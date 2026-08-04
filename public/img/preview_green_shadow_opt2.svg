@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <!-- Dark Tactical Background -->
+    <linearGradient id="tacticalBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+
+    <!-- Hologram Visor -->
+    <linearGradient id="holoVisor" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="rgba(56, 189, 248, 0.8)" />
+      <stop offset="100%" stop-color="rgba(14, 165, 233, 0.4)" />
+    </linearGradient>
+
+    <!-- Grid Pattern -->
+    <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1e293b" stroke-width="1.5"/>
+    </pattern>
+
+    <filter id="neonGlow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Frame Background with Grid -->
+  <rect x="15" y="15" width="370" height="370" rx="24" fill="url(#tacticalBg)" stroke="#0ea5e9" stroke-width="4" />
+  <rect x="25" y="25" width="350" height="350" rx="18" fill="url(#grid)" />
+
+  <!-- Corner Tactical HUD Markers -->
+  <path d="M 35 60 L 35 35 L 60 35" stroke="#38bdf8" stroke-width="4" fill="none" />
+  <path d="M 365 60 L 365 35 L 340 35" stroke="#38bdf8" stroke-width="4" fill="none" />
+  <path d="M 35 340 L 35 365 L 60 365" stroke="#38bdf8" stroke-width="4" fill="none" />
+  <path d="M 365 340 L 365 365 L 340 365" stroke="#38bdf8" stroke-width="4" fill="none" />
+
+  <!-- Radar Circles -->
+  <circle cx="200" cy="190" r="140" fill="none" stroke="#1e293b" stroke-width="2" stroke-dasharray="6 6" />
+  <circle cx="200" cy="190" r="90" fill="none" stroke="#0284c7" stroke-width="1" opacity="0.4" />
+
+  <!-- Hero Body & Ammo Belt -->
+  <path d="M130 240 Q 200 320 270 240 L 250 340 L 150 340 Z" fill="#065f46" stroke="#047857" stroke-width="3" />
+  <!-- Ammo Strap across chest -->
+  <path d="M140 250 L 260 330" stroke="#78350f" stroke-width="14" stroke-linecap="round" />
+  <circle cx="170" cy="270" r="6" fill="#22c55e" stroke="#15803d" stroke-width="2" />
+  <circle cx="200" cy="290" r="6" fill="#22c55e" stroke="#15803d" stroke-width="2" />
+  <circle cx="230" cy="310" r="6" fill="#22c55e" stroke="#15803d" stroke-width="2" />
+
+  <!-- Head Base -->
+  <ellipse cx="200" cy="190" rx="70" ry="60" fill="#10b981" stroke="#047857" stroke-width="5" />
+  <path d="M245 175 C 295 170, 310 180, 310 190 C 310 200, 295 210, 245 205 Z" fill="#10b981" stroke="#047857" stroke-width="4" />
+
+  <!-- Tactical Visor Monocle Reticle -->
+  <rect x="190" y="155" width="85" height="55" rx="8" fill="url(#holoVisor)" stroke="#38bdf8" stroke-width="3" filter="url(#neonGlow)" />
+  <circle cx="235" cy="182" r="16" fill="none" stroke="#38bdf8" stroke-width="2" />
+  <line x1="235" y1="160" x2="235" y2="204" stroke="#38bdf8" stroke-width="1.5" />
+  <line x1="213" y1="182" x2="257" y2="182" stroke="#38bdf8" stroke-width="1.5" />
+  <text x="260" y="168" font-family="monospace" font-size="9" fill="#38bdf8" font-weight="bold">LOCK</text>
+
+  <!-- Left Eye Normal -->
+  <ellipse cx="160" cy="178" rx="12" ry="15" fill="#ffffff" stroke="#047857" stroke-width="2" />
+  <ellipse cx="163" cy="178" rx="6" ry="9" fill="#0f172a" />
+
+  <!-- Grid Coordinate Labels -->
+  <text x="45" y="55" font-family="monospace" font-size="12" fill="#38bdf8" font-weight="bold">GRID: A-1</text>
+  <text x="300" y="55" font-family="monospace" font-size="12" fill="#0ea5e9" font-weight="bold">MECH-01</text>
+
+  <!-- Text Label -->
+  <rect x="50" y="340" width="300" height="34" rx="6" fill="#0f172a" stroke="#0ea5e9" stroke-width="2" />
+  <text x="200" y="362" font-family="sans-serif" font-size="15" font-weight="900" fill="#38bdf8" text-anchor="middle" letter-spacing="2">OPTION 2: TACTICAL CARTOON</text>
+</svg>

@@ -1,0 +1,156 @@
+import { ItemDefinition, Position, TurnAction, Unit } from '../types';
+import { calculateDamage, getTileAt, getUnitAt, gustDirection, planPush } from './gameLogic';
+import { applyPushPlan, pushKill, type ResolveContext } from './actionBuilders';
+
+/**
+ * ITEMS, RESOLVED. The sibling of skillResolution — same split, same reasons.
+ *
+ * `itemTargetInvalid` exists separately because two items can be aimed at a tile that cannot
+ * take them, and the item is spent unconditionally once resolution starts: a misclick on
+ * empty grass used to burn 100 Coin for nothing. The check has to happen before the caller
+ * removes anything from the inventory, so it is its own exported function rather than an
+ * early return buried in the planner.
+ */
+
+/** True when this tile cannot legally receive the item. The caller should show BLOCKED. */
+export const itemTargetInvalid = (item: ItemDefinition, pos: Position, ctx: ResolveContext): boolean => {
+    const { units, board, terrainDefs } = ctx;
+
+    // Coffee Bean: needs an ally who has actually spent something to give back.
+    if (item.effect === 'REFRESH') {
+        const t = getUnitAt(pos, units);
+        return !t
+            || t.isEnemy
+            || (t.digestingTurns || 0) > 0      // still swallowing; an action cannot be used
+            || (!t.hasMoved && !t.hasAttacked); // nothing spent yet, so nothing to give back
+    }
+
+    // A trap is ARMED, not detonated: it needs an empty, walkable tile to sit on.
+    if (item.effect === 'TRAP') {
+        const tile = getTileAt(pos, board);
+        return !tile
+            || !!getUnitAt(pos, units)
+            || !!tile.trap
+            || !terrainDefs[tile.terrain]?.isWalkable
+            || !!tile.isHouse;
+    }
+
+    return false;
+};
+
+/**
+ * Everything an item does, as actions.
+ *
+ * TRAP is absent on purpose: arming one writes a tile, not an action, and the ENGINE owns the
+ * detonation — every way a unit can arrive on a tile (walk, push, gust, hazard) funnels
+ * through UNIT_MOVE, and that is where the trigger lives. The caller writes the board.
+ */
+export const planItemActions = (
+    item: ItemDefinition,
+    pos: Position,
+    ctx: ResolveContext,
+    /** Whoever is credited with kills — matters only for SUN_ON_KILL fusions. */
+    actor?: Unit | null,
+): TurnAction[] => {
+    const { units, board, terrainDefs } = ctx;
+    const actions: TurnAction[] = [];
+
+    if (item.effect === 'REFRESH') {
+        // itemTargetInvalid was called first, so this target is known good.
+        const target = getUnitAt(pos, units)!;
+        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: target.id, updates: { hasMoved: false, hasAttacked: false } });
+        actions.push({ type: 'APPLY_DAMAGE', targetId: target.id, amount: 0, eventType: 'BUFF', pos });
+        return actions;
+    }
+
+    // GUST ignores the tile you clicked: it is a board-wide effect, like Blover in
+    // PvZ. Fliers are removed outright; everything else on the ground is shoved one
+    // tile back toward the spawn edge (+y — zombies march in from high y).
+    if (item.effect === 'GUST') {
+        // Direction comes from the tile you clicked: the gust blows toward the
+        // nearest board edge. Shared with the hover arrow via gustDirection().
+        const { dx: gdx, dy: gdy } = gustDirection(pos);
+        const enemies = units.filter(u => u.isEnemy && u.hp > 0);
+
+        enemies.forEach(e => {
+            if (e.movementType === 'FLYING') {
+                actions.push({ type: 'APPLY_DAMAGE', targetId: e.id, amount: 0, eventType: 'DROWN', pos: e.position });
+                pushKill(actions, e, actor);
+            }
+        });
+
+        // Furthest along the gust first, so each vacates its tile before the next
+        // arrives. Projecting onto the direction vector keeps this correct for all
+        // four headings, not just the +y default it started as.
+        const along = (u: Unit) => u.position.x * gdx + u.position.y * gdy;
+        const grounded = enemies
+            .filter(e => e.movementType !== 'FLYING')
+            .sort((a, b) => along(b) - along(a));
+
+        // One shared simulation so the gust sees its own displacements: a zombie
+        // already blown onto the bank is a body the next one can be driven into.
+        const gustSim = new Map<string, Unit>(units.filter(u => u.hp > 0).map(u => [u.id, { ...u }]));
+        enemies.filter(e => e.movementType === 'FLYING').forEach(e => gustSim.delete(e.id));
+
+        grounded.forEach(e => {
+            const live = gustSim.get(e.id);
+            if (!live || live.hp <= 0) return;
+            if (live.immunities.includes('PUSH')) {
+                actions.push({ type: 'APPLY_DAMAGE', targetId: e.id, amount: 0, eventType: 'IMMUNE', pos: live.position });
+                return;
+            }
+            const plan = planPush(live, gdx, gdy, Array.from(gustSim.values()), board, terrainDefs);
+            applyPushPlan(plan, actions, gustSim, actor);
+        });
+
+        return actions;
+    }
+
+    // --- the ordinary case: a square blast centred on the clicked tile ---
+    const radius = item.rangeRadius || 0;
+    const targets: Position[] = [];
+    for (let x = pos.x - radius; x <= pos.x + radius; x++) {
+        for (let y = pos.y - radius; y <= pos.y + radius; y++) {
+            if (x >= 0 && x < 8 && y >= 0 && y < 8) targets.push({ x, y });
+        }
+    }
+
+    targets.forEach(t => {
+        const u = getUnitAt(t, units);
+
+        // Jalapeno burns its whole column rather than a blast radius.
+        if (item.effect === 'TERRAIN_MOD' && item.id === 'jalapeno') {
+            for (let col = 0; col < 8; col++) {
+                actions.push({ type: 'APPLY_DAMAGE', targetId: 'tile', amount: 0, eventType: 'BURN', pos: { x: t.x, y: col } });
+                const target = getUnitAt({ x: t.x, y: col }, units);
+                if (target) {
+                    const result = calculateDamage(target, item.damage, true);
+                    actions.push({ type: 'APPLY_DAMAGE', targetId: target.id, amount: result.finalDamage, eventType: 'DAMAGE', pos: { x: t.x, y: col } });
+                    if (result.isFatal) pushKill(actions, target, actor);
+                }
+                actions.push({ type: 'MODIFY_TERRAIN', pos: { x: t.x, y: col }, terrain: 'LAVA' });
+            }
+            return;
+        }
+
+        if (u) {
+            const result = calculateDamage(u, item.damage, false);
+            actions.push({ type: 'APPLY_DAMAGE', targetId: u.id, amount: result.finalDamage, eventType: 'DAMAGE', pos: t });
+            if (result.isFatal) pushKill(actions, u, actor);
+
+            if (item.effect === 'BURN') {
+                actions.push({ type: 'UPDATE_UNIT_STATE', unitId: u.id, updates: { statusEffects: [...u.statusEffects, 'BURN'] } });
+            }
+            if (item.effect === 'FREEZE' && !u.immunities.includes('FREEZE') && !u.immunities.includes('STATUS')) {
+                // Real FREEZE, not the STUN stand-in it used to apply: STUN was a
+                // workaround for FREEZE never expiring, and it made the effect last
+                // exactly one turn regardless. Frozen now holds until something hits.
+                actions.push({ type: 'UPDATE_UNIT_STATE', unitId: u.id, updates: { statusEffects: [...u.statusEffects, 'FREEZE'] } });
+            }
+        } else {
+            actions.push({ type: 'APPLY_DAMAGE', targetId: 'tile', amount: 0, eventType: 'BURN', pos: t });
+        }
+    });
+
+    return actions;
+};

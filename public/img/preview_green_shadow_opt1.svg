@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#34d399" />
+      <stop offset="100%" stop-color="#065f46" />
+    </radialGradient>
+
+    <!-- Cape Gradient -->
+    <linearGradient id="capeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a8a" />
+      <stop offset="100%" stop-color="#1e1b4b" />
+    </linearGradient>
+
+    <!-- Pea Head Gradient -->
+    <linearGradient id="peaGrad" x1="20%" y1="20%" x2="80%" y2="80%">
+      <stop offset="0%" stop-color="#a7f3d0" />
+      <stop offset="60%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#047857" />
+    </linearGradient>
+
+    <filter id="dropShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="2" dy="6" stdDeviation="4" flood-opacity="0.4" />
+    </filter>
+  </defs>
+
+  <!-- Frame Background -->
+  <circle cx="200" cy="200" r="185" fill="url(#bgGrad)" stroke="#6ee7b7" stroke-width="8" />
+  <circle cx="200" cy="200" r="175" fill="none" stroke="#047857" stroke-width="2" stroke-dasharray="8 6" />
+
+  <!-- Hero Cape flowing behind -->
+  <path d="M120 220 Q 70 300 100 370 Q 200 380 300 370 Q 330 300 280 220 Z" fill="url(#capeGrad)" filter="url(#dropShadow)" />
+
+  <!-- Stem & Leaf -->
+  <path d="M200 130 C 160 80, 130 90, 110 110 C 140 120, 170 135, 190 145 Z" fill="#059669" stroke="#047857" stroke-width="3" />
+  <path d="M200 140 Q 195 100 200 70 Q 205 100 200 140" stroke="#047857" stroke-width="6" fill="none" stroke-linecap="round" />
+
+  <!-- Hero Mask (Dark Navy) -->
+  <path d="M140 160 Q 200 140 260 160 Q 275 190 260 215 Q 200 230 140 215 Q 125 190 140 160 Z" fill="#0f172a" stroke="#38bdf8" stroke-width="4" filter="url(#dropShadow)" />
+
+  <!-- Peashooter Head -->
+  <ellipse cx="200" cy="210" rx="75" ry="65" fill="url(#peaGrad)" stroke="#065f46" stroke-width="5" />
+
+  <!-- Cannon Snout -->
+  <path d="M245 195 C 295 190, 310 200, 310 210 C 310 220, 295 230, 245 225 Z" fill="url(#peaGrad)" stroke="#065f46" stroke-width="4" />
+  <ellipse cx="305" cy="210" rx="10" ry="14" fill="#047857" stroke="#064e3b" stroke-width="3" />
+  <ellipse cx="305" cy="210" rx="5" ry="8" fill="#022c22" />
+
+  <!-- Expressive Cute Eyes inside Mask -->
+  <!-- Left Eye -->
+  <ellipse cx="170" cy="185" rx="14" ry="18" fill="#ffffff" />
+  <ellipse cx="173" cy="185" rx="8" ry="11" fill="#0f172a" />
+  <circle cx="176" cy="180" r="3" fill="#ffffff" />
+
+  <!-- Right Eye -->
+  <ellipse cx="225" cy="185" rx="14" ry="18" fill="#ffffff" />
+  <ellipse cx="222" cy="185" rx="8" ry="11" fill="#0f172a" />
+  <circle cx="225" cy="180" r="3" fill="#ffffff" />
+
+  <!-- Cute Eyebrows (Heroic V-shape) -->
+  <path d="M150 162 L 182 170" stroke="#38bdf8" stroke-width="4" stroke-linecap="round" />
+  <path d="M245 162 L 213 170" stroke="#38bdf8" stroke-width="4" stroke-linecap="round" />
+
+  <!-- Leaf Collar Badge -->
+  <path d="M150 265 Q 200 295 250 265 Q 230 315 200 325 Q 170 315 150 265 Z" fill="#059669" stroke="#34d399" stroke-width="3" />
+  <polygon points="200,280 206,295 222,295 209,305 214,320 200,310 186,320 191,305 178,295 194,295" fill="#fbbf24" stroke="#d97706" stroke-width="2" />
+
+  <!-- Text Label -->
+  <rect x="70" y="345" width="260" height="36" rx="8" fill="#0f172a" stroke="#34d399" stroke-width="2" />
+  <text x="200" y="369" font-family="sans-serif" font-size="16" font-weight="900" fill="#6ee7b7" text-anchor="middle" letter-spacing="2">OPTION 1: CLASSIC 2D</text>
+</svg>

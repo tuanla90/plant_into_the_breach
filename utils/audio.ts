@@ -1,0 +1,284 @@
+/**
+ * Sound. One module, no React — the engine calls `sfx()` from inside the async turn loop,
+ * which is not a component and must not re-render anything to make a noise.
+ *
+ * All audio is CC0 and lives in `public/audio/` (see /CREDITS.md and
+ * `art-src/install_audio.mjs`, which is what put it there and can put it there again).
+ *
+ * Two things browsers force on us, handled here so callers never think about them:
+ *
+ *  1. AUTOPLAY. Nothing may sound before the user has interacted with the page. Every
+ *     `sfx()`/`playMusic()` before that is remembered, not played; `unlock()` (wired to the
+ *     first pointer/key event) starts the pending track. Calling play() anyway would throw
+ *     an unhandled rejection on every click until the user touched something.
+ *
+ *  2. ONE ELEMENT CANNOT OVERLAP ITSELF. A grid game fires the same impact five times in
+ *     one AoE, so each sound keeps a small pool of clones and round-robins through it.
+ */
+
+export type SfxName =
+    | 'ui-click' | 'ui-select' | 'ui-back' | 'ui-coin' | 'ui-item'
+    | 'step' | 'attack-melee' | 'attack-shot' | 'attack-lob'
+    | 'skill-cast' | 'skill-ult'
+    | 'hit' | 'hit-heavy' | 'hit-freeze' | 'hit-blocked' | 'heal' | 'drown'
+    | 'die-enemy' | 'die-plant'
+    | 'spawn' | 'turn-start' | 'gain-sun' | 'brain-lost'
+    | 'victory' | 'defeat' | 'fusion';
+
+export type MusicTrack = 'menu' | 'intro' | 'map' | 'combat';
+
+/**
+ * File + per-sound mix. `gain` is baked in because the packs are not mastered to a common
+ * loudness — the alarm is twice the level of a footstep, and balancing at the call site
+ * would mean re-tuning every caller. An array of files means "pick one at random", which
+ * is what stops eight footsteps in a row from sounding like a machine.
+ */
+const SFX: Record<SfxName, { files: string[]; gain: number }> = {
+    'ui-click':     { files: ['ui-click.wav'],   gain: 0.35 },
+    'ui-select':    { files: ['ui-select.wav'],  gain: 0.55 },
+    'ui-back':      { files: ['ui-back.wav'],    gain: 0.45 },
+    'ui-coin':      { files: ['ui-coin.mp3'],    gain: 0.70 },
+    'ui-item':      { files: ['ui-item.mp3'],    gain: 0.70 },
+
+    'step':         { files: ['step-1.wav', 'step-2.wav', 'step-3.wav'], gain: 0.40 },
+
+    'attack-melee': { files: ['attack-melee.wav'], gain: 0.75 },
+    'attack-shot':  { files: ['attack-shot.wav'],  gain: 0.55 },
+    'attack-lob':   { files: ['attack-lob.wav'],   gain: 0.55 },
+    'skill-cast':   { files: ['skill-cast.wav'],   gain: 0.60 },
+    'skill-ult':    { files: ['skill-ult.wav'],    gain: 0.80 },
+
+    'hit':          { files: ['hit-1.wav', 'hit-2.wav', 'hit-3.wav'], gain: 0.65 },
+    'hit-heavy':    { files: ['hit-heavy.wav'],   gain: 0.75 },
+    'hit-freeze':   { files: ['hit-freeze.wav'],  gain: 0.60 },
+    'hit-blocked':  { files: ['hit-blocked.wav'], gain: 0.50 },
+    'heal':         { files: ['heal.wav'],        gain: 0.55 },
+    'drown':        { files: ['drown.wav'],       gain: 0.70 },
+
+    'die-enemy':    { files: ['die-enemy.wav'],   gain: 0.70 },
+    'die-plant':    { files: ['die-plant.wav'],   gain: 0.70 },
+
+    'spawn':        { files: ['spawn.wav'],       gain: 0.55 },
+    'turn-start':   { files: ['turn-start.wav'],  gain: 0.45 },
+    'gain-sun':     { files: ['gain-sun.wav'],    gain: 0.45 },
+    // Losing a brain is the worst thing that can happen in a run. It gets to be loud.
+    'brain-lost':   { files: ['brain-lost.wav'],  gain: 1.00 },
+
+    'victory':      { files: ['victory.mp3'],     gain: 0.80 },
+    'defeat':       { files: ['defeat.wav'],      gain: 0.70 },
+    'fusion':       { files: ['fusion.wav'],      gain: 0.65 },
+};
+
+const MUSIC: Record<MusicTrack, { file: string; gain: number }> = {
+    menu:   { file: 'music-menu.mp3',   gain: 0.30 },
+    intro:  { file: 'music-intro.mp3',  gain: 0.34 },
+    map:    { file: 'music-map.mp3',    gain: 0.26 },
+    combat: { file: 'music-combat.mp3', gain: 0.30 },
+};
+
+const BASE = '/audio/';
+const POOL_SIZE = 4;
+
+// --- SETTINGS ---------------------------------------------------------------
+
+const STORAGE_KEY = 'pitb_audio_v1';
+
+export interface AudioSettings {
+    master: number;   // 0..1
+    sfx: number;      // 0..1
+    music: number;    // 0..1
+    muted: boolean;
+}
+
+const DEFAULTS: AudioSettings = { master: 0.7, sfx: 1, music: 0.6, muted: false };
+
+const clamp01 = (n: unknown, fallback: number) =>
+    typeof n === 'number' && isFinite(n) ? Math.min(1, Math.max(0, n)) : fallback;
+
+const load = (): AudioSettings => {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return { ...DEFAULTS };
+        const s = JSON.parse(raw);
+        return {
+            master: clamp01(s.master, DEFAULTS.master),
+            sfx: clamp01(s.sfx, DEFAULTS.sfx),
+            music: clamp01(s.music, DEFAULTS.music),
+            muted: !!s.muted,
+        };
+    } catch {
+        return { ...DEFAULTS };
+    }
+};
+
+let settings: AudioSettings = load();
+const listeners = new Set<(s: AudioSettings) => void>();
+
+export const getAudioSettings = (): AudioSettings => ({ ...settings });
+
+export const subscribeAudio = (fn: (s: AudioSettings) => void) => {
+    listeners.add(fn);
+    return () => { listeners.delete(fn); };
+};
+
+export const setAudioSettings = (patch: Partial<AudioSettings>) => {
+    settings = { ...settings, ...patch };
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(settings)); } catch { /* private mode */ }
+    applyMusicVolume();
+    // Unmuting is a deliberate act, so it should be audible immediately rather than at the
+    // next screen change — restart whatever track the game currently wants.
+    if (!settings.muted && currentTrack && musicEl?.paused) void startMusic(currentTrack);
+    if (settings.muted) stopMusic();
+    listeners.forEach(fn => fn({ ...settings }));
+};
+
+export const toggleMute = () => setAudioSettings({ muted: !settings.muted });
+
+// --- AUTOPLAY UNLOCK --------------------------------------------------------
+
+let unlocked = false;
+let pendingTrack: MusicTrack | null = null;
+
+export const isAudioUnlocked = () => unlocked;
+
+/** Wired to the first real user gesture by `installAudioUnlock()`. */
+const unlock = () => {
+    if (unlocked) return;
+    unlocked = true;
+    preloadAll();
+    if (pendingTrack) { void startMusic(pendingTrack); pendingTrack = null; }
+};
+
+export const installAudioUnlock = () => {
+    if (typeof window === 'undefined') return () => {};
+    const fire = () => { unlock(); teardown(); };
+    const teardown = () => {
+        window.removeEventListener('pointerdown', fire);
+        window.removeEventListener('keydown', fire);
+    };
+    window.addEventListener('pointerdown', fire);
+    window.addEventListener('keydown', fire);
+    return teardown;
+};
+
+// --- SFX --------------------------------------------------------------------
+
+const pools = new Map<string, { els: HTMLAudioElement[]; next: number }>();
+
+const poolFor = (file: string) => {
+    let p = pools.get(file);
+    if (!p) {
+        const els = Array.from({ length: POOL_SIZE }, () => {
+            const el = new Audio(BASE + file);
+            el.preload = 'auto';
+            return el;
+        });
+        p = { els, next: 0 };
+        pools.set(file, p);
+    }
+    return p;
+};
+
+const preloadAll = () => {
+    Object.values(SFX).forEach(def => def.files.forEach(f => poolFor(f)));
+};
+
+/**
+ * Identical sounds fired within this window collapse into one. An area-of-effect hit
+ * resolves as N separate APPLY_DAMAGE actions in the same instant; without this they stack
+ * into a single distorted blare that is louder than anything else in the game.
+ */
+const RETRIGGER_MS = 45;
+const lastPlayed = new Map<SfxName, number>();
+
+export const sfx = (name: SfxName, volumeScale = 1) => {
+    if (settings.muted || typeof window === 'undefined') return;
+    if (!unlocked) return;
+
+    const def = SFX[name];
+    if (!def) return;
+
+    const now = performance.now();
+    const prev = lastPlayed.get(name);
+    if (prev !== undefined && now - prev < RETRIGGER_MS) return;
+    lastPlayed.set(name, now);
+
+    const file = def.files.length === 1
+        ? def.files[0]
+        : def.files[Math.floor(Math.random() * def.files.length)];
+
+    const pool = poolFor(file);
+    const el = pool.els[pool.next];
+    pool.next = (pool.next + 1) % pool.els.length;
+
+    el.volume = Math.min(1, def.gain * volumeScale * settings.sfx * settings.master);
+    try {
+        el.currentTime = 0;
+        // Autoplay can still be refused (a background tab, a policy we did not predict).
+        // A rejected promise here is not worth a console error on every click.
+        void el.play().catch(() => {});
+    } catch { /* element not ready yet; skip this one rather than throw into the turn loop */ }
+};
+
+// --- MUSIC ------------------------------------------------------------------
+
+let musicEl: HTMLAudioElement | null = null;
+let currentTrack: MusicTrack | null = null;
+let fadeTimer: number | null = null;
+
+const musicTargetVolume = () =>
+    settings.muted ? 0 : (MUSIC[currentTrack!]?.gain ?? 0.3) * settings.music * settings.master;
+
+const applyMusicVolume = () => {
+    if (musicEl && currentTrack) musicEl.volume = musicTargetVolume();
+};
+
+const clearFade = () => {
+    if (fadeTimer !== null) { clearInterval(fadeTimer); fadeTimer = null; }
+};
+
+const startMusic = async (track: MusicTrack) => {
+    clearFade();
+    const def = MUSIC[track];
+    if (!def) return;
+
+    if (!musicEl) {
+        musicEl = new Audio();
+        musicEl.loop = true;
+    }
+    musicEl.src = BASE + def.file;
+    currentTrack = track;
+    musicEl.volume = 0;
+    try { await musicEl.play(); } catch { return; }
+
+    // Fade in. Instant-on reads as a glitch when a screen transition is still animating.
+    const target = musicTargetVolume();
+    let v = 0;
+    fadeTimer = window.setInterval(() => {
+        v = Math.min(target, v + target / 12);
+        if (musicEl) musicEl.volume = v;
+        if (v >= target - 0.001) clearFade();
+    }, 40);
+};
+
+const stopMusic = () => {
+    clearFade();
+    if (!musicEl) return;
+    const el = musicEl;
+    let v = el.volume;
+    fadeTimer = window.setInterval(() => {
+        v -= 0.06;
+        if (v <= 0) { el.pause(); clearFade(); return; }
+        el.volume = Math.max(0, v);
+    }, 40);
+};
+
+/** Idempotent: asking for the track already playing does nothing, so it is safe in an effect. */
+export const playMusic = (track: MusicTrack | null) => {
+    if (track === currentTrack && musicEl && !musicEl.paused) return;
+
+    if (track === null) { currentTrack = null; stopMusic(); return; }
+
+    if (!unlocked) { pendingTrack = track; currentTrack = track; return; }
+    void startMusic(track);
+};
