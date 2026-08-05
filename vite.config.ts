@@ -6,7 +6,8 @@ export default defineConfig(() => {
     return {
       base: './',
       server: {
-        port: 3000,
+        // PORT được Claude Code preview (autoPort) cấp khi port mặc định bận.
+        port: Number(process.env.PORT) || 3000,
         host: '0.0.0.0',
       },
       plugins: [react()],
