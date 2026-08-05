@@ -532,13 +532,17 @@ export const useGameProgression = ({
          * `units`, the Coin, bench, inventory and brains are in `gameState`, and the fusions
          * ride on the heroes themselves.
          *
-         * NOT for the Breach. Its gauntlet is one authored map with ten bosses on it
-         * (GENERATE_BREACH_MAP) — every one of them carries `endsRun: false`, so the test has
-         * to be "is there a NEXT ACT in this stage", not "did a non-final boss just die".
+         * NOT for the Breach, and "is there a next act in this stage" is NOT the test that
+         * excludes it: the Breach re-fights all nine campaign bosses, so its Gargantuar is
+         * still stage 1 act 1 and would happily ask for a map of Goldacre in the middle of the
+         * gauntlet.
+         *
+         * The test is whether this boss is the END OF ITS MAP. An act's boss is the last node
+         * there is (`next` is empty); every Breach boss has a camp waiting after it. That is
+         * exactly the distinction — a map that continues does not need a successor.
          */
-        const clearedAct = completedNodeType === 'BOSS' && finishedNode?.bossId
-            ? bossById(finishedNode.bossId)
-            : undefined;
+        const endOfMap = completedNodeType === 'BOSS' && finishedNode?.next.length === 0;
+        const clearedAct = endOfMap && finishedNode?.bossId ? bossById(finishedNode.bossId) : undefined;
         const nextAct = clearedAct && clearedAct.stage !== 0
             ? actsOfStage(clearedAct.stage as 1 | 2 | 3).find(b => b.act === clearedAct.act + 1)
             : undefined;

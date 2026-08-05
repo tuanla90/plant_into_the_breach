@@ -47,8 +47,8 @@ export interface DialogueLine {
 const GS = { name: 'Shadeleaf', img: HERO_SPRITES.GREEN_SHADOW, color: '#4ade80' };
 const SF = { name: 'Sunspot', img: HERO_SPRITES.SOLAR_FLARE, color: '#fb923c' };
 const WK = { name: 'Ironhusk', img: HERO_SPRITES.WALL_KNIGHT, color: '#f59e0b' };
-const DAVE = { name: 'Old Mulch', img: '/img/portrait-mulch.jpg', color: '#facc15' };
-const PENNY = { name: 'Chrona', img: '/img/portrait-chrona.jpg', color: '#38bdf8' };
+const DAVE = { name: 'Old Mulch', img: './img/portrait-mulch.jpg', color: '#facc15' };
+const PENNY = { name: 'Chrona', img: './img/portrait-chrona.jpg', color: '#38bdf8' };
 const ZOMBIE = { name: 'Zombie', img: ICONS.ZOMBIE, color: '#f87171' };
 const GARG = { name: 'Gargantuar', img: ICONS.GARGANTUAR, color: '#ef4444' };
 

@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Unit, UnitClass, Skill, TileData, TerrainDefinition, UnitType } from '../types';
+import { SQUAD_SIZE } from '../constants';
 import { UNIT_SKILLS, DEFAULT_TERRAIN_DEFS } from '../constants';
 import { Crosshair, Move, Shield, Zap, XCircle, Hourglass, ChevronsRight, ArrowUpCircle, Utensils, RotateCcw, Sun, Skull, Info, Mountain, Radar, Sword, ArrowRight, Play, UserPlus, MinusCircle, AlertCircle, Plus } from 'lucide-react';
 import { formatGridPosition, isSunProducingSkill } from '../utils/gameLogic';
@@ -122,7 +123,9 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
   // --- PLACEMENT MODE HEADER ---
   if (interactionMode === 'PLACEMENT') {
       const deployedCount = rosterUnits.filter(u => u.position.x >= 0).length;
-      const MAX_DEPLOY = 3; 
+      // SQUAD_SIZE, not a 3 written here as well. Two places encoding one rule is how they
+      // drift, and this panel is the one that refuses to let the battle start when they do.
+      const MAX_DEPLOY = SQUAD_SIZE;
       const canStart = deployedCount > 0 && deployedCount <= MAX_DEPLOY;
 
       return (

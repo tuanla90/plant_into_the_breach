@@ -1105,6 +1105,8 @@ export const VI: Record<string, string> = {
     "Goes to the bench — a backup body, or fusion material": "Vào ghế dự bị — làm quân thay thế, hoặc nguyên liệu ghép",
     // Act upgrades (data/heroUpgrades.ts) — one hero, one upgrade, per boss put down.
     "Three peas down the row. Anything they overkill, the rest fly past.": "Ba viên đậu dọc hàng. Viên nào thừa sát thương thì bay tiếp.",
+    "Your squad, your Coin and your bench carry over. Wounds do too.": "Đội hình, Xu và ghế dự bị đi tiếp cùng bạn. Vết thương cũng vậy.",
+    "Move out": "Lên Đường",
     "Act cleared": "Đã xong một Act",
     "Who takes it?": "Ai nhận?",
     "What does {hero} take?": "{hero} nhận gì?",

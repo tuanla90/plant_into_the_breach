@@ -26,6 +26,7 @@ import {
 // It is pure — units in, TurnAction[] out — so it belongs beside the rest of the rules.
 import { planSkillActions } from './utils/skillResolution';
 import { activeResonance } from './utils/elements';
+import { isBattleOnlyUnit } from './utils/unitFactory';
 import { freshHero } from './utils/unitFactory';
 import { itemTargetInvalid, planItemActions } from './utils/itemResolution';
 import { loadConfigFromStorage } from './utils/persistence';
@@ -1869,7 +1870,13 @@ const App: React.FC = () => {
                         }
                     }}
                     onStartBattle={handleStartBattle}
-                    rosterUnits={units.filter(u => u.type === UnitType.PLANT)}
+                    /* The SQUAD, not "everything on my side of the board".
+                       The deployment panel counts what it is given, and the gear crate and any
+                       wild plant are already standing on their tiles when placement opens — so
+                       a fight that rolled one showed "4 / 3", refused to start, and listed a
+                       crate as a squad member the player could try to pick up. Neither is
+                       deployable and neither belongs to the run (`isBattleOnlyUnit`). */
+                    rosterUnits={units.filter(u => u.type === UnitType.PLANT && !isBattleOnlyUnit(u))}
                     onSelectRosterUnit={setSelectedRosterId}
                     selectedRosterId={selectedRosterId}
                     onResetTurn={() => { if (gameState.interactionMode === 'IDLE') resetTurn(); }}

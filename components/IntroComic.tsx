@@ -20,14 +20,14 @@ import { useI18n } from '../i18n';
 // Panel heights are generous on purpose: the art is ~4:3 and object-cover crops what the
 // height cannot hold — too short and the characters lose their faces. The page scrolls.
 const PANELS = [
-    { art: '/img/comic/comic-01-plaza.jpg', caption: 'Neon Plaza. Just another quiet evening.', cols: 'col-span-12 md:col-span-7', h: 'h-80', pos: '50% 65%' },
-    { art: '/img/comic/comic-02-alert.jpg', caption: 'Until every screen in the city screamed the same word.', cols: 'col-span-12 md:col-span-5', h: 'h-80' },
-    { art: '/img/comic/comic-03-drain.jpg', caption: 'They did not come from the horizon. They came from below.', cols: 'col-span-12 md:col-span-4', h: 'h-72' },
-    { art: '/img/comic/comic-04-gate.jpg', caption: 'The plaza gate held for exactly four seconds.', cols: 'col-span-12 md:col-span-8', h: 'h-96', pos: '50% 70%' },
-    { art: '/img/comic/comic-05-tunnel.jpg', caption: 'Three survived. None of them were soldiers.', cols: 'col-span-12 md:col-span-4', h: 'h-72' },
-    { art: '/img/comic/comic-06-gear.jpg', caption: 'But someone had left the gear behind — as if they knew this day would come.', cols: 'col-span-12 md:col-span-4', h: 'h-72' },
-    { art: '/img/comic/comic-07-mask.jpg', caption: 'Breathe in. Mask on. Shadeleaf walks out.', cols: 'col-span-12 md:col-span-4', h: 'h-72' },
-    { art: '/img/comic/comic-08-rooftop.jpg', caption: 'The city may be lost. The world is not.', cols: 'col-span-12', h: 'h-[480px]', captionBottom: true },
+    { art: './img/comic/comic-01-plaza.jpg', caption: 'Neon Plaza. Just another quiet evening.', cols: 'col-span-12 md:col-span-7', h: 'h-80', pos: '50% 65%' },
+    { art: './img/comic/comic-02-alert.jpg', caption: 'Until every screen in the city screamed the same word.', cols: 'col-span-12 md:col-span-5', h: 'h-80' },
+    { art: './img/comic/comic-03-drain.jpg', caption: 'They did not come from the horizon. They came from below.', cols: 'col-span-12 md:col-span-4', h: 'h-72' },
+    { art: './img/comic/comic-04-gate.jpg', caption: 'The plaza gate held for exactly four seconds.', cols: 'col-span-12 md:col-span-8', h: 'h-96', pos: '50% 70%' },
+    { art: './img/comic/comic-05-tunnel.jpg', caption: 'Three survived. None of them were soldiers.', cols: 'col-span-12 md:col-span-4', h: 'h-72' },
+    { art: './img/comic/comic-06-gear.jpg', caption: 'But someone had left the gear behind — as if they knew this day would come.', cols: 'col-span-12 md:col-span-4', h: 'h-72' },
+    { art: './img/comic/comic-07-mask.jpg', caption: 'Breathe in. Mask on. Shadeleaf walks out.', cols: 'col-span-12 md:col-span-4', h: 'h-72' },
+    { art: './img/comic/comic-08-rooftop.jpg', caption: 'The city may be lost. The world is not.', cols: 'col-span-12', h: 'h-[480px]', captionBottom: true },
 ];
 
 interface IntroComicProps {

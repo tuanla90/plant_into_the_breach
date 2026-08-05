@@ -10,7 +10,7 @@ import { useI18n } from '../i18n';
  * than stacked on top of it. If the file is missing the menu falls back to that text logo,
  * so the game never boots to a blank screen.
  */
-const COVER_ART = '/img/cover.png';
+const COVER_ART = './img/cover.png';
 
 interface StartMenuProps {
     onStart: () => void;

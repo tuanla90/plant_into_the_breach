@@ -64,7 +64,7 @@ const ElementCrest: React.FC<{ element: ElementId; accent: string; open: boolean
  * is added it will borrow too, and it should land on the skull plate rather than quietly
  * wearing the Gargantuar's face.
  */
-const GARGANTUAR_ART = '/img/sprite-gargantuar.png';
+const GARGANTUAR_ART = './img/sprite-gargantuar.png';
 const bossPortrait = (id: BossId): string | undefined => {
     const cls = BOSS_UNIT_CLASS[id];
     const art = cls ? (ZOMBIE_DEFINITIONS as any)[cls]?.imgUrl as string | undefined : undefined;

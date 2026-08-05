@@ -239,7 +239,7 @@ export const Tile: React.FC<TileProps> = ({
                {/* A clawed hand breaking out of the ground. This used to be a Lucide glove
                    icon flipped upside down, which read as a mitten more than a grave. */}
                <img
-                   src="/img/terrain/spawn-hole.svg"
+                   src="./img/terrain/spawn-hole.svg"
                    alt=""
                    aria-hidden="true"
                    className="absolute inset-[8%] w-[84%] h-[84%] object-contain z-10

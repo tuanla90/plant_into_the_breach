@@ -23,7 +23,7 @@ export const GAME_EVENTS: GameEvent[] = [
         id: 'tut_revive',
         title: "The Roadside Medic",
         description: "A figure waves you down from the verge, a crate of pots at her feet. \"I heard you lost somebody. I can fix that — for a price.\"",
-        imgUrl: "/img/event-medic.jpg",
+        imgUrl: "./img/event-medic.jpg",
         options: [
             {
                 label: "Revive a Hero",
@@ -47,7 +47,7 @@ export const GAME_EVENTS: GameEvent[] = [
         id: 'rest_site',
         title: "Campfire",
         description: "A safe hollow, a bank of coals, and a few hours before the next push.",
-        imgUrl: "/img/event-campfire.jpg",
+        imgUrl: "./img/event-campfire.jpg",
         options: [
             {
                 // No `req` here on purpose: the Coin check for revival lives in EventScreen,
@@ -80,7 +80,7 @@ export const GAME_EVENTS: GameEvent[] = [
         tier: 1,
         title: "Old Mulch's Taco Van",
         description: "Mulch swerves out of nowhere in a van held together with taco. \"WABBY WABBO! I'll trade ya somethin' good — and I ain't takin' no for an answer, neighbour!\"",
-        imgUrl: "/img/event-taco-van.jpg",
+        imgUrl: "./img/event-taco-van.jpg",
         options: [
             {
                 label: "Trade a Bench Plant",
@@ -121,7 +121,7 @@ export const GAME_EVENTS: GameEvent[] = [
         tier: 1,
         title: "Abandoned Zen Garden",
         description: "Someone tended this place for a long time, and then stopped. The watering can is still full.",
-        imgUrl: "/img/event-zengarden.jpg",
+        imgUrl: "./img/event-zengarden.jpg",
         options: [
             {
                 label: "Water the Beds",
@@ -153,7 +153,7 @@ export const GAME_EVENTS: GameEvent[] = [
         tier: 2,
         title: "The Soft Ground",
         description: "A field of leaning headstones. Some of the soil has been turned over recently — from underneath.",
-        imgUrl: "/img/event-graveyard.jpg",
+        imgUrl: "./img/event-graveyard.jpg",
         options: [
             {
                 label: "Dig It Up",
@@ -188,7 +188,7 @@ export const GAME_EVENTS: GameEvent[] = [
         tier: 1,
         title: "Chrona's Paradox",
         description: "Chrona is stuck replaying the same three seconds. \"User. My chronal stabilisers require calibration. I can also— I can also— I can also—\"",
-        imgUrl: "/img/event-chrona.jpg",
+        imgUrl: "./img/event-chrona.jpg",
         options: [
             {
                 label: "Pay for Parts",
@@ -214,7 +214,7 @@ export const GAME_EVENTS: GameEvent[] = [
         tier: 3,
         title: "The Treasure Yeti",
         description: "It is right there, arms full of somebody else's money, and it has already seen you.",
-        imgUrl: "/img/event-yeti.jpg",
+        imgUrl: "./img/event-yeti.jpg",
         options: [
             {
                 label: "Chase It Down",
@@ -242,7 +242,7 @@ export const GAME_EVENTS: GameEvent[] = [
         tier: 3,
         title: "The Zombie King's Sceptre",
         description: "Left in the mud where he fell. The jewel on top is still warm, and it is still beating.",
-        imgUrl: "/img/event-sceptre.jpg",
+        imgUrl: "./img/event-sceptre.jpg",
         options: [
             {
                 label: "Break It Open",
@@ -267,7 +267,7 @@ export const GAME_EVENTS: GameEvent[] = [
         tier: 3,
         title: "Blightlord Broadcast",
         description: "A hologram of the Blightlord flickers into the road. \"Greetings, grassy simpletons. Surrender the brainz and I shall make your composting… brisk.\"",
-        imgUrl: "/img/event-blightlord.jpg",
+        imgUrl: "./img/event-blightlord.jpg",
         options: [
             {
                 label: "Taunt Him",
@@ -292,7 +292,7 @@ export const GAME_EVENTS: GameEvent[] = [
         tier: 1,
         title: "The Barrel Roller's Chest",
         description: "The zombie did not survive the landing. Its cargo did — a strapped sea chest, still locked.",
-        imgUrl: "/img/event-chest.jpg",
+        imgUrl: "./img/event-chest.jpg",
         options: [
             {
                 label: "Blow the Lock",
@@ -324,7 +324,7 @@ export const GAME_EVENTS: GameEvent[] = [
         tier: 1,
         title: "The Saloon Piano",
         description: "Still in tune, somehow, under an inch of dust. The Pianist Zombie is not coming back for it.",
-        imgUrl: "/img/event-piano.jpg",
+        imgUrl: "./img/event-piano.jpg",
         options: [
             {
                 label: "Play Something",
@@ -346,7 +346,7 @@ export const GAME_EVENTS: GameEvent[] = [
         tier: 2,
         title: "Cracked Power Tile",
         description: "A Far Future power tile, split down the middle and venting hard enough to hum your teeth.",
-        imgUrl: "/img/event-powertile.jpg",
+        imgUrl: "./img/event-powertile.jpg",
         options: [
             {
                 label: "Tap the Vent",
@@ -374,7 +374,7 @@ export const GAME_EVENTS: GameEvent[] = [
         tier: 1,
         title: "The Camel Formation",
         description: "Three Camel Zombies plodding in single file. The middle one is walking wrong — too heavy, too careful.",
-        imgUrl: "/img/event-camel.jpg",
+        imgUrl: "./img/event-camel.jpg",
         options: [
             {
                 label: "Hit the Middle One",
@@ -402,7 +402,7 @@ export const GAME_EVENTS: GameEvent[] = [
         tier: 2,
         title: "Vasebreaker",
         description: "Three sealed vases in a row, exactly as the old minigame left them. Something is inside each one. From here you cannot tell what.",
-        imgUrl: "/img/event-vase.jpg",
+        imgUrl: "./img/event-vase.jpg",
         options: [
             {
                 label: "Crack One Open",
@@ -443,7 +443,7 @@ export const GAME_EVENTS: GameEvent[] = [
         tier: 2,
         title: "Wall-nut Bowling",
         description: "A roped-off lane, a rack of Wall-nuts, and a bored-looking Conehead at the far end acting as the pin. Somebody has set up a book on it.",
-        imgUrl: "/img/event-bowling.jpg",
+        imgUrl: "./img/event-bowling.jpg",
         options: [
             {
                 label: "Take the Lane",
@@ -480,7 +480,7 @@ export const GAME_EVENTS: GameEvent[] = [
         tier: 2,
         title: "The Imp Nest",
         description: "A Gargantuar's supply cache, unguarded — and the Imps stacked inside it are still asleep. For now.",
-        imgUrl: "/img/event-imp-nest.jpg",
+        imgUrl: "./img/event-imp-nest.jpg",
         options: [
             {
                 label: "Rob the Nest",

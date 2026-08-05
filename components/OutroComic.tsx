@@ -18,14 +18,14 @@ import { useI18n } from '../i18n';
  * this screen switches itself on.
  */
 export const OUTRO_PANELS = [
-    { art: '/img/comic/outro-01-fall.jpg', caption: 'The staff hit the ground before the body did.', cols: 'col-span-12 md:col-span-7', h: 'h-80', pos: '50% 35%' },
-    { art: '/img/comic/outro-02-silence.jpg', caption: 'And for the first time since the drains, the city went quiet.', cols: 'col-span-12 md:col-span-5', h: 'h-80' },
-    { art: '/img/comic/outro-03-recede.jpg', caption: 'Without orders, the horde was only weather. It blew away.', cols: 'col-span-12 md:col-span-4', h: 'h-72' },
-    { art: '/img/comic/outro-04-banners.jpg', caption: 'They unstitched his coat, and hung every flag back where it was taken from.', cols: 'col-span-12 md:col-span-8', h: 'h-96', pos: '50% 40%' },
-    { art: '/img/comic/outro-05-replant.jpg', caption: 'The plaza cracked open again. This time, from seeds.', cols: 'col-span-12 md:col-span-4', h: 'h-72' },
-    { art: '/img/comic/outro-06-chrona.jpg', caption: 'Chrona kept one copy of the timeline. "Just in case," she said.', cols: 'col-span-12 md:col-span-4', h: 'h-72' },
-    { art: '/img/comic/outro-07-masks.jpg', caption: 'The masks stayed on. Some habits are what kept a city alive.', cols: 'col-span-12 md:col-span-4', h: 'h-72' },
-    { art: '/img/comic/outro-08-plaza.jpg', caption: 'Neon Plaza. Just another quiet evening.', cols: 'col-span-12', h: 'h-[480px]', captionBottom: true },
+    { art: './img/comic/outro-01-fall.jpg', caption: 'The staff hit the ground before the body did.', cols: 'col-span-12 md:col-span-7', h: 'h-80', pos: '50% 35%' },
+    { art: './img/comic/outro-02-silence.jpg', caption: 'And for the first time since the drains, the city went quiet.', cols: 'col-span-12 md:col-span-5', h: 'h-80' },
+    { art: './img/comic/outro-03-recede.jpg', caption: 'Without orders, the horde was only weather. It blew away.', cols: 'col-span-12 md:col-span-4', h: 'h-72' },
+    { art: './img/comic/outro-04-banners.jpg', caption: 'They unstitched his coat, and hung every flag back where it was taken from.', cols: 'col-span-12 md:col-span-8', h: 'h-96', pos: '50% 40%' },
+    { art: './img/comic/outro-05-replant.jpg', caption: 'The plaza cracked open again. This time, from seeds.', cols: 'col-span-12 md:col-span-4', h: 'h-72' },
+    { art: './img/comic/outro-06-chrona.jpg', caption: 'Chrona kept one copy of the timeline. "Just in case," she said.', cols: 'col-span-12 md:col-span-4', h: 'h-72' },
+    { art: './img/comic/outro-07-masks.jpg', caption: 'The masks stayed on. Some habits are what kept a city alive.', cols: 'col-span-12 md:col-span-4', h: 'h-72' },
+    { art: './img/comic/outro-08-plaza.jpg', caption: 'Neon Plaza. Just another quiet evening.', cols: 'col-span-12', h: 'h-[480px]', captionBottom: true },
 ];
 
 interface OutroComicProps {

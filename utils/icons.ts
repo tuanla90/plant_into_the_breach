@@ -1,7 +1,7 @@
 import { Unit, UnitClass } from '../types';
 
 // All game art is stored LOCALLY in `public/img/` and referenced by absolute path
-// (`/img/<name>.<ext>`) — Vite serves `public/` at the site root.
+// (`./img/<name>.<ext>`) — Vite serves `public/` at the site root.
 //
 // Why local instead of hotlinking: these images used to be hotlinked from
 // static.wikia.nocookie.net (plus two other CDNs). That was fragile — corporate /
@@ -10,7 +10,7 @@ import { Unit, UnitClass } from '../types';
 // so the art silently vanished. Downloading the assets makes the game render offline
 // and immune to whatever the network decides to block next.
 //
-// PLACEHOLDER ART: every entry under `/img/placeholder/` is a generated token, not final
+// PLACEHOLDER ART: every entry under `./img/placeholder/` is a generated token, not final
 // art. They replaced 30 images taken from the Plants vs. Zombies wiki. Keeping those made
 // the rename of the game and its whole cast pointless — the artwork was still the original
 // IP — and they clashed on the board with the cut-out chibi sprites the zombies use.
@@ -29,61 +29,61 @@ import { Unit, UnitClass } from '../types';
 // sprite versions for the board are planned; until then the card art is used everywhere.
 // hero-captain-combustible.webp is kept for when Captain Combustible returns as an unlockable.
 export const HERO_ICONS = {
-    GREEN_SHADOW: `/img/hero-green-shadow.jpg`,
-    WALL_KNIGHT: `/img/hero-wall-knight.jpg`,
-    SOLAR_FLARE: `/img/hero-solar-flare.jpg`,
-    CHOMPZILLA: `/img/hero-chompzilla.jpg`,
-    KERNEL_PULT: `/img/hero-cobb.jpg`,
+    GREEN_SHADOW: `./img/hero-green-shadow.jpg`,
+    WALL_KNIGHT: `./img/hero-wall-knight.jpg`,
+    SOLAR_FLARE: `./img/hero-solar-flare.jpg`,
+    CHOMPZILLA: `./img/hero-chompzilla.jpg`,
+    KERNEL_PULT: `./img/hero-cobb.jpg`,
     // The four heroes that finish the roster of nine. These four were rendered on white and
     // cut out (art-src/make_sprites.py), so there is no separate card art for them — both
     // this table and HERO_SPRITES point at the same cut-out, which is what the two 32-48px
     // codex thumbnails want anyway.
-    THORNQUILL: `/img/sprite-thornquill.png`,
-    THORNHIDE: `/img/sprite-thornhide.png`,
-    CHARDWALL: `/img/sprite-chardwall.png`,
-    GOURDWARD: `/img/sprite-gourdward.png`,
+    THORNQUILL: `./img/sprite-thornquill.png`,
+    THORNHIDE: `./img/sprite-thornhide.png`,
+    CHARDWALL: `./img/sprite-chardwall.png`,
+    GOURDWARD: `./img/sprite-gourdward.png`,
 };
 
 // Transparent-background board sprites (512x512 PNG, normalized: shared baseline and scale).
 // Generated from the card art, cut out and aligned by scratchpad/make_sprites.py-style processing.
 export const HERO_SPRITES = {
-    GREEN_SHADOW: `/img/sprite-green-shadow.png`,
-    WALL_KNIGHT: `/img/sprite-wall-knight.png`,
-    SOLAR_FLARE: `/img/sprite-solar-flare.png`,
-    CHOMPZILLA: `/img/sprite-chompzilla.png`,
-    KERNEL_PULT: `/img/sprite-cobb.png`,
-    THORNQUILL: `/img/sprite-thornquill.png`,
-    THORNHIDE: `/img/sprite-thornhide.png`,
-    CHARDWALL: `/img/sprite-chardwall.png`,
-    GOURDWARD: `/img/sprite-gourdward.png`,
+    GREEN_SHADOW: `./img/sprite-green-shadow.png`,
+    WALL_KNIGHT: `./img/sprite-wall-knight.png`,
+    SOLAR_FLARE: `./img/sprite-solar-flare.png`,
+    CHOMPZILLA: `./img/sprite-chompzilla.png`,
+    KERNEL_PULT: `./img/sprite-cobb.png`,
+    THORNQUILL: `./img/sprite-thornquill.png`,
+    THORNHIDE: `./img/sprite-thornhide.png`,
+    CHARDWALL: `./img/sprite-chardwall.png`,
+    GOURDWARD: `./img/sprite-gourdward.png`,
 };
 
 // Fusion-material art: bio-mech "gear" walkers (single-purpose war machines with a small
 // plant core piloting them). Used by MATERIAL_DEFINITIONS only — the plain plant classes in
 // ICONS below stay untouched because plants.ts shares them.
 export const MATERIAL_SPRITES = {
-    MAT_PEASHOOTER: `/img/gear-peashooter.png`,
-    MAT_SUNFLOWER: `/img/gear-sunflower.png`,
-    MAT_WALLNUT: `/img/gear-wallnut.png`,
-    MAT_CHOMPER: `/img/gear-chomper.png`,
-    MAT_SNOW_PEA: `/img/gear-snow-pea.png`,
-    MAT_CORN: `/img/gear-corn.png`,
+    MAT_PEASHOOTER: `./img/gear-peashooter.png`,
+    MAT_SUNFLOWER: `./img/gear-sunflower.png`,
+    MAT_WALLNUT: `./img/gear-wallnut.png`,
+    MAT_CHOMPER: `./img/gear-chomper.png`,
+    MAT_SNOW_PEA: `./img/gear-snow-pea.png`,
+    MAT_CORN: `./img/gear-corn.png`,
     // The four gears belonging to the four new heroes.
-    MAT_CACTUS: `/img/gear-cactus.png`,
-    MAT_ENDURIAN: `/img/gear-endurian.png`,
-    MAT_CHARD: `/img/gear-chard.png`,
-    MAT_PUMPKIN: `/img/gear-pumpkin.png`,
+    MAT_CACTUS: `./img/gear-cactus.png`,
+    MAT_ENDURIAN: `./img/gear-endurian.png`,
+    MAT_CHARD: `./img/gear-chard.png`,
+    MAT_PUMPKIN: `./img/gear-pumpkin.png`,
 };
 
 // Combat-item icons: handheld bio-mech consumables (pins, triggers, rip-cords), centered
 // in-frame like inventory icons. data/items.ts points here.
 export const ITEM_SPRITES = {
-    POTATO_MINE: `/img/item-potato-mine.png`,
-    CHERRY_BOMB: `/img/item-cherry-bomb.png`,
-    JALAPENO: `/img/item-jalapeno.png`,
-    SNOW_PEA: `/img/item-snow-pea.png`,
-    COFFEE_BEAN: `/img/item-coffee-bean.png`,
-    BLOVER: `/img/item-blover.png`,
+    POTATO_MINE: `./img/item-potato-mine.png`,
+    CHERRY_BOMB: `./img/item-cherry-bomb.png`,
+    JALAPENO: `./img/item-jalapeno.png`,
+    SNOW_PEA: `./img/item-snow-pea.png`,
+    COFFEE_BEAN: `./img/item-coffee-bean.png`,
+    BLOVER: `./img/item-blover.png`,
 };
 
 // Neon accent per hero — mirrors the accent color baked into each hero's card art.
@@ -149,7 +149,7 @@ export const SPRITE_VARIANTS: Partial<Record<UnitClass, SpriteVariant[]>> = {
     // and a mound of heaving earth is the only warning the player gets.
     [UnitClass.SANDREAVER]: [{
         when: u => !!u.isBurrowed,
-        src: `/img/sprite-sandreaver-mound.png`,
+        src: `./img/sprite-sandreaver-mound.png`,
         note: 'burrowed — the tile it will erupt from',
     }],
 
@@ -158,7 +158,7 @@ export const SPRITE_VARIANTS: Partial<Record<UnitClass, SpriteVariant[]>> = {
     // and a melee wall finally means something to it.
     [UnitClass.ARMADA]: [{
         when: u => u.movementType !== 'FLYING',
-        src: `/img/sprite-armada-wreck.png`,
+        src: `./img/sprite-armada-wreck.png`,
         note: 'grounded — no longer a flier for any rule',
     }],
 
@@ -168,7 +168,7 @@ export const SPRITE_VARIANTS: Partial<Record<UnitClass, SpriteVariant[]>> = {
     // Losing the passenger is the most readable way to say "this thing changed".
     [UnitClass.GARGANTUAR]: [{
         when: u => u.hp <= Math.floor(u.maxHp / 2),
-        src: `/img/sprite-gargantuar-wounded.png`,
+        src: `./img/sprite-gargantuar-wounded.png`,
         note: 'below half health — throw range 4 -> 2',
     }],
 };
@@ -186,57 +186,57 @@ export const spriteFor = (unit: Unit): string => {
 };
 
 export const ICONS = {
-    PEASHOOTER: `/img/placeholder/peashooter.svg`,
-    SNOW_PEA: `/img/placeholder/snow-pea.svg`,
-    REPEATER: `/img/placeholder/repeater.svg`,
-    BLOOMERANG: `/img/placeholder/bloomerang.svg`,
-    CACTUS: `/img/placeholder/cactus.svg`,
-    MELON_PULT: `/img/placeholder/melon-pult.svg`,
-    CABBAGE_PULT: `/img/placeholder/cabbage-pult.svg`,
-    KERNEL_PULT: `/img/placeholder/kernel-pult.svg`,
-    MAGNET_SHROOM: `/img/placeholder/magnet-shroom.svg`,
-    SUN_SHROOM: `/img/placeholder/sun-shroom.svg`,
-    SCAREDY_SHROOM: `/img/placeholder/scaredy-shroom.svg`,
-    WALLNUT: `/img/placeholder/wallnut.svg`,
+    PEASHOOTER: `./img/placeholder/peashooter.svg`,
+    SNOW_PEA: `./img/placeholder/snow-pea.svg`,
+    REPEATER: `./img/placeholder/repeater.svg`,
+    BLOOMERANG: `./img/placeholder/bloomerang.svg`,
+    CACTUS: `./img/placeholder/cactus.svg`,
+    MELON_PULT: `./img/placeholder/melon-pult.svg`,
+    CABBAGE_PULT: `./img/placeholder/cabbage-pult.svg`,
+    KERNEL_PULT: `./img/placeholder/kernel-pult.svg`,
+    MAGNET_SHROOM: `./img/placeholder/magnet-shroom.svg`,
+    SUN_SHROOM: `./img/placeholder/sun-shroom.svg`,
+    SCAREDY_SHROOM: `./img/placeholder/scaredy-shroom.svg`,
+    WALLNUT: `./img/placeholder/wallnut.svg`,
     // Borrowed art on purpose: a crate reads as a nut-shaped lump at board scale, and a
     // wrong-but-legible placeholder beats a missing image. One line to swap when the
     // crate sprite lands (art-src/ART-PROMPTS.md).
-    GEAR_CRATE: `/img/placeholder/wallnut.svg`,
-    TALL_NUT: `/img/placeholder/tall-nut.svg`,
-    ENDURIAN: `/img/placeholder/endurian.svg`,
-    SWEET_POTATO: `/img/placeholder/sweet-potato.svg`,
-    IRON_NUT: `/img/placeholder/iron-nut.svg`,
-    PUMPKIN: `/img/placeholder/pumpkin.svg`,
-    CHARD_GUARD: `/img/placeholder/chard-guard.svg`,
-    CHOMPER: `/img/placeholder/chomper.svg`,
-    BONK_CHOY: `/img/placeholder/bonk-choy.svg`,
-    SUNFLOWER: `/img/placeholder/sunflower.svg`,
-    TWIN_SUNFLOWER: `/img/placeholder/twin-sunflower.svg`,
+    GEAR_CRATE: `./img/placeholder/wallnut.svg`,
+    TALL_NUT: `./img/placeholder/tall-nut.svg`,
+    ENDURIAN: `./img/placeholder/endurian.svg`,
+    SWEET_POTATO: `./img/placeholder/sweet-potato.svg`,
+    IRON_NUT: `./img/placeholder/iron-nut.svg`,
+    PUMPKIN: `./img/placeholder/pumpkin.svg`,
+    CHARD_GUARD: `./img/placeholder/chard-guard.svg`,
+    CHOMPER: `./img/placeholder/chomper.svg`,
+    BONK_CHOY: `./img/placeholder/bonk-choy.svg`,
+    SUNFLOWER: `./img/placeholder/sunflower.svg`,
+    TWIN_SUNFLOWER: `./img/placeholder/twin-sunflower.svg`,
 
     // NEW PLANTS
-    COFFEE_BEAN: `/img/placeholder/coffee-bean.svg`,
-    HYPNO_SHROOM: `/img/placeholder/hypno-shroom.svg`,
-    BLOVER: `/img/placeholder/blover.svg`,
-    UMBRELLA_LEAF: `/img/placeholder/umbrella-leaf.svg`,
-    TORCHWOOD: `/img/placeholder/torchwood.svg`,
+    COFFEE_BEAN: `./img/placeholder/coffee-bean.svg`,
+    HYPNO_SHROOM: `./img/placeholder/hypno-shroom.svg`,
+    BLOVER: `./img/placeholder/blover.svg`,
+    UMBRELLA_LEAF: `./img/placeholder/umbrella-leaf.svg`,
+    TORCHWOOD: `./img/placeholder/torchwood.svg`,
 
     // ZOMBIES — `sprite-*.png` are the original cut-out chibi sprites (art-src batches);
     // classes still on `.webp` are waiting for their art: FLAG (and IMP below).
-    ZOMBIE: `/img/sprite-zombie.png`,
-    CONEHEAD: `/img/sprite-conehead.png`,
-    BUCKETHEAD: `/img/sprite-buckethead.png`,
-    NEWSPAPER: `/img/sprite-newspaper.png`,
-    SCREEN_DOOR: `/img/sprite-screen-door.png`,
-    DIGGER: `/img/sprite-digger.png`,
-    FOOTBALL: `/img/sprite-football.png`,
-    POLE_VAULTER: `/img/sprite-pole-vaulter.png`,
-    DISCO: `/img/sprite-disco.png`,
-    BALLOON: `/img/sprite-balloon.png`,
-    CATAPULT: `/img/sprite-catapult.png`,
-    FLAG: `/img/sprite-flag.png`,
+    ZOMBIE: `./img/sprite-zombie.png`,
+    CONEHEAD: `./img/sprite-conehead.png`,
+    BUCKETHEAD: `./img/sprite-buckethead.png`,
+    NEWSPAPER: `./img/sprite-newspaper.png`,
+    SCREEN_DOOR: `./img/sprite-screen-door.png`,
+    DIGGER: `./img/sprite-digger.png`,
+    FOOTBALL: `./img/sprite-football.png`,
+    POLE_VAULTER: `./img/sprite-pole-vaulter.png`,
+    DISCO: `./img/sprite-disco.png`,
+    BALLOON: `./img/sprite-balloon.png`,
+    CATAPULT: `./img/sprite-catapult.png`,
+    FLAG: `./img/sprite-flag.png`,
 
     // BOSS/ETC
-    GARGANTUAR: `/img/sprite-gargantuar.png`,
+    GARGANTUAR: `./img/sprite-gargantuar.png`,
     /**
      * The eight bosses that came after the Gargantuar. All of them shipped borrowing a sprite
      * from a unit they resembled, and each got its own key here rather than reaching for the
@@ -249,19 +249,19 @@ export const ICONS = {
      * sprite-armada-wreck.png (shot down) and sprite-sandreaver-mound.png (still burrowed).
      * Nothing reads Unit.isBurrowed for a sprite swap today.
      */
-    IRONCART: `/img/sprite-ironcart.png`,
-    CINDER_COLOSSUS: `/img/sprite-cinder-colossus.png`,
-    ARMADA: `/img/sprite-armada.png`,
-    SANDREAVER: `/img/sprite-sandreaver.png`,
-    YETI: `/img/sprite-yeti.png`,
-    HEADLINER: `/img/sprite-headliner.png`,
-    CLOCKJAW: `/img/sprite-clockjaw.png`,
-    VOLTMAW: `/img/sprite-voltmaw.png`,
-    BLIGHTLORD: `/img/sprite-blightlord.png`,
-    IMP: `/img/sprite-imp.png`,
-    ROCK: `/img/sprite-rock.png`,
-    GRAVE: `/img/sprite-grave.png`,
-    MINE: `/img/placeholder/mine.svg`,
-    CHERRY: `/img/placeholder/cherry.svg`,
-    JALAPENO: `/img/placeholder/jalapeno.svg`
+    IRONCART: `./img/sprite-ironcart.png`,
+    CINDER_COLOSSUS: `./img/sprite-cinder-colossus.png`,
+    ARMADA: `./img/sprite-armada.png`,
+    SANDREAVER: `./img/sprite-sandreaver.png`,
+    YETI: `./img/sprite-yeti.png`,
+    HEADLINER: `./img/sprite-headliner.png`,
+    CLOCKJAW: `./img/sprite-clockjaw.png`,
+    VOLTMAW: `./img/sprite-voltmaw.png`,
+    BLIGHTLORD: `./img/sprite-blightlord.png`,
+    IMP: `./img/sprite-imp.png`,
+    ROCK: `./img/sprite-rock.png`,
+    GRAVE: `./img/sprite-grave.png`,
+    MINE: `./img/placeholder/mine.svg`,
+    CHERRY: `./img/placeholder/cherry.svg`,
+    JALAPENO: `./img/placeholder/jalapeno.svg`
 };
