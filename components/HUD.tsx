@@ -40,44 +40,49 @@ export const HUD: React.FC<HUDProps> = ({
   const isFast = speed > 1;
 
   return (
-    <header className="w-full h-16 bg-[#0b0d14]/90 border-b border-[#293245] flex items-center justify-between px-5 z-50 shadow-2xl shrink-0 relative backdrop-blur-md font-pixel select-none">
+    // No fixed height and no absolutely-centred block: every cluster lives in normal flex
+    // flow so narrow viewports squeeze (then hide labels) instead of stacking three groups
+    // on top of one another. The mission objective drops to its own strip below lg.
+    <header className="w-full bg-[#0b0d14]/90 border-b border-[#293245] z-50 shadow-2xl shrink-0 relative backdrop-blur-md font-pixel select-none">
       {/* Glow Accent Line */}
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-sky-400 to-amber-400 opacity-80" />
 
+      <div className="h-14 lg:h-16 flex items-center justify-between gap-2 lg:gap-4 px-2 sm:px-3 lg:px-5">
+
       {/* LEFT: Currencies & Item Belt */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1.5 lg:gap-3 min-w-0">
 
         {/* SUN ECONOMY */}
         <div
-            className="h-10 flex items-center gap-2.5 px-3 bg-gradient-to-r from-amber-950/60 to-yellow-950/40 border border-yellow-500/50 rounded-lg shadow-[0_0_12px_rgba(245,158,11,0.2)]"
+            className="h-10 flex items-center gap-1.5 lg:gap-2.5 px-2 lg:px-3 bg-gradient-to-r from-amber-950/60 to-yellow-950/40 border border-yellow-500/50 rounded-lg shadow-[0_0_12px_rgba(245,158,11,0.2)]"
             title={t('Sun — spent on hero skills. Resets every level.')}
         >
              <div className="bg-yellow-900/60 p-1.5 rounded-full border border-yellow-400/60 shadow-inner">
                  <Sun size={18} className="text-yellow-300 fill-yellow-400 animate-spin-slow" />
              </div>
              <div className="flex flex-col leading-none">
-                 <span className="text-[9px] uppercase tracking-widest text-amber-400 font-bold">{t('Sun')}</span>
-                 <span className="text-xl font-black text-yellow-300 tabular-nums drop-shadow">{gameState.sun}</span>
+                 <span className="hidden md:block text-[9px] uppercase tracking-widest text-amber-400 font-bold">{t('Sun')}</span>
+                 <span className="text-lg lg:text-xl font-black text-yellow-300 tabular-nums drop-shadow">{gameState.sun}</span>
              </div>
         </div>
 
         {/* COIN PROGRESSION */}
         <div
-            className="h-10 flex items-center gap-2.5 px-3 bg-gradient-to-r from-cyan-950/60 to-slate-900/50 border border-cyan-500/40 rounded-lg shadow-[0_0_10px_rgba(6,182,212,0.15)]"
+            className="h-10 flex items-center gap-1.5 lg:gap-2.5 px-2 lg:px-3 bg-gradient-to-r from-cyan-950/60 to-slate-900/50 border border-cyan-500/40 rounded-lg shadow-[0_0_10px_rgba(6,182,212,0.15)]"
             title={t('Coin — spent between levels on plants, items and revives.')}
         >
              <div className="bg-cyan-900/50 p-1.5 rounded-md border border-cyan-400/50">
                  <Coins size={18} className="text-cyan-300" />
              </div>
              <div className="flex flex-col leading-none">
-                 <span className="text-[9px] uppercase tracking-widest text-cyan-400 font-bold">{t('Coin')}</span>
-                 <span className="text-xl font-black text-cyan-200 tabular-nums">{gameState.coins}</span>
+                 <span className="hidden md:block text-[9px] uppercase tracking-widest text-cyan-400 font-bold">{t('Coin')}</span>
+                 <span className="text-lg lg:text-xl font-black text-cyan-200 tabular-nums">{gameState.coins}</span>
              </div>
         </div>
 
         {/* ITEM BELT */}
-        <div className="h-10 px-2.5 bg-[#121622]/80 border border-[#293245] rounded-lg flex items-center gap-1.5 shadow-inner">
-             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mr-1">{t('Items')}</span>
+        <div className="h-10 px-2 lg:px-2.5 bg-[#121622]/80 border border-[#293245] rounded-lg flex items-center gap-1.5 shadow-inner">
+             <span className="hidden xl:inline text-[10px] font-bold text-gray-400 uppercase tracking-wider mr-1">{t('Items')}</span>
              {playerItems.map((item, index) => {
                  const isSelected = gameState.selectedItemId === item.id;
                  return (
@@ -101,11 +106,11 @@ export const HUD: React.FC<HUDProps> = ({
       </div>
 
       {/* CENTER: BRAINS DEFENSE BAR & MISSION OBJECTIVE */}
-      <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-4 pointer-events-none">
+      <div className="flex items-center justify-center gap-2 lg:gap-4 min-w-0">
 
           <div
               className={`
-                  flex items-center gap-3 px-4 h-11 border-2 rounded-lg shadow-xl backdrop-blur-md transition-all
+                  shrink-0 flex items-center gap-2 lg:gap-3 px-2 lg:px-4 h-11 border-2 rounded-lg shadow-xl backdrop-blur-md transition-all
                   ${brainsCritical
                       ? 'bg-red-950/80 border-red-500 animate-threat shadow-[0_0_24px_rgba(239,68,68,0.6)]'
                       : 'bg-[#221028]/80 border-pink-500/50 shadow-[0_0_15px_rgba(236,72,153,0.2)]'}
@@ -120,15 +125,16 @@ export const HUD: React.FC<HUDProps> = ({
                       {t('Brains')}
                   </span>
                   <div className="flex items-baseline gap-1">
-                      <span className={`text-2xl font-black tabular-nums leading-none ${brainsCritical ? 'text-red-400' : 'text-white'}`}>
+                      <span className={`text-xl lg:text-2xl font-black tabular-nums leading-none ${brainsCritical ? 'text-red-400' : 'text-white'}`}>
                           {brainsLeft}
                       </span>
                       <span className="text-sm font-bold text-gray-500 leading-none">/{brainsMax}</span>
                   </div>
               </div>
 
-              {/* Segmented Health Battery Pips */}
-              <div className="flex gap-1 ml-1">
+              {/* Segmented Health Battery Pips (labels-first on tight screens: the count
+                  is the signal, the battery is garnish) */}
+              <div className="hidden md:flex gap-1 ml-1">
                   {Array.from({ length: brainsMax }).map((_, i) => (
                       <div
                           key={i}
@@ -141,13 +147,13 @@ export const HUD: React.FC<HUDProps> = ({
           </div>
 
           {brainsCritical && (
-              <div className="text-[11px] uppercase tracking-widest text-red-400 font-black max-w-[8rem] leading-tight animate-pulse">
+              <div className="hidden xl:block text-[11px] uppercase tracking-widest text-red-400 font-black max-w-[8rem] leading-tight animate-pulse">
                   {brainsLeft === 0 ? t('No brains left') : t('CRITICAL! Hold the line')}
               </div>
           )}
 
           {/* Turn Counter Badge */}
-          <div className="flex flex-col items-center leading-none px-3 py-1 bg-[#131722] border border-[#293245] rounded-md">
+          <div className="shrink-0 flex flex-col items-center leading-none px-2 lg:px-3 py-1 bg-[#131722] border border-[#293245] rounded-md">
               <span className="text-[8px] uppercase tracking-[0.2em] text-sky-400 font-bold">{t('Turn')}</span>
               <span className="text-base font-black text-gray-200 tabular-nums">
                   {gameState.turn}
@@ -160,21 +166,22 @@ export const HUD: React.FC<HUDProps> = ({
               </span>
           </div>
 
-          {/* Mission Objectives Badge */}
+          {/* Mission Objectives Badge — inline only at lg+; below that it moves to the
+              strip under the bar, where a narrow screen gives it a full row to itself. */}
           {gameState.mission && (
-              <div className="flex flex-col gap-0.5 border-l border-[#293245] pl-4 max-w-[26rem]">
+              <div className="hidden lg:flex flex-col gap-0.5 border-l border-[#293245] pl-4 min-w-0 max-w-[11rem] xl:max-w-[26rem]">
                   <div className="flex items-center gap-1.5 text-amber-400 font-bold">
                       <Target size={14} className="animate-pulse" />
                       <span className="text-[9px] uppercase tracking-[0.2em]">{t('Objective')}</span>
                   </div>
-                  <div className="text-xs text-gray-200 leading-tight font-medium">
+                  <div className="text-xs text-gray-200 leading-tight font-medium truncate xl:whitespace-normal" title={t(gameState.mission.description)}>
                       {t(gameState.mission.description)}
                   </div>
 
                   {/* Optional goals. Worthless if invisible: the player has to know a bonus
                       is in play, and how close it is, while there is still time to chase it. */}
                   {gameState.mission.bonuses.length > 0 && (
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+                      <div className="hidden xl:flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
                           {gameState.mission.bonuses.map(bonus => {
                               const killGoal = bonus.type === 'KILL_COUNT' ? (bonus.count || 0) : 0;
                               const killed = gameState.mission!.zombiesKilled;
@@ -205,7 +212,7 @@ export const HUD: React.FC<HUDProps> = ({
       </div>
 
       {/* RIGHT: Controls & Settings */}
-      <div className="flex gap-2">
+      <div className="flex gap-1 lg:gap-2 shrink-0">
          {/* FAST FORWARD (toggle) */}
          <button
              onClick={() => onToggleSpeed && onToggleSpeed()}
@@ -265,6 +272,40 @@ export const HUD: React.FC<HUDProps> = ({
              <Settings size={18} />
          </button>
       </div>
+
+      </div>
+
+      {/* MISSION STRIP (< lg): one full-width line under the bar. Same information as the
+          inline badge above, compressed to fit — description truncates, bonuses collapse
+          to their coin value (+ kill counter), full text stays reachable via title. */}
+      {gameState.mission && (
+          <div className="lg:hidden flex items-center gap-2 px-3 pb-1 -mt-0.5 min-w-0">
+              <Target size={12} className="text-amber-400 shrink-0" />
+              <span
+                  className="text-[11px] text-gray-200 leading-tight font-medium truncate min-w-0"
+                  title={t(gameState.mission.description)}
+              >
+                  {t(gameState.mission.description)}
+              </span>
+              {gameState.mission.bonuses.map(bonus => {
+                  const killGoal = bonus.type === 'KILL_COUNT' ? (bonus.count || 0) : 0;
+                  const killed = gameState.mission!.zombiesKilled;
+                  const done = bonus.type === 'KILL_COUNT' && killed >= killGoal;
+                  return (
+                      <span
+                          key={bonus.type}
+                          className={`shrink-0 flex items-center gap-0.5 text-[10px] font-bold ${done ? 'text-emerald-300' : 'text-amber-300/90'}`}
+                          title={t(bonus.description)}
+                      >
+                          <Coins size={10} />+{bonus.coins}
+                          {bonus.type === 'KILL_COUNT' && (
+                              <span className="font-mono">({killed}/{killGoal})</span>
+                          )}
+                      </span>
+                  );
+              })}
+          </div>
+      )}
 
     </header>
   );

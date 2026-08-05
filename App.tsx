@@ -274,10 +274,14 @@ const App: React.FC = () => {
   // Music follows the screen. playMusic is idempotent, so re-running this on unrelated
   // state changes does not restart the track.
   useEffect(() => {
+      const isBossCombat = gameState.screen === 'COMBAT' && (
+          units.some(u => !!u.bossId) ||
+          mapNodes.find(n => n.id === gameState.currentLevelId)?.type === 'BOSS'
+      );
       const TRACKS: Partial<Record<GameState['screen'], MusicTrack | null>> = {
           START_MENU: 'menu', SQUAD_SELECT: 'menu', TUTORIAL: 'menu',
           MAP: 'map', SHOP: 'map', EVENT: 'map',
-          COMBAT: 'combat',
+          COMBAT: isBossCombat ? 'boss' : 'combat',
           // Silence under the win/lose stinger — music competing with it just muddies both.
           VICTORY: null, GAME_OVER: null,
       };
@@ -288,7 +292,7 @@ const App: React.FC = () => {
 
       if (gameState.screen === 'VICTORY') sfx('victory');
       else if (gameState.screen === 'GAME_OVER') sfx('defeat');
-  }, [gameState.screen, showIntro]);
+  }, [gameState.screen, gameState.currentLevelId, showIntro, units, mapNodes]);
 
   /**
    * Every run now begins at the hero picker. The tutorial is a separate road, taken only by
@@ -1774,9 +1778,13 @@ const App: React.FC = () => {
           // Not a death screen — a REWIND. Chrona promised it in the boss dialogue ("khi
           // thua, tôi sẽ NHẢY"): losing hands the timeline back, it does not end the story.
           // Cyan/temporal styling instead of blood-red, and the button is the jump itself.
-          <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center font-pixel text-white">
+          // overflow-y-auto + min-h-full (not justify-center on the fixed box itself):
+          // with the content taller than a mobile-landscape screen, flex centering clips
+          // BOTH ends and the Rewind button — the only way out — becomes unreachable.
+          <div className="fixed inset-0 z-50 bg-black overflow-y-auto font-pixel text-white">
+            <div className="min-h-full flex flex-col items-center justify-center text-center px-6 py-8">
               <p className="text-cyan-400 mb-3 uppercase tracking-widest animate-pulse">{t('TICK... TICK...')}</p>
-              <h1 className="text-5xl text-cyan-300 mb-4 font-bold uppercase tracking-widest drop-shadow-[0_0_12px_rgba(34,211,238,0.6)]">{t('Timeline Lost')}</h1>
+              <h1 className="text-3xl sm:text-5xl text-cyan-300 mb-4 font-bold uppercase tracking-widest drop-shadow-[0_0_12px_rgba(34,211,238,0.6)]">{t('Timeline Lost')}</h1>
               <p className="text-gray-400 mb-2 uppercase tracking-widest">{t('The Zombies ate your brains...')}</p>
               <p className="text-gray-300 mb-6 tracking-widest">{t('Chrona: "I still hold a copy of this timeline. Jump with me."')}</p>
 
@@ -1791,6 +1799,7 @@ const App: React.FC = () => {
               <button onClick={() => setGameState(INITIAL_GAME_STATE)} className="px-8 py-4 bg-gray-900 border border-cyan-400 text-cyan-300 hover:bg-cyan-300 hover:text-black uppercase tracking-widest font-bold transition-colors">
                   {t('Rewind Time')}
               </button>
+            </div>
           </div>
       )}
 
@@ -1815,7 +1824,14 @@ const App: React.FC = () => {
             />
             
             <div className="flex-1 flex overflow-hidden">
-                <div className="flex-1 flex items-center justify-center relative p-4 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]">
+                {/* In flow on the row's left edge — as a fixed overlay it covered the
+                    board's A/B files and its tail ran off-screen on short viewports. */}
+                <SquadSidebar
+                    units={units}
+                    selectedUnitId={gameState.selectedUnitId}
+                    onSelectUnit={(id) => setGameState(prev => ({ ...prev, selectedUnitId: id, selectedTile: null, interactionMode: 'IDLE' }))}
+                />
+                <div className="flex-1 flex items-center justify-center relative p-2 lg:p-4 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] min-w-0">
                     <Board 
                         boardData={board}
                         units={units}
@@ -1883,12 +1899,6 @@ const App: React.FC = () => {
                     turnResetsLeft={1 - turnResetsUsed}
                 />
             </div>
-
-            <SquadSidebar 
-                units={units} 
-                selectedUnitId={gameState.selectedUnitId}
-                onSelectUnit={(id) => setGameState(prev => ({ ...prev, selectedUnitId: id, selectedTile: null, interactionMode: 'IDLE' }))} 
-            />
         </div>
       )}
 
@@ -1962,6 +1972,7 @@ const App: React.FC = () => {
             note={coachNote.note}
             index={coachNote.index}
             total={coachNote.total}
+            avoidPanel={gameState.screen === 'COMBAT'}
           />
       )}
 

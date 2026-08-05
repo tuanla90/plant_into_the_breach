@@ -95,6 +95,46 @@ export const Board: React.FC<BoardProps> = ({
 }) => {
   const { t } = useI18n();
 
+  // The board square is sized off the space that is actually there. The old CSS formula —
+  // min(76vh, 58vw) — was blind to the ActionPanel and the chassis padding, so on mobile
+  // landscape the square overflowed its flex cell and pushed the panel off-screen. Here the
+  // container is measured (padding/borders subtracted from the chassis), and the old
+  // viewport ratios are kept only as an upper bound so desktop keeps its exact size.
+  const boardAreaRef = React.useRef<HTMLDivElement | null>(null);
+  const chassisRef = React.useRef<HTMLDivElement | null>(null);
+  const [boardSide, setBoardSide] = React.useState<number | null>(null);
+  React.useLayoutEffect(() => {
+    const area = boardAreaRef.current;
+    if (!area) return;
+    const px = (v: string) => parseFloat(v) || 0;
+    const measure = () => {
+      const chassis = chassisRef.current;
+      if (!chassis) return;
+      const a = getComputedStyle(area);
+      const c = getComputedStyle(chassis);
+      const availW = area.clientWidth - px(a.paddingLeft) - px(a.paddingRight)
+        - px(c.paddingLeft) - px(c.paddingRight) - px(c.borderLeftWidth) - px(c.borderRightWidth);
+      const availH = area.clientHeight - px(a.paddingTop) - px(a.paddingBottom)
+        - px(c.paddingTop) - px(c.paddingBottom) - px(c.borderTopWidth) - px(c.borderBottomWidth);
+      // 1.08 / 0.95: projected bbox of the tilted square (see the footprint comment below).
+      // The 76vh/58vw caps only exist to keep the desktop composition airy — on phone
+      // landscape (short viewport) they would waste scarce pixels, so the measured
+      // container is the only limit there.
+      const capH = window.innerHeight >= 520 ? window.innerHeight * 0.76 : Infinity;
+      const capW = window.innerWidth >= 1024 ? window.innerWidth * 0.58 : Infinity;
+      const side = Math.max(120, Math.min(availW / 1.08, availH / 0.95, capH, capW));
+      setBoardSide(prev => (prev !== null && Math.abs(prev - side) < 0.5 ? prev : side));
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(area);
+    // ResizeObserver callbacks ride the render pipeline, which stalls in hidden/background
+    // tabs — a plain resize listener still fires there, and rotation on mobile can land
+    // exactly in that window.
+    window.addEventListener('resize', measure);
+    return () => { ro.disconnect(); window.removeEventListener('resize', measure); };
+  }, []);
+
   // Movement telegraph: use what the caller gave us, otherwise derive it from the units.
   const pathTiles = React.useMemo<EnemyPathTile[]>(() => {
     if (!showEnemyPaths) return [];
@@ -125,24 +165,25 @@ export const Board: React.FC<BoardProps> = ({
   const activeUnits = units.filter(u => u.position.x >= 0 && u.position.y >= 0);
 
   return (
-    <div className={`relative w-full h-full flex items-center justify-center p-4 ${shake ? 'animate-[shake_0.5s_ease-in-out]' : ''}`}>
-        
+    <div ref={boardAreaRef} className={`relative w-full h-full flex items-center justify-center p-2 lg:p-4 ${shake ? 'animate-[shake_0.5s_ease-in-out]' : ''}`}>
+
         {/* Main Board Chassis Wrapper.
             The outer A–H / 1–8 coordinate strips are gone: they sat outside the tilted
             plane so they no longer lined up with the foreshortened columns, and every
             tile already prints its own coordinate. */}
-        <div className="relative p-4 bg-[#0f131d] border border-[#293245] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] cyber-card flex flex-col items-center justify-center">
+        <div ref={chassisRef} className="relative p-2 lg:p-4 bg-[#0f131d] border border-[#293245] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] cyber-card flex flex-col items-center justify-center">
 
             {/* Footprint wrapper: reserves the PROJECTED bbox of the tilted board, not the
                 full untilted square — otherwise the chassis shows dead bands above and
                 below. Ratios are measured at 26° / 1400px perspective: projected height
                 ≈ 0.95 × side, projected width ≈ 1.08 × side (the near edge flares out).
-                Retune both if BOARD_TILT_DEG changes. */}
+                Retune both if BOARD_TILT_DEG changes. First paint (boardSide null) falls
+                back to the old viewport formula so the frame never flashes at zero size. */}
             <div
                 className="relative"
                 style={{
-                    width: 'calc(min(76vh, 58vw) * 1.08)',
-                    height: 'calc(min(76vh, 58vw) * 0.95)',
+                    width: boardSide !== null ? boardSide * 1.08 : 'calc(min(76vh, 58vw) * 1.08)',
+                    height: boardSide !== null ? boardSide * 0.95 : 'calc(min(76vh, 58vw) * 0.95)',
                 }}
             >
                 {/* Main Board Aspect Container.
@@ -150,8 +191,10 @@ export const Board: React.FC<BoardProps> = ({
                     preserve-3d, or the units' counter-rotation would flatten back into the
                     ground plane. Click/hover hitboxes survive the transform untouched. */}
                 <div
-                    className="absolute left-1/2 top-1/2 w-[min(76vh,58vw)] h-[min(76vh,58vw)] bg-[#0b0d12] border-2 border-[#293245] shadow-2xl rounded-lg"
+                    className="absolute left-1/2 top-1/2 bg-[#0b0d12] border-2 border-[#293245] shadow-2xl rounded-lg"
                     style={{
+                        width: boardSide !== null ? boardSide : 'min(76vh,58vw)',
+                        height: boardSide !== null ? boardSide : 'min(76vh,58vw)',
                         // -53% (not -50%) vertically: the projected shape hangs low in its
                         // layout box because the far edge forshortens toward center.
                         transform: `translate(-50%, -53%) perspective(1400px) rotateX(${BOARD_TILT_DEG}deg)`,

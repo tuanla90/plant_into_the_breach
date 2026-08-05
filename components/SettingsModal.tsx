@@ -84,7 +84,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <div className="fixed inset-0 z-[999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn select-none">
                     <div
                         ref={modalRef}
-                        className="w-full max-w-md bg-[#13161f] border border-[#293245] rounded-xl shadow-2xl overflow-hidden flex flex-col"
+                        className="w-full max-w-md max-h-full bg-[#13161f] border border-[#293245] rounded-xl shadow-2xl overflow-hidden flex flex-col"
                     >
                         {/* MODAL HEADER */}
                         <div className="px-5 py-4 bg-[#1b202c] border-b border-[#293245] flex items-center justify-between">
@@ -102,8 +102,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             </button>
                         </div>
 
-                        {/* MODAL BODY */}
-                        <div className="p-5 space-y-6 max-h-[80dvh] overflow-y-auto">
+                        {/* MODAL BODY — flex-1 min-h-0 so header + body together never
+                            exceed the max-h-full card; a fixed 80dvh ignored the header
+                            and pushed the last section past the bottom edge. */}
+                        <div className="p-5 space-y-6 flex-1 min-h-0 overflow-y-auto">
 
                             {/* SECTION 1: AUDIO SETTINGS */}
                             <div className="space-y-4">

@@ -20,8 +20,11 @@ export const TutorialPrompt: React.FC<TutorialPromptProps> = ({ onPlay, onSkip }
     const { t } = useI18n();
 
     return (
-        <div className="fixed inset-0 z-[110] bg-black/85 backdrop-blur-sm flex items-center justify-center font-pixel p-4">
-            <div className="bg-[#1a1c21] border-2 border-green-500 p-8 max-w-md w-full text-center shadow-[0_0_40px_rgba(0,0,0,0.8)]">
+        // Scroll container + min-h-full wrapper: at ~390px of height the card is taller
+        // than the screen, and flex-centering on the fixed layer clipped its footer.
+        <div className="fixed inset-0 z-[110] bg-black/85 backdrop-blur-sm overflow-y-auto font-pixel">
+          <div className="min-h-full flex items-center justify-center p-4">
+            <div className="bg-[#1a1c21] border-2 border-green-500 p-5 sm:p-8 max-w-md w-full text-center shadow-[0_0_40px_rgba(0,0,0,0.8)]">
                 <GraduationCap size={48} className="mx-auto text-green-400 mb-4" />
 
                 <h2 className="text-2xl text-white font-bold uppercase mb-3">
@@ -52,6 +55,7 @@ export const TutorialPrompt: React.FC<TutorialPromptProps> = ({ onPlay, onSkip }
                     {t('Asked only once — the tutorial can be replayed from the main menu at any time.')}
                 </p>
             </div>
+          </div>
         </div>
     );
 };

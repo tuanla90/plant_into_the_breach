@@ -119,14 +119,18 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
 
                     {/* CONTINUE — only when a saved run exists. Sits above Start: resuming
                         is the likelier intent, and Start silently abandons the save. */}
+                    {/* No whitespace-nowrap on the two primary buttons: inside the md
+                        key-art band the column is ~200px wide and the Vietnamese labels
+                        overflowed the button frame; tighter tracking below lg plus a
+                        graceful wrap beats clipped text. */}
                     {onContinue && (
                         <button
                             onClick={onContinue}
-                            className="group relative px-5 py-4 bg-amber-950/85 backdrop-blur-sm border-2 border-amber-500 hover:bg-amber-500 text-amber-400 hover:text-black transition-all duration-200 uppercase font-bold tracking-[0.08em] text-base whitespace-nowrap flex items-center justify-center gap-3 overflow-hidden rounded-md"
+                            className="group relative px-3 lg:px-5 py-4 bg-amber-950/85 backdrop-blur-sm border-2 border-amber-500 hover:bg-amber-500 text-amber-400 hover:text-black transition-all duration-200 uppercase font-bold tracking-[0.04em] lg:tracking-[0.08em] text-sm lg:text-base flex items-center justify-center gap-3 overflow-hidden rounded-md"
                         >
                             <div className="absolute inset-0 bg-amber-400 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-200 z-0"></div>
                             <span className="relative z-10 flex items-center gap-2.5">
-                                <RotateCcw size={22} />
+                                <RotateCcw size={22} className="shrink-0" />
                                 {t('Continue Campaign')}
                             </span>
                         </button>
@@ -135,11 +139,11 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
                     {/* START BUTTON */}
                     <button
                         onClick={onStart}
-                        className="group relative px-5 py-4 bg-green-950/85 backdrop-blur-sm border-2 border-green-500 hover:bg-green-600 text-green-400 hover:text-black transition-all duration-200 uppercase font-bold tracking-[0.08em] text-base whitespace-nowrap flex items-center justify-center gap-3 overflow-hidden rounded-md"
+                        className="group relative px-3 lg:px-5 py-4 bg-green-950/85 backdrop-blur-sm border-2 border-green-500 hover:bg-green-600 text-green-400 hover:text-black transition-all duration-200 uppercase font-bold tracking-[0.04em] lg:tracking-[0.08em] text-sm lg:text-base flex items-center justify-center gap-3 overflow-hidden rounded-md"
                     >
                         <div className="absolute inset-0 bg-green-500 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-200 z-0"></div>
                         <span className="relative z-10 flex items-center gap-2.5">
-                            <Play size={22} fill="currentColor" />
+                            <Play size={22} fill="currentColor" className="shrink-0" />
                             {t('Start Mission')}
                         </span>
                     </button>

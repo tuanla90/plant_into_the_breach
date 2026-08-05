@@ -155,8 +155,10 @@ export const EventScreen: React.FC<EventScreenProps> = ({
             {/* EVENT CARD */}
             <div className="relative z-10 w-full max-w-4xl max-h-[92dvh] bg-[#1a1c21] border-2 border-gray-600 shadow-2xl flex flex-col md:flex-row overflow-hidden animate-in zoom-in-95 duration-300">
 
-                {/* IMAGE SIDE — art is optional; a missing file must not leave a broken frame. */}
-                <div className="w-full md:w-1/3 bg-black relative border-b md:border-b-0 md:border-r border-gray-600 shrink-0 min-h-[120px]">
+                {/* IMAGE SIDE — art is optional; a missing file must not leave a broken frame.
+                    max-h caps the stacked (mobile) variant: a shrink-0 120px band ate a third
+                    of the card on a 360px-tall screen before the first option was visible. */}
+                <div className="w-full md:w-1/3 bg-black relative border-b md:border-b-0 md:border-r border-gray-600 shrink-0 min-h-[96px] max-h-[26dvh] md:max-h-none">
                     {imgFailed ? (
                         <div className="w-full h-full flex items-center justify-center text-gray-700">
                             <HelpCircle size={48} />
@@ -173,9 +175,9 @@ export const EventScreen: React.FC<EventScreenProps> = ({
                 </div>
 
                 {/* CONTENT SIDE */}
-                <div className="flex-1 p-8 flex flex-col min-w-0 overflow-y-auto">
+                <div className="flex-1 p-4 sm:p-6 lg:p-8 flex flex-col min-w-0 overflow-y-auto">
                     <div className="flex items-start justify-between gap-4 mb-4">
-                        <h2 className="text-3xl font-bold uppercase text-yellow-400 tracking-wider">{t(event.title)}</h2>
+                        <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold uppercase text-yellow-400 tracking-wider min-w-0">{t(event.title)}</h2>
                         <div className="flex items-center gap-2 text-amber-300 text-lg shrink-0 border border-amber-800 px-3 py-1 bg-black/40">
                             <Coins size={18} /> {coins}
                         </div>

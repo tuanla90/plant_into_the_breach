@@ -438,9 +438,12 @@ export const SquadSelectScreen: React.FC<SquadSelectScreenProps> = ({
 
               {/* NAME PLATE + CLASS + STATS */}
               <div className="relative z-10 flex flex-col items-center gap-1 px-2 pt-1.5">
+                  {/* tracking-wide/text-sm, not tracking-widest/text-base: at widest every
+                      two-word Vietnamese title overran the 221px card and truncated. */}
                   <div
-                      className="text-base font-black uppercase tracking-widest leading-none text-center truncate max-w-full"
+                      className="text-sm font-black uppercase tracking-wide leading-none text-center truncate max-w-full"
                       style={{ color: isSelected ? accent : '#e5e7eb' }}
+                      title={t(hero.name)}
                   >
                       {t(hero.name)}
                   </div>

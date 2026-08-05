@@ -96,8 +96,8 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
           data-tut="end-turn"
           className="w-full bg-gradient-to-r from-red-950 via-rose-900 to-red-950 hover:from-red-900 hover:to-rose-800 text-red-200 hover:text-white border border-red-500/60 hover:border-red-400 py-2.5 px-4 shadow-[0_0_15px_rgba(239,68,68,0.25)] active:scale-95 transition-all flex items-center justify-center gap-2 mt-auto rounded-lg group cursor-pointer"
       >
-          <span className="text-base font-black uppercase tracking-[0.2em] group-hover:drop-shadow">{t('End Turn')}</span>
-          <span className="keycap text-[10px] text-red-300 border-red-500/40">SPACE</span>
+          <span className="text-sm lg:text-base font-black uppercase tracking-[0.1em] lg:tracking-[0.2em] group-hover:drop-shadow whitespace-nowrap">{t('End Turn')}</span>
+          <span className="keycap text-[10px] text-red-300 border-red-500/40 hidden md:inline">SPACE</span>
       </button>
       </>
   );
@@ -108,15 +108,15 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
         data-tut="start-battle"
         disabled={disabled}
         className={`
-            w-full py-5 px-4 border-2 shadow-2xl active:scale-95 transition-all flex flex-col items-center justify-center gap-1 mt-auto rounded-xl cursor-pointer
+            w-full py-3 lg:py-5 px-4 border-2 shadow-2xl active:scale-95 transition-all flex flex-col items-center justify-center gap-1 mt-auto rounded-xl cursor-pointer
             ${disabled ? 'bg-slate-900 border-slate-700 text-slate-500 cursor-not-allowed opacity-50' : 'bg-gradient-to-r from-emerald-700 via-green-600 to-emerald-700 hover:from-emerald-600 hover:to-green-500 text-white border-emerald-400 glow-green animate-pulse'}
         `}
     >
         <div className="flex items-center gap-2.5">
             <Play size={24} fill="currentColor" />
-            <span className="text-2xl font-black uppercase tracking-[0.2em] drop-shadow-md">{t('Start Battle')}</span>
+            <span className="text-lg lg:text-2xl font-black uppercase tracking-[0.1em] lg:tracking-[0.2em] drop-shadow-md">{t('Start Battle')}</span>
         </div>
-        <span className="text-xs uppercase tracking-widest opacity-80 font-bold">{disabled ? t('Check Deployment Limit') : t('Enemies will Approach')}</span>
+        <span className="text-[10px] lg:text-xs uppercase tracking-widest opacity-80 font-bold">{disabled ? t('Check Deployment Limit') : t('Enemies will Approach')}</span>
     </button>
   );
 
@@ -129,10 +129,13 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
       const canStart = deployedCount > 0 && deployedCount <= MAX_DEPLOY;
 
       return (
-        <div className="w-80 md:w-96 cyber-panel border-l border-[#293245] flex flex-col h-full shadow-2xl relative z-30 font-pixel shrink-0">
-            <div className="bg-[#121622] p-5 border-b border-[#293245] text-center">
-                <h2 className="text-xl text-amber-400 uppercase font-black tracking-widest mb-2 flex items-center justify-center gap-2">
-                    <Zap size={20} className="text-amber-400 animate-bounce" />
+        <div className="w-64 md:w-80 lg:w-96 cyber-panel border-l border-[#293245] flex flex-col h-full shadow-2xl relative z-30 font-pixel shrink-0">
+            {/* p-3/text-base below lg: at 375px of viewport height the padded header plus
+                the Start Battle footer alone were taller than the panel, and the button's
+                bottom edge left the screen. */}
+            <div className="bg-[#121622] p-3 lg:p-5 border-b border-[#293245] text-center">
+                <h2 className="text-base lg:text-xl text-amber-400 uppercase font-black tracking-widest mb-1.5 lg:mb-2 flex items-center justify-center gap-2">
+                    <Zap size={20} className="text-amber-400 animate-bounce shrink-0" />
                     {t('Tactical Insertion')}
                 </h2>
                 <div className="flex justify-between items-center text-sm text-gray-300 border border-[#293245] p-2.5 rounded-lg bg-[#0b0d14]/80">
@@ -148,7 +151,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                 )}
             </div>
             
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 min-h-0 overflow-y-auto p-3 lg:p-4 space-y-3">
                 <div className="text-xs text-sky-400 uppercase font-bold tracking-widest mb-2 flex items-center gap-1.5">
                     <Radar size={14} />
                     {t('Squad Roster')}
@@ -206,7 +209,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                 })}
             </div>
 
-            <div className="p-3 border-t border-[#293245] bg-[#0b0d14]">
+            <div className="p-2 lg:p-3 border-t border-[#293245] bg-[#0b0d14]">
                 <StartBattleButton disabled={!canStart} />
             </div>
         </div>
@@ -216,9 +219,11 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
   // --- 1. EMPTY STATE ---
   if (!selectedUnit && !selectedTile) {
     return (
-        <div className="w-96 cyber-panel border-l border-[#293245] flex flex-col h-full shadow-2xl relative z-30 font-pixel">
-            <div className="flex-1 flex flex-col items-center justify-center text-gray-500 p-8 text-center gap-3">
-                <Info size={44} className="text-sky-400 opacity-40 animate-pulse" />
+        // Same width ladder as every other branch: the one time this said plain `w-96`
+        // (and skipped shrink-0) the board jumped size whenever the selection emptied.
+        <div className="w-64 md:w-80 lg:w-96 cyber-panel border-l border-[#293245] flex flex-col h-full shadow-2xl relative z-30 font-pixel shrink-0">
+            <div className="flex-1 min-h-0 overflow-y-auto flex flex-col items-center justify-center text-gray-500 p-4 lg:p-8 text-center gap-3">
+                <Info size={44} className="text-sky-400 opacity-40 animate-pulse shrink-0" />
                 <div className="text-lg uppercase tracking-widest font-black text-gray-300">{t('System Idle')}</div>
                 <p className="text-xs text-gray-400">{t('Select a Unit or Tile to view details.')}</p>
             </div>
@@ -235,7 +240,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
       const envInfo = selectedTile.environment !== 'NONE' ? terrainDefs[selectedTile.environment] : null;
 
       return (
-        <div className="w-80 md:w-96 cyber-panel border-l border-[#293245] flex flex-col h-full shadow-2xl relative z-30 font-pixel shrink-0">
+        <div className="w-64 md:w-80 lg:w-96 cyber-panel border-l border-[#293245] flex flex-col h-full shadow-2xl relative z-30 font-pixel shrink-0">
             <div className="bg-[#121622] p-5 border-b border-[#293245] flex items-center gap-4">
                  <div className="w-14 h-14 bg-[#0b0d14] border border-[#293245] rounded-xl flex items-center justify-center shadow-inner">
                      <Mountain size={28} className="text-sky-400" />
@@ -246,7 +251,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                  </div>
             </div>
 
-            <div className="p-5 flex-1 space-y-5">
+            <div className="p-4 lg:p-5 flex-1 min-h-0 overflow-y-auto space-y-4 lg:space-y-5">
                 <div>
                     <h3 className="text-gray-400 uppercase text-xs font-bold mb-2 tracking-wider">{t('Terrain Properties')}</h3>
                     <p className="text-gray-200 text-sm leading-relaxed">{info?.description ? t(info.description) : ''}</p>
@@ -295,10 +300,10 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
   const canUndo = isPlayer && selectedUnit!.hasMoved && !selectedUnit!.hasAttacked && selectedUnit!.prevPosition !== undefined && interactionMode !== 'MOVING' && interactionMode !== 'EXECUTING';
 
   return (
-    <div className="w-80 md:w-96 cyber-panel border-l border-[#293245] flex flex-col h-full shadow-2xl relative z-30 font-pixel shrink-0">
+    <div className="w-64 md:w-80 lg:w-96 cyber-panel border-l border-[#293245] flex flex-col h-full shadow-2xl relative z-30 font-pixel shrink-0">
       
       {/* A. HEADER: PORTRAIT & BASIC INFO */}
-      <div className={`p-5 border-b border-[#293245] ${isPlayer ? 'bg-gradient-to-r from-emerald-950/60 to-slate-900/80' : 'bg-gradient-to-r from-red-950/60 to-slate-900/80'} flex gap-4 relative`}>
+      <div className={`p-3 lg:p-5 border-b border-[#293245] ${isPlayer ? 'bg-gradient-to-r from-emerald-950/60 to-slate-900/80' : 'bg-gradient-to-r from-red-950/60 to-slate-900/80'} flex gap-3 lg:gap-4 relative`}>
           {/* w-18/h-18 are NOT in this Tailwind build's spacing scale — they resolved to
               nothing, the box fell back to auto, and it grew to the sprite's natural 512px
               inside a 384px panel. overflow-hidden keeps any future oversized art contained. */}
@@ -342,7 +347,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
       </div>
 
       {/* C. BODY CONTENT */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-[#0b0d14]">
+      <div className="flex-1 min-h-0 overflow-y-auto p-3 lg:p-4 space-y-3.5 bg-[#0b0d14]">
           
           {/* ENEMY INTENT */}
           {!isPlayer && (
@@ -523,7 +528,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
       </div>
 
       {/* D. FOOTER ACTIONS (End Turn) */}
-      <div className="p-3 border-t border-[#293245] bg-[#0b0d14]">
+      <div className="p-2 lg:p-3 border-t border-[#293245] bg-[#0b0d14]">
           <EndTurnButton />
       </div>
 

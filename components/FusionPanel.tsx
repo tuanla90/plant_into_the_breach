@@ -246,7 +246,10 @@ export const FusionPanel: React.FC<FusionPanelProps> = ({ squad, bench, onFuse, 
                 <div className="relative z-10 flex-1 min-h-0 flex">
 
                     {/* ---- LEFT: hero focus tabs + bench ---------------------------------- */}
-                    <div className="w-[340px] shrink-0 border-r border-gray-800 flex flex-col min-h-0">
+                    {/* Width ladder, not a flat 340px: together with the 400px details column
+                        the fixed pair overflowed any viewport under ~780px and the confirm
+                        button was clipped clean off. */}
+                    <div className="w-[220px] md:w-[260px] xl:w-[340px] shrink-0 border-r border-gray-800 flex flex-col min-h-0">
                         {/* Hero tabs */}
                         <div className="p-3 border-b border-gray-800 shrink-0">
                             <h3 className="text-[11px] uppercase font-bold tracking-widest text-gray-500 mb-2">{t('Heroes')}</h3>
@@ -440,7 +443,7 @@ export const FusionPanel: React.FC<FusionPanelProps> = ({ squad, bench, onFuse, 
                     </div>
 
                     {/* ---- RIGHT: everything the fusion touches --------------------------- */}
-                    <div className="w-[400px] shrink-0 border-l border-gray-800 flex flex-col min-h-0">
+                    <div className="w-[240px] md:w-[300px] xl:w-[400px] shrink-0 border-l border-gray-800 flex flex-col min-h-0">
                         <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar p-4 flex flex-col gap-4">
 
                             {previewRecipe && selectedPlant && (

@@ -52,10 +52,12 @@ export const TutorialDialogue: React.FC<TutorialDialogueProps> = ({ lines, onDon
                 every width instead of relying on the box being narrower than the screen. */}
             <div className="w-full max-w-4xl mx-auto px-4 pb-16 relative">
                 {/* Portrait, standing on the dialogue box */}
+                {/* max-h in dvh: at 320–400px of viewport height a fixed 160px portrait
+                    ran off the top of the screen and clipped at the character's head. */}
                 <img
                     src={line.img}
                     alt={line.name}
-                    className={`absolute bottom-full h-40 md:h-52 object-contain pointer-events-none -mb-2 ${line.side === 'left' ? 'left-6' : 'right-6'}`}
+                    className={`absolute bottom-full h-40 md:h-52 max-h-[38dvh] object-contain pointer-events-none -mb-2 ${line.side === 'left' ? 'left-6' : 'right-6'}`}
                     style={{ filter: `drop-shadow(0 8px 10px rgba(0,0,0,0.8)) drop-shadow(0 0 14px ${accent}33)` }}
                 />
 

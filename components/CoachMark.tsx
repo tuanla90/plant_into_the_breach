@@ -8,6 +8,9 @@ interface CoachMarkProps {
     /** Which board of the chain, for the "2/7" counter. */
     index: number;
     total: number;
+    /** In combat the right rail belongs to the ActionPanel — recentre over the board
+        instead of the viewport so the note never sits on top of End Turn. */
+    avoidPanel?: boolean;
 }
 
 /**
@@ -22,11 +25,18 @@ interface CoachMarkProps {
  * actually ended the whole tutorial — leaving is TutorialSkipButton's job, pinned
  * top-right by App for the entire run.
  */
-export const CoachMark: React.FC<CoachMarkProps> = ({ note, index, total }) => {
+export const CoachMark: React.FC<CoachMarkProps> = ({ note, index, total, avoidPanel = false }) => {
     const { t } = useI18n();
 
+    // bottom-14, not bottom-6: the run-wide TutorialSkipButton owns the bottom-left corner
+    // (~46px tall) and on narrow screens a viewport-centred note reached into it.
+    // The calc() variants mirror the ActionPanel width ladder (w-64/w-80/w-96).
+    const centering = avoidPanel
+        ? 'left-[calc((100vw-16rem)/2)] md:left-[calc((100vw-20rem)/2)] lg:left-[calc((100vw-24rem)/2)]'
+        : 'left-1/2';
+
     return (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 pointer-events-none font-pixel">
+        <div className={`fixed bottom-14 ${centering} -translate-x-1/2 z-50 pointer-events-none font-pixel max-w-[calc(100vw-1rem)]`}>
             <div className="flex items-center gap-3 px-5 py-3 bg-[#101a12]/95 border-2 border-emerald-500 rounded-lg shadow-[0_0_28px_rgba(16,185,129,0.28)] backdrop-blur-md animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <Leaf size={20} className="text-emerald-400 shrink-0" />
 

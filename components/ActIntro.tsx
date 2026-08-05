@@ -31,16 +31,19 @@ export const ActIntro: React.FC<{ boss: BossId; onContinue: () => void }> = ({ b
     const accent = stage?.accent ?? '#facc15';
 
     return (
-        <div className="fixed inset-0 z-[75] bg-black flex items-center justify-center font-pixel text-white animate-in fade-in duration-500">
-            <div className="absolute inset-0"
+        // Scrollable, centred via min-h-full: on a 320px-tall landscape phone this screen
+        // is taller than the viewport, and pure flex centering clipped the Move out button
+        // — the only way forward — off the bottom with no way to reach it.
+        <div className="fixed inset-0 z-[75] bg-black overflow-y-auto font-pixel text-white animate-in fade-in duration-500">
+            <div className="fixed inset-0 pointer-events-none"
                  style={{ background: `radial-gradient(ellipse at 50% 60%, ${accent}18 0%, #000 65%)` }} />
 
-            <div className="relative z-10 w-full max-w-[820px] px-8 flex flex-col items-center gap-5 text-center">
+            <div className="relative z-10 min-h-full w-full max-w-[820px] mx-auto px-8 py-6 flex flex-col items-center justify-center gap-3 sm:gap-5 text-center">
                 <div className="flex flex-col items-center gap-1">
                     <span className="text-[11px] uppercase tracking-[0.4em]" style={{ color: accent }}>
                         {t('Act {n}', { n: act.act })}
                     </span>
-                    <h1 className="text-4xl font-black uppercase tracking-widest">{t(act.city)}</h1>
+                    <h1 className="text-2xl sm:text-4xl font-black uppercase tracking-widest">{t(act.city)}</h1>
                     {stage && (
                         <span className="text-[11px] uppercase tracking-widest text-gray-500">
                             {t(stage.name)}
@@ -50,14 +53,14 @@ export const ActIntro: React.FC<{ boss: BossId; onContinue: () => void }> = ({ b
 
                 <div className="w-24 h-[2px] rounded" style={{ background: accent }} />
 
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-4 sm:gap-6">
                     {art ? (
-                        <img src={art} alt="" className="h-[190px] w-auto object-contain"
+                        <img src={art} alt="" className="h-[190px] max-h-[32dvh] w-auto object-contain"
                              style={{ filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.9)) drop-shadow(0 0 16px rgba(248,113,113,0.35))' }} />
                     ) : (
                         <Skull size={64} className="text-red-500" />
                     )}
-                    <div className="max-w-[380px] text-left flex flex-col gap-2">
+                    <div className="max-w-[380px] text-left flex flex-col gap-2 min-w-0">
                         <span className="flex items-center gap-2 text-[13px] font-black uppercase tracking-widest text-red-300">
                             <Crown size={15} /> {t(act.name)}
                         </span>

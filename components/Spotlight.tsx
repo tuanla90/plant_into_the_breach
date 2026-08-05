@@ -93,8 +93,10 @@ export const Spotlight: React.FC<SpotlightProps> = ({ focus, note, index, total,
     const vh = typeof window !== 'undefined' ? window.innerHeight : 0;
 
     // Park the note clear of the hole: below it normally, above it when the target is low.
+    // vh - 150, not vh - 110: 110 assumed a one-line note, but at narrow widths the text
+    // wraps and the box grew down into the skip button pinned to the bottom-left corner.
     const noteTop = rect
-        ? (rect.top > vh * 0.55 ? Math.max(12, rect.top - 96) : Math.min(vh - 110, rect.top + rect.height + 18))
+        ? (rect.top > vh * 0.55 ? Math.max(12, rect.top - 96) : Math.min(vh - 150, rect.top + rect.height + 18))
         : vh * 0.5;
 
     return (
@@ -132,7 +134,7 @@ export const Spotlight: React.FC<SpotlightProps> = ({ focus, note, index, total,
             )}
 
             <div
-                className="fixed z-[95] left-1/2 -translate-x-1/2 font-pixel"
+                className="fixed z-[95] left-1/2 -translate-x-1/2 font-pixel w-max max-w-[calc(100vw-1.5rem)]"
                 style={{ top: noteTop }}
             >
                 <div className="flex items-center gap-3 px-5 py-3 bg-[#101a12]/97 border-2 border-emerald-500 rounded-lg shadow-[0_0_28px_rgba(16,185,129,0.35)] animate-in fade-in slide-in-from-bottom-2 duration-200">

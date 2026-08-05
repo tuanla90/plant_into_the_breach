@@ -28,7 +28,12 @@ export const SquadSidebar = ({ units, selectedUnitId, onSelectUnit }: SquadSideb
   if (squad.length === 0) return null;
 
   return (
-    <div className="fixed top-24 left-4 w-20 flex flex-col gap-3 z-40 pointer-events-auto font-pixel select-none">
+    // In-flow column, not a fixed overlay: floated at `fixed top-24 left-4` it sat on top
+    // of the board's left file, and with four-plus units it ran straight off the bottom of
+    // a mobile-landscape screen with no way to scroll. As a flex child the board simply
+    // gets measured around it, and the column itself scrolls when it is taller than the
+    // fight area.
+    <div className="shrink-0 flex flex-col gap-2 lg:gap-3 py-2 px-1.5 lg:px-2 overflow-y-auto overflow-x-hidden font-pixel select-none">
         {squad.map(unit => {
             const isSelected = selectedUnitId === unit.id;
             const isActed = unit.hasAttacked;
@@ -52,13 +57,13 @@ export const SquadSidebar = ({ units, selectedUnitId, onSelectUnit }: SquadSideb
                     data-tut={unit.heroId ? `hero-${unit.heroId}` : unit.materialId ? `unit-${unit.materialId}` : `unit-${unit.id}`}
                     className={`
                         relative group cursor-pointer transition-all duration-200 text-left
-                        ${isSelected ? 'translate-x-2' : 'hover:translate-x-1'}
+                        ${isSelected ? '' : 'hover:brightness-110'}
                         ${isActed ? 'opacity-50 grayscale' : ''}
                     `}
                 >
                     {/* Portrait Frame */}
                     <div className={`
-                        w-16 h-16 bg-[#121622] rounded-xl border-2 transition-all duration-200 overflow-hidden shadow-xl relative
+                        w-12 h-12 lg:w-16 lg:h-16 bg-[#121622] rounded-xl border-2 transition-all duration-200 overflow-hidden shadow-xl relative
                         ${isSelected
                             ? 'border-amber-400 shadow-[0_0_16px_rgba(245,158,11,0.4)] ring-2 ring-amber-400/30'
                             : 'border-[#293245] hover:border-sky-400'}

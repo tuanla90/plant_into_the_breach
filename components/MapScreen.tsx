@@ -80,14 +80,18 @@ interface MapScreenProps {
 const NodeTooltip = ({ type, x, y, zoom }: { type: string, x: number, y: number, zoom: number }) => {
     const { t } = useI18n();
     const info = NODE_INFO[type] || NODE_INFO['EVENT'];
+    // Flip to the node's left past mid-map and clamp top/bottom: anchored blindly to the
+    // right, a 224px card walked off the canvas for every node in the two rightmost
+    // columns (and poked past the edges for nodes on the first/last row).
+    const flip = x > 55;
     return (
         <div
             className="absolute z-50 bg-[#1a1c21] border-2 border-white/20 p-3 rounded shadow-[0_0_30px_rgba(0,0,0,0.9)] flex flex-col gap-1 w-56 pointer-events-none transition-opacity duration-200"
             style={{
                 left: `${x}%`,
-                top: `${y}%`,
-                transform: `translate(20px, -50%) scale(${1/zoom})`,
-                transformOrigin: 'left center'
+                top: `clamp(3.5rem, ${y}%, calc(100% - 3.5rem))`,
+                transform: flip ? `translate(calc(-100% - 20px), -50%) scale(${1/zoom})` : `translate(20px, -50%) scale(${1/zoom})`,
+                transformOrigin: flip ? 'right center' : 'left center'
             }}
         >
             <div className={`font-black uppercase text-sm ${info.color} flex items-center gap-2 border-b border-white/10 pb-1`}>
