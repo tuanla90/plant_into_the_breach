@@ -2,17 +2,37 @@
   "name": "Plant Heroes: Blightfall",
   "short_name": "Blightfall",
   "description": "Chiến thuật theo lượt 2.5D trên lưới ô vuông: dẫn dắt biệt đội Plant Heroes chặn đứng Đạo Quân Xác Sống.",
-  "start_url": "/",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "orientation": "landscape",
   "background_color": "#0b0d12",
   "theme_color": "#0b0d12",
   "icons": [
     {
-      "src": "/favicon.svg",
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "./favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }
