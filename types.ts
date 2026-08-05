@@ -1299,7 +1299,10 @@ export interface ItemDefinition {
          */
         | 'TRAP'
         /** Hands one spent hero its action back. Needs a valid friendly target to be spent. */
-        | 'REFRESH';
+        | 'REFRESH'
+        | 'SPIKES'
+        | 'HYPNO'
+        | 'STRIP_ARMOR';
     description: string;
     imgUrl: string;
 }

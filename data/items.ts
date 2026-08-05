@@ -37,4 +37,13 @@ export const DEFAULT_ITEM_DEFINITIONS: ItemDefinition[] = [
     // The answer to Balloon Zombies, and a panic button for a collapsing line. Board-wide,
     // so it ignores the targeted tile entirely — the click only picks the wind direction.
     { id: 'blover', name: 'Blover', coinCost: 60, damage: 0, rangeRadius: 0, effect: 'GUST', description: 'A gust across the whole board: every flying zombie is blown away, every other one is shoved a tile back.', imgUrl: ITEM_SPRITES.BLOVER },
+
+    // Area hazard: lays sharp spikes on a tile. Any zombie stepping or pushed across takes 2 damage per turn. Lasts 3 turns.
+    { id: 'spikeweed', name: 'Spikeweed', coinCost: 35, damage: 2, rangeRadius: 0, effect: 'SPIKES', description: 'Lays a field of sharp spikes on a tile. Any zombie entering or pushed across takes 2 damage per turn. Lasts 3 turns.', imgUrl: ITEM_SPRITES.SPIKEWEED },
+
+    // Mind control: turns a target non-boss zombie into an ally that attacks other zombies.
+    { id: 'hypno_shroom', name: 'Hypno-shroom', coinCost: 65, damage: 0, rangeRadius: 0, effect: 'HYPNO', description: 'Mind-controls a non-boss zombie: turns it into an ally that attacks other zombies.', imgUrl: ITEM_SPRITES.HYPNO_SHROOM },
+
+    // Disarms all metal armor and shields of zombies in a 3x3 area.
+    { id: 'magnet_shroom', name: 'Magnet-shroom', coinCost: 50, damage: 0, rangeRadius: 1, effect: 'STRIP_ARMOR', description: 'Disables all metal armor and shields of zombies in a 3x3 area.', imgUrl: ITEM_SPRITES.MAGNET_SHROOM },
 ];

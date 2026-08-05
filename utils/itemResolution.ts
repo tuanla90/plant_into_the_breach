@@ -38,6 +38,36 @@ export const itemTargetInvalid = (item: ItemDefinition, pos: Position, ctx: Reso
             || !!tile.isHouse;
     }
 
+    if (item.effect === 'HYPNO') {
+        const t = getUnitAt(pos, units);
+        return !t || !t.isEnemy || !!t.bossId;
+    }
+
+    if (item.effect === 'SPIKES') {
+        const tile = getTileAt(pos, board);
+        return !tile
+            || !terrainDefs[tile.terrain]?.isWalkable
+            || !!tile.isHouse
+            || (!!tile.spikes && tile.spikes.turns > 0);
+    }
+
+    if (item.effect === 'STRIP_ARMOR') {
+        const radius = item.rangeRadius || 1;
+        let foundArmored = false;
+        for (let x = pos.x - radius; x <= pos.x + radius; x++) {
+            for (let y = pos.y - radius; y <= pos.y + radius; y++) {
+                if (x >= 0 && x < 8 && y >= 0 && y < 8) {
+                    const u = getUnitAt({ x, y }, units);
+                    if (u && u.isEnemy && ((u.armor || 0) > 0 || (u.shield || 0) > 0)) {
+                        foundArmored = true;
+                        break;
+                    }
+                }
+            }
+        }
+        return !foundArmored;
+    }
+
     return false;
 };
 
@@ -57,6 +87,48 @@ export const planItemActions = (
 ): TurnAction[] => {
     const { units, board, terrainDefs } = ctx;
     const actions: TurnAction[] = [];
+
+    if (item.effect === 'SPIKES') {
+        actions.push({
+            type: 'MODIFY_TERRAIN',
+            pos,
+            spikes: { damage: item.damage || 2, turns: 3 }
+        });
+        return actions;
+    }
+
+    if (item.effect === 'HYPNO') {
+        const target = getUnitAt(pos, units);
+        if (target && target.isEnemy && !target.bossId) {
+            actions.push({
+                type: 'UPDATE_UNIT_STATE',
+                unitId: target.id,
+                updates: { isEnemy: false, statusEffects: [...target.statusEffects, 'HYPNOTIZED'] }
+            });
+            actions.push({ type: 'APPLY_DAMAGE', targetId: target.id, amount: 0, eventType: 'BUFF', pos });
+        }
+        return actions;
+    }
+
+    if (item.effect === 'STRIP_ARMOR') {
+        const radius = item.rangeRadius || 1;
+        for (let x = pos.x - radius; x <= pos.x + radius; x++) {
+            for (let y = pos.y - radius; y <= pos.y + radius; y++) {
+                if (x >= 0 && x < 8 && y >= 0 && y < 8) {
+                    const target = getUnitAt({ x, y }, units);
+                    if (target && target.isEnemy && ((target.armor || 0) > 0 || (target.shield || 0) > 0)) {
+                        actions.push({
+                            type: 'UPDATE_UNIT_STATE',
+                            unitId: target.id,
+                            updates: { armor: 0, shield: 0 }
+                        });
+                        actions.push({ type: 'APPLY_DAMAGE', targetId: target.id, amount: 0, eventType: 'BLOCK', pos: { x, y } });
+                    }
+                }
+            }
+        }
+        return actions;
+    }
 
     if (item.effect === 'REFRESH') {
         // itemTargetInvalid was called first, so this target is known good.

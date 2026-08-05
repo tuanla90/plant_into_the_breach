@@ -84,6 +84,9 @@ export const ITEM_SPRITES = {
     SNOW_PEA: `./img/item-snow-pea.png`,
     COFFEE_BEAN: `./img/item-coffee-bean.png`,
     BLOVER: `./img/item-blover.png`,
+    SPIKEWEED: `./img/terrain/spikes.svg`,
+    HYPNO_SHROOM: `./img/placeholder/hypno-shroom.svg`,
+    MAGNET_SHROOM: `./img/placeholder/magnet-shroom.svg`,
 };
 
 // Neon accent per hero — mirrors the accent color baked into each hero's card art.
@@ -198,10 +201,7 @@ export const ICONS = {
     SUN_SHROOM: `./img/placeholder/sun-shroom.svg`,
     SCAREDY_SHROOM: `./img/placeholder/scaredy-shroom.svg`,
     WALLNUT: `./img/placeholder/wallnut.svg`,
-    // Borrowed art on purpose: a crate reads as a nut-shaped lump at board scale, and a
-    // wrong-but-legible placeholder beats a missing image. One line to swap when the
-    // crate sprite lands (art-src/ART-PROMPTS.md).
-    GEAR_CRATE: `./img/placeholder/wallnut.svg`,
+    GEAR_CRATE: `./img/sprite-gear-crate.png`,
     TALL_NUT: `./img/placeholder/tall-nut.svg`,
     ENDURIAN: `./img/placeholder/endurian.svg`,
     SWEET_POTATO: `./img/placeholder/sweet-potato.svg`,

@@ -27,7 +27,7 @@ export type SfxName =
     | 'spawn' | 'turn-start' | 'gain-sun' | 'brain-lost'
     | 'victory' | 'defeat' | 'fusion';
 
-export type MusicTrack = 'menu' | 'intro' | 'map' | 'combat';
+export type MusicTrack = 'menu' | 'intro' | 'map' | 'combat' | 'boss';
 
 /**
  * File + per-sound mix. `gain` is baked in because the packs are not mastered to a common
@@ -53,7 +53,7 @@ const SFX: Record<SfxName, { files: string[]; gain: number }> = {
     'hit':          { files: ['hit-1.wav', 'hit-2.wav', 'hit-3.wav'], gain: 0.65 },
     'hit-heavy':    { files: ['hit-heavy.wav'],   gain: 0.75 },
     'hit-freeze':   { files: ['hit-freeze.wav'],  gain: 0.60 },
-    'hit-fire':     { files: ['hit-heavy.wav', 'attack-melee.wav'], gain: 0.75 },
+    'hit-fire':     { files: ['hit-fire.wav'],    gain: 0.75 },
     'hit-ice':      { files: ['hit-freeze.wav'],  gain: 0.65 },
     'hit-elec':     { files: ['arc.wav'],         gain: 0.70 },
     'hit-blocked':  { files: ['hit-blocked.wav'], gain: 0.50 },
@@ -89,6 +89,7 @@ const MUSIC: Record<MusicTrack, { file: string; gain: number }> = {
     intro:  { file: 'music-intro.mp3',  gain: 0.34 },
     map:    { file: 'music-map.mp3',    gain: 0.26 },
     combat: { file: 'music-combat.mp3', gain: 0.30 },
+    boss:   { file: 'music-boss.mp3',   gain: 0.32 },
 };
 
 const BASE = '/audio/';
