@@ -53,6 +53,7 @@ import { VictoryScreen } from './components/VictoryScreen';
 import { FusionPanel } from './components/FusionPanel';
 import { CampScreen } from './components/CampScreen';
 import { UpgradePicker } from './components/UpgradePicker';
+import { ActIntro } from './components/ActIntro';
 import { SquadViewer } from './components/SquadViewer';
 import { BalanceScreen } from './components/BalanceScreen';
 import { DebugPanel, buildDebugMap, type DebugJump } from './components/DebugPanel';
@@ -1658,7 +1659,19 @@ const App: React.FC = () => {
         is saved (MAP is a safe screen for runPersistence), and the picker can reopen for as
         many picks as are owed without fighting the report for the same space.
       */}
-      {gameState.screen === 'MAP' && (gameState.upgradePicks ?? 0) > 0 && (
+      {/*
+        THE ACT CUT, in front of everything else — including the upgrade picker, which is the
+        first thing waiting on the other side of it. Order matters: the reward for act one
+        should land in act two's briefing room, not over the top of it.
+      */}
+      {gameState.actIntro && (
+          <ActIntro
+             boss={gameState.actIntro}
+             onContinue={() => setGameState(prev => ({ ...prev, actIntro: undefined }))}
+          />
+      )}
+
+      {gameState.screen === 'MAP' && !gameState.actIntro && (gameState.upgradePicks ?? 0) > 0 && (
           <UpgradePicker
              squad={fusableHeroes(units)}
              picks={gameState.upgradePicks ?? 0}

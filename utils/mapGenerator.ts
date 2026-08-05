@@ -33,72 +33,69 @@ export const stageForBosses = (bossesBeaten: number): number =>
     Math.max(0, Math.min(STAGE_SECTORS.length - 1, Math.floor(bossesBeaten / 3)));
 
 /**
- * Layers in one act: ordinary ground, a shop, more ground, the rest, the boss.
+ * Layers in ONE ACT, and an act is one map.
  *
- * FIVE, so a full three-act stage is a fifteen-layer run — the length this generator was
- * originally written for, before it was cut to ten to fit a single boss on the end of it.
- * Three acts of four would leave one ordinary battle per act, which is not a chapter, it is a
- * corridor with a boss at the end.
+ * TEN, which is what a map here has always been. It was briefly five, when three acts shared a
+ * single fifteen-layer page, and five is not a chapter — it is one ordinary battle, a shop, a
+ * rest and then a boss. The fights are the game; a map that reaches its boss before the player
+ * has had a run of fights is a corridor.
+ *
+ * So the acts are not stacked into one page any more. Each is a full map with its own boss at
+ * the bottom, and clearing that boss builds the next one (useGameProgression, "the act cut").
+ * Slay the Spire's shape, and for its reason: an act should END, visibly, before the next one
+ * starts.
  */
-const LAYERS_PER_ACT = 5;
+const LAYERS_PER_ACT = 10;
 
 /**
- * A RUN IS THREE ACTS, and it always said so.
+ * ONE ACT'S MAP.
  *
- * `RunResult` has carried the sentence "a run is three acts, and each boss is banked the
- * moment it falls" since before there was a campaign screen — but this generator built ONE
- * boss, at layer 9, and that was the run. A stage was three acts on the map screen and one act
- * in the code, so anything that wanted to happen "after an act" had exactly one place it could
- * happen: the moment the whole run ended.
+ * A run is still three acts — `RunResult` has said so since before there was a campaign screen
+ * — but they are three MAPS, walked one after another, not three bands of one. This builds the
+ * one the player is standing in; clearing its boss is what asks for the next.
  *
- * Each act is now a band of `LAYERS_PER_ACT` layers ending in its own boss, in its own sector,
- * behind its own pre-boss rest. Only the LAST boss carries the run out (`endsRun`); the others
- * are banked as they fall and the run walks on into the next sector.
- *
- * ENTERING MID-STAGE. The campaign screen lets a player start at any act they have unlocked,
- * and that choice is where the run BEGINS rather than all of it: pick act 2 and the run is
- * acts 2 and 3. The alternative is making "enter act 2" mean "replay act 1 first", which is
- * the opposite of what an unlocked act card promises.
+ * `endsRun` is the whole seam. The boss of acts one and two carries `endsRun: false`, which
+ * says "banked, but not the door out": the payout waits, the run keeps its Coin, its bench and
+ * its wounded, and the next act's map is generated underneath it. Only the act that closes the
+ * stage ends the run.
  *
  * @param bossesBeaten  how far the save has got; picks the stage when nothing overrides it.
  * @param stageOverride 0-based stage the player CHOSE on the campaign screen. The count is
  *                      only ever a guess at where someone wants to be, and once there is a
  *                      screen for saying so, the saying wins.
- * @param bossId        the act the player chose. The run runs from that act to the end of its
- *                      stage, and each act's boss is stamped onto its own boss node so
- *                      `generateBoard` can pick that boss's authored arena.
+ * @param bossId        the act being played. Its boss goes on the last node, and its sector is
+ *                      the ground the whole map is drawn on.
  */
 export const GENERATE_MAP = (bossesBeaten = 0, stageOverride?: number, bossId?: BossId): MapNode[] => {
     const stage = stageOverride !== undefined
         ? Math.max(0, Math.min(STAGE_SECTORS.length - 1, stageOverride))
         : stageForBosses(bossesBeaten);
     const chain = STAGE_SECTORS[stage] ?? STAGE_SECTORS[0];
-
-    // The acts this run walks: the chosen one through the end of the stage. Falling back to
-    // the whole stage keeps every other entry point — tutorial skip, debug jump, a save with
-    // no chosen act — behaving exactly as it did.
-    const startAct = bossId ? (bossById(bossId)?.act ?? 1) : 1;
     const stageActs = actsOfStage((stage + 1) as 1 | 2 | 3);
-    const chosen = stageActs.filter(b => b.act >= startAct);
-    const plan = (chosen.length ? chosen : stageActs)
-        .map(b => ({ boss: b.id, world: chain[b.act - 1] ?? chain[0] }));
+
+    // The act this map IS. Falling back to the stage's first act keeps every other entry point
+    // — tutorial skip, debug jump, a save with no chosen act — behaving exactly as it did.
+    const act = (bossId ? bossById(bossId) : undefined) ?? stageActs[0];
+    const world = chain[(act?.act ?? 1) - 1] ?? chain[0];
+    const isLastAct = !act || act.act === stageActs[stageActs.length - 1]?.act;
 
     const nodes: MapNode[] = [];
-    const layers = plan.length * LAYERS_PER_ACT;
+    const layers = LAYERS_PER_ACT;
 
-    // Per act: ordinary ground, a shop, more ground, the rest, the boss. Those last two are
-    // ONE node each — a single node funnels every branch back together before the fight, which
-    // is what a pre-boss rest is for, and a boss the player could walk past is not a boss.
-    const nodesPerLayer: number[] = [];
-    for (let layer = 0; layer < layers; layer++) {
-        const within = layer % LAYERS_PER_ACT;
-        if (layer === 0 || within >= LAYERS_PER_ACT - 2) { nodesPerLayer.push(1); continue; }
+    // Layer 0: start. Layers 1..7: 2-4 wide. Layer 8: the pre-boss rest. Layer 9: the boss.
+    // The last two are ONE node each — a single node funnels every branch back together before
+    // the fight, which is what a pre-boss rest is for, and a boss the player could walk past is
+    // not a boss.
+    const nodesPerLayer: number[] = [1];
+    for (let i = 1; i < layers - 2; i++) {
         // Weighted random for width: mostly 2 or 3, rarely 4
         const rand = Math.random();
         if (rand > 0.9) nodesPerLayer.push(4);
         else if (rand > 0.4) nodesPerLayer.push(3);
         else nodesPerLayer.push(2);
     }
+    nodesPerLayer.push(1); // Pre-boss campfire
+    nodesPerLayer.push(1); // Boss
 
     let nodeIdCounter = 0;
     const layerNodes: MapNode[][] = [];
@@ -120,26 +117,20 @@ export const GENERATE_MAP = (bossesBeaten = 0, stageOverride?: number, bossId?: 
             const jitter = (Math.random() * 6) - 3; // +/- 3%
             const xPos = (segmentWidth * (i + 1)) + jitter;
             
-            // Determine Type. Every act is the same shape: ordinary ground, a shop, a
-            // rest, then the thing the act is named after.
-            const within = layer % LAYERS_PER_ACT;
-            const actIndex = Math.floor(layer / LAYERS_PER_ACT);
+            // Determine Type
             let type: MapNode['type'] = 'BATTLE';
 
             if (layer === 0) {
                 type = 'BATTLE'; // Start
-            } else if (within === LAYERS_PER_ACT - 1) {
+            } else if (layer === layers - 1) {
                 type = 'BOSS';
-            } else if (within === LAYERS_PER_ACT - 2) {
+            } else if (layer === layers - 2) {
                 type = 'CAMPFIRE';
             } else {
                 const rand = Math.random();
-                // One shop per act, in the same slot every time, so a player can plan around
-                // it instead of hoping for one — but on ONE NODE of that layer, not all of
-                // them. Forcing the whole layer put nine shop icons on a three-act map and
-                // removed the choice it was meant to create: taking the shop should cost you
-                // whatever the branch beside it was offering.
-                if (within === 1 && i === 0) {
+                // One guaranteed shop per act, on ONE node of its layer rather than all of
+                // them, so taking it still costs whatever the branch beside it was offering.
+                if (layer === 3 && i === 0) {
                      type = 'SHOP';
                 } else {
                     // INCREASED EVENT FREQUENCY
@@ -159,24 +150,21 @@ export const GENERATE_MAP = (bossesBeaten = 0, stageOverride?: number, bossId?: 
                 }
             }
 
-            const act = plan[Math.min(actIndex, plan.length - 1)];
             const node: MapNode = {
                 id: `node_${nodeIdCounter++}`,
                 x: xPos,
                 y: yPos,
                 type,
-                // The act's own sector, so the three bands on the map screen ARE the three
-                // acts — every border the player crosses is a boss they just put down.
-                world: act.world,
+                // One sector for the whole map: this map IS one act, and an act is one place.
+                world,
                 status: layer === 0 ? 'AVAILABLE' : 'LOCKED',
                 next: [],
-                ...(type === 'BOSS'
+                ...(type === 'BOSS' && act
                     ? {
-                        bossId: act.boss,
-                        // Only the stage's last act carries the run out. The others bank as
-                        // they fall (useGameProgression `projectUnlocks`) and the run walks
-                        // on — the same flag the Breach's gauntlet uses.
-                        ...(actIndex < plan.length - 1 ? { endsRun: false } : {}),
+                        bossId: act.id,
+                        // Acts one and two hand over to the next map instead of ending the
+                        // run — the same flag the Breach's gauntlet uses for its corridors.
+                        ...(isLastAct ? {} : { endsRun: false }),
                     }
                     : {}),
             };

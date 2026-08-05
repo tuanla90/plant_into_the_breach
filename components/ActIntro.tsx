@@ -1,0 +1,85 @@
+import React from 'react';
+import { BossId } from '../types';
+import { ArrowRight, Crown, Skull } from 'lucide-react';
+import { bossById, STAGES } from '../data/unlocks';
+import { BOSS_UNIT_CLASS } from '../data/bosses';
+import { ZOMBIE_DEFINITIONS } from '../data/zombies';
+import { useI18n } from '../i18n';
+
+/**
+ * THE CUT BETWEEN ACTS.
+ *
+ * An act is a whole map now, and clearing its boss lays the next one down underneath the
+ * player. Without a beat between them the transition is invisible: the map screen simply
+ * blinks and every node is locked again, which reads as a bug rather than as progress.
+ *
+ * So this is the curtain. It names the new place, its boss and what that boss is holding, and
+ * it is the only screen in the run that exists purely to say "that was a chapter". Slay the
+ * Spire spends a full screen on the same beat for the same reason.
+ *
+ * Deliberately NOT a decision — one button. The choices belong to the map behind it; a screen
+ * that both announces and asks is a screen people click through without reading either half.
+ */
+export const ActIntro: React.FC<{ boss: BossId; onContinue: () => void }> = ({ boss, onContinue }) => {
+    const { t } = useI18n();
+    const act = bossById(boss);
+    if (!act) return null;
+
+    const stage = STAGES.find(st => st.id === act.stage);
+    const cls = BOSS_UNIT_CLASS[boss];
+    const art = cls ? (ZOMBIE_DEFINITIONS as any)[cls]?.imgUrl as string | undefined : undefined;
+    const accent = stage?.accent ?? '#facc15';
+
+    return (
+        <div className="fixed inset-0 z-[75] bg-black flex items-center justify-center font-pixel text-white animate-in fade-in duration-500">
+            <div className="absolute inset-0"
+                 style={{ background: `radial-gradient(ellipse at 50% 60%, ${accent}18 0%, #000 65%)` }} />
+
+            <div className="relative z-10 w-full max-w-[820px] px-8 flex flex-col items-center gap-5 text-center">
+                <div className="flex flex-col items-center gap-1">
+                    <span className="text-[11px] uppercase tracking-[0.4em]" style={{ color: accent }}>
+                        {t('Act {n}', { n: act.act })}
+                    </span>
+                    <h1 className="text-4xl font-black uppercase tracking-widest">{t(act.city)}</h1>
+                    {stage && (
+                        <span className="text-[11px] uppercase tracking-widest text-gray-500">
+                            {t(stage.name)}
+                        </span>
+                    )}
+                </div>
+
+                <div className="w-24 h-[2px] rounded" style={{ background: accent }} />
+
+                <div className="flex items-center gap-6">
+                    {art ? (
+                        <img src={art} alt="" className="h-[190px] w-auto object-contain"
+                             style={{ filter: 'drop-shadow(0 6px 14px rgba(0,0,0,0.9)) drop-shadow(0 0 16px rgba(248,113,113,0.35))' }} />
+                    ) : (
+                        <Skull size={64} className="text-red-500" />
+                    )}
+                    <div className="max-w-[380px] text-left flex flex-col gap-2">
+                        <span className="flex items-center gap-2 text-[13px] font-black uppercase tracking-widest text-red-300">
+                            <Crown size={15} /> {t(act.name)}
+                        </span>
+                        <p className="text-[12px] leading-relaxed text-gray-300 normal-case tracking-normal">
+                            {t(act.hint)}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Said out loud, because it is the thing that separates this from a new run:
+                    everything the last act was played with is still here. */}
+                <p className="text-[11px] text-gray-500 normal-case tracking-normal">
+                    {t('Your squad, your Coin and your bench carry over. Wounds do too.')}
+                </p>
+
+                <button data-sfx="confirm"
+                        onClick={onContinue}
+                        className="h-12 px-8 flex items-center gap-2 rounded-lg border-2 text-[13px] font-black uppercase tracking-widest transition-all hover:brightness-125"
+                        style={{ borderColor: accent, color: accent, background: `${accent}14` }}>
+                    {t('Move out')} <ArrowRight size={16} />
+                </button>
+            </div>
+        </div>
+    );
+};

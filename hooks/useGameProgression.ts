@@ -25,7 +25,7 @@ import { buildMission, earnedBonuses } from '../data/missions';
 import {
     parseRecipeKey, unlockInfoFor, TUTORIAL_RECIPES, UnlockAward,
     RunResult, xpForRun, levelOf, levelCapFor, nextUnbeatenBoss, heroForBoss,
-    recipeKey, BOSSES, XP_PER_LEVEL,
+    recipeKey, BOSSES, XP_PER_LEVEL, actsOfStage, bossById,
 } from '../data/unlocks';
 import { FUSION_RECIPES } from '../data/fusionRecipes';
 import { tutorialNode, tutorialBattle, tutorialBoard, GENERATE_TUTORIAL_MAP, TUTORIAL_CHAIN } from '../data/tutorial';
@@ -262,7 +262,10 @@ export const useGameProgression = ({
         const result: RunResult = {
             layers,
             objectives: state.bonusObjectivesBanked,
-            actsCleared: bossDefeated ? 1 : 0,
+            // Every act this run put down, not just the last one. As a boolean this paid a
+            // three-act run exactly what it paid a one-act run — and the field has been called
+            // `actsCleared` the whole time, which is what it was always meant to count.
+            actsCleared: Math.max(gameState.actsCleared ?? 0, bossDefeated ? 1 : 0),
             recordLayers: Math.max(0, layers - state.deepestChapter),
         };
         const gained = xpForRun(result);
@@ -520,6 +523,29 @@ export const useGameProgression = ({
         // reaches here, so the wager is forfeit.
         if (isFight) reward += gameState.nextBattleMods?.coinOnWin || 0;
 
+        /**
+         * THE ACT CUT.
+         *
+         * An act is a whole map, and clearing its boss lays down the next act's map rather
+         * than ending the run — Slay the Spire's shape. Everything the run owns crosses over
+         * untouched, because none of it lives in `mapNodes`: the squad and its wounds are in
+         * `units`, the Coin, bench, inventory and brains are in `gameState`, and the fusions
+         * ride on the heroes themselves.
+         *
+         * NOT for the Breach. Its gauntlet is one authored map with ten bosses on it
+         * (GENERATE_BREACH_MAP) — every one of them carries `endsRun: false`, so the test has
+         * to be "is there a NEXT ACT in this stage", not "did a non-final boss just die".
+         */
+        const clearedAct = completedNodeType === 'BOSS' && finishedNode?.bossId
+            ? bossById(finishedNode.bossId)
+            : undefined;
+        const nextAct = clearedAct && clearedAct.stage !== 0
+            ? actsOfStage(clearedAct.stage as 1 | 2 | 3).find(b => b.act === clearedAct.act + 1)
+            : undefined;
+        if (nextAct) {
+            setMapNodes(GENERATE_MAP(unlocksRef.current.bossesBeaten.length, nextAct.stage - 1, nextAct.id));
+        }
+
         setGameState(prev => ({
             ...prev,
             coins: prev.coins + reward,
@@ -529,6 +555,14 @@ export const useGameProgression = ({
             // not a screen. The Breach hands out nine of these before the Blightlord, which is
             // exactly enough to finish all three heroes (data/heroUpgrades.ts).
             upgradePicks: (prev.upgradePicks ?? 0) + (completedNodeType === 'BOSS' ? 1 : 0),
+            actsCleared: (prev.actsCleared ?? 0) + (completedNodeType === 'BOSS' ? 1 : 0),
+            ...(nextAct
+                ? {
+                    actIntro: nextAct.id,
+                    // The node that was just cleared belongs to a map that no longer exists.
+                    currentLevelId: null,
+                }
+                : {}),
         }));
         return reward;
     };

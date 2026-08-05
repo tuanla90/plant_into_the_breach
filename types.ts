@@ -652,6 +652,30 @@ export interface GameState {
      * valid — an absent ledger just means "nothing counted yet".
      */
     battleStats?: Partial<Record<HeroId, BattleHeroStats>>;
+    /**
+     * Act upgrades won and not yet spent. One is banked per boss put down; the player spends
+     * them from the victory screen, choosing which hero gets what.
+     *
+     * A COUNT, not a queue of offers: the three upgrades a hero has are fixed
+     * (data/heroUpgrades.ts) and each may be taken once, so what is owed is a number and what
+     * is available is derived from the squad. Banking rather than forcing the choice on the
+     * spot also means a boss cleared on the way out of a run does not strand its reward.
+     */
+    upgradePicks?: number;
+    /**
+     * Acts whose boss has fallen THIS RUN. Feeds the end-of-run XP, which used to be a
+     * boolean ("did a boss die") — fine while a run held one act, and an undercount of two
+     * thirds the moment it held three.
+     */
+    actsCleared?: number;
+    /**
+     * The act about to start, when the player has just cleared the one before it. Set by the
+     * act cut and consumed by the intro card; absent the rest of the time.
+     *
+     * The map is swapped the instant the boss dies rather than when this is dismissed, so a
+     * reload mid-announcement lands on the new act rather than on a map that no longer exists.
+     */
+    actIntro?: BossId;
 }
 
 export interface TurnAction {
@@ -1103,16 +1127,6 @@ export interface RunState {
     bench: BenchPlant[];
     /** Element per hero for this run. Absent = base form. Optional so old saves still load. */
     heroElements?: Partial<Record<HeroId, ElementId>>;
-    /**
-     * Act upgrades won and not yet spent. One is banked per boss put down; the player spends
-     * them from the victory screen, choosing which hero gets what.
-     *
-     * A COUNT, not a queue of offers: the three upgrades a hero has are fixed
-     * (data/heroUpgrades.ts) and each may be taken once, so what is owed is a number and what
-     * is available is derived from the squad. Banking rather than forcing the choice on the
-     * spot also means a boss cleared on the way out of a run does not strand its reward.
-     */
-    upgradePicks?: number;
 }
 
 /** Progress that persists across runs. Stored separately from Admin config. */
