@@ -70,8 +70,11 @@ export const replayScriptedBattle = (
 ): ReplayResult => {
     const log: string[] = [];
     const fail = (msg: string): never => {
+        // The whole log, not a tail. A desync's CAUSE is routinely many turns upstream of
+        // where the script finally trips — a re-pathed zombie on turn 2 breaks a MOVE on
+        // turn 4 — and a 14-line window kept showing the trip while hiding the fork.
         throw new Error(
-            `${nodeId} replay: ${msg}\n  last moves:\n    ${log.slice(-14).join('\n    ')}`
+            `${nodeId} replay: ${msg}\n  moves:\n    ${log.join('\n    ')}`
         );
     };
 

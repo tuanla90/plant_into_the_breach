@@ -317,23 +317,30 @@ export const useGameEngine = () => {
                           if (isMelee) addEffect(action.targetPos.x, action.targetPos.y, 'SLASH', aim);
                           else addEffect(attacker.position.x, attacker.position.y, 'MUZZLE', aim);
 
+                          const dx = action.targetPos.x - attacker.position.x;
+                          const dy = action.targetPos.y - attacker.position.y;
+                          // Enemy (Zombie) faces left (negative y direction). Plant faces right (positive y direction).
+                          const shouldFlip = attacker.isEnemy ? dy > 0 : dy < 0;
+
                           if (isMelee) {
                               // --- MELEE ANIMATION (Step & Retract) ---
-                              const dx = action.targetPos.x - attacker.position.x;
-                              const dy = action.targetPos.y - attacker.position.y;
-
                               // Lunge towards target
                               const lungeX = dx * 0.4;
                               const lungeY = dy * 0.4;
 
-                              setUnits(prev => prev.map(u => u.id === action.unitId ? { ...u, isAttacking: true, visualOffset: { x: lungeX, y: lungeY } } : u));
+                              setUnits(prev => prev.map(u => u.id === action.unitId ? { ...u, isAttacking: true, visualOffset: { x: lungeX, y: lungeY }, flipX: shouldFlip } : u));
                               await wait(ANIMATION_CONFIG.ATTACK_LUNGE_DURATION);
 
                               // Retract
-                              setUnits(prev => prev.map(u => u.id === action.unitId ? { ...u, visualOffset: { x: 0, y: 0 } } : u));
+                              setUnits(prev => prev.map(u => u.id === action.unitId ? { ...u, visualOffset: { x: 0, y: 0 }, flipX: undefined } : u));
                               await wait(100);
                           } else {
                               // --- PROJECTILE ANIMATION ---
+                              // Recoil slightly away from target
+                              const recoilX = -dx * 0.15;
+                              const recoilY = -dy * 0.15;
+                              setUnits(prev => prev.map(u => u.id === action.unitId ? { ...u, isAttacking: true, visualOffset: { x: recoilX, y: recoilY }, flipX: shouldFlip } : u));
+
                               let projType: Projectile['type'] = 'PEA';
                               if (attacker.class === UnitClass.SNOW_PEA) projType = 'FROZEN_PEA';
                               else if (attacker.class === UnitClass.KERNEL_PULT) projType = 'CORN';
@@ -347,7 +354,7 @@ export const useGameEngine = () => {
                               const targetY = action.targetPos.x * 12.5 + 6.25;
 
                               // Distance calculation for variable speed
-                              const dist = Math.sqrt(Math.pow(action.targetPos.x - attacker.position.x, 2) + Math.pow(action.targetPos.y - attacker.position.y, 2));
+                              const dist = Math.sqrt(Math.pow(dx, 2) + Math.pow(dy, 2));
 
                               // Calculate Duration: Min 300ms, then add distance factor
                               let duration = Math.max(ANIMATION_CONFIG.PROJECTILE_MIN_DURATION, dist * ANIMATION_CONFIG.PROJECTILE_SPEED * 2);
@@ -371,6 +378,11 @@ export const useGameEngine = () => {
 
                               // Force Reflow/Render
                               await wait(20);
+
+                              // Reset recoil/flip quickly
+                              setTimeout(() => {
+                                  setUnits(prev => prev.map(u => u.id === action.unitId ? { ...u, visualOffset: { x: 0, y: 0 }, flipX: undefined } : u));
+                              }, scaleMs(80));
 
                               // 2. Move (Trigger CSS Transition)
                               setProjectiles(prev => prev.map(p => p.id === pid ? { ...p, currentX: targetX, currentY: targetY, duration: flightMs } : p));

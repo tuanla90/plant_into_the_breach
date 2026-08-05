@@ -588,6 +588,15 @@ export const assertTutorial = () => {
         const groupHp = group.reduce(
             (n, sp) => n + (ZOMBIE_DEFINITIONS[sp.cls]?.maxHp ?? 0) + (sp.hpBonus ?? 0), 0);
 
+        // Armour entered the arithmetic when the metal tier landed (data/zombies.ts): a raw
+        // damage total against an armoured group overstates what actually arrives by 1 per
+        // hit, and the gap is real — it is exactly why the tut_4 door's hpBonus is 3 and not
+        // 5. Shaving by the group's SOFTEST armour keeps this an overestimate (every real hit
+        // loses at least that much), and a skill that pushes gets its collision point back,
+        // because a slam ignores helmets (utils/actionBuilders.ts) and assuming the shove
+        // always connects is itself the generous reading.
+        const minArmor = Math.min(...group.map(sp => ZOMBIE_DEFINITIONS[sp.cls]?.armor ?? 0));
+
         // Reach is measured to the NEAREST of them: a hero who can hit the closest body is
         // the most generous reading of "the squad can intervene here".
         let reach = 0;
@@ -598,10 +607,14 @@ export const assertTutorial = () => {
             if (!pos || !def) return;
             const dist = Math.min(...group.map(sp => Math.abs(pos.x - sp.x) + Math.abs(pos.y - sp.y)));
             const best = [def.basicAttack, def.heroSkill]
-                .map(sk => ({
-                    dmg: sk.effects.find(e => e.type === 'DAMAGE')?.value ?? 0,
-                    span: def.moveRange + (sk.rangeValue || 1),
-                }))
+                .map(sk => {
+                    const raw = sk.effects.find(e => e.type === 'DAMAGE')?.value ?? 0;
+                    const collision = sk.effects.some(e => e.type === 'PUSH') ? 1 : 0;
+                    return {
+                        dmg: (raw > 0 ? Math.max(0, raw - minArmor) : 0) + collision,
+                        span: def.moveRange + (sk.rangeValue || 1),
+                    };
+                })
                 .filter(o => o.dmg > 0 && dist <= o.span)
                 .sort((a, c) => c.dmg - a.dmg)[0];
             if (!best) return;

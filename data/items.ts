@@ -17,8 +17,8 @@ export const DEFAULT_ITEM_DEFINITIONS: ItemDefinition[] = [
     // 50 Coin, and it deleted the 10 HP Massive boss in a single click. Maw's Devour
     // already establishes the rule (App.tsx: burrow_strike does 1 to a Massive unit) — a
     // consumable must not assassinate a boss. At 5 it still clears an entire lane of chaff
-    // (every zombie but Football and Gargantuar dies) and leaves the boss on half health,
-    // so the lane-clear identity survives without the one-shot.
+    // (every common in the game dies to it, the Gargantuar does not) and leaves the boss on
+    // half health, so the lane-clear identity survives without the one-shot.
     { id: 'jalapeno', name: 'Jalapeno', coinCost: 50, damage: 5, rangeRadius: 0, effect: 'TERRAIN_MOD', description: 'Burns the whole row and turns it to Lava.', imgUrl: ITEM_SPRITES.JALAPENO },
 
     // --- Plants turned into one-shot power-ups (PvZ's own consumables) ---
@@ -44,6 +44,12 @@ export const DEFAULT_ITEM_DEFINITIONS: ItemDefinition[] = [
     // Mind control: turns a target non-boss zombie into an ally that attacks other zombies.
     { id: 'hypno_shroom', name: 'Hypno-shroom', coinCost: 65, damage: 0, rangeRadius: 0, effect: 'HYPNO', description: 'Mind-controls a non-boss zombie: turns it into an ally that attacks other zombies.', imgUrl: ITEM_SPRITES.HYPNO_SHROOM },
 
-    // Disarms all metal armor and shields of zombies in a 3x3 area.
-    { id: 'magnet_shroom', name: 'Magnet-shroom', coinCost: 50, damage: 0, rangeRadius: 1, effect: 'STRIP_ARMOR', description: 'Disables all metal armor and shields of zombies in a 3x3 area.', imgUrl: ITEM_SPRITES.MAGNET_SHROOM },
+    // Disarms the horde's METAL, and metal now means exactly three armoured commons —
+    // Buckethead, Screen Door, Football (data/zombies.ts: armour is metal, the plastic cone
+    // is not) — plus the immunities gear grants a regular zombie: a Catapult's PUSH chassis,
+    // a Screen Door's STATUS door (METAL_IMMUNITIES, utils/itemResolution.ts). Bosses keep
+    // their immunities — each carries exactly one and it is load-bearing (data/zombies.ts),
+    // and a 50-Coin click that makes a boss shovable would end fights the way the 99-damage
+    // Jalapeno used to.
+    { id: 'magnet_shroom', name: 'Magnet-shroom', coinCost: 50, damage: 0, rangeRadius: 1, effect: 'STRIP_ARMOR', description: 'Rips the metal off zombies in a 3x3 area: armor, shields, and the Push/Status immunities of regular zombies. Bosses keep their gear.', imgUrl: ITEM_SPRITES.MAGNET_SHROOM },
 ];

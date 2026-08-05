@@ -331,6 +331,7 @@ export interface Unit {
   visualOffset?: { x: number, y: number };
   isDying?: boolean;
   isAttacking?: boolean;
+  flipX?: boolean;
   isMassive?: boolean;
   /**
    * Which named boss this unit IS. Set only on the one body a boss encounter is about.

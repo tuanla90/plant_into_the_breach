@@ -162,11 +162,11 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
          * how it ended up deleting bosses the moment bosses stopped being Massive. A magic
          * number needs a magic exception, and the exception is the part that rots.
          *
-         * 7 is chosen, not rounded to: it is the health of the toughest body in the game that
-         * is not a boss — a Screen Door or a Football Zombie in an ELITE wave (5 x the 1.5
-         * elite multiplier). So Maw still swallows ANYTHING short of a boss in one bite, the
-         * identity is untouched, and it is now a number that meets shields, armour and damage
-         * reduction like every other number.
+         * 7 is chosen, not rounded to: it is exactly what the toughest non-boss body in the
+         * game costs to erase — an ELITE Football Zombie, floor(4 x 1.5) = 6 HP behind
+         * armour 1, and 7 arrives through that armour as 6. So Maw still swallows ANYTHING
+         * short of a boss in one bite, the identity is untouched, and it is now a number that
+         * meets shields, armour and damage reduction like every other number.
          *
          * Against a boss it is deliberately near-nothing (utils/skillResolution.ts). Maw's
          * reward for beating the Gargantuar is an executioner for thick regular units; it was

@@ -527,19 +527,20 @@ export const TUTORIAL_CHAIN: TutorialNode[] = [
                     { cls: UnitClass.BASIC_ZOMBIE, x: 5, y: 2 },
                     { cls: UnitClass.BASIC_ZOMBIE, x: 2, y: 7 },
                 ],
-                // Three Coneheads in ONE row, all inside Precision Blast's 4 tiles. 3 HP each
+                // Four Coneheads in ONE row, all inside Precision Blast's 4 tiles. 3 HP each
                 // against 3 piercing damage: the skill the player just learned to afford kills
                 // the entire wave in a single click. Basic Pea Shot would kill none of them.
-                // Six at once — the elite spike. Two jobs in one wave, which is why they all
+                // Seven at once — the elite spike. Two jobs in one wave, which is why they all
                 // arrive together on turn 3 rather than one wave per turn: a wave that lands
                 // on the LAST turn never acts at all (spawns are held still the turn they
                 // appear), so the killers have to be on the board a full turn early.
                 3: [
-                    // The pierce row: 2 HP behind armour 1, and Precision Blast's four tiles
-                    // from C4 are exactly C5..C8, so one click (3 - armour = 2, exactly
+                    // The pierce row: 3 HP of plain plastic — the cone lost its armour when
+                    // armour became metal (data/zombies.ts) — and Precision Blast's four
+                    // tiles from C4 are exactly C5..C8, so one click (3 damage, exactly
                     // lethal) removes the entire lane. Pea Shot would kill none of them —
-                    // 2 damage arrives as 1 against 2 health — which is the argument for Sun
-                    // made in units rather than in words.
+                    // 2 damage against 3 health — which is the argument for Sun made in
+                    // units rather than in words.
                     { cls: UnitClass.CONEHEAD, x: 2, y: 4 },
                     { cls: UnitClass.CONEHEAD, x: 2, y: 5 },
                     { cls: UnitClass.CONEHEAD, x: 2, y: 6 },
@@ -743,7 +744,16 @@ export const TUTORIAL_CHAIN: TutorialNode[] = [
                 // the board already speaks: kill either one and the OTHER one walks in. The
                 // unsavable assertion proves it over their combined health, so neither can
                 // quietly become killable on its own.
-                { cls: UnitClass.SCREEN_DOOR_ZOMBIE, x: 5, y: 1, hpBonus: 4, unsavable: true },
+                // hpBonus 3: the door's base body is 2 HP behind metal armour now
+                // (data/zombies.ts), and the number is chosen so the script's exact damage
+                // stream — pea 1 + Sun Burn 3 on turn 1 (both shaved by the armour), then
+                // turn 3's bash-collision — kills it on TURN 3 at D1, the same turn the old
+                // 8 HP unarmoured door died there. That death is load-bearing: the Buckethead
+                // behind it re-paths through the freed row-0 lane to C1, which is the tile
+                // turn 4's slam-and-pea close-out clicks on. One point more and the door
+                // outlives its cue, the bucket parks on D1 instead, and the replay desyncs
+                // on the Peashooter's scripted step into that exact tile.
+                { cls: UnitClass.SCREEN_DOOR_ZOMBIE, x: 5, y: 1, hpBonus: 3, unsavable: true },
                 // SUNSPOT's turn-3 target, and no longer mere bookkeeping: a GRAVE digs up
                 // a zombie every GRAVE_DIG_PERIOD turns (turnManager), telegraphed on
                 // the unit as a countdown. Its clock strikes at the end of turn 2 — the
@@ -783,7 +793,7 @@ export const TUTORIAL_CHAIN: TutorialNode[] = [
                 { turn: 1, note: 'Hất văng nó khỏi hiên nhà!', focus: 'tile-1-1', act: 'ATTACK' },
                 { turn: 1, note: 'Gài Mìn Khoai Tây chặn bước nó quay lại.', focus: 'item-potato_mine' },
                 { turn: 1, note: 'Đặt mìn vào đúng ô vừa hất ra.', focus: 'tile-1-1', act: 'ITEM' },
-                { turn: 1, note: 'Nhà dưới: Cửa Lưới 8 máu. Xạ Thủ, bắn!', focus: 'unit-MAT_PEASHOOTER' },
+                { turn: 1, note: 'Nhà dưới: Cửa Lưới 5 máu bọc giáp. Xạ Thủ, bắn!', focus: 'unit-MAT_PEASHOOTER' },
                 { turn: 1, note: 'Di chuyển xuống hàng F lấy góc bắn!', focus: 'tile-5-2', act: 'MOVE' },
                 { turn: 1, note: 'Bắn Đậu!', focus: 'skill-pea_shot' },
                 { turn: 1, note: 'Khai hỏa! Nó mới chỉ trầy da.', focus: 'tile-5-1', act: 'ATTACK' },
@@ -791,7 +801,7 @@ export const TUTORIAL_CHAIN: TutorialNode[] = [
                 { turn: 1, note: 'Tiến sát lại cho đủ tầm thiêu đốt.', focus: 'tile-4-3', act: 'MOVE' },
                 { turn: 1, note: 'Thiêu Đốt — dồn sạch 50 Sun!', focus: 'skill-sf_sunburn' },
                 { turn: 1, note: 'Phun lửa nướng nó!', focus: 'tile-5-1', act: 'ATTACK' },
-                { turn: 1, note: 'Nó còn 2 máu. Kết thúc lượt!', focus: 'end-turn' },
+                { turn: 1, note: 'Nó còn 1 máu. Kết thúc lượt!', focus: 'end-turn' },
 
                 // --- turn 2: the arithmetic says no. Say it, then hold the second front ---
                 { turn: 2, note: 'Nó sát cửa rồi, bắn không kịp nữa!' },
@@ -809,12 +819,13 @@ export const TUTORIAL_CHAIN: TutorialNode[] = [
 
                 // --- turn 3: the thief does not get to walk away ---
                 // Under the house rule a zombie that takes a brain is still standing there
-                // afterwards, on 2 HP, already walking at the NEXT house. Ironhusk answers it
-                // with the board's own opening lesson: shoved with the map edge behind it, the
-                // bash and the collision come to exactly the 2 it has left.
+                // afterwards, on 1 HP, already walking at the NEXT house. Ironhusk answers it
+                // with the board's own opening lesson: shoved with the map edge behind it —
+                // the bash itself bounces off the door's metal (1 - armour = 0), and the
+                // collision is exactly the 1 it has left.
                 { turn: 3, note: 'Con cướp não vẫn còn đó! Chọn Ironhusk.', focus: 'hero-WALL_KNIGHT' },
                 { turn: 3, note: 'Đập Khiên.', focus: 'skill-wk_bash' },
-                { turn: 3, note: 'Hất nó vào tường — đập cộng va là vừa đủ.', focus: 'tile-3-0', act: 'ATTACK' },
+                { turn: 3, note: 'Hất nó vào tường — giáp chặn đập, cú va kết liễu.', focus: 'tile-3-0', act: 'ATTACK' },
                 { turn: 3, note: 'Đội Xô đang tới. Chọn Xạ Thủ.', focus: 'unit-MAT_PEASHOOTER' },
                 { turn: 3, note: 'Sang hàng E cho thẳng đường đạn.', focus: 'tile-4-2', act: 'MOVE' },
                 { turn: 3, note: 'Bắn Đậu.', focus: 'skill-pea_shot' },

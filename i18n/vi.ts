@@ -1100,7 +1100,7 @@ export const VI: Record<string, string> = {
     "Arm it on an empty tile. The first zombie to step there takes 5 damage.": "Gài lên một ô trống. Con zombie đầu tiên bước vào ăn 5 sát thương.",
     "Lays a field of sharp spikes on a tile. Any zombie entering or pushed across takes 2 damage per turn. Lasts 3 turns.": "Trải thảm gai nhọn lên 1 ô. Zombie bước vào hoặc bị ĐẨY lướt qua chịu 2 sát thương/lượt. Tồn tại 3 lượt.",
     "Mind-controls a non-boss zombie: turns it into an ally that attacks other zombies.": "Thôi miên 1 zombie thường: Biến nó thành đồng minh quay lại tấn công kẻ địch.",
-    "Disables all metal armor and shields of zombies in a 3x3 area.": "Vô hiệu hóa toàn bộ Giáp sắt & Khiên của Zombie trong vùng 3x3.",
+    "Rips the metal off zombies in a 3x3 area: armor, shields, and the Push/Status immunities of regular zombies. Bosses keep their gear.": "Hút sạch kim loại của Zombie trong vùng 3x3: tước vĩnh viễn Giáp, Khiên, và cả miễn nhiễm Đẩy/Trạng thái của zombie thường. Trùm không bị mất miễn nhiễm.",
     "Gear": "Khí Tài",
     "Bench {n}/{max}": "Dự bị {n}/{max}",
     "Nothing left on the rack.": "Giá hàng đã trống.",
@@ -1252,7 +1252,7 @@ export const VI: Record<string, string> = {
     // "Bodies shoved" và "Boss turns cancelled" là hai cột tồn tại vì Chardwall:
     // 0 sát thương + 6 cú dúi CHÍNH LÀ câu chuyện, đừng dịch thành từ chung chung.
     "Battle Report": "Báo Cáo Trận Đánh",
-    // Giáp mũ sắt (Conehead/Buckethead — Unit.armor): tooltip trên pip xám của quân.
+    // Giáp kim loại (Buckethead/Cửa Lưới/Bóng Bầu Dục — Unit.armor): tooltip trên pip xám của quân.
     "Armor: every hit loses 1 damage. Fire and spikes ignore it.": "Giáp: mỗi đòn đánh bị trừ 1 sát thương. Lửa và gai xuyên qua giáp.",
     "Damage dealt": "Sát thương gây ra",
     "Kills": "Số mạng hạ",

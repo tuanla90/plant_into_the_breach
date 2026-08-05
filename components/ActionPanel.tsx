@@ -364,6 +364,30 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                           <span className="italic text-gray-400 text-xs">{selectedUnit!.intent?.description ? t(selectedUnit!.intent.description) : t('Idle')}</span>
                       )}
                   </div>
+                  
+                  {/* ENEMY TRAITS */}
+                  <div className="mt-3 pt-3 border-t border-red-500/20">
+                      <h4 className="text-red-300/80 uppercase font-bold text-[10px] tracking-wider mb-2">{t('Traits')}</h4>
+                      <div className="flex flex-wrap gap-1.5">
+                          {selectedUnit!.movementType === 'FLYING' && (
+                              <span className="px-2 py-0.5 bg-red-900/50 border border-red-700/50 rounded-sm text-[10px] text-red-200 uppercase font-bold">{t('Flying')}</span>
+                          )}
+                          {selectedUnit!.movementType === 'TELEPORT' && (
+                              <span className="px-2 py-0.5 bg-red-900/50 border border-red-700/50 rounded-sm text-[10px] text-red-200 uppercase font-bold">{t('Teleporting')}</span>
+                          )}
+                          {((selectedUnit as any).armor || 0) > 0 && (
+                              <span className="px-2 py-0.5 bg-red-900/50 border border-red-700/50 rounded-sm text-[10px] text-red-200 uppercase font-bold">{t('Armor')} {((selectedUnit as any).armor)}</span>
+                          )}
+                          {selectedUnit!.immunities?.map(imm => (
+                              <span key={imm} className="px-2 py-0.5 bg-red-900/50 border border-red-700/50 rounded-sm text-[10px] text-red-200 uppercase font-bold">
+                                  {t('Immune: {imm}', { imm: t(imm) })}
+                              </span>
+                          ))}
+                          {selectedUnit!.movementType === 'WALKING' && !((selectedUnit as any).armor) && (!selectedUnit!.immunities || selectedUnit!.immunities.length === 0) && (
+                              <span className="text-[10px] text-red-400/50 italic">{t('No special traits')}</span>
+                          )}
+                      </div>
+                  </div>
               </div>
           )}
 

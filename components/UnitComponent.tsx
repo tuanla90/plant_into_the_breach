@@ -62,7 +62,9 @@ export const UnitComponent: React.FC<UnitComponentProps> = ({ unit, isSelected, 
   // The Gargantuar's art is drawn facing right; every other zombie in the set marches
   // left, toward the lawn. Mirror it on the WRAPPER, not the <img> — the idle-bob
   // animation owns the img's transform and would silently erase a flip put there.
-  const flip = facingFlip(unit.class);
+  const baseFlip = facingFlip(unit.class) === ' scaleX(-1)';
+  const shouldFlip = unit.flipX ? !baseFlip : baseFlip;
+  const flip = shouldFlip ? ' scaleX(-1)' : '';
   const transformStyle: any = { transformOrigin: '50% 100%' };
   if (unit.visualOffset) {
       transformStyle.transform = `translate(${unit.visualOffset.y * 100}%, ${unit.visualOffset.x * 100}%) ${standUp}${flip}`;

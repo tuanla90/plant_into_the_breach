@@ -13,27 +13,36 @@ export const ZOMBIE_DEFINITIONS: Partial<Record<UnitClass, UnitDefinition>> = {
         upgradeCosts: { hp: 0, dmg: 0, move: 0, cdr: 0 }
     },
     /**
-     * THE HELMET TIER IS ARMOUR NOW, NOT HIT POINTS (brainstorm_balance § 2 — the one idea
-     * that document got right). `armor: 1` shaves every weapon hit, and may shave it to ZERO.
+     * ARMOUR IS METAL, AND ONLY METAL (the Magnet-shroom rule made it literal). `armor: 1`
+     * shaves every weapon hit, and may shave it to ZERO — and because armour is metal, the
+     * Magnet-shroom rips it off. That one sentence now decides who gets the stat:
      *
-     * The numbers are chosen so the time-to-kill against the MAIN damage tier (2 — Shadeleaf,
-     * Maw, Cobb, Thornhide) is UNCHANGED: Conehead 2 HP takes 1 through armour, two hits, as
-     * before; Buckethead 3 HP, three hits, as before. What changed is the CHIP tier: a
-     * 1-damage tool now clangs off a helmet entirely, and the player is told to bring a real
-     * answer — push it, burn it (environment bypasses armour), or spike the lane it walks.
-     * The old ladder note said "the armour ladder has to be made of different numbers of
-     * shots"; it still is, and now it is also made of different KINDS of shot.
+     *   Conehead      3 HP, no armour   a PLASTIC cone is not a helmet, and PvZ's magnet
+     *                                   famously leaves it alone. Its toughness is padding.
+     *   Buckethead    3 HP + armor 1    the metal bucket.
+     *   Screen Door   2 HP + armor 1    the metal door — see its own note.
+     *   Football      4 HP + armor 1    helmet and pads — see its own note.
+     *
+     * Time-to-kill against the MAIN damage tier (2 — Shadeleaf, Maw, Cobb, Thornhide) is
+     * preserved where it matters: Conehead two hits (was two through armour), Buckethead
+     * three, Screen Door two. The CHIP tier (1 damage) now has a real split instead of a
+     * uniform wall: it works on the Conehead again (three hits of honest plastic) and clangs
+     * off the three metal bodies until something answers the metal — push it, burn it
+     * (environment bypasses armour), spike its lane, or magnet the armour off outright.
      *
      * Interactions that keep this honest: FIRE (element or terrain) ignores armour, ground
      * spikes ignore armour, the Potato Mine's trap applies raw damage — so nothing here can
      * make a body unkillable, only pea-proof.
      */
     [UnitClass.CONEHEAD]: {
-        class: UnitClass.CONEHEAD, name: 'Conehead', maxHp: 2, damage: 2, moveRange: 3, armor: 1,
+        // 3 HP, up from 2, because the armour left: 2 HP bare is a Basic Zombie with a hat.
+        // Three keeps it exactly two main-tier hits, one more than the Basic — same ladder
+        // rung it held when the cone was (wrongly) worth an armour point.
+        class: UnitClass.CONEHEAD, name: 'Conehead', maxHp: 3, damage: 2, moveRange: 3,
         imgUrl: ICONS.CONEHEAD,
         movementType: 'WALKING', immunities: [],
         cost: 0,
-        maxStats: { hp: 2, dmg: 2, move: 3, cdr: 0 },
+        maxStats: { hp: 3, dmg: 2, move: 3, cdr: 0 },
         upgradeCosts: { hp: 0, dmg: 0, move: 0, cdr: 0 }
     },
     [UnitClass.BUCKETHEAD]: {
@@ -53,15 +62,18 @@ export const ZOMBIE_DEFINITIONS: Partial<Record<UnitClass, UnitDefinition>> = {
         upgradeCosts: { hp: 0, dmg: 0, move: 0, cdr: 0 }
     },
     [UnitClass.SCREEN_DOOR_ZOMBIE]: {
-        // 4, not 5, and it used to out-tank the Buckethead while ALSO ignoring every status
-        // in the game — strictly better on both axes, which left the bucket with no reason to
-        // exist. The door is a shield, not a bucket: its answer is that control does not
-        // work on it, so it pays for that by being the easier of the two to simply shoot.
-        class: UnitClass.SCREEN_DOOR_ZOMBIE, name: 'Screen Door Zombie', maxHp: 4, damage: 2, moveRange: 3,
+        // The door is METAL now, so it is armour (Magnet-shroom takes it) — and the body
+        // behind it dropped to 2 HP to pay for keeping STATUS. History demands the care:
+        // this zombie once out-tanked the Buckethead while ALSO ignoring every status in
+        // the game — strictly better on both axes. The split today: the bucket is the
+        // tougher grind (3 HP behind the same armour), the door is control-proof but only
+        // two main-tier hits of meat — and one magnet pulse leaves a 2 HP nobody that
+        // every status in the game suddenly sticks to.
+        class: UnitClass.SCREEN_DOOR_ZOMBIE, name: 'Screen Door Zombie', maxHp: 2, damage: 2, moveRange: 3, armor: 1,
         imgUrl: ICONS.SCREEN_DOOR,
-        movementType: 'WALKING', immunities: ['STATUS'], 
+        movementType: 'WALKING', immunities: ['STATUS'],
         cost: 0,
-        maxStats: { hp: 4, dmg: 2, move: 3, cdr: 0 },
+        maxStats: { hp: 2, dmg: 2, move: 3, cdr: 0 },
         upgradeCosts: { hp: 0, dmg: 0, move: 0, cdr: 0 }
     },
     [UnitClass.DIGGER_ZOMBIE]: {
@@ -74,11 +86,17 @@ export const ZOMBIE_DEFINITIONS: Partial<Record<UnitClass, UnitDefinition>> = {
         upgradeCosts: { hp: 0, dmg: 0, move: 0, cdr: 0 }
     },
     [UnitClass.FOOTBALL_ZOMBIE]: {
-        class: UnitClass.FOOTBALL_ZOMBIE, name: 'Football Zombie', maxHp: 5, damage: 2, moveRange: 4,
+        // The helmet and pads are METAL: armour 1, and no immunities at all — the PUSH
+        // immunity it used to carry is gone by design (PvZ's linebacker is fast and tough,
+        // not unshovable). 4 HP behind armour makes it the bulk king of the commons — four
+        // main-tier hits, chip-proof — but every answer armour teaches now works on it:
+        // shove it into a hazard, burn it, spike its sprint lane, or magnet the pads off
+        // and watch a 4 HP body arrive at the line naked.
+        class: UnitClass.FOOTBALL_ZOMBIE, name: 'Football Zombie', maxHp: 4, damage: 2, moveRange: 4, armor: 1,
         imgUrl: ICONS.FOOTBALL,
-        movementType: 'WALKING', immunities: ['PUSH'],
+        movementType: 'WALKING', immunities: [],
         cost: 0,
-        maxStats: { hp: 5, dmg: 2, move: 4, cdr: 0 },
+        maxStats: { hp: 4, dmg: 2, move: 4, cdr: 0 },
         upgradeCosts: { hp: 0, dmg: 0, move: 0, cdr: 0 }
     },
     [UnitClass.POLE_VAULTER]: {

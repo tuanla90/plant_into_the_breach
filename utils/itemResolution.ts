@@ -1,6 +1,32 @@
-import { ItemDefinition, Position, TurnAction, Unit } from '../types';
+import { ItemDefinition, Position, TurnAction, Unit, UnitImmunity, UnitType } from '../types';
 import { calculateDamage, getTileAt, getUnitAt, gustDirection, planPush, getSolidUnitAt } from './gameLogic';
 import { applyPushPlan, pushKill, type ResolveContext } from './actionBuilders';
+
+/**
+ * What the Magnet-shroom can rip off a body: the plating itself, and the immunities that live
+ * in the GEAR rather than the flesh. PUSH is a Catapult's chassis; STATUS is the Screen Door
+ * held between the zombie and the world. BURN/FREEZE/DROWN stay — they describe what a body
+ * is made of, and a magnet has no opinion about meat. (The Football's metal is plain `armor`
+ * since it lost its PUSH immunity — the armour strip below already covers it.)
+ */
+const METAL_IMMUNITIES: ReadonlyArray<UnitImmunity> = ['PUSH', 'STATUS'];
+
+/**
+ * Gear immunities come off the REGULAR horde only. A boss's immunity is its design — one
+ * each, load-bearing (data/zombies.ts) — and a 50-Coin click that makes a boss shovable or
+ * freezable is the "consumable deletes a boss" line the Jalapeno note in data/items.ts
+ * already refuses to cross. Obstacles keep theirs too: a rock's PUSH is physics, not a helmet.
+ * Armor and shield still come off ANYONE — losing plating speeds a fight up, it does not
+ * skip one.
+ */
+const magnetStripsImmunities = (u: Unit): boolean =>
+    !u.bossId && u.type === UnitType.ZOMBIE;
+
+/** True when the magnet has anything at all to take from this unit. */
+const magnetHasWork = (u: Unit): boolean =>
+    (u.armor || 0) > 0
+    || (u.shield || 0) > 0
+    || (magnetStripsImmunities(u) && u.immunities.some(i => METAL_IMMUNITIES.includes(i)));
 
 /**
  * ITEMS, RESOLVED. The sibling of skillResolution — same split, same reasons.
@@ -53,19 +79,19 @@ export const itemTargetInvalid = (item: ItemDefinition, pos: Position, ctx: Reso
 
     if (item.effect === 'STRIP_ARMOR') {
         const radius = item.rangeRadius || 1;
-        let foundArmored = false;
+        let foundMetal = false;
         for (let x = pos.x - radius; x <= pos.x + radius; x++) {
             for (let y = pos.y - radius; y <= pos.y + radius; y++) {
                 if (x >= 0 && x < 8 && y >= 0 && y < 8) {
                     const u = getUnitAt({ x, y }, units);
-                    if (u && u.isEnemy && ((u.armor || 0) > 0 || (u.shield || 0) > 0)) {
-                        foundArmored = true;
+                    if (u && u.isEnemy && magnetHasWork(u)) {
+                        foundMetal = true;
                         break;
                     }
                 }
             }
         }
-        return !foundArmored;
+        return !foundMetal;
     }
 
     return false;
@@ -116,12 +142,12 @@ export const planItemActions = (
             for (let y = pos.y - radius; y <= pos.y + radius; y++) {
                 if (x >= 0 && x < 8 && y >= 0 && y < 8) {
                     const target = getUnitAt({ x, y }, units);
-                    if (target && target.isEnemy && ((target.armor || 0) > 0 || (target.shield || 0) > 0)) {
-                        actions.push({
-                            type: 'UPDATE_UNIT_STATE',
-                            unitId: target.id,
-                            updates: { armor: 0, shield: 0 }
-                        });
+                    if (target && target.isEnemy && magnetHasWork(target)) {
+                        const updates: Partial<Unit> = { armor: 0, shield: 0 };
+                        if (magnetStripsImmunities(target)) {
+                            updates.immunities = target.immunities.filter(i => !METAL_IMMUNITIES.includes(i));
+                        }
+                        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: target.id, updates });
                         actions.push({ type: 'APPLY_DAMAGE', targetId: target.id, amount: 0, eventType: 'BLOCK', pos: { x, y } });
                     }
                 }
