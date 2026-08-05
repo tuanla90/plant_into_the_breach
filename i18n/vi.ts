@@ -1047,7 +1047,7 @@ export const VI: Record<string, string> = {
     "Blightlord Broadcast": "Buổi Phát Sóng Của Blightlord",
     "A hologram of the Blightlord flickers into the road. \"Greetings, grassy simpletons. Surrender the brainz and I shall make your composting… brisk.\"": "Hình chiếu của Blightlord chập chờn hiện giữa đường. \"Chào lũ cỏ dại ngờ nghệch. Nộp não ra rồi ta sẽ cho các ngươi mục rữa… thật chóng vánh.\"",
     "Operation: Blightfall": "Chiến Dịch: Blightfall",
-    "Hover for details": "Rê chuột xem chi tiết",
+    "Tap or hover for details": "Chạm / rê chuột xem chi tiết",
     "Master": "Tổng",
     "Music": "Nhạc nền",
     "Effects": "Hiệu ứng",

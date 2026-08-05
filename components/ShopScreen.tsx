@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BenchPlant, ItemDefinition, MaterialId, Unit } from '../types';
 import { ShoppingCart, Heart, Sun, ArrowLeft, Coins, RefreshCw, Sprout, AlertTriangle, Brain, Info } from 'lucide-react';
 import { BENCH_CAPACITY, FUSION_SLOTS, shopRerollCost } from '../constants';
@@ -45,8 +45,11 @@ interface ShopScreenProps {
  *
  * Rules this screen follows after the readability pass:
  *  - Cards carry a NAME and a PRICE, nothing else. Every description, per-hero fusion
- *    status and stat line lives in the hover panel — read it when you want it, never
- *    pushed at you. (The material hover keeps the three DESIGN.md section 5 lines.)
+ *    status and stat line lives in the info panel — read it when you want it, never
+ *    pushed at you. (The material panel keeps the three DESIGN.md section 5 lines.)
+ *  - The info panel opens on hover (desktop) OR by tapping the card (touch, where
+ *    hover does not exist). The Buy button is its own tap target and never toggles
+ *    the panel — info first, purchase second, on every device.
  *  - The page is top-anchored (`items-start`), because a centered column taller than the
  *    viewport clips its own header above the scrollable area — the old layout's bug.
  *  - Hover panels open UPWARD from the bottom half of the card grid and never off-screen.
@@ -70,6 +73,12 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({
     onBuyBrain,
 }) => {
     const { t } = useI18n();
+    // Which card's info panel is pinned open — the touch-device stand-in for hover.
+    // Tapping a card pins its panel; tapping it again, tapping empty space, or buying
+    // unpins. Desktop hover stays pure CSS (`group-hover` below), gated behind
+    // `@media (hover:hover)` so mobile sticky-:hover can't hold a panel open after
+    // the tap that was meant to close it.
+    const [openInfo, setOpenInfo] = useState<string | null>(null);
     // Shop services and items are all paid in Coin — Sun never leaves the battlefield
     // (DESIGN.md section 3). `sun` is shown in the header for reference only.
     const heroes = squad.filter(u => u.isHero);
@@ -82,7 +91,10 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({
     const canBuyBrain = !!onBuyBrain && !brainsFull && canAffordBrain;
 
     return (
-        <div className="w-full h-full bg-[#111] flex justify-center items-start font-pixel text-white relative overflow-y-auto py-5 px-4">
+        <div
+            className="w-full h-full bg-[#111] flex justify-center items-start font-pixel text-white relative overflow-y-auto py-5 px-4"
+            onClick={() => setOpenInfo(null)}
+        >
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-scales.png')] opacity-30 pointer-events-none"></div>
 
             <div className="w-full max-w-5xl z-10 flex flex-col gap-3">
@@ -195,11 +207,20 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({
                             const ownedBySomeone = statuses.some(s => s.owned);
                             const noHeroCanTakeIt = statuses.length > 0 && statuses.every(s => !s.ok);
 
+                            // Keyed by INDEX, not material — two cards can carry the same
+                            // material and each needs its own panel.
+                            const infoKey = `plant-${index}`;
+                            const pinned = openInfo === infoKey;
+
                             return (
                                 <div
                                     key={`${materialId}-${index}`}
+                                    onClick={e => {
+                                        e.stopPropagation();
+                                        setOpenInfo(k => (k === infoKey ? null : infoKey));
+                                    }}
                                     className={`
-                                        relative group flex flex-col p-2.5 bg-black/40 border transition-colors
+                                        relative group flex flex-col p-2.5 bg-black/40 border transition-colors cursor-pointer
                                         ${noHeroCanTakeIt ? 'border-red-800 hover:border-red-600' : 'border-gray-700 hover:border-green-500'}
                                     `}
                                 >
@@ -217,13 +238,19 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({
                                         <div className="flex-1 min-w-0">
                                             <div className="font-bold text-green-200 text-sm truncate">{t(def.name)}</div>
                                             <div className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5">
-                                                <Info size={10} /> {t('Hover for details')}
+                                                <Info size={10} /> {t('Tap or hover for details')}
                                             </div>
                                         </div>
                                     </div>
 
                                     <button
-                                        onClick={() => onBuyMaterial && onBuyMaterial(materialId, index)}
+                                        onClick={e => {
+                                            // The card behind this button toggles the info panel;
+                                            // a purchase must stay a purchase, on touch and mouse alike.
+                                            e.stopPropagation();
+                                            setOpenInfo(null);
+                                            if (onBuyMaterial) onBuyMaterial(materialId, index);
+                                        }}
                                         disabled={!buyable}
                                         data-tut={`shop-plant-${materialId}`}
                                         className={`
@@ -239,11 +266,14 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({
                                         </span>
                                     </button>
 
-                                    {/* --- Hover panel: the three lines DESIGN.md section 5 requires.
+                                    {/* --- Info panel: the three lines DESIGN.md section 5 requires.
                                         Opens DOWNWARD (the grid sits near the top of the page) but is
                                         anchored inside the card column so it can never leave the page
-                                        horizontally; z-50 floats it over the sections below. --- */}
-                                    <div className="pointer-events-none absolute z-50 left-0 right-0 top-full mt-1 hidden group-hover:block">
+                                        horizontally; z-50 floats it over the sections below.
+                                        Pinned (tap): interactive, so a tap on it closes it instead of
+                                        falling through to the card it covers. Hover-only: inert, so the
+                                        mouse can reach the cards underneath. --- */}
+                                    <div className={`absolute z-50 left-0 right-0 top-full mt-1 ${pinned ? 'block' : 'pointer-events-none hidden [@media(hover:hover)]:group-hover:block'}`}>
                                         <div className="bg-[#0b0d10] border-2 border-yellow-600 p-3 shadow-2xl text-left space-y-2.5">
                                             {/* 1. What it gives a hero */}
                                             <div>
@@ -305,10 +335,16 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({
                     <div className="grid grid-cols-2 gap-3">
                         {items.map(item => {
                             const affordable = coins >= item.coinCost;
+                            const infoKey = `item-${item.id}`;
+                            const pinned = openInfo === infoKey;
                             return (
                                 <div
                                     key={item.id}
-                                    className="relative group flex gap-3 items-center p-2.5 bg-black/40 border border-gray-700 hover:border-yellow-500 transition-colors"
+                                    onClick={e => {
+                                        e.stopPropagation();
+                                        setOpenInfo(k => (k === infoKey ? null : infoKey));
+                                    }}
+                                    className="relative group flex gap-3 items-center p-2.5 bg-black/40 border border-gray-700 hover:border-yellow-500 transition-colors cursor-pointer"
                                 >
                                     <div className="w-12 h-12 bg-black flex items-center justify-center border border-gray-600 shrink-0">
                                         <img src={item.imgUrl} className="w-10 h-10 object-contain" />
@@ -316,11 +352,15 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({
                                     <div className="flex-1 min-w-0">
                                         <div className="font-bold text-yellow-200 text-sm truncate">{t(item.name)}</div>
                                         <div className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5">
-                                            <Info size={10} /> {t('Hover for details')}
+                                            <Info size={10} /> {t('Tap or hover for details')}
                                         </div>
                                     </div>
                                     <button
-                                        onClick={() => onBuyItem(item)}
+                                        onClick={e => {
+                                            e.stopPropagation();
+                                            setOpenInfo(null);
+                                            onBuyItem(item);
+                                        }}
                                         disabled={!affordable}
                                         data-tut={`shop-item-${item.id}`}
                                         className={`
@@ -334,9 +374,10 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({
                                         <span className="flex items-center gap-1 text-amber-300"><Coins size={12} /> {item.coinCost}</span>
                                     </button>
 
-                                    {/* Item description on hover — opens UPWARD: this section sits at
-                                        the bottom of the page, downward would leave the viewport. */}
-                                    <div className="pointer-events-none absolute z-50 left-0 right-0 bottom-full mb-1 hidden group-hover:block">
+                                    {/* Item description panel — opens UPWARD: this section sits at
+                                        the bottom of the page, downward would leave the viewport.
+                                        Same pinned/hover split as the plant panels above. */}
+                                    <div className={`absolute z-50 left-0 right-0 bottom-full mb-1 ${pinned ? 'block' : 'pointer-events-none hidden [@media(hover:hover)]:group-hover:block'}`}>
                                         <div className="bg-[#0b0d10] border-2 border-yellow-600 p-3 shadow-2xl">
                                             <div className="text-xs text-gray-200 leading-snug">{t(item.description)}</div>
                                         </div>
