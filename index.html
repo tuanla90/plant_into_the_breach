@@ -160,7 +160,7 @@
     </style>
 
     <!-- PWA Manifest & iOS Fullscreen Standalone Support -->
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href="./manifest.json" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Blightfall" />
@@ -168,11 +168,11 @@
   </head>
   <body class="bg-itb-bg text-white overflow-hidden font-pixel">
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+    <script type="module" src="./index.tsx"></script>
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW reg error:', err));
+          navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW reg error:', err));
         });
       }
     </script>
