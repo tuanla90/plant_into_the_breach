@@ -465,7 +465,7 @@ export const planSkillActions = (
                 // fallback preserves — nothing existing changes reach.
                 const pushTiles = pushEffect.type === 'GLOBAL_PUSH' ? 1 : (pushEffect.value ?? 1);
                 const plan = planPush(targetUnit, dx, dy, livingSim, board, terrainDefs, 3, new Set(), pushTiles);
-                applyPushPlan(plan, actions, tempUnits, caster);
+                applyPushPlan(plan, actions, tempUnits, board, caster);
                 applyCollisionBonus(plan);
             }
         }

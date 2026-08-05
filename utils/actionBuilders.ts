@@ -1,5 +1,5 @@
 import { ElementId, Position, TerrainDefinition, TileData, TurnAction, Unit, UnitType } from '../types';
-import { calculateDamage, planPush } from './gameLogic';
+import { calculateDamage, getTileAt, planPush } from './gameLogic';
 import { getFusionEffectValue, hasFusionEffect } from './fusion';
 
 /**
@@ -59,13 +59,34 @@ export const applyPushPlan = (
     plan: ReturnType<typeof planPush>,
     actions: TurnAction[],
     sim: Map<string, Unit>,
+    /** The ground the shove crosses — spike fields on it bite every body driven over them. */
+    board: TileData[],
     killer?: Unit | null,
 ) => {
     plan.moves.forEach(m => {
         const u = sim.get(m.unitId);
-        if (!u) return;
+        // hp check: a body the spikes below killed mid-shove slides no further, and its
+        // planned drown, dunk or brain theft died with it.
+        if (!u || u.hp <= 0) return;
         actions.push({ type: 'UNIT_MOVE', unitId: m.unitId, path: [m.to], isForced: true });
         u.position = m.to;
+
+        /**
+         * Spikes bite a SHOVED body exactly as they bite a walking one — being pushed across
+         * the field is still crossing the field, which is what the item card promises. This
+         * is the push half of `stepOnSpikes` (utils/turnManager.ts) and MUST stay in step
+         * with it: enemies only, fliers drift over, and the spines come up under the boots so
+         * helmet armour is bypassed. Safe against double-billing because the walking half
+         * only ever runs on the walks turnManager itself commits, never on forced moves.
+         */
+        if (!u.isEnemy || u.movementType === 'FLYING') return;
+        const field = getTileAt(m.to, board)?.spikes;
+        if (!field || field.turns <= 0) return;
+        const r = calculateDamage(u, field.damage, false, true);
+        actions.push({ type: 'APPLY_DAMAGE', targetId: u.id, amount: r.finalDamage, eventType: 'DAMAGE', pos: m.to });
+        u.hp = r.remainingHp;
+        u.shield = r.remainingShield;
+        if (r.isFatal) pushKill(actions, u, killer ?? undefined);
     });
 
     /**
@@ -91,7 +112,8 @@ export const applyPushPlan = (
 
     plan.drowned.forEach(id => {
         const u = sim.get(id);
-        if (!u) return;
+        // Spiked dead on the way: it never reached the water, so it must not drown twice.
+        if (!u || u.hp <= 0) return;
         actions.push({ type: 'APPLY_DAMAGE', targetId: id, amount: 0, eventType: 'DROWN', pos: u.position });
         u.hp = 0;
         pushKill(actions, u, killer ?? undefined);
@@ -112,7 +134,7 @@ export const applyPushPlan = (
      */
     plan.doused.forEach(id => {
         const u = sim.get(id);
-        if (!u) return;
+        if (!u || u.hp <= 0) return;
         actions.push({ type: 'APPLY_DAMAGE', targetId: id, amount: 0, eventType: 'DROWN', pos: u.position });
         actions.push({ type: 'UPDATE_INTENT', unitId: id, intent: { type: 'WAIT', description: 'Dragged out of the water...' } });
         u.intent = { type: 'WAIT', description: 'Dragged out of the water...' };
@@ -123,7 +145,8 @@ export const applyPushPlan = (
     // in on its own turn produces, so the reducer's counter cannot drift between the two.
     plan.tookBrain.forEach(({ unitId, house }: { unitId: string; house: Position }) => {
         const u = sim.get(unitId);
-        if (!u) return;
+        // Spiked dead on the doorstep: the brain stays where it is.
+        if (!u || u.hp <= 0) return;
         actions.push({ type: 'BRAIN_LOST', pos: house, unitId });
         u.hp = 0;
     });

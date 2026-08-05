@@ -175,7 +175,7 @@ export const planItemActions = (
                 return;
             }
             const plan = planPush(live, gdx, gdy, Array.from(gustSim.values()), board, terrainDefs);
-            applyPushPlan(plan, actions, gustSim, actor);
+            applyPushPlan(plan, actions, gustSim, board, actor);
         });
 
         return actions;

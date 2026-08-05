@@ -322,13 +322,19 @@ export const processTurn = (
 
                 plan.moves.forEach(m => {
                     const t = simUnits.find(s2 => s2.id === m.unitId);
-                    if (!t) return;
+                    // Spiked dead a tile ago: the wind carries no corpses.
+                    if (!t || t.hp <= 0) return;
                     actions.push({ type: 'UNIT_MOVE', unitId: m.unitId, path: [m.to], isForced: true });
                     t.position = m.to;
+                    // The wind drives bodies across spike fields like any other shove does
+                    // (utils/actionBuilders.ts, applyPushPlan) — written here too because this
+                    // hazard path builds its own actions, and stepOnSpikes already owns the
+                    // exemptions and the armour bypass.
+                    stepOnSpikes(t, [m.to]);
                 });
                 plan.drowned.forEach(id => {
                     const t = simUnits.find(s2 => s2.id === id);
-                    if (!t) return;
+                    if (!t || t.hp <= 0) return;
                     actions.push({ type: 'APPLY_DAMAGE', targetId: id, amount: 0, eventType: 'DROWN', pos: t.position });
                     t.hp = 0;
                     killUnit(t);
@@ -339,7 +345,7 @@ export const processTurn = (
                 // own actions rather than going through applyPushPlan.
                 plan.doused.forEach(id => {
                     const t = simUnits.find(s2 => s2.id === id);
-                    if (!t) return;
+                    if (!t || t.hp <= 0) return;
                     actions.push({ type: 'APPLY_DAMAGE', targetId: id, amount: 0, eventType: 'DROWN', pos: t.position });
                     const wait: Intent = { type: 'WAIT', description: 'Dragged out of the water...' };
                     actions.push({ type: 'UPDATE_INTENT', unitId: id, intent: wait });
@@ -347,7 +353,8 @@ export const processTurn = (
                 });
                 plan.tookBrain.forEach(({ unitId, house }) => {
                     const t = simUnits.find(s2 => s2.id === unitId);
-                    if (!t) return;
+                    // Spiked dead on the doorstep: the brain stays where it is.
+                    if (!t || t.hp <= 0) return;
                     // Remember it here too: the board is the reducer's to change, so a second
                     // shove this same turn would otherwise claim the same brain again.
                     hazardEatenHouses.add(`${house.x},${house.y}`);
@@ -1048,7 +1055,7 @@ export const processTurn = (
                         const plan = planPush(enemy, dx, dy, living, currentBoard, terrainDefs, 3, brainsTakenThisTurn);
                         // applyPushPlan works on a map of the very same objects, so the sim
                         // sees the new positions and hp without a second pass.
-                        applyPushPlan(plan, actions, new Map(living.map(u => [u.id, u])), targetUnit);
+                        applyPushPlan(plan, actions, new Map(living.map(u => [u.id, u])), currentBoard, targetUnit);
                         plan.tookBrain.forEach(({ unitId, house }) => {
                             brainsTakenThisTurn.add(`${house.x},${house.y}`);
                             brainThieves.add(unitId);
@@ -1072,7 +1079,7 @@ export const processTurn = (
                     if (dx !== 0 || dy !== 0) {
                         const living = simUnits.filter(u => u.hp > 0);
                         const plan = planPush(targetUnit, dx, dy, living, currentBoard, terrainDefs, 3, brainsTakenThisTurn, intent.pushOnHit);
-                        applyPushPlan(plan, actions, new Map(living.map(u => [u.id, u])), enemy);
+                        applyPushPlan(plan, actions, new Map(living.map(u => [u.id, u])), currentBoard, enemy);
                         plan.tookBrain.forEach(({ unitId, house }) => {
                             brainsTakenThisTurn.add(`${house.x},${house.y}`);
                             brainThieves.add(unitId);

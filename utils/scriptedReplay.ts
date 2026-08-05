@@ -182,7 +182,18 @@ export const replayScriptedBattle = (
         const plan = planPush(target, dx, dy, living(), board, DEFAULT_TERRAIN_DEFS);
         plan.moves.forEach(m => {
             const u = living().find(z => z.id === m.unitId);
-            if (u) stepThroughTraps(u, [m.to]);
+            if (!u) return;
+            stepThroughTraps(u, [m.to]);
+            // Spikes bite shoved bodies too — a copy of the applyPushPlan rule, and like the
+            // collision block below it MUST stay in step with the real one.
+            const spikes = getTileAt(m.to, board)?.spikes;
+            if (u.hp > 0 && spikes && spikes.turns > 0 && u.isEnemy && u.movementType !== 'FLYING') {
+                const r = calculateDamage(u, spikes.damage, false, true);
+                u.hp = r.remainingHp;
+                u.shield = r.remainingShield;
+                log.push(`spikes at ${TILE(m.to.x, m.to.y)} hit ${u.class} -> hp${u.hp}`);
+                if (r.isFatal) killUnit(u);
+            }
         });
         plan.drowned.forEach(id => { const u = living().find(z => z.id === id); if (u) { log.push(`${u.class} drowns`); killUnit(u); } });
         plan.tookBrain.forEach(({ unitId, house }) => {
