@@ -58,7 +58,7 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({ onContinue, reward
 
     return (
         <div className="fixed inset-0 z-[60] bg-black/90 flex flex-col items-center justify-center font-pixel animate-in fade-in duration-500">
-            <div className="bg-[#1a1c21] border-4 border-yellow-500 p-8 max-w-lg w-full text-center shadow-[0_0_50px_rgba(234,179,8,0.3)] relative overflow-hidden">
+            <div className="bg-[#1a1c21] border-4 border-yellow-500 p-8 max-w-lg w-full text-center shadow-[0_0_50px_rgba(234,179,8,0.3)] relative max-h-[100dvh] overflow-y-auto custom-scrollbar">
                 {/* Background Rays */}
                 <div className="absolute inset-0 bg-[repeating-conic-gradient(from_0deg,transparent_0deg_10deg,rgba(255,255,0,0.05)_10deg_20deg)] animate-[spin_20s_linear_infinite]"></div>
 

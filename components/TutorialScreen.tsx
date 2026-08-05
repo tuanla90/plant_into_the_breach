@@ -473,7 +473,7 @@ export const TutorialScreen: React.FC<TutorialScreenProps> = ({
         );
 
     return (
-        <div className={`${overlay ? 'fixed inset-0 z-[80]' : 'w-full h-screen'} bg-[#0d0e11] flex flex-col font-pixel text-white relative overflow-hidden`}>
+        <div className={`${overlay ? 'fixed inset-0 z-[80]' : 'w-full h-[100dvh]'} bg-[#0d0e11] flex flex-col font-pixel text-white relative overflow-hidden`}>
             <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.03)_1px,transparent_1px)] bg-[length:40px_40px] opacity-20 pointer-events-none"></div>
 
             {/* Header */}

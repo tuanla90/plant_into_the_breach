@@ -103,7 +103,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         </div>
 
                         {/* MODAL BODY */}
-                        <div className="p-5 space-y-6 max-h-[80vh] overflow-y-auto">
+                        <div className="p-5 space-y-6 max-h-[80dvh] overflow-y-auto">
 
                             {/* SECTION 1: AUDIO SETTINGS */}
                             <div className="space-y-4">

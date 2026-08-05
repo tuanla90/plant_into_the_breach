@@ -500,11 +500,11 @@ export const SquadSelectScreen: React.FC<SquadSelectScreenProps> = ({
   };
 
   return (
-    <div className="w-full h-screen bg-[#0d0e11] flex flex-col font-pixel text-white relative overflow-hidden">
+    <div className="w-full min-h-[100dvh] h-auto lg:h-[100dvh] bg-[#0d0e11] flex flex-col font-pixel text-white relative overflow-y-auto lg:overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_120%,#1a2130_0%,#0d0e11_55%,#000_100%)] z-0" />
         <div className="absolute top-0 w-full h-1 bg-yellow-500 shadow-[0_0_20px_rgba(234,179,8,0.5)] z-10" />
 
-        <div className="z-10 w-full h-full flex flex-col px-6 pt-5 pb-5 gap-3 max-w-[1800px] mx-auto">
+        <div className="z-10 w-full min-h-full lg:h-full flex flex-col px-6 pt-5 pb-5 gap-3 max-w-[1800px] mx-auto">
 
             {/* HEADER */}
             <div className="flex flex-wrap justify-between items-end gap-3 border-b border-gray-800 pb-3 shrink-0">

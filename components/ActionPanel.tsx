@@ -129,7 +129,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
       const canStart = deployedCount > 0 && deployedCount <= MAX_DEPLOY;
 
       return (
-        <div className="w-96 cyber-panel border-l border-[#293245] flex flex-col h-full shadow-2xl relative z-30 font-pixel">
+        <div className="w-80 md:w-96 cyber-panel border-l border-[#293245] flex flex-col h-full shadow-2xl relative z-30 font-pixel shrink-0">
             <div className="bg-[#121622] p-5 border-b border-[#293245] text-center">
                 <h2 className="text-xl text-amber-400 uppercase font-black tracking-widest mb-2 flex items-center justify-center gap-2">
                     <Zap size={20} className="text-amber-400 animate-bounce" />
@@ -235,7 +235,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
       const envInfo = selectedTile.environment !== 'NONE' ? terrainDefs[selectedTile.environment] : null;
 
       return (
-        <div className="w-96 cyber-panel border-l border-[#293245] flex flex-col h-full shadow-2xl relative z-30 font-pixel">
+        <div className="w-80 md:w-96 cyber-panel border-l border-[#293245] flex flex-col h-full shadow-2xl relative z-30 font-pixel shrink-0">
             <div className="bg-[#121622] p-5 border-b border-[#293245] flex items-center gap-4">
                  <div className="w-14 h-14 bg-[#0b0d14] border border-[#293245] rounded-xl flex items-center justify-center shadow-inner">
                      <Mountain size={28} className="text-sky-400" />
@@ -295,7 +295,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
   const canUndo = isPlayer && selectedUnit!.hasMoved && !selectedUnit!.hasAttacked && selectedUnit!.prevPosition !== undefined && interactionMode !== 'MOVING' && interactionMode !== 'EXECUTING';
 
   return (
-    <div className="w-96 cyber-panel border-l border-[#293245] flex flex-col h-full shadow-2xl relative z-30 font-pixel">
+    <div className="w-80 md:w-96 cyber-panel border-l border-[#293245] flex flex-col h-full shadow-2xl relative z-30 font-pixel shrink-0">
       
       {/* A. HEADER: PORTRAIT & BASIC INFO */}
       <div className={`p-5 border-b border-[#293245] ${isPlayer ? 'bg-gradient-to-r from-emerald-950/60 to-slate-900/80' : 'bg-gradient-to-r from-red-950/60 to-slate-900/80'} flex gap-4 relative`}>

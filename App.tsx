@@ -1485,7 +1485,7 @@ const App: React.FC = () => {
   const isInRun = !['START_MENU', 'STAGE_SELECT', 'SQUAD_SELECT', 'TUTORIAL'].includes(gameState.screen);
 
   return (
-    <div className="w-full h-screen bg-[#111] flex flex-col overflow-hidden select-none">
+    <div className="w-full h-[100dvh] bg-[#111] flex flex-col overflow-hidden select-none">
 
       <OrientationOverlay />
 

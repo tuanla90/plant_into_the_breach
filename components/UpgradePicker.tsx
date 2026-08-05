@@ -41,7 +41,7 @@ export const UpgradePicker: React.FC<UpgradePickerProps> = ({ squad, picks, onPi
 
     return (
         <div className="fixed inset-0 z-[70] bg-black/92 flex items-center justify-center font-pixel text-white p-6 animate-in fade-in duration-300">
-            <div className="w-full max-w-[880px] flex flex-col gap-4">
+            <div className="w-full max-w-[880px] flex flex-col gap-4 max-h-[100dvh] overflow-y-auto custom-scrollbar">
 
                 <div className="text-center">
                     <p className="text-[11px] uppercase tracking-[0.35em] text-amber-500">{t('Act cleared')}</p>

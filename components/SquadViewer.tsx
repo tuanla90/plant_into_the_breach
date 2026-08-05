@@ -17,7 +17,7 @@ export const SquadViewer: React.FC<SquadViewerProps> = ({ units, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-[60] bg-black/90 backdrop-blur-sm flex items-center justify-center font-pixel p-8">
-        <div className="w-full max-w-5xl flex flex-col h-full max-h-[80vh]">
+        <div className="w-full max-w-5xl flex flex-col h-full max-h-[80dvh]">
             
             {/* Header */}
             <div className="flex justify-between items-center mb-6 border-b-2 border-gray-700 pb-4">

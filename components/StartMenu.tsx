@@ -49,7 +49,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
     };
 
     return (
-        <div className="w-full h-screen bg-[#0d0e11] flex items-end md:items-center justify-center md:justify-end font-pixel text-white relative overflow-hidden">
+        <div className="w-full min-h-[100dvh] h-auto lg:h-[100dvh] bg-[#0d0e11] flex items-end md:items-center justify-center md:justify-end font-pixel text-white relative overflow-y-auto lg:overflow-hidden">
 
             {/* --- KEY ART --- */}
             {hasCover && (
@@ -63,21 +63,21 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
                         src={COVER_ART}
                         alt=""
                         onError={() => setHasCover(false)}
-                        className="absolute inset-0 w-full h-full object-cover object-top z-0"
+                        className="fixed inset-0 w-full h-full object-cover object-top z-0"
                     />
 
                     {/* Darken the right side only, where the buttons live. The heroes are on
                         the left and the composition's bright centre is the wet street, so a
                         uniform tint would dim exactly the parts worth showing. */}
-                    <div className="absolute inset-0 z-[1] hidden md:block bg-gradient-to-l from-[#0b0d12] via-[#0b0d12]/50 to-transparent"></div>
+                    <div className="fixed inset-0 z-[1] hidden md:block bg-gradient-to-l from-[#0b0d12] via-[#0b0d12]/50 to-transparent"></div>
                 </>
             )}
 
             {/* --- FALLBACK BACKGROUND (only when the key art is missing) --- */}
             {!hasCover && (
                 <>
-                    <div className="absolute inset-0 bg-gradient-to-b from-gray-900 to-black z-0"></div>
-                    <div className="absolute inset-0 bg-[linear-gradient(rgba(34,197,94,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(34,197,94,0.05)_1px,transparent_1px)] bg-[length:40px_40px] opacity-30 z-0"></div>
+                    <div className="fixed inset-0 bg-gradient-to-b from-gray-900 to-black z-0"></div>
+                    <div className="fixed inset-0 bg-[linear-gradient(rgba(34,197,94,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(34,197,94,0.05)_1px,transparent_1px)] bg-[length:40px_40px] opacity-30 z-0"></div>
                     <div className="absolute top-1/4 left-1/4 animate-bounce duration-[3000ms] opacity-20">
                         <Shield size={64} className="text-green-800" />
                     </div>
@@ -88,10 +88,9 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
             )}
 
             {/* Mobile only: there is no right-hand column to put the buttons in, so they sit
-                over the foot of the art and need their own scrim. */}
-            {hasCover && (
-                <div className="absolute inset-0 z-[2] md:hidden bg-gradient-to-t from-black/95 via-black/30 to-transparent"></div>
-            )}
+            directly over the art's focal point. A black gradient coming up from the bottom
+            preserves the title while making the buttons readable. */}
+            <div className="fixed inset-0 top-1/2 z-[1] md:hidden bg-gradient-to-t from-[#0b0d12] via-[#0b0d12]/90 to-transparent"></div>
 
             {/* Scanlines Overlay */}
             <div className="scanlines"></div>

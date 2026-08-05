@@ -153,7 +153,7 @@ export const EventScreen: React.FC<EventScreenProps> = ({
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#1a1c21_0%,#000_100%)] z-0"></div>
 
             {/* EVENT CARD */}
-            <div className="relative z-10 w-full max-w-4xl max-h-[92vh] bg-[#1a1c21] border-2 border-gray-600 shadow-2xl flex flex-col md:flex-row overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="relative z-10 w-full max-w-4xl max-h-[92dvh] bg-[#1a1c21] border-2 border-gray-600 shadow-2xl flex flex-col md:flex-row overflow-hidden animate-in zoom-in-95 duration-300">
 
                 {/* IMAGE SIDE — art is optional; a missing file must not leave a broken frame. */}
                 <div className="w-full md:w-1/3 bg-black relative border-b md:border-b-0 md:border-r border-gray-600 shrink-0 min-h-[120px]">
