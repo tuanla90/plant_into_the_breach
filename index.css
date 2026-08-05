@@ -1,0 +1,145 @@
+/* CSS gốc của app — trước đây nằm trong <style> của index.html cạnh script CDN Tailwind.
+   Tailwind giờ biên dịch lúc build (xem tailwind.config.js); file này là nguồn duy nhất
+   cho cả directives lẫn custom CSS. */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  font-size: 16px;
+}
+/* Compact scale cho mobile landscape (mật độ kiểu Into the Breach mobile).
+   Mọi kích thước rem của Tailwind (chữ, nút, padding, panel) co lại đồng bộ;
+   bàn cờ đo bằng px trong Board.tsx nên tự nở ra chiếm chỗ trống. Khoá theo
+   CHIỀU CAO viewport vì game bắt xoay ngang — viewport thấp nghĩa là điện
+   thoại, bất kể rộng bao nhiêu. Các nhãn text-[10px]... giữ nguyên vì đã nhỏ. */
+@media (max-height: 520px) {
+  html { font-size: 14px; }
+}
+@media (max-height: 400px) {
+  html { font-size: 13px; }
+}
+
+body {
+  background-color: #0b0d12;
+  font-family: 'Be Vietnam Pro', sans-serif;
+  color: #e2e8f0;
+  user-select: none;
+}
+img {
+  image-rendering: pixelated;
+}
+
+/* --- Gaming UI Glass & Metallic Panels --- */
+.cyber-panel {
+  background: linear-gradient(135deg, rgba(19, 22, 31, 0.95) 0%, rgba(11, 13, 18, 0.98) 100%);
+  border: 1px solid rgba(41, 50, 69, 0.8);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+}
+
+.cyber-card {
+  background: linear-gradient(180deg, rgba(27, 32, 44, 0.9) 0%, rgba(15, 18, 25, 0.95) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cyber-card:hover {
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow: 0 6px 20px rgba(56, 189, 248, 0.15), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+/* Glow Effects */
+.glow-green {
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+}
+.glow-cyan {
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+}
+.glow-yellow {
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+}
+.glow-red {
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+}
+
+/* Keycap / Hotkey style */
+.keycap {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  border: 1px solid #334155;
+  border-bottom-width: 3px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+/* Custom animations */
+@keyframes threatPulse {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.02); }
+}
+.animate-threat {
+  animation: threatPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spinSlow 12s linear infinite;
+}
+
+@keyframes pulseBorder {
+  0%, 100% { border-color: rgba(56, 189, 248, 0.4); }
+  50% { border-color: rgba(56, 189, 248, 0.9); }
+}
+.animate-pulse-border {
+  animation: pulseBorder 2s infinite;
+}
+
+/* CRT Scanline effect */
+.scanlines {
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0),
+    rgba(255,255,255,0) 50%,
+    rgba(0,0,0,0.25) 50%,
+    rgba(0,0,0,0.25)
+  );
+  background-size: 100% 4px;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  opacity: 0.08;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 3px;
+}
+
+/* --- Giảm tải GPU cho thiết bị cảm ứng / màn thấp ---
+   backdrop-filter là hiệu ứng vẽ đắt nhất trên GPU điện thoại (blur lại toàn bộ
+   nội dung phía sau MỖI khung hình). Panel vẫn giữ nền mờ đục — chỉ mất hiệu
+   ứng kính; đổi lại khung hình mượt hơn rõ rệt trong trận. */
+@media (pointer: coarse), (max-height: 520px) {
+  .cyber-panel,
+  [class*="backdrop-blur"] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
