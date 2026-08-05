@@ -38,11 +38,22 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
+  const req = event.request;
+  if (req.method !== 'GET') return;
+
+  // Media đi THẲNG, không qua SW. Nhạc/sfx tải bằng range request (206);
+  // service worker trả lời range không đúng cách — đặc biệt trên iOS/WebKit —
+  // là <audio> câm lặng lẽ. Cache fallback bên dưới cũng chỉ biết trả bản 200
+  // đầy đủ, sai với client đang xin một khúc giữa file.
+  if (req.headers.has('range')) return;
+  const url = new URL(req.url);
+  if (url.origin !== location.origin) return;
+  if (/\.(mp3|wav|ogg|m4a)$/i.test(url.pathname)) return;
+
   // Network first with cache fallback
   event.respondWith(
-    fetch(event.request).catch(() =>
-      caches.match(event.request).then((cached) => cached || Response.error())
+    fetch(req).catch(() =>
+      caches.match(req).then((cached) => cached || Response.error())
     )
   );
 });

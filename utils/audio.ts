@@ -92,7 +92,12 @@ const MUSIC: Record<MusicTrack, { file: string; gain: number }> = {
     boss:   { file: 'music-boss.mp3',   gain: 0.32 },
 };
 
-const BASE = '/audio/';
+// BASE_URL chứ không phải '/audio/' cứng: site deploy dưới đường dẫn con
+// (github.io/plant_into_the_breach/), đường dẫn tuyệt đối trỏ về gốc domain
+// và MỌI file âm thanh 404 — game câm hoàn toàn trên bản deploy trong khi
+// localhost vẫn kêu bình thường. BASE_URL của Vite là './' nên phân giải
+// theo URL trang ở cả hai môi trường.
+const BASE = import.meta.env.BASE_URL + 'audio/';
 const POOL_SIZE = 4;
 
 // --- SETTINGS ---------------------------------------------------------------

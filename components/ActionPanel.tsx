@@ -75,31 +75,35 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
               disabled={spent || locked || !onResetTurn}
               data-tut="reset-turn"
               title={t('Chrona rewinds the board to the start of this turn. Once per battle.')}
-              className={`w-full py-2 px-4 mb-2 border rounded-lg flex items-center justify-center gap-2 transition-all
+              className={`flex-1 lg:w-full py-2 px-2 lg:px-4 border rounded-lg flex items-center justify-center gap-1.5 lg:gap-2 transition-all
                   ${spent || locked
                       ? 'border-gray-700 text-gray-600 bg-[#0b0d14] cursor-not-allowed opacity-60'
                       : 'border-cyan-500/60 text-cyan-300 bg-gradient-to-r from-cyan-950 via-slate-900 to-cyan-950 hover:border-cyan-300 hover:text-white shadow-[0_0_12px_rgba(34,211,238,0.15)] active:scale-95 cursor-pointer'}`}
           >
-              <RotateCcw size={14} />
-              <span className="text-xs font-black uppercase tracking-[0.15em]">{t('Rewind Turn')}</span>
+              <RotateCcw size={14} className="shrink-0" />
+              {/* Chữ chỉ hiện từ lg — dưới đó footer là MỘT hàng và mỗi px bề ngang
+                  đều đang tranh nhau với nút End Turn. Icon + bộ đếm là đủ nghĩa. */}
+              <span className="hidden lg:inline text-xs font-black uppercase tracking-[0.15em]">{t('Rewind Turn')}</span>
               <span className="text-[10px] font-mono opacity-80">{Math.max(0, turnResetsLeft)}/1</span>
           </button>
       );
   };
 
-  // COMPACT END TURN BUTTON
+  // COMPACT END TURN BUTTON — dưới lg, Rewind và End Turn nằm CHUNG MỘT HÀNG:
+  // xếp chồng như desktop thì hai nút này nuốt ~90px chiều cao của panel và danh
+  // sách skill phía trên chỉ còn ló ra một mẩu sau thanh cuộn.
   const EndTurnButton = () => (
-      <>
+      <div className="flex lg:flex-col gap-1.5 lg:gap-2">
       <RewindTurnButton />
       <button
           onClick={onEndTurn}
           data-tut="end-turn"
-          className="w-full bg-gradient-to-r from-red-950 via-rose-900 to-red-950 hover:from-red-900 hover:to-rose-800 text-red-200 hover:text-white border border-red-500/60 hover:border-red-400 py-2.5 px-4 shadow-[0_0_15px_rgba(239,68,68,0.25)] active:scale-95 transition-all flex items-center justify-center gap-2 mt-auto rounded-lg group cursor-pointer"
+          className="flex-[2] lg:w-full bg-gradient-to-r from-red-950 via-rose-900 to-red-950 hover:from-red-900 hover:to-rose-800 text-red-200 hover:text-white border border-red-500/60 hover:border-red-400 py-2 lg:py-2.5 px-3 lg:px-4 shadow-[0_0_15px_rgba(239,68,68,0.25)] active:scale-95 transition-all flex items-center justify-center gap-2 rounded-lg group cursor-pointer"
       >
           <span className="text-sm lg:text-base font-black uppercase tracking-[0.1em] lg:tracking-[0.2em] group-hover:drop-shadow whitespace-nowrap">{t('End Turn')}</span>
           <span className="keycap text-[10px] text-red-300 border-red-500/40 hidden md:inline">SPACE</span>
       </button>
-      </>
+      </div>
   );
 
   const StartBattleButton = ({ disabled }: { disabled: boolean }) => (
@@ -307,7 +311,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
           {/* w-18/h-18 are NOT in this Tailwind build's spacing scale — they resolved to
               nothing, the box fell back to auto, and it grew to the sprite's natural 512px
               inside a 384px panel. overflow-hidden keeps any future oversized art contained. */}
-          <div className="relative w-16 h-16 bg-[#0b0d14] border-2 border-white/20 rounded-xl shadow-inner shrink-0 overflow-hidden p-1">
+          <div className="relative w-12 h-12 lg:w-16 lg:h-16 bg-[#0b0d14] border-2 border-white/20 rounded-xl shadow-inner shrink-0 overflow-hidden p-1">
               <img 
                  src={selectedUnit!.imgUrl} 
                  className={`w-full h-full object-contain ${isDone ? 'grayscale opacity-60' : ''}`}
@@ -330,18 +334,18 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
 
       {/* B. STATS GRID */}
       <div className="grid grid-cols-2 border-b border-[#293245] divide-x divide-[#293245] bg-[#121622]">
-          <div className="p-2.5 flex items-center gap-3 justify-center">
+          <div className="p-1.5 lg:p-2.5 flex items-center gap-2 lg:gap-3 justify-center">
               <Shield size={18} className="text-red-400" />
               <div className="flex flex-col items-start leading-none">
                   <span className="text-[10px] text-gray-400 uppercase font-bold">{t('HP')}</span>
-                  <span className="text-lg text-white font-black">{selectedUnit!.hp}/{selectedUnit!.maxHp}</span>
+                  <span className="text-base lg:text-lg text-white font-black">{selectedUnit!.hp}/{selectedUnit!.maxHp}</span>
               </div>
           </div>
-          <div className="p-2.5 flex items-center gap-3 justify-center">
+          <div className="p-1.5 lg:p-2.5 flex items-center gap-2 lg:gap-3 justify-center">
               <Move size={18} className="text-sky-400" />
               <div className="flex flex-col items-start leading-none">
                   <span className="text-[10px] text-gray-400 uppercase font-bold">{t('Move')}</span>
-                  <span className="text-lg text-white font-black">{selectedUnit!.moveRange}</span>
+                  <span className="text-base lg:text-lg text-white font-black">{selectedUnit!.moveRange}</span>
               </div>
           </div>
       </div>
