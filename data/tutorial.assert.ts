@@ -41,7 +41,22 @@ import {
 // written down here and checked at build time.
 // ---------------------------------------------------------------------------------------
 
-const WORD_LIMIT = 12;
+/**
+ * Words allowed in one coach note.
+ *
+ * Raised from 12 after the campfire lesson (tut_6) needed three sentences that could not be
+ * cut further without dropping a rule the player has to know: which hero receives the trait,
+ * that the material leaves the bench, and that the graft is permanent.
+ */
+const WORD_LIMIT = 15;
+
+/** Shared by both note lists — see the two call sites below. */
+const assertNoteLength = (where: string, note: string) => {
+    const words = note.trim().split(/\s+/).length;
+    if (words > WORD_LIMIT) {
+        throw new Error(`${where}: note is ${words} words (max ${WORD_LIMIT}). Fix the board, not the note.`);
+    }
+};
 
 /**
  * The least damage the hero can take from `wave` if she plays perfectly: every tile she can
@@ -282,10 +297,7 @@ export const assertTutorial = () => {
 
         // --- notes stay one line ---
         b.steps.forEach(st => {
-            const words = st.note.trim().split(/\s+/).length;
-            if (words > WORD_LIMIT) {
-                throw new Error(`${node.id} turn ${st.turn}: note is ${words} words (max ${WORD_LIMIT}). Fix the board, not the note.`);
-            }
+            assertNoteLength(`${node.id} turn ${st.turn}`, st.note);
             if (st.turn < 1 || st.turn > b.maxTurns) {
                 throw new Error(`${node.id}: note on turn ${st.turn}, outside 1..${b.maxTurns}`);
             }
@@ -340,7 +352,7 @@ export const assertTutorial = () => {
                 let bite = 0;
                 boxed.forEach(sp => {
                     const d = ZOMBIE_DEFINITIONS[sp.cls]!;
-                    if (heroDist < distToBrain(sp.boxAt!.x, sp.boxAt!.y)) bite += d.damage;
+                    if (heroDist < distToBrain(sp.boxAt!.x, sp.boxAt!.y)) bite += d.damage + (sp.dmgBonus ?? 0);
                     // The post must be reachable from the spawn: straight-line distance is a
                     // lower bound on the real path, and the killers are placed with open lanes.
                     const dist = Math.abs(sp.x - sp.boxAt!.x) + Math.abs(sp.y - sp.boxAt!.y);
@@ -422,8 +434,20 @@ export const assertTutorial = () => {
                     .map(st => st.turn)
             ).size;
 
-            const dmgOf = (sk?: { effects: { type: string; value?: number }[] }) =>
-                sk?.effects.find(e => e.type === 'DAMAGE')?.value ?? 0;
+            /**
+             * What one cast is worth against ONE body — damage times shots.
+             *
+             * The `* VOLLEY` is not decoration. Precision Blast is authored as "2 damage,
+             * three shots" (data/heroes.ts), and reading only the DAMAGE value scored it at 2
+             * — a third of the truth — which would have let this proof declare a boss safe
+             * from a burst that actually kills it. A guarantee computed off the wrong number
+             * is worse than no guarantee, because it is believed.
+             */
+            const dmgOf = (sk?: { effects: { type: string; value?: number }[] }) => {
+                const dmg = sk?.effects.find(e => e.type === 'DAMAGE')?.value ?? 0;
+                const shots = sk?.effects.find(e => e.type === 'VOLLEY')?.value ?? 1;
+                return dmg * Math.max(1, shots);
+            };
             const gs = HERO_DEFINITIONS.GREEN_SHADOW, sf = HERO_DEFINITIONS.SOLAR_FLARE, wk = HERO_DEFINITIONS.WALL_KNIGHT;
             let pea = dmgOf(gs.basicAttack), blast = dmgOf(gs.heroSkill), blastCost = gs.heroSkill.sunCost ?? 0;
             let burn = dmgOf(sf.heroSkill), burnCost = sf.heroSkill.sunCost ?? 0;
@@ -521,13 +545,19 @@ export const assertTutorial = () => {
         const itemIds = shop.itemOffers ?? DEFAULT_ITEM_DEFINITIONS.map(i => i.id);
         const itemCost = itemIds.reduce(
             (n, id) => n + (DEFAULT_ITEM_DEFINITIONS.find(i => i.id === id)?.coinCost ?? 0), 0);
-        // No service costs any more: Squad Repair was removed from the shop entirely.
-        // Healing lives at the Campfire, and a shop only buys and sells. The brain buy-back
-        // is still on that screen but cannot fire here — it needs a lost brain, and the
-        // tutorial's first brain loss happens after this shop.
+        // No service costs on the SHOP screen: Squad Repair was removed from it entirely, and
+        // the brain buy-back cannot fire here (it needs a lost brain, and the tutorial's first
+        // one happens after this shop).
         const worstCase = stockCost + itemCost;
 
-        if (purse < worstCase + COIN_REVIVE_HERO) {
+        // Downstream of the shop the chain has ONE bill: the revive on board 5. The graft at
+        // the campfire on board 6 is free and has to stay free — a campfire's price is the two
+        // options you did not take, and COIN_FUSE is charged only at the Breach's paid camps
+        // (`MapNode.paidCamp`). If a scripted campfire ever starts charging, this is where the
+        // budget has to learn about it.
+        const scriptedBills = COIN_REVIVE_HERO;
+
+        if (purse < worstCase + scriptedBills) {
             throw new Error(
                 `tutorial budget: purse ${purse} cannot cover the worst shopping trip the shop ` +
                 `allows (plants ${stockCost} + items ${itemCost} = ${worstCase}) and still ` +
@@ -539,42 +569,55 @@ export const assertTutorial = () => {
 
     // AN UNSAVABLE BRAIN HAS TO BE GENUINELY UNSAVABLE.
     //
-    // Give every plant its full movement AND its longest, hardest-hitting skill, point all
-    // of it at the doomed tile on turn 1, and the total must still fall short. Blockers,
-    // Sun costs and the fact that spending the whole squad here would lose the other house
-    // are all ignored on purpose — this is an upper bound, so passing it is a guarantee.
+    // Give every plant its full movement AND its longest, hardest-hitting skill, point all of
+    // it at the doomed doorstep on turn 1, and the total must still fall short. Blockers, Sun
+    // costs and the fact that spending the whole squad there loses the other house are all
+    // ignored on purpose — this is an upper bound, so passing it is a guarantee.
+    //
+    // The sum is over the WHOLE GROUP, not each body alone, because the guarantee changed
+    // shape. It used to be one inflated health bar nobody could chew through; it is now two
+    // zombies walking the same lane, and the honest claim is not "you cannot kill it" but
+    // "you cannot kill BOTH — whichever one you drop, the other one walks in". A group whose
+    // combined health fits inside one turn of squad damage is a brain the player can save.
     TUTORIAL_CHAIN.forEach(node => {
         const b = node.battle;
         if (!b) return;
-        b.opening.filter(sp => sp.unsavable).forEach(sp => {
-            const hp = (ZOMBIE_DEFINITIONS[sp.cls]?.maxHp ?? 0) + (sp.hpBonus ?? 0);
-            let reach = 0;
-            const parts: string[] = [];
-            b.squad.forEach(heroId => {
-                const pos = b.placement[heroId];
-                const def = HERO_DEFINITIONS[heroId];
-                if (!pos || !def) return;
-                const dist = Math.abs(pos.x - sp.x) + Math.abs(pos.y - sp.y);
-                const best = [def.basicAttack, def.heroSkill]
-                    .map(sk => ({
-                        dmg: sk.effects.find(e => e.type === 'DAMAGE')?.value ?? 0,
-                        span: def.moveRange + (sk.rangeValue || 1),
-                    }))
-                    .filter(o => o.dmg > 0 && dist <= o.span)
-                    .sort((a, c) => c.dmg - a.dmg)[0];
-                if (!best) return;
-                reach += best.dmg;
-                parts.push(`${heroId} ${best.dmg}`);
-            });
-            if (reach >= hp) {
-                throw new Error(
-                    `${node.id}: the ${sp.cls} at ${sp.x},${sp.y} is marked unsavable but the ` +
-                    `squad can put ${reach} damage on that tile in one turn (${parts.join(' + ')}) ` +
-                    `against its ${hp} HP. The player will kill it, keep the brain, and the ` +
-                    `lesson collapses. Raise hpBonus above ${reach}, or move it out of reach.`
-                );
-            }
+        const group = b.opening.filter(sp => sp.unsavable);
+        if (group.length === 0) return;
+
+        const groupHp = group.reduce(
+            (n, sp) => n + (ZOMBIE_DEFINITIONS[sp.cls]?.maxHp ?? 0) + (sp.hpBonus ?? 0), 0);
+
+        // Reach is measured to the NEAREST of them: a hero who can hit the closest body is
+        // the most generous reading of "the squad can intervene here".
+        let reach = 0;
+        const parts: string[] = [];
+        b.squad.forEach(heroId => {
+            const pos = b.placement[heroId];
+            const def = HERO_DEFINITIONS[heroId];
+            if (!pos || !def) return;
+            const dist = Math.min(...group.map(sp => Math.abs(pos.x - sp.x) + Math.abs(pos.y - sp.y)));
+            const best = [def.basicAttack, def.heroSkill]
+                .map(sk => ({
+                    dmg: sk.effects.find(e => e.type === 'DAMAGE')?.value ?? 0,
+                    span: def.moveRange + (sk.rangeValue || 1),
+                }))
+                .filter(o => o.dmg > 0 && dist <= o.span)
+                .sort((a, c) => c.dmg - a.dmg)[0];
+            if (!best) return;
+            reach += best.dmg;
+            parts.push(`${heroId} ${best.dmg}`);
         });
+
+        if (reach >= groupHp) {
+            const roster = group.map(sp => `${sp.cls} ${(ZOMBIE_DEFINITIONS[sp.cls]?.maxHp ?? 0) + (sp.hpBonus ?? 0)}hp`).join(' + ');
+            throw new Error(
+                `${node.id}: the doomed house is guarded by ${roster} = ${groupHp} HP, and the ` +
+                `squad can put ${reach} damage into that lane in one turn (${parts.join(' + ')}). ` +
+                `The player clears the whole group and keeps the brain, so the lesson collapses. ` +
+                `Add a body, or raise hpBonus until the group is worth more than ${reach}.`
+            );
+        }
     });
 
     // NOBODY STANDS AROUND.
@@ -598,6 +641,10 @@ export const assertTutorial = () => {
             // The scripted death: Sunspot is explicitly left to the player, because
             // nothing she can do changes the outcome and pretending otherwise would lie.
             tut_2: [4],
+            // The mop-up turn: one 2 HP riser is left and a single Sun Burn kills it outright.
+            // Inventing work for the other two would mean inventing a zombie, and a board that
+            // spawns a body so nobody looks idle is the worse lie.
+            tut_4: [5],
         };
         [...new Set(combat.map(st => st.turn))].forEach(t => {
             if ((exempt[node.id] ?? []).includes(t)) return;
@@ -624,6 +671,10 @@ export const assertTutorial = () => {
         const expected = node.type === 'SHOP' ? 'SHOP' : node.type === 'CAMPFIRE' ? 'CAMPFIRE' : 'EVENT';
 
         node.steps.forEach((st, i) => {
+            // The one-line rule applies here too. It used to be checked ONLY on battle.steps,
+            // so the shop, event and campfire lessons — the wordiest in the chain, because
+            // they explain an economy rather than a board — were never measured at all.
+            assertNoteLength(`${node.id} (${node.type})`, st.note);
             if ((st.phase ?? 'COMBAT') !== expected) {
                 throw new Error(
                     `${node.id}: step "${st.note}" is phase ${st.phase ?? 'COMBAT'} on a ${node.type} ` +
@@ -815,10 +866,13 @@ const replayWholeChain = () => {
             throw new Error(
                 `${node.id}: the replayed script ends in ${res.screen}, but it promises ${expected}. ` + tail);
         }
-        const unsavable = b.opening.filter(sp => sp.unsavable).length;
-        if (!b.scriptedDefeat && res.brainsLost !== unsavable) {
+        // Declared, not counted. It used to be "one brain per unsavable spawn", which was
+        // only ever true while each doomed house had exactly one eater — the moment a house
+        // was guarded by a PAIR, that arithmetic said two brains and the board loses one.
+        const expectedBrains = b.scriptedBrainLoss ?? 0;
+        if (!b.scriptedDefeat && res.brainsLost !== expectedBrains) {
             throw new Error(
-                `${node.id}: the replay loses ${res.brainsLost} brain(s); the board is designed to lose exactly ${unsavable}. ` + tail);
+                `${node.id}: the replay loses ${res.brainsLost} brain(s); the board declares scriptedBrainLoss: ${expectedBrains}. ` + tail);
         }
         if (b.scriptedLoss && res.survivors.includes(b.scriptedLoss)) {
             throw new Error(

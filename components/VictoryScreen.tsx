@@ -1,10 +1,13 @@
 
 import React from 'react';
-import { Trophy, ArrowRight, Coins, Check } from 'lucide-react';
-import { MissionBonus } from '../types';
+import { Trophy, ArrowRight, Coins, Check, Swords, Skull, Wind, Ban, HeartCrack } from 'lucide-react';
+import { BattleHeroStats, HeroId, MissionBonus } from '../types';
 import { useI18n } from '../i18n';
 import { UnlockPanel } from './UnlockPanel';
+import { LevelBar, LevelBarProps } from './LevelBar';
 import { UnlockAward } from '../data/unlocks';
+import { HERO_DEFINITIONS } from '../data/heroes';
+import { HERO_ACCENTS, HERO_SPRITES } from '../utils/icons';
 
 interface VictoryScreenProps {
     onContinue: () => void;
@@ -17,12 +20,41 @@ interface VictoryScreenProps {
     rewards: { coins: number; bonuses: MissionBonus[] };
     /** Anything this fight unlocked. Empty most fights; the panel hides itself when so. */
     unlocks?: UnlockAward[];
+    /**
+     * What the run is worth so far. Levels are paid by the RESULT of a run, so between nodes
+     * this is a running total rather than something already banked — `pending` says which.
+     */
+    payout?: LevelBarProps;
+    /**
+     * The battle ledger, passed only after a SLAY_BOSS win. A boss is the one fight long
+     * enough for the numbers to mean something, and the one whose telling deserves a scene —
+     * and it is where a support's value finally gets printed: Chardwall ends most boss fights
+     * with a damage column of 0 and a shove column that explains the victory.
+     */
+    bossStats?: Partial<Record<HeroId, BattleHeroStats>>;
 }
 
-export const VictoryScreen: React.FC<VictoryScreenProps> = ({ onContinue, rewards, unlocks = [] }) => {
+/** Column order tells the story left to right: what you did, then what it cost you. */
+const REPORT_COLUMNS: Array<{ stat: keyof BattleHeroStats; icon: React.FC<{ size?: number; className?: string }>; label: string }> = [
+    { stat: 'damageDealt', icon: Swords, label: 'Damage dealt' },
+    { stat: 'kills', icon: Skull, label: 'Kills' },
+    { stat: 'pushes', icon: Wind, label: 'Bodies shoved' },
+    { stat: 'intentsCancelled', icon: Ban, label: 'Boss turns cancelled' },
+    { stat: 'damageTaken', icon: HeartCrack, label: 'Damage taken' },
+];
+
+export const VictoryScreen: React.FC<VictoryScreenProps> = ({ onContinue, rewards, unlocks = [], payout, bossStats }) => {
     const { t } = useI18n();
     const bonusCoins = rewards.bonuses.reduce((total, b) => total + b.coins, 0);
     const baseCoins = Math.max(0, rewards.coins - bonusCoins);
+
+    // Roster order, not damage order: sorting by output would file the support last every
+    // time, which is the opposite of what this table exists to say.
+    const reportRows = bossStats
+        ? (Object.keys(HERO_DEFINITIONS) as HeroId[])
+            .filter(id => bossStats[id])
+            .map(id => ({ id, name: HERO_DEFINITIONS[id].name, stats: bossStats[id]! }))
+        : [];
 
     return (
         <div className="fixed inset-0 z-[60] bg-black/90 flex flex-col items-center justify-center font-pixel animate-in fade-in duration-500">
@@ -40,6 +72,48 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({ onContinue, reward
 
                     {/* Above the Coin line on purpose: earning a hero outranks earning money,
                         and it is the thing the player must not scroll past. */}
+                    {payout && <LevelBar {...payout} />}
+
+                    {/* THE BATTLE REPORT — boss fights only. Names stay proper names. */}
+                    {reportRows.length > 0 && (
+                        <div className="w-full bg-black/40 border border-gray-700 p-4 rounded">
+                            <div className="text-gray-400 uppercase text-sm mb-3 text-left">{t('Battle Report')}</div>
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr>
+                                        <th className="text-left font-normal pb-2"></th>
+                                        {REPORT_COLUMNS.map(col => (
+                                            <th key={col.stat} className="pb-2 font-normal" title={t(col.label)}>
+                                                <col.icon size={14} className="inline text-gray-400" />
+                                            </th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {reportRows.map(row => (
+                                        <tr key={row.id} className="border-t border-gray-800">
+                                            <td className="py-1.5 text-left">
+                                                <span className="flex items-center gap-2">
+                                                    <img src={HERO_SPRITES[row.id]} alt="" className="w-6 h-6 object-contain" />
+                                                    <span className="font-bold" style={{ color: HERO_ACCENTS[row.id] }}>{row.name}</span>
+                                                </span>
+                                            </td>
+                                            {REPORT_COLUMNS.map(col => (
+                                                <td key={col.stat} className="py-1.5 text-center tabular-nums"
+                                                    title={t(col.label)}
+                                                    /* A zero is dimmed, not hidden: "0 damage, 6 shoves"
+                                                       IS the story on a support row. */
+                                                    style={{ color: row.stats[col.stat] > 0 ? '#e5e7eb' : '#4b5563' }}>
+                                                    {row.stats[col.stat]}
+                                                </td>
+                                            ))}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+
                     <UnlockPanel awards={unlocks} />
 
                     <div className="w-full bg-black/40 border border-gray-700 p-4 rounded flex flex-col gap-3">

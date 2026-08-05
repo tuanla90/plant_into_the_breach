@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
-import { Play, BookOpen, Shield, Skull, ScrollText, RotateCcw, GraduationCap } from 'lucide-react';
-import { useI18n, LanguageToggle } from '../i18n';
+import React, { useState, useEffect } from 'react';
+import { Play, BookOpen, Shield, Skull, ScrollText, RotateCcw, GraduationCap, Download, Settings } from 'lucide-react';
+import { useI18n } from '../i18n';
 
 /**
  * Key art for the main menu, authored at 16:9 to match the screen.
@@ -17,15 +17,36 @@ interface StartMenuProps {
     /** Present only when a saved run exists — resumes it from its last safe point. */
     onContinue?: () => void;
     onTutorial: () => void;
+    /** Open settings modal */
+    onOpenSettings?: () => void;
     /** Start a fresh run on the scripted seven-node tutorial map. */
     onReplayTutorial?: () => void;
     /** Re-open the intro comic. It only shows itself once, so this is the way back to it. */
     onReplayIntro?: () => void;
 }
 
-export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTutorial, onReplayTutorial, onReplayIntro }) => {
+export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTutorial, onOpenSettings, onReplayTutorial, onReplayIntro }) => {
     const { t } = useI18n();
     const [hasCover, setHasCover] = useState(true);
+    const [installPrompt, setInstallPrompt] = useState<any>(null);
+
+    useEffect(() => {
+        const handleBeforeInstall = (e: Event) => {
+            e.preventDefault();
+            setInstallPrompt(e);
+        };
+        window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+        return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+    }, []);
+
+    const handleInstallClick = () => {
+        if (installPrompt) {
+            installPrompt.prompt();
+            installPrompt.userChoice.then(() => setInstallPrompt(null));
+        } else {
+            alert(t('Để cài đặt PWA Toàn Màn Hình: Bấm nút Chia sẻ (Share) -> Thêm vào Màn hình chính (Add to Home Screen) trên trình duyệt của bạn!'));
+        }
+    };
 
     return (
         <div className="w-full h-screen bg-[#0d0e11] flex items-end md:items-center justify-center md:justify-end font-pixel text-white relative overflow-hidden">
@@ -75,9 +96,6 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
             {/* Scanlines Overlay */}
             <div className="scanlines"></div>
 
-            {/* Language Switch */}
-            <LanguageToggle className="absolute top-4 right-4 z-30" />
-
             {/* --- MAIN CONTENT CONTAINER --- */}
             {/* Sized to the darkened band on the right so the stack sits centred in it. */}
             <div className={`relative z-20 flex flex-col items-center gap-6 w-full max-w-sm px-6 ${hasCover ? 'md:w-[30%] md:max-w-none md:px-7 pb-10 md:pb-0' : 'max-w-2xl gap-12'}`}>
@@ -98,18 +116,18 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
                 )}
 
                 {/* MENU BUTTONS */}
-                <div className="flex flex-col w-full max-w-sm gap-4">
+                <div className="flex flex-col w-full max-w-sm gap-3">
 
                     {/* CONTINUE — only when a saved run exists. Sits above Start: resuming
                         is the likelier intent, and Start silently abandons the save. */}
                     {onContinue && (
                         <button
                             onClick={onContinue}
-                            className="group relative px-5 py-5 bg-amber-950/85 backdrop-blur-sm border-2 border-amber-500 hover:bg-amber-500 text-amber-400 hover:text-black transition-all duration-200 uppercase font-bold tracking-[0.08em] text-lg whitespace-nowrap flex items-center justify-center gap-4 overflow-hidden"
+                            className="group relative px-5 py-4 bg-amber-950/85 backdrop-blur-sm border-2 border-amber-500 hover:bg-amber-500 text-amber-400 hover:text-black transition-all duration-200 uppercase font-bold tracking-[0.08em] text-base whitespace-nowrap flex items-center justify-center gap-3 overflow-hidden rounded-md"
                         >
                             <div className="absolute inset-0 bg-amber-400 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-200 z-0"></div>
-                            <span className="relative z-10 flex items-center gap-3">
-                                <RotateCcw size={24} />
+                            <span className="relative z-10 flex items-center gap-2.5">
+                                <RotateCcw size={22} />
                                 {t('Continue Campaign')}
                             </span>
                         </button>
@@ -118,13 +136,11 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
                     {/* START BUTTON */}
                     <button
                         onClick={onStart}
-                        className="group relative px-5 py-5 bg-green-950/85 backdrop-blur-sm border-2 border-green-500 hover:bg-green-600 text-green-400 hover:text-black transition-all duration-200 uppercase font-bold tracking-[0.08em] text-lg whitespace-nowrap flex items-center justify-center gap-4 overflow-hidden"
+                        className="group relative px-5 py-4 bg-green-950/85 backdrop-blur-sm border-2 border-green-500 hover:bg-green-600 text-green-400 hover:text-black transition-all duration-200 uppercase font-bold tracking-[0.08em] text-base whitespace-nowrap flex items-center justify-center gap-3 overflow-hidden rounded-md"
                     >
-                        {/* Hover slide effect */}
                         <div className="absolute inset-0 bg-green-500 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-200 z-0"></div>
-
-                        <span className="relative z-10 flex items-center gap-3">
-                            <Play size={24} fill="currentColor" />
+                        <span className="relative z-10 flex items-center gap-2.5">
+                            <Play size={22} fill="currentColor" />
                             {t('Start Mission')}
                         </span>
                     </button>
@@ -132,38 +148,53 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
                     {/* TUTORIAL BUTTON */}
                     <button
                         onClick={onTutorial}
-                        className="group relative px-5 py-4 bg-gray-950/85 backdrop-blur-sm border border-gray-500 hover:border-white text-gray-400 hover:text-white transition-all duration-200 uppercase font-bold tracking-[0.05em] text-base whitespace-nowrap flex items-center justify-center gap-4"
+                        className="group relative px-5 py-3.5 bg-gray-950/85 backdrop-blur-sm border border-gray-500 hover:border-white text-gray-300 hover:text-white transition-all duration-200 uppercase font-bold tracking-[0.05em] text-sm whitespace-nowrap flex items-center justify-center gap-3 rounded-md"
                     >
-                        <BookOpen size={20} />
+                        <BookOpen size={18} />
                         {t('Tactical Archive')}
                     </button>
 
-                    {/* The roster and the fusion matrix used to sit here as a second button.
-                        They are tabs of the Tactical Archive now — two adjacent buttons for
-                        "the book you read between runs" was one book too many. */}
+                    {/* SETTINGS BUTTON */}
+                    {onOpenSettings && (
+                        <button
+                            onClick={onOpenSettings}
+                            className="group relative px-5 py-3.5 bg-slate-900/85 backdrop-blur-sm border border-slate-600 hover:border-sky-400 text-slate-200 hover:text-sky-300 transition-all duration-200 uppercase font-bold tracking-[0.05em] text-sm whitespace-nowrap flex items-center justify-center gap-3 rounded-md"
+                        >
+                            <Settings size={18} className="text-sky-400" />
+                            {t('Cài Đặt Hệ Thống')}
+                        </button>
+                    )}
 
-                    {/* Quiet row: replays of things that show themselves once — the intro
-                        comic, and the scripted tutorial chain. */}
-                    <div className="self-center flex items-center gap-6">
-                        {onReplayTutorial && (
-                            <button
-                                onClick={onReplayTutorial}
-                                className="flex items-center gap-2 text-xs uppercase tracking-widest text-gray-600 hover:text-gray-300 transition-colors"
-                            >
-                                <GraduationCap size={14} />
-                                {t('Replay the tutorial')}
-                            </button>
-                        )}
-                        {onReplayIntro && (
-                            <button
-                                onClick={onReplayIntro}
-                                className="flex items-center gap-2 text-xs uppercase tracking-widest text-gray-600 hover:text-gray-300 transition-colors"
-                            >
-                                <ScrollText size={14} />
-                                {t('Read the intro comic')}
-                            </button>
-                        )}
-                    </div>
+                    {/* DOWNLOAD / INSTALL PWA BUTTON */}
+                    <button
+                        onClick={handleInstallClick}
+                        className="group relative px-5 py-3.5 bg-sky-950/85 backdrop-blur-sm border border-sky-500 hover:bg-sky-500 hover:text-black text-sky-300 transition-all duration-200 uppercase font-bold tracking-[0.05em] text-sm whitespace-nowrap flex items-center justify-center gap-3 rounded-md"
+                    >
+                        <Download size={18} />
+                        {t('Tải App PWA (Full Screen)')}
+                    </button>
+
+                    {/* REPLAY TUTORIAL BUTTON */}
+                    {onReplayTutorial && (
+                        <button
+                            onClick={onReplayTutorial}
+                            className="group relative px-5 py-3.5 bg-slate-900/80 backdrop-blur-sm border border-slate-700 hover:border-slate-400 text-slate-300 hover:text-white transition-all duration-200 uppercase font-semibold tracking-[0.05em] text-xs whitespace-nowrap flex items-center justify-center gap-2.5 rounded-md"
+                        >
+                            <GraduationCap size={16} />
+                            {t('Replay the tutorial')}
+                        </button>
+                    )}
+
+                    {/* READ INTRO COMIC BUTTON */}
+                    {onReplayIntro && (
+                        <button
+                            onClick={onReplayIntro}
+                            className="group relative px-5 py-3.5 bg-slate-900/80 backdrop-blur-sm border border-slate-700 hover:border-slate-400 text-slate-300 hover:text-white transition-all duration-200 uppercase font-semibold tracking-[0.05em] text-xs whitespace-nowrap flex items-center justify-center gap-2.5 rounded-md"
+                        >
+                            <ScrollText size={16} />
+                            {t('Read the intro comic')}
+                        </button>
+                    )}
 
                 </div>
 

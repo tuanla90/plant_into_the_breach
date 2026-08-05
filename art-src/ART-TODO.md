@@ -1,9 +1,29 @@
 # Art still to be made
 
-30 units currently render a generated placeholder token from `public/img/placeholder/`.
-They replaced artwork taken from the Plants vs. Zombies wiki — the originals are parked in
-`art-src/removed-pvz-art/` for reference only and **must not go back into `public/`**, since
-shipping them is what the rename of the game and its cast was meant to get away from.
+33 tokens still render a generated placeholder from `public/img/placeholder/` — all of them
+plants, zombies and board props. Most replaced artwork taken from the Plants vs. Zombies wiki;
+the originals are parked in `art-src/removed-pvz-art/` for reference only and **must not go back
+into `public/`**, since shipping them is what the rename of the game and its cast was meant to
+get away from.
+
+**Done on 2026-08-04:** the four pack-#7 heroes (Thornquill, Thornhide, Chardwall, Gourdward)
+and their four fusion gears now have real art. They were rendered on white and cut out with
+`art-src/make_sprites.py`, which also normalises them onto the shared board geometry — 512×512,
+content 474px tall, bottom edge at y=493. Their eight placeholder SVGs are still on disk but
+nothing references them any more.
+
+**Done on 2026-08-05:** all nine remaining bosses got art. Retiring them was eight edits to
+`utils/icons.ts` and nothing else — which is exactly what giving each boss its own ICONS key
+bought, even while every one of them was borrowing another unit's sprite.
+
+**Nothing a player sees is on placeholder art any more (2026-08-05).** `IMP`, `ROCK`, `GRAVE`
+and the Disco dancer were the last four, and three boss second-states went in with them
+(`SPRITE_VARIANTS`, utils/icons.ts). Everything still under `public/img/placeholder/` is a dead
+entry: those classes live in `PLANT_DEFINITIONS` but never render, because heroes read
+`HERO_SPRITES` and bench plants read `MATERIAL_SPRITES`.
+
+The set has three silhouettes so the families stay tellable apart on a crowded board:
+**disc** = a unit on the board, **crest** (peaked shield) = a hero, **cog** = fusion gear.
 
 ## How to retire a placeholder
 
@@ -50,6 +70,35 @@ is the role the art should read as at a glance.
 | Mine | `placeholder/mine.svg` | board hazard |
 | Cherry Bomb | `placeholder/cherry.svg` | explosive |
 | Jalapeno | `placeholder/jalapeno.svg` | fire line |
+| Chard Guard | `placeholder/chard-guard.svg` | knockback defender |
+| Rock | `placeholder/rock.svg` | inert obstacle |
+| Grave | `placeholder/grave.svg` | digs up a zombie on a timer |
+
+### Heroes (crest token) — ✅ DONE, art landed 2026-08-04
+
+A hero token is doing two jobs at once — the portrait on the squad card and the sprite on the
+board — so replacing one means either art that survives both crops, or splitting the entry in
+`utils/icons.ts` into two files (`HERO_PORTRAITS` and `HERO_SPRITES` already point at the same
+file per hero, which is where that split would go).
+
+| Hero | Placeholder | Should read as |
+| --- | --- | --- |
+| Thornquill | `placeholder/hero-thornquill.svg` | Cactus — spines, piercing, long range |
+| Thornhide | `placeholder/hero-thornhide.svg` | Endurian — spikes facing out, melee, retaliation |
+| Chardwall | `placeholder/hero-chardwall.svg` | Chard Guard — rainbow chard, red stalk, leverage / knockback |
+| Gourdward | `placeholder/hero-gourdward.svg` | Pumpkin — a hollow shell that armours somebody else |
+
+### Fusion gear (cog token) — ✅ DONE, art landed 2026-08-04
+
+These are the fusion materials, not units. The brief is "bio-mech walker": a small war machine
+with a plant core driving it, which is why the token is a cog rather than a disc.
+
+| Gear | Placeholder | Plant core |
+| --- | --- | --- |
+| Cactus gear | `placeholder/gear-cactus.svg` | Cactus |
+| Endurian gear | `placeholder/gear-endurian.svg` | Endurian |
+| Chard gear | `placeholder/gear-chard.svg` | Chard Guard |
+| Pumpkin gear | `placeholder/gear-pumpkin.svg` | Pumpkin |
 
 Regenerate every token: `node art-src/make_plant_placeholders.mjs`
 

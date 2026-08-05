@@ -1,8 +1,10 @@
 import { FUSION_SLOTS } from '../constants';
 import { HERO_DEFINITIONS } from '../data/heroes';
 import { getMaterial } from '../data/materials';
+import { UPGRADE_HP, UPGRADE_MOVE, upgradeById, upgradesFor } from '../data/heroUpgrades';
 import { getRecipe, FusionRecipe } from '../data/fusionRecipes';
-import { FusionEffect, FusionEffectType, MaterialId, Skill, SkillEffectDefinition, Unit } from '../types';
+import { FusionEffect, FusionEffectType, HeroId, MaterialId, Skill, SkillEffectDefinition, Unit } from '../types';
+import { elementRider, skillCarriesElement } from './elements';
 
 /**
  * Fusion rules (DESIGN.md section 6).
@@ -81,7 +83,7 @@ export const canFuse = (
     if (knownRecipes && hero.heroId && !knownRecipes.includes(`${hero.heroId}:${materialId}`)) {
         return {
             ok: false,
-            reason: tr('Recipe unknown: {hero} + {material}. Complete bonus objectives to learn it.', {
+            reason: tr('Recipe unknown: {hero} + {material}. Level up to learn it.', {
                 hero: tr(unitName(hero)), material: materialName,
             }),
         };
@@ -141,15 +143,58 @@ export const applyFusion = (hero: Unit, materialId: MaterialId): Unit => {
     return fused;
 };
 
-/** Every effect this unit carries from its fusions, in the order they were applied. */
+/**
+ * Every effect this unit carries — from its fusions AND from the act upgrades it has been
+ * given this run (data/heroUpgrades.ts).
+ *
+ * The two sources are merged HERE, in the one function every consumer already reads, rather
+ * than being wired separately. Damage, reach, shove distance, retaliation, Sun income and the
+ * targeting overlay all come off this list, so an upgrade added here is an upgrade the player
+ * can see in the overlay before committing the click — and `migrateHeroHp` keeps the +2 HP
+ * across a reload for free, because it re-derives max health from `BONUS_HP` totalled right
+ * here. Wiring upgrades anywhere else would mean re-solving all six of those problems.
+ */
 export const getFusionEffects = (unit: Unit): FusionEffect[] => {
     if (!unit) return [];
-    return fusionsOf(unit)
+    const fromFusions = fusionsOf(unit)
         // Pair lookup first; the material's generic effect is only a fallback for a
         // bench plant or a hero id the matrix does not know.
         .map(id => getRecipe(unit.heroId, id)?.effect ?? getMaterial(id)?.effect)
         .filter((effect): effect is FusionEffect => !!effect);
+    const fromUpgrades = (unit.upgrades ?? [])
+        .map(id => upgradeById(id)?.effect)
+        .filter((effect): effect is FusionEffect => !!effect);
+    return [...fromFusions, ...fromUpgrades];
 };
+
+/**
+ * Hand a hero one act upgrade. Same shape as `applyFusion`: a new Unit, nothing mutated.
+ *
+ * VIGOR writes maxHp AND carries a BONUS_HP effect, which is not redundancy: the write is what
+ * the player feels now, and the effect is what `migrateHeroHp` re-derives the ceiling from
+ * after a reload. A BONUS_HP fusion does exactly the same two things for exactly this reason.
+ * STRIDE has no effect vocabulary to ride, so it is written onto the body alone — nothing
+ * anywhere re-derives moveRange, so nothing can wipe it.
+ */
+export const applyUpgrade = (hero: Unit, upgradeId: string): Unit => {
+    const up = upgradeById(upgradeId);
+    if (!up || up.hero !== hero.heroId) return hero;
+    if ((hero.upgrades ?? []).includes(upgradeId)) return hero;   // once each, ever
+
+    const next: Unit = { ...hero, upgrades: [...(hero.upgrades ?? []), upgradeId] };
+    if (up.kind === 'VIGOR') {
+        next.maxHp = hero.maxHp + UPGRADE_HP;
+        // Healed by the amount gained rather than to full: this is a bigger frame, not a
+        // free rest. The camp sells the rest separately and should keep being worth buying.
+        next.hp = hero.hp + UPGRADE_HP;
+    }
+    if (up.kind === 'STRIDE') next.moveRange = hero.moveRange + UPGRADE_MOVE;
+    return next;
+};
+
+/** Upgrades this hero has not taken yet. The picker offers exactly these. */
+export const upgradesLeft = (hero: Unit) =>
+    upgradesFor(hero.heroId as HeroId).filter(u => !(hero.upgrades ?? []).includes(u.id));
 
 /** The authored recipes a hero currently carries, for UI that wants their names. */
 export const getFusionRecipes = (unit: Unit): FusionRecipe[] =>
@@ -224,37 +269,153 @@ export const describeFusionForHero = (
  * targeting overlay, not just in the resolution.
  */
 export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
-    if (!caster.fusions?.length) return skill;
-    if (!skill.effects.some(e => e.type === 'DAMAGE')) return skill;
+    /**
+     * The hero's ELEMENT rides in here too (rules L1/L2, utils/elements.ts), for the same reason
+     * the fusions do: this one function feeds both the resolution AND the targeting overlay, so
+     * a slow bolted on here is a slow the player can see BEFORE committing the click. Attaching
+     * it at resolution time instead would leave the overlay lying about what the attack does.
+     *
+     * Which is why this early-out had to grow a second clause: an element is not a fusion, and a
+     * hero can perfectly well carry one with no materials fused at all. Under the old test her
+     * element was silently dropped for the whole first stretch of the run.
+     */
+    const carriesElement = skillCarriesElement(skill, caster);
+    // Third clause, and it arrived the same way the element's did: a hero can carry an ACT
+    // UPGRADE with no materials fused at all, and under the two-clause test her Heavier Peas
+    // were silently dropped for the whole run — the skill came back with its authored 2 and
+    // the +1 existed only in a data file. Measured, not guessed: a fresh Shadeleaf given all
+    // three upgrades still handed back `DAMAGE 2, range 8`.
+    if (!caster.fusions?.length && !caster.upgrades?.length && !carriesElement) return skill;
+
+    const hasDamage = skill.effects.some(e => e.type === 'DAMAGE');
+    const hasShove = skill.effects.some(e => e.type === 'PUSH' || e.type === 'PULL' || e.type === 'GLOBAL_PUSH');
+    const hasShield = skill.effects.some(e => e.type === 'SHIELD');
+    const hasTaunt = skill.effects.some(e => e.type === 'TAUNT');
+
+    /**
+     * THE GATE. This used to read "no DAMAGE effect, no fusions", which was a fine shorthand
+     * back when every offensive skill in the game dealt damage. Chardwall broke it: his free
+     * swing carries PUSH and nothing else — 0 damage is his identity, not a gap — so under the
+     * old test every single fusion in his row was dropped on the floor without a word, and so
+     * was Gourdward's shield and Thornhide's taunt.
+     *
+     * The test is now "does this skill DO something to somebody else", which is what the
+     * shorthand was reaching for all along. A self-buff (Harvest, the Sun charges) still
+     * matches nothing here and still returns untouched, which is the case the original guard
+     * actually existed to protect: nobody wants Sunspot freezing herself for banking light.
+     *
+     * The element rider passes this gate on exactly the same terms, which is rule L1 restated:
+     * Chardwall's Backswing is 0 damage and pure PUSH, and it still comes out slowing what it
+     * throws. Sunspot is the reason the gate must stay: her free action IS the self-buff, so
+     * rule L2 moves her element onto Sun Burn — which does damage and walks straight through.
+     */
+    if (!hasDamage && !hasShove && !hasShield && !hasTaunt) return skill;
 
     const extra: SkillEffectDefinition[] = [];
-    if (hasFusionEffect(caster, 'ON_HIT_PUSH') && !skill.effects.some(e => e.type === 'PUSH' || e.type === 'PULL')) {
-        extra.push({ type: 'PUSH', value: 1 });
+    // The on-hit riders stay gated on DAMAGE specifically. They are things that happen to a
+    // body the attack HURT — grafting them onto a pure shove or a shield would fire them at
+    // whatever the skill happened to touch, including the ally being shielded.
+    if (hasDamage) {
+        if (hasFusionEffect(caster, 'ON_HIT_PUSH') && !skill.effects.some(e => e.type === 'PUSH' || e.type === 'PULL')) {
+            extra.push({ type: 'PUSH', value: 1 });
+        }
+        if (hasFusionEffect(caster, 'ON_HIT_FREEZE') && !skill.effects.some(e => e.type === 'STUN')) {
+            extra.push({ type: 'STUN' });
+        }
+        if (hasFusionEffect(caster, 'ON_HIT_BURN')) {
+            extra.push({ type: 'APPLY_BURN' });
+        }
+        // Frost Pea: a delay on every hit — never a full freeze (that is Blizzard's job).
+        if (hasFusionEffect(caster, 'ON_HIT_SLOW') && !skill.effects.some(e => e.type === 'APPLY_SLOW' || e.type === 'STUN')) {
+            extra.push({ type: 'APPLY_SLOW' });
+        }
     }
-    if (hasFusionEffect(caster, 'ON_HIT_FREEZE') && !skill.effects.some(e => e.type === 'STUN')) {
-        extra.push({ type: 'STUN' });
-    }
-    if (hasFusionEffect(caster, 'ON_HIT_BURN')) {
-        extra.push({ type: 'APPLY_BURN' });
-    }
-    // Frost Pea: a delay on every hit — never a full freeze (that is Blizzard's job).
-    if (hasFusionEffect(caster, 'ON_HIT_SLOW') && !skill.effects.some(e => e.type === 'APPLY_SLOW' || e.type === 'STUN')) {
-        extra.push({ type: 'APPLY_SLOW' });
+
+    // Thornquill's row: the attack leaves the ground it crossed bristling. Allowed on a pure
+    // shove as well as on a damaging shot — both are strikes that travel over tiles — but not
+    // on a shield or a taunt, where there is no swing to leave anything behind.
+    const spikeTrail = getFusionEffectValue(caster, 'SPIKE_TRAIL');
+    if ((hasDamage || hasShove)
+        && hasFusionEffect(caster, 'SPIKE_TRAIL')
+        && !skill.effects.some(e => e.type === 'SPIKE_TILE')) {
+        extra.push({ type: 'SPIKE_TILE', value: Math.max(1, spikeTrail) });
     }
 
     let effects = [...skill.effects, ...extra];
 
     // Brittle Bite: the one fusion that lets Frostpod actually finish a kill.
+    //
+    // Note this MAPS rather than appends: on Chardwall, whose swing has no DAMAGE effect at
+    // all, it does nothing. That is deliberate — 0 damage is the hero, and a material must not
+    // be able to bolt a damage number onto him from the side.
     const bonusDamage = getFusionEffectValue(caster, 'BONUS_DAMAGE');
     if (bonusDamage > 0) {
         effects = effects.map(e =>
             e.type === 'DAMAGE' ? { ...e, value: (e.value || 0) + bonusDamage } : e);
     }
 
-    // Blizzard: Frostpod only ever slows on her own. This is the upgrade that turns
-    // every one of her slows into a full freeze.
+    // The Chard Guard axis: every shove this hero throws travels further. Applied after the
+    // ON_HIT_PUSH rider above so a fusion-granted shove gets the extra distance too. This is
+    // the ONLY place the number is grown — skillResolution reads the finished value straight
+    // off the effect and hands it to planPush as a tile count.
+    const pushBonus = getFusionEffectValue(caster, 'PUSH_DISTANCE');
+    if (pushBonus > 0) {
+        effects = effects.map(e =>
+            (e.type === 'PUSH' || e.type === 'PULL') ? { ...e, value: (e.value ?? 1) + pushBonus } : e);
+    }
+
+    // Thornhide's row: the shout carries further. SHIELD_BONUS is the odd one out of this
+    // group and is deliberately NOT here — it is applied in skillResolution instead, so the
+    // skill card keeps showing the authored shield number (see the comment there).
+    const tauntBonus = getFusionEffectValue(caster, 'TAUNT_RADIUS');
+    if (tauntBonus > 0) {
+        effects = effects.map(e =>
+            e.type === 'TAUNT' ? { ...e, value: (e.value ?? 0) + tauntBonus } : e);
+    }
+
+    // Blizzard: turns every SLOW this caster deals into a full freeze. No fusion recipe
+    // grants it since Frostpod was retired (data/heroes.ts) — it is kept live because it is
+    // exactly what the ICE element is specified to do, and deleting it would mean writing
+    // it again.
     if (hasFusionEffect(caster, 'UPGRADE_SLOW_TO_FREEZE')) {
         effects = effects.map(e => (e.type === 'APPLY_SLOW' ? { type: 'STUN' as const } : e));
+    }
+
+    /**
+     * THE ELEMENT (rules L1 and L2). Note where it sits: AFTER Blizzard's map above, and that
+     * position is the whole decision.
+     *
+     * Blizzard turns EVERY `APPLY_SLOW` on the skill into a `STUN`. Applied before it, the ICE
+     * rider would be swept up as well — and any hero holding Blizzard plus ICE would own a free
+     * stun on their free attack, every turn, forever. That is the exact ceiling this codebase
+     * has been protecting on purpose for several recipes now: it is why Cobb's Frostbutter,
+     * Thornquill's Frostquill and Thornhide's Chill Thorns are all slows and never freezes (see
+     * the STUN RULE at the top of data/fusionRecipes.ts). Handing the same thing to all nine
+     * heroes through the element system would delete Frostpod's entire identity, and the price
+     * for it is one max HP — the cheapest lockdown in the game by an order of magnitude.
+     *
+     * So Blizzard upgrades the slow the SKILL was authored with, and nothing else. Frostpod plus
+     * ICE is therefore not a stun engine; she is a hero whose element is already in her kit, and
+     * the dedup below means she gets nothing extra for it. That is the correct reading of the
+     * element as a rule: it is a floor for heroes who lack the effect, never a multiplier for
+     * the one hero built around it.
+     */
+    if (carriesElement) {
+        elementRider(caster.element).forEach(rider => {
+            /**
+             * No stacking a second copy of what the attack already does. `STUN` counts as an
+             * existing slow because it is strictly the better version — Cobb's Butter Splat and
+             * anything Blizzard just upgraded must not be dragged back down to a slow, nor pick
+             * up a redundant one alongside it.
+             *
+             * LIGHTNING never reaches this loop: an arc is not a status. It is resolved against
+             * a second tile in skillResolution (rule L3), which is why `elementRider` returns
+             * nothing for it — and why a LIGHTNING hero still needs everything above this line.
+             */
+            const alreadyCovered = effects.some(e =>
+                e.type === rider.type || (rider.type === 'APPLY_SLOW' && e.type === 'STUN'));
+            if (!alreadyCovered) effects = [...effects, rider];
+        });
     }
 
     // Wall-nut Bowling: extends the reach of every attack (incl. Rolling Charge).
@@ -263,7 +424,11 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
 
     // Pea Lance: the melee swing reaches further, but the shove is gone — reach
     // is bought with the push, not stacked on top of it.
-    if (skill.rangeType === 'MELEE' && hasFusionEffect(caster, 'MELEE_REACH_TRADE')) {
+    //
+    // Gated on the swing still dealing damage. On Chardwall the push IS the attack, so paying
+    // for reach with it would leave a skill whose entire effect list is empty — a free action
+    // that does literally nothing, which reads as a broken button rather than a trade.
+    if (skill.rangeType === 'MELEE' && hasDamage && hasFusionEffect(caster, 'MELEE_REACH_TRADE')) {
         rangeValue += getFusionEffectValue(caster, 'MELEE_REACH_TRADE');
         effects = effects.filter(e => e.type !== 'PUSH');
     }

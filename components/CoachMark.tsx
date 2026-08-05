@@ -1,5 +1,5 @@
 import React from 'react';
-import { Leaf, X } from 'lucide-react';
+import { Leaf } from 'lucide-react';
 import { useI18n } from '../i18n';
 
 interface CoachMarkProps {
@@ -8,7 +8,6 @@ interface CoachMarkProps {
     /** Which board of the chain, for the "2/7" counter. */
     index: number;
     total: number;
-    onSkip: () => void;
 }
 
 /**
@@ -19,11 +18,11 @@ interface CoachMarkProps {
  * sits under the board, never covers it, has no OK button to click through, and is replaced
  * as soon as the next turn starts.
  *
- * The only control is Skip, and it is always present. A returning player must be able to
- * leave in one click; a new one must not lose the tutorial by mis-clicking, which is why
- * Skip is small and off to the side rather than the obvious thing to press.
+ * It has no controls at all. The X it used to carry looked like "close this tip" but
+ * actually ended the whole tutorial — leaving is TutorialSkipButton's job, pinned
+ * top-right by App for the entire run.
  */
-export const CoachMark: React.FC<CoachMarkProps> = ({ note, index, total, onSkip }) => {
+export const CoachMark: React.FC<CoachMarkProps> = ({ note, index, total }) => {
     const { t } = useI18n();
 
     return (
@@ -38,14 +37,6 @@ export const CoachMark: React.FC<CoachMarkProps> = ({ note, index, total, onSkip
                 <span className="text-[10px] font-mono text-emerald-600/80 shrink-0 tabular-nums">
                     {index}/{total}
                 </span>
-
-                <button
-                    onClick={onSkip}
-                    title={t('Skip the tutorial')}
-                    className="pointer-events-auto shrink-0 ml-1 p-1 text-emerald-700 hover:text-emerald-200 hover:bg-emerald-900/60 rounded transition-colors"
-                >
-                    <X size={14} />
-                </button>
             </div>
         </div>
     );

@@ -3,6 +3,8 @@ import React from 'react';
 import { Unit, UnitType } from '../types';
 import { Shield, Zap, Move, Heart, X } from 'lucide-react';
 import { useI18n } from '../i18n';
+import { ElementBadge } from './ElementBadge';
+import { ELEMENT_HP_COST } from '../utils/elements';
 
 interface SquadViewerProps {
   units: Unit[];
@@ -46,12 +48,25 @@ export const SquadViewer: React.FC<SquadViewerProps> = ({ units, onClose }) => {
                         {/* Stats & Info */}
                         <div className="flex-1 z-10 flex flex-col">
                             <h3 className="text-xl text-green-400 font-bold uppercase leading-none mb-1">{t(unit.class.replace(/_/g, ' '))}</h3>
-                            <span className="text-sm text-gray-500 uppercase tracking-widest mb-3">{t(unit.role)}</span>
+                            <div className="flex items-center gap-2 mb-3">
+                                <span className="text-sm text-gray-500 uppercase tracking-widest">{t(unit.role)}</span>
+                                {unit.element && <ElementBadge element={unit.element} size={11} showName />}
+                            </div>
 
                             <div className="grid grid-cols-2 gap-2 mt-auto">
-                                <div className="bg-gray-800/50 p-1 flex items-center justify-between rounded px-2">
+                                {/* The element's bill is already inside maxHp, so the number
+                                    here silently disagrees with the hero sheet. Say why. */}
+                                <div
+                                    className="bg-gray-800/50 p-1 flex items-center justify-between rounded px-2"
+                                    title={unit.element ? t('-{n} max HP', { n: ELEMENT_HP_COST }) : undefined}
+                                >
                                     <span className="text-red-400 flex items-center gap-1"><Heart size={12} /> {t('HP')}</span>
-                                    <span className="font-bold">{unit.hp}/{unit.maxHp}</span>
+                                    <span className="font-bold">
+                                        {unit.hp}/{unit.maxHp}
+                                        {unit.element && (
+                                            <span className="ml-1 text-[10px] font-normal text-gray-500">−{ELEMENT_HP_COST}</span>
+                                        )}
+                                    </span>
                                 </div>
                                 <div className="bg-gray-800/50 p-1 flex items-center justify-between rounded px-2">
                                     <span className="text-yellow-400 flex items-center gap-1"><Zap size={12} /> {t('DMG')}</span>

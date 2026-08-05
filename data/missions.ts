@@ -1,6 +1,8 @@
 import {
-    Mission, MissionBonus, ObjectiveType, Position, TileData, Unit, MapNode, UnitType
+    BossId, MaterialId, Mission, MissionBonus, ObjectiveType, Position, TerrainType, TileData, Unit,
+    MapNode, UnitClass, UnitType,
 } from '../types';
+import { MATERIAL_DEFINITIONS } from './materials';
 import { COIN_NO_BRAIN_LOST } from '../constants';
 
 /**
@@ -20,6 +22,9 @@ const BONUS_POOL: MissionBonus[] = [
     { type: 'KILL_COUNT', description: 'Destroy 6 zombies', coins: 25, count: 6 },
 ];
 
+/** Ground a squad can be asked to stand on for several turns. */
+const HOLDABLE_TERRAIN: TerrainType[] = ['GRASS', 'CONCRETE', 'SAND', 'ICE', 'BRIDGE', 'RAIL'];
+
 const pickOne = <T,>(items: T[]): T => items[Math.floor(Math.random() * items.length)];
 
 const pickN = <T,>(items: T[], n: number): T[] => {
@@ -33,19 +38,43 @@ const pickN = <T,>(items: T[], n: number): T[] => {
 
 /** Objectives available per node type. Boss fights stay simple — the boss is the complication. */
 const objectivesFor = (nodeType: MapNode['type']): ObjectiveType[] => {
-    if (nodeType === 'BOSS') return ['SURVIVE_TURNS'];
-    if (nodeType === 'ELITE') return ['PROTECT_HOUSE', 'KILL_ALL', 'HOLD_TILE'];
-    return ['SURVIVE_TURNS', 'PROTECT_HOUSE', 'KILL_ALL', 'BLOCK_SPAWNS', 'HOLD_TILE'];
+    if (nodeType === 'BOSS') return ['SLAY_BOSS'];
+    if (nodeType === 'ELITE') return ['PROTECT_HOUSE', 'KILL_ALL', 'HOLD_TILE', 'ESCORT_GEAR'];
+    return ['SURVIVE_TURNS', 'PROTECT_HOUSE', 'KILL_ALL', 'BLOCK_SPAWNS', 'HOLD_TILE', 'ESCORT_GEAR'];
 };
 
-export const buildMission = (nodeType: MapNode['type'], board: TileData[], isFirstLevel = false): Mission => {
+/**
+ * @param enemies The wave this battle opens with. Only SLAY_BOSS reads it, and it has to:
+ *                the objective is unwinnable if no boss was placed, and — worse — a check for
+ *                "no boss alive" would be satisfied on turn one and hand out an instant win.
+ *                An encounter with no boss in it simply cannot be given this objective.
+ */
+export const buildMission = (
+    nodeType: MapNode['type'],
+    board: TileData[],
+    isFirstLevel = false,
+    enemies: Unit[] = [],
+): Mission => {
     // The opening level always teaches the base rule before layering anything on top.
-    const objective: ObjectiveType = isFirstLevel ? 'SURVIVE_TURNS' : pickOne(objectivesFor(nodeType));
+    const available = objectivesFor(nodeType)
+        .filter(o => o !== 'SLAY_BOSS' || enemies.some(e => e.bossId));
+    const objective: ObjectiveType = isFirstLevel || available.length === 0
+        ? 'SURVIVE_TURNS'
+        : pickOne(available);
 
     const houses = board.filter(t => t.isHouse && t.hasBrain);
     const spawns = board.filter(t => t.isSpawnZone);
     // Somewhere in the middle of the board — a tile worth fighting over, not a safe corner.
-    const contested = board.filter(t => !t.isHouse && !t.isDeployZone && !t.isSpawnZone && t.terrain === 'GRASS');
+    //
+    // "Somewhere standable", not "grass". The GRASS test was written when every board was a
+    // lawn, and it silently deletes this objective on any sector paved with something else:
+    // the city boards are CONCRETE, Frostgate is ICE, and on those the filter comes back empty
+    // and buildMission drops through to SURVIVE_TURNS without saying so. A tile you can stand
+    // and fight on is the actual requirement — LAVA is the one walkable exception, because
+    // "hold this tile" should not mean "stand in fire for four turns".
+    const contested = board.filter(t =>
+        !t.isHouse && !t.isDeployZone && !t.isSpawnZone
+        && HOLDABLE_TERRAIN.includes(t.terrain));
 
     const base = {
         bonuses: pickN(BONUS_POOL, 2),
@@ -66,6 +95,34 @@ export const buildMission = (nodeType: MapNode['type'], board: TileData[], isFir
         }
         case 'KILL_ALL':
             return { ...base, objective, description: 'Destroy every zombie on the board.' };
+
+        case 'ESCORT_GEAR': {
+            /**
+             * The crate goes on contested ground — the same pool HOLD_TILE draws from, and for
+             * the same reason. Dropped in a safe corner it would be a free objective; dropped
+             * on a doorstep it would be indistinguishable from PROTECT_HOUSE. In the middle it
+             * is a second front, which is the fight this objective exists to create.
+             */
+            const tile = contested.length ? pickOne(contested) : null;
+            if (!tile) break;
+            const cargo = pickOne(Object.keys(MATERIAL_DEFINITIONS) as MaterialId[]);
+            return {
+                ...base,
+                objective,
+                target: { x: tile.x, y: tile.y },
+                gearMaterial: cargo,
+                description: 'Keep the gear crate standing — the horde is coming for it too.',
+            };
+        }
+
+        case 'SLAY_BOSS': {
+            const boss = enemies.find(e => e.bossId);
+            if (!boss) break;
+            return {
+                ...base, objective, bossId: boss.bossId,
+                description: 'Bring it down. No houses to hold and no clock — this one ends when one side stops standing.',
+            };
+        }
 
         case 'BLOCK_SPAWNS': {
             const targets = pickN(spawns, 2).map(t => ({ x: t.x, y: t.y }));
@@ -111,10 +168,28 @@ export const isMissionFailed = (mission: Mission | null, board: TileData[]): boo
     return false;
 };
 
-/** Can the level end right now in success, before the timer? Only KILL_ALL qualifies. */
+/**
+ * Can the level end right now in success, before the timer?
+ *
+ * Two objectives qualify, and both for the same reason: they name a state the player can
+ * actually reach and see. Everything else is measured when the clock stops.
+ */
 export const isMissionCompleteEarly = (mission: Mission | null, units: Unit[]): boolean => {
-    if (!mission || mission.objective !== 'KILL_ALL') return false;
-    return !units.some(u => u.isEnemy && u.hp > 0);
+    if (!mission) return false;
+    if (mission.objective === 'KILL_ALL') return !units.some(u => u.isEnemy && u.hp > 0);
+    // Asked against the mission's OWN record of which boss this is, not against a headcount.
+    //
+    // The first version counted live bosses and required at least one to exist, so that a wave
+    // with no boss could not read as "already won". It could not work: the engine hands this
+    // function `remainingUnits`, corpses already filtered out, so the moment the boss died the
+    // count hit zero and the guard turned a victory into "nothing happened" — and, at the
+    // timer, into a defeat for a fight the player had won. `mission.bossId` is the memory that
+    // makes the two states distinguishable, and buildMission refuses the objective without it.
+    if (mission.objective === 'SLAY_BOSS') {
+        if (!mission.bossId) return false;
+        return !units.some(u => u.isEnemy && u.hp > 0 && u.bossId === mission.bossId);
+    }
+    return false;
 };
 
 /** Evaluated when the clock runs out: did the player also satisfy the objective? */
@@ -127,6 +202,15 @@ export const isMissionSatisfied = (mission: Mission | null, units: Unit[]): bool
             return !!mission.target && someoneOn(mission.target, units);
         case 'KILL_ALL':
             return !units.some(u => u.isEnemy && u.hp > 0);
+        case 'ESCORT_GEAR':
+            // Asked of the unit list, not of the board: the crate is a body, and a body that
+            // is gone is simply not in it. Nothing has to remember where it stood.
+            return units.some(u => !u.isEnemy && u.hp > 0 && u.class === UnitClass.GEAR_CRATE);
+        case 'SLAY_BOSS':
+            // Same reading as isMissionCompleteEarly — see the note there on why this cannot
+            // be a headcount.
+            return !!mission.bossId
+                && !units.some(u => u.isEnemy && u.hp > 0 && u.bossId === mission.bossId);
         default:
             return true;
     }

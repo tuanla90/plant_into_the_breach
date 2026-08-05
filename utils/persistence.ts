@@ -1,7 +1,9 @@
-import { UnitClass, UnitDefinition, Skill, TerrainDefinition, ItemDefinition, UnlockState, HeroId, MaterialId } from '../types';
+import { UnitClass, UnitDefinition, Skill, TerrainDefinition, ItemDefinition, UnlockState, BossId, HeroId, MaterialId } from '../types';
 import { DEFAULT_UNIT_DEFINITIONS, UNIT_SKILLS, DEFAULT_TERRAIN_DEFS, DEFAULT_ITEM_DEFINITIONS } from '../constants';
 import { HERO_DEFINITIONS, STARTING_HEROES } from '../data/heroes';
-import { startingRecipes } from '../data/unlocks';
+import {
+    startingRecipes, BOSSES, XP_PER_LAYER, XP_PER_BONUS_OBJECTIVE, XP_PER_ACT,
+} from '../data/unlocks';
 import { MATERIAL_DEFINITIONS, STARTING_MATERIALS } from '../data/materials';
 
 const STORAGE_KEY = 'pitb_config_v1';
@@ -143,10 +145,12 @@ export const loadConfigFromStorage = (): GameConfig | null => {
 // PLAYER PROGRESS  (unlocked heroes / materials, run statistics)
 // ---------------------------------------------------------------------------
 
-const defaultUnlockState = (): UnlockState => ({
+export const defaultUnlockState = (): UnlockState => ({
     heroes: [...STARTING_HEROES],
     materials: [...STARTING_MATERIALS],
+    xp: 0,
     deepestChapter: 0,
+    bossesBeaten: [],
     runsWon: 0,
     bossesDefeated: 0,
     bonusObjectivesDone: 0,
@@ -166,6 +170,16 @@ const mergeIds = <T extends string>(
     return Array.from(new Set<T>([...starting, ...fromSave]));
 };
 
+/**
+ * Rebuilds a level for a save made before levels existed, from the counters that used to
+ * drive the three separate payouts. Deliberately generous: under-crediting would look like
+ * progress had been taken away, which is the one migration failure a player notices.
+ */
+const xpFromLegacyCounters = (saved: any): number =>
+    toCount(saved?.deepestChapter) * XP_PER_LAYER
+    + toCount(saved?.bonusObjectivesDone) * XP_PER_BONUS_OBJECTIVE
+    + toCount(saved?.bossesDefeated) * XP_PER_ACT;
+
 const toCount = (value: unknown): number => {
     const n = typeof value === 'number' ? value : Number(value);
     return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
@@ -180,19 +194,39 @@ export const loadUnlockState = (): UnlockState => {
         return {
             heroes: mergeIds<HeroId>(saved.heroes, HERO_DEFINITIONS, STARTING_HEROES),
             materials: mergeIds<MaterialId>(saved.materials, MATERIAL_DEFINITIONS, STARTING_MATERIALS),
+            // Saves written before the level existed carry no `xp`, but they do carry the
+            // three counters it replaced — so the level is rebuilt from them rather than
+            // reset to 1. Heroes and recipes already earned are stored explicitly and are
+            // never revoked by this, so the worst case is a save that is a little ahead.
+            xp: saved.xp === undefined
+                ? xpFromLegacyCounters(saved)
+                : toCount(saved.xp),
             deepestChapter: toCount(saved.deepestChapter),
             runsWon: toCount(saved.runsWon),
-            // Absent on saves written before hero-by-boss unlocking existed. toCount maps
-            // undefined to 0, so an old save simply starts earning from the next boss.
+            // Saves from before named bosses only counted them. Take the first N off the
+            // table so the heroes they already own line up with a boss that explains them.
+            bossesBeaten: Array.isArray(saved.bossesBeaten)
+                ? (saved.bossesBeaten as unknown[]).filter((id): id is BossId =>
+                      typeof id === 'string' && BOSSES.some(b => b.id === id))
+                : BOSSES.slice(0, toCount(saved.bossesDefeated)).map(b => b.id),
             bossesDefeated: toCount(saved.bossesDefeated),
             bonusObjectivesDone: toCount(saved.bonusObjectivesDone),
             bonusObjectivesBanked: toCount(saved.bonusObjectivesBanked),
             // Union with the starting set, same as heroes/materials: a save written before
             // recipes existed keeps its progress and simply gains the signature pairings.
+            //
+            // Filtered by living hero, for the same reason mergeIds filters heroes: retiring
+            // Frostpod left saves holding `COLD_SNAP:MAT_*` keys that no longer pair with
+            // anything. They are counted, so the Archive read "34/90 recipes" against a
+            // roster that can only produce 90 — owned drifting past the total, with nothing
+            // on screen to explain it.
             recipes: Array.from(new Set([
                 ...startingRecipes(STARTING_HEROES),
                 ...(Array.isArray(saved.recipes) ? saved.recipes.filter((r: unknown) => typeof r === 'string') : []),
-            ])) as string[],
+            ])).filter(key => {
+                const hero = String(key).split(':')[0] as HeroId;
+                return hero in HERO_DEFINITIONS;
+            }) as string[],
             tutorialDone: saved.tutorialDone === true,
         };
     } catch (e) {
@@ -207,9 +241,14 @@ export const saveUnlockState = (state: UnlockState) => {
         const clean: UnlockState = {
             heroes: mergeIds<HeroId>(state?.heroes, HERO_DEFINITIONS, STARTING_HEROES),
             materials: mergeIds<MaterialId>(state?.materials, MATERIAL_DEFINITIONS, STARTING_MATERIALS),
+            xp: toCount(state?.xp),
             deepestChapter: toCount(state?.deepestChapter),
             runsWon: toCount(state?.runsWon),
-            bossesDefeated: toCount(state?.bossesDefeated),
+            bossesBeaten: Array.isArray(state?.bossesBeaten)
+                ? state.bossesBeaten.filter(id => BOSSES.some(b => b.id === id))
+                : [],
+            // Always derived, never trusted: one list, one count.
+            bossesDefeated: Array.isArray(state?.bossesBeaten) ? state.bossesBeaten.length : 0,
             bonusObjectivesDone: toCount(state?.bonusObjectivesDone),
             bonusObjectivesBanked: toCount(state?.bonusObjectivesBanked),
             recipes: Array.from(new Set([

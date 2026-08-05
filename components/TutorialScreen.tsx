@@ -2,10 +2,15 @@
 import React, { useState } from 'react';
 import {
     ArrowLeft, Move, Shield, Sun, Coins, Zap, AlertTriangle, CornerDownRight, Crosshair,
-    ChevronsRight, Brain, FlaskConical, Sprout, Package, BookOpen, Users, X,
+    ChevronsRight, Brain, FlaskConical, Sprout, Package, BookOpen, Users, X, Star,
+    Atom, Snowflake, Flame,
 } from 'lucide-react';
-import { UnlockState } from '../types';
+import { ElementId, UnlockState } from '../types';
+import { SQUAD_SIZE } from '../constants';
+import { ELEMENTS, ELEMENT_DEFINITIONS, ELEMENT_HP_COST, RESONANCE_DESCRIPTIONS } from '../utils/elements';
 import { HeroGrid, RecipeMatrix, codexCounts } from './CodexScreen';
+import { levelOf, levelCapFor } from '../data/unlocks';
+import { STARTING_MATERIALS } from '../data/materials';
 import { useI18n } from '../i18n';
 
 /** The three books this screen absorbed. */
@@ -224,6 +229,110 @@ const EconomyContent: React.FC = () => {
     );
 };
 
+/**
+ * The one mechanic the game charges for before it explains: the player meets elements as four
+ * chips at squad select, pays MAX health for one, and until this page existed was never told a
+ * single rule. LIGHTNING in particular is unguessable from the word — nothing about "Lightning"
+ * says "half the HERO's damage stat, rounded down, no floor".
+ *
+ * Same icons as the picker (ElementBadge / SquadSelectScreen) and the same accents, because a
+ * player arrives here holding the memory of that screen; a second visual language for one
+ * system would read as a second system.
+ */
+const ELEMENT_TOPIC_ICONS: Record<ElementId, React.ComponentType<{ size?: number }>> = {
+    ICE: Snowflake,
+    FIRE: Flame,
+    LIGHTNING: Zap,
+};
+
+/**
+ * The status each rule leaves behind, in the terms the board shows it. Kept beside the card
+ * rather than folded into ELEMENT_DEFINITIONS.description: that string is the one-line answer
+ * the picker and the badge tooltip need, and this is the footnote only a manual has room for.
+ */
+const ELEMENT_FOOTNOTES: Record<ElementId, string> = {
+    ICE: 'A slowed enemy covers half its usual ground on its next turn.',
+    FIRE: 'A burning enemy takes 1 damage before it acts.',
+    LIGHTNING: 'Half the HERO\'s damage stat — never the number written on the skill.',
+};
+
+const ElementContent: React.FC = () => {
+    const { t } = useI18n();
+    return (
+        <div className="space-y-3">
+            <p className="text-[13px] leading-5 text-gray-300">
+                {t('An element is not a second kit. It is one rule laid over everything a hero already does. Pick one per hero at squad select — it is locked in for the whole run.')}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {ELEMENTS.map(id => {
+                    const def = ELEMENT_DEFINITIONS[id];
+                    const Icon = ELEMENT_TOPIC_ICONS[id];
+                    return (
+                        <div key={id} className="bg-[#15171c] border p-3" style={{ borderColor: `${def.accent}66` }}>
+                            <strong
+                                className="flex items-center gap-1.5 mb-2 text-[11px] uppercase tracking-widest"
+                                style={{ color: def.accent }}
+                            >
+                                <Icon size={14} /> {t(def.name)}
+                            </strong>
+                            {/* Straight from ELEMENT_DEFINITIONS, so the manual cannot drift
+                                away from what the picker promised two screens ago. */}
+                            <p className="text-[13px] leading-5 text-gray-300">{t(def.description)}</p>
+                            <p className="text-[11px] leading-4 text-gray-500 mt-1.5">{t(ELEMENT_FOOTNOTES[id])}</p>
+                        </div>
+                    );
+                })}
+            </div>
+            {/* The figure is READ from ELEMENT_HP_COST. It has already moved once (1 -> 2, when
+                hero health doubled) and the screen that hardcoded it ended up showing a "-2"
+                badge above the words "-1 max HP". A manual that misquotes the bill is worse
+                than no manual. */}
+            <Note tone="red" title={t('The price')}>
+                {t('Carrying an element costs {n} MAX health, and hero health persists between battles — so it is a bill you keep paying. Base form is free.', { n: ELEMENT_HP_COST })}
+            </Note>
+            <Facts items={[
+                <><strong className="text-white">{t('It rides the ATTACK, not the damage.')}</strong> {t('A hero who deals 0 still carries one: Chardwall\'s shove throws its target AND slows it.')}</>,
+                <>{t('Lightning arcs ONCE, from the main target only, to one enemy beside it — for half the hero\'s damage stat, rounded down, with no minimum. A hero on 0 or 1 damage arcs for the effect alone.')}</>,
+                <>{t('A hero whose free attack cannot reach an enemy carries the element on her paid skill instead. Sunspot\'s basic action is +25 Sun, so hers rides Sun Burn.')}</>,
+                <>{t('It applies to EVERY source of damage that hero has — retaliation included.')}</>,
+            ]} />
+            <Note tone="blue" title={t('It changes most where damage was never the point')}>
+                {t('Thornhide + Ice taunts the horde onto himself and everything that bites him walks away slowed. Chardwall + Lightning is one swing that throws two bodies.')}
+            </Note>
+
+            {/* RESONANCE. It lives at the bottom of THIS page rather than in a topic of its
+                own because it is not a second system — it is what the three rules above do
+                when a player stops hedging. Both figures are computed from SQUAD_SIZE and
+                ELEMENT_HP_COST for the reason the price note gives: the per-hero cost has
+                moved once already, and a total typed out by hand would have survived it. */}
+            <Note tone="amber" title={t('Resonance — all {n} heroes on one element', { n: SQUAD_SIZE })}>
+                {t('Commit the whole squad to a single element and it opens a fourth rule, one a mixed squad cannot reach at all. The bill is the same {n} per hero as always, so {total} max health across the squad — and it is read from the squad you picked, never from who is still standing, so it can never switch on because a hero fell.', { n: ELEMENT_HP_COST, total: SQUAD_SIZE * ELEMENT_HP_COST })}
+            </Note>
+            {/* Same three-column shape as the element cards above, deliberately: this is the
+                same three elements answering a second question, not a new kind of thing. */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {ELEMENTS.map(id => {
+                    const def = ELEMENT_DEFINITIONS[id];
+                    const Icon = ELEMENT_TOPIC_ICONS[id];
+                    return (
+                        <div key={id} className="bg-[#15171c] border p-3" style={{ borderColor: `${def.accent}66` }}>
+                            <strong
+                                className="flex items-center gap-1.5 mb-2 text-[11px] uppercase tracking-widest"
+                                style={{ color: def.accent }}
+                            >
+                                <Icon size={14} /> {t('{element} resonance', { element: t(def.name) })}
+                            </strong>
+                            {/* Straight from RESONANCE_DESCRIPTIONS, so the manual and the
+                                squad-select banner quote one source and cannot disagree. */}
+                            <p className="text-[13px] leading-5 text-gray-300">{t(RESONANCE_DESCRIPTIONS[id])}</p>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+};
+
 const FusionContent: React.FC = () => {
     const { t } = useI18n();
     return (
@@ -234,7 +343,7 @@ const FusionContent: React.FC = () => {
                 <><strong className="text-white">{t('The effect comes from the PAIR, not the plant.')}</strong> {t('A Peashooter makes Shadeleaf fire twice, but hands Sunspot the ranged shot she never had.')}</>,
                 <>{t('Two slots per hero. The same plant never stacks into the same hero twice.')}</>,
                 <>{t('The graft heals that hero to full.')}</>,
-                <>{t('You must know the recipe. Each hero starts knowing the plant it grew from; the rest are learned by completing bonus objectives.')}</>,
+                <>{t('You must know the recipe. Each hero starts knowing the plant it grew from; the rest open one per commander level.')}</>,
                 <>{t('Grafting needs intact tissue — a seedling worn down by deployments cannot be fused until it has been healed.')}</>,
             ]} />
             <Note tone="purple" title={t('One visit, one choice')}>
@@ -313,7 +422,7 @@ const FriendlyFireContent: React.FC = () => {
 };
 
 // --- TOPIC DATA ---
-type TopicId = 'BASICS' | 'INTENT' | 'PUSH' | 'BRAINS' | 'ECONOMY' | 'FUSION' | 'BENCH' | 'ITEMS' | 'FRIENDLY_FIRE';
+type TopicId = 'BASICS' | 'INTENT' | 'PUSH' | 'BRAINS' | 'ECONOMY' | 'ELEMENTS' | 'FUSION' | 'BENCH' | 'ITEMS' | 'FRIENDLY_FIRE';
 
 interface Topic {
     id: TopicId;
@@ -329,6 +438,9 @@ const TUTORIAL_TOPICS: Topic[] = [
     { id: 'PUSH', title: 'Push & Collision', icon: <ChevronsRight className="text-orange-400" />, desc: 'Taking ground away is often worth more than damage.', content: <PushContent /> },
     { id: 'BRAINS', title: 'Brains & Defeat', icon: <Brain className="text-fuchsia-400" />, desc: 'What you are defending, and what happens when you lose it.', content: <BrainContent /> },
     { id: 'ECONOMY', title: 'Sun & Coin', icon: <Sun className="text-yellow-400" />, desc: 'Two currencies that never touch each other.', content: <EconomyContent /> },
+    // Ahead of FUSION because it is decided first — the element is picked before the run
+    // starts, the graft happens at a campfire inside it.
+    { id: 'ELEMENTS', title: 'Elements', icon: <Atom className="text-cyan-400" />, desc: 'One rule laid over a whole hero, paid for in max health.', content: <ElementContent /> },
     { id: 'FUSION', title: 'Fusion', icon: <FlaskConical className="text-purple-400" />, desc: 'Grafting a plant into a hero. The main way a squad grows.', content: <FusionContent /> },
     { id: 'BENCH', title: 'The Bench', icon: <Sprout className="text-green-400" />, desc: 'Backup plants: insurance, or fusion material. Not both.', content: <BenchContent /> },
     { id: 'ITEMS', title: 'Combat Items', icon: <Package className="text-amber-400" />, desc: 'One-use tools bought with Coin.', content: <ItemContent /> },
@@ -344,6 +456,7 @@ export const TutorialScreen: React.FC<TutorialScreenProps> = ({
 
     const activeTopic = TUTORIAL_TOPICS.find(topic => topic.id === selectedTopicId);
     const counts = unlocks ? codexCounts(unlocks) : null;
+    const level = levelOf(unlocks?.xp ?? 0, levelCapFor(unlocks?.heroes.length ?? 0, STARTING_MATERIALS.length));
 
     const SectionTab: React.FC<{ id: Section; icon: React.ReactNode; label: string; count?: string }> =
         ({ id, icon, label, count }) => (
@@ -386,6 +499,16 @@ export const TutorialScreen: React.FC<TutorialScreenProps> = ({
                     up between runs — so they are tabs of one thing now. */}
                 {counts && (
                     <div className="ml-auto flex items-center gap-2">
+                        {/* The level is the thing everything else is paid out of, so it is
+                            stated once, plainly, at the top of the book that lists them. */}
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 border border-amber-700/60 bg-amber-950/25">
+                            <Star size={13} className="text-amber-400" />
+                            <span className="text-[11px] uppercase tracking-widest text-gray-400">{t('Level')}</span>
+                            <span className="text-sm font-black text-amber-300">{level.level}</span>
+                            <span className="text-[10px] font-mono text-gray-600">
+                                {level.capped ? t('MAX') : `${level.into}/${level.needed}`}
+                            </span>
+                        </div>
                         <SectionTab id="MANUAL" icon={<BookOpen size={13} />} label={t('Manual')} />
                         <SectionTab id="HEROES" icon={<Users size={13} />} label={t('Heroes')}
                                     count={`${counts.heroesOwned}/${counts.heroesTotal}`} />
@@ -461,7 +584,7 @@ export const TutorialScreen: React.FC<TutorialScreenProps> = ({
                 <div className="shrink-0 px-4 py-2 border-t border-[#2b303b] bg-[#12141a] text-[11px] text-gray-500 normal-case tracking-normal">
                     {section === 'MANUAL'
                         ? t('Everything here describes the rules as they are now, not as the tutorial taught them.')
-                        : t('Heroes are freed by breaking a siege. Fusion recipes are bought with bonus objectives, and are learned at the end of a run.')}
+                        : t('Both are paid by your commander level, and the level is paid by how far a run got — winning is not required.')}
                 </div>
             )}
 

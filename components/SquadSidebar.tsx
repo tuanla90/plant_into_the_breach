@@ -2,6 +2,8 @@ import React from 'react';
 import { Unit, UnitType } from '../types';
 import { useI18n } from '../i18n';
 import { Shield } from 'lucide-react';
+import { ElementBadge } from './ElementBadge';
+import { ELEMENT_DEFINITIONS } from '../utils/elements';
 
 interface SquadSidebarProps {
   units: Unit[];
@@ -44,7 +46,7 @@ export const SquadSidebar = ({ units, selectedUnitId, onSelectUnit }: SquadSideb
                     key={unit.id}
                     type="button"
                     onClick={() => onSelectUnit(unit.id)}
-                    title={`${label} — ${unit.hp}/${unit.maxHp} HP${shield ? ` (+${shield})` : ''}`}
+                    title={`${label} — ${unit.hp}/${unit.maxHp} HP${shield ? ` (+${shield})` : ''}${unit.element ? ` · ${t(ELEMENT_DEFINITIONS[unit.element].name)}` : ''}`}
                     aria-label={label}
                     aria-pressed={isSelected}
                     data-tut={unit.heroId ? `hero-${unit.heroId}` : unit.materialId ? `unit-${unit.materialId}` : `unit-${unit.id}`}
@@ -90,6 +92,15 @@ export const SquadSidebar = ({ units, selectedUnitId, onSelectUnit }: SquadSideb
                     {shield > 0 && (
                         <div className="absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 bg-sky-600 border border-sky-300 rounded-full flex items-center justify-center gap-0.5 text-[9px] font-black text-white shadow-md">
                             <Shield size={8} fill="white" />{shield}
+                        </div>
+                    )}
+
+                    {/* Element badge. Bottom-right is the only corner left: shield holds
+                        top-right, the wounded marker top-left, and the HP readout the whole
+                        bottom edge inside the frame. */}
+                    {unit.element && (
+                        <div className="absolute -bottom-1.5 -right-1.5 z-10">
+                            <ElementBadge element={unit.element} size={9} />
                         </div>
                     )}
 

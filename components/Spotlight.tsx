@@ -19,7 +19,6 @@ interface SpotlightProps {
     busy?: boolean;
     /** Dismisses a note that has no target. Targeted steps clear themselves off the board. */
     onAdvance: () => void;
-    onSkip: () => void;
 }
 
 interface Rect { top: number; left: number; width: number; height: number }
@@ -37,7 +36,7 @@ interface Rect { top: number; left: number; width: number; height: number }
  * wall. Four rectangles leave the middle physically empty, so clicks land on the real button
  * underneath with no special handling at all.
  */
-export const Spotlight: React.FC<SpotlightProps> = ({ focus, note, index, total, busy, onAdvance, onSkip }) => {
+export const Spotlight: React.FC<SpotlightProps> = ({ focus, note, index, total, busy, onAdvance }) => {
     const { t } = useI18n();
     const [rect, setRect] = useState<Rect | null>(null);
 
@@ -149,19 +148,10 @@ export const Spotlight: React.FC<SpotlightProps> = ({ focus, note, index, total,
                         </button>
                     )}
                 </div>
-
-                {/* Leaving the tutorial is its own labelled button, set apart from the note.
-                    It used to be an X tucked into the corner of the card — which reads as
-                    "close this tip" while actually ending the whole tutorial. A destructive
-                    action must never wear the costume of a dismiss control. */}
-                <div className="mt-2 flex justify-center">
-                    <button
-                        onClick={onSkip}
-                        className="px-3 py-1.5 bg-[#14161b]/95 border border-gray-700 text-gray-500 hover:text-gray-200 hover:border-gray-500 text-[10px] uppercase tracking-widest rounded transition-colors"
-                    >
-                        {t('Skip the tutorial')}
-                    </button>
-                </div>
+                {/* No skip button here. Every tutorial surface used to carry its own —
+                    and each read as "dismiss this text" while actually ending the whole
+                    tutorial. The one exit is TutorialSkipButton, pinned top-right by App
+                    for the entire run. */}
             </div>
         </>
     );

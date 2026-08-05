@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { HeroId, MaterialId, Skill, UnitClass, UnlockState } from '../types';
 import { HERO_DEFINITIONS } from '../data/heroes';
+import { ROLE_META, ROLE_ORDER, HeroRoleChip } from './HeroRoleChip';
 import { MATERIAL_DEFINITIONS, STARTING_MATERIALS } from '../data/materials';
 import { FUSION_RECIPES } from '../data/fusionRecipes';
 import { recipeKey, unlockInfoFor, SIGNATURE_MATERIAL } from '../data/unlocks';
@@ -121,7 +122,7 @@ const HeroCard: React.FC<{ heroId: HeroId; owned: boolean; knownRecipes: number 
                                 {t(info.hint)}
                             </p>
                             <div className="mt-1 px-2 py-1 border border-[#2b303b] text-[10px] uppercase tracking-widest text-gray-400">
-                                {t('Defeat boss {n}', { n: info.bossNumber })}
+                                {t('Defeat {boss}', { boss: t(info.name) })}
                             </div>
                         </>
                     )}
@@ -146,7 +147,12 @@ const HeroCard: React.FC<{ heroId: HeroId; owned: boolean; knownRecipes: number 
                      style={{ color: owned ? accent : '#6b7280' }}>
                     {t(hero.name)}
                 </div>
-                <div className="text-[11px] uppercase tracking-widest text-gray-500">{t(prettyClass(hero.baseClass))}</div>
+                {/* Role first, plant second — same pairing and same chip as the squad
+                    picker, so the two roster views cannot drift apart. */}
+                <div className="flex items-center gap-1.5 max-w-full">
+                    <HeroRoleChip role={hero.role} dim={!owned} />
+                    <span className="text-[10px] uppercase tracking-widest text-gray-500 truncate">{t(prettyClass(hero.baseClass))}</span>
+                </div>
                 <div className="flex items-center gap-4 mt-1 text-[12px] font-mono font-bold">
                     <span className="flex items-center gap-1 text-red-400"><Heart size={12} fill="currentColor" />{hero.maxHp}</span>
                     <span className="flex items-center gap-1 text-orange-400"><HandFist size={12} />{hero.damage}</span>
@@ -202,7 +208,7 @@ export const RecipeMatrix: React.FC<{ unlocks: UnlockState }> = ({ unlocks }) =>
                     <div className="h-full bg-emerald-500 transition-all" style={{ width: `${(learned / total) * 100}%` }} />
                 </div>
                 <span className="text-[11px] text-gray-600 normal-case tracking-normal">
-                    {t('Bonus objectives buy these — three objectives per recipe.')}
+                    {t('Every commander level opens one more pairing.')}
                 </span>
             </div>
 
@@ -294,7 +300,7 @@ export const RecipeMatrix: React.FC<{ unlocks: UnlockState }> = ({ unlocks }) =>
                                                     )}
                                                     {isSignature && (
                                                         <div className="mt-0.5 text-[9px] uppercase tracking-widest text-amber-600/70">
-                                                            {t('Signature')}
+                                                            {t('Own plant')}
                                                         </div>
                                                     )}
                                                 </button>
@@ -326,7 +332,7 @@ export const RecipeMatrix: React.FC<{ unlocks: UnlockState }> = ({ unlocks }) =>
                             {selKnown
                                 ? t(selRecipe.description)
                                 : owned(sel.hero)
-                                    ? t('Complete bonus objectives to learn new pairings.')
+                                    ? t('Level up to open more pairings.')
                                     : t('Unlock this hero first — its pairings come after.')}
                         </p>
                     </div>
@@ -349,23 +355,50 @@ export const RecipeMatrix: React.FC<{ unlocks: UnlockState }> = ({ unlocks }) =>
 // the Archive absorbed both and this file now exports the panels rather than a screen.
 
 export const HeroGrid: React.FC<{ unlocks: UnlockState }> = ({ unlocks }) => {
+    const { t } = useI18n();
     const recipesOfHero = (h: HeroId) =>
         MATERIALS.filter(m => unlocks.recipes.includes(recipeKey(h, m))).length;
 
     return (
         <div className="h-full overflow-y-auto custom-scrollbar p-6">
-            {/* Three columns rather than auto-fill: there are exactly six heroes, and
-                auto-fill left a row of five with one card stranded underneath. Two rows of
-                three stays balanced as the roster grows to nine. */}
-            <div className="grid gap-4 max-w-[1180px] mx-auto grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                {ROSTER.map(h => (
-                    <HeroCard
-                        key={h}
-                        heroId={h}
-                        owned={unlocks.heroes.includes(h)}
-                        knownRecipes={recipesOfHero(h)}
-                    />
-                ))}
+            {/* Grouped by role, exactly like the squad picker. A flat three-column grid was
+                fine at six heroes and stops being fine at ten: 3+3+3+1 strands a single card
+                on a row of its own, and more importantly a flat list never says the thing a
+                player needs from this screen — that the roster is three thirds and a squad
+                wants a spread. Three columns inside each group keeps 3-hero groups on one
+                row at desktop widths. */}
+            <div className="max-w-[1180px] mx-auto flex flex-col gap-5">
+                {ROLE_ORDER.map(role => {
+                    const group = ROSTER.filter(h => HERO_DEFINITIONS[h].role === role);
+                    if (!group.length) return null;
+                    const meta = ROLE_META[role];
+                    const owned = group.filter(h => unlocks.heroes.includes(h)).length;
+                    return (
+                        <section key={role}>
+                            <div className="flex items-center gap-3 mb-2">
+                                <span
+                                    className="flex items-center gap-1.5 px-2 py-1 rounded text-[11px] font-black uppercase tracking-widest border shrink-0"
+                                    style={{ color: meta.color, borderColor: `${meta.color}66`, backgroundColor: `${meta.color}14` }}
+                                >
+                                    {meta.icon}{t(meta.label)}
+                                </span>
+                                <span className="text-[11px] text-gray-500 normal-case tracking-normal truncate">{t(meta.blurb)}</span>
+                                <div className="h-px flex-1 bg-gray-800" />
+                                <span className="text-[10px] font-mono text-gray-600 shrink-0">{owned}/{group.length}</span>
+                            </div>
+                            <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                                {group.map(h => (
+                                    <HeroCard
+                                        key={h}
+                                        heroId={h}
+                                        owned={unlocks.heroes.includes(h)}
+                                        knownRecipes={recipesOfHero(h)}
+                                    />
+                                ))}
+                            </div>
+                        </section>
+                    );
+                })}
             </div>
         </div>
     );

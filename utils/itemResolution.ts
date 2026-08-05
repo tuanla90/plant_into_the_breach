@@ -1,5 +1,5 @@
 import { ItemDefinition, Position, TurnAction, Unit } from '../types';
-import { calculateDamage, getTileAt, getUnitAt, gustDirection, planPush } from './gameLogic';
+import { calculateDamage, getTileAt, getUnitAt, gustDirection, planPush, getSolidUnitAt } from './gameLogic';
 import { applyPushPlan, pushKill, type ResolveContext } from './actionBuilders';
 
 /**
@@ -29,7 +29,10 @@ export const itemTargetInvalid = (item: ItemDefinition, pos: Position, ctx: Reso
     if (item.effect === 'TRAP') {
         const tile = getTileAt(pos, board);
         return !tile
-            || !!getUnitAt(pos, units)
+            // Solid, not present. A mine refused on an apparently empty square is an arrow
+            // pointing at the boss — the one thing the burrow rule exists to prevent. It arms
+            // normally instead, and goes off the next time the digger surfaces there.
+            || !!getSolidUnitAt(pos, units)
             || !!tile.trap
             || !terrainDefs[tile.terrain]?.isWalkable
             || !!tile.isHouse;
@@ -116,13 +119,13 @@ export const planItemActions = (
     }
 
     targets.forEach(t => {
-        const u = getUnitAt(t, units);
+        const u = getSolidUnitAt(t, units);
 
         // Jalapeno burns its whole column rather than a blast radius.
         if (item.effect === 'TERRAIN_MOD' && item.id === 'jalapeno') {
             for (let col = 0; col < 8; col++) {
                 actions.push({ type: 'APPLY_DAMAGE', targetId: 'tile', amount: 0, eventType: 'BURN', pos: { x: t.x, y: col } });
-                const target = getUnitAt({ x: t.x, y: col }, units);
+                const target = getSolidUnitAt({ x: t.x, y: col }, units);
                 if (target) {
                     const result = calculateDamage(target, item.damage, true);
                     actions.push({ type: 'APPLY_DAMAGE', targetId: target.id, amount: result.finalDamage, eventType: 'DAMAGE', pos: { x: t.x, y: col } });

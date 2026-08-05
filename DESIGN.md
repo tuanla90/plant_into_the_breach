@@ -487,17 +487,36 @@ Gói 11 lệch nhịp vì có 11 hero nhưng chỉ cần 10 nguyên liệu.
 Dùng nó làm phần thưởng cuối: mở hệ công thức đặc biệt (hero + nguyên liệu cho hiệu ứng vượt mức),
 đúng chỗ duy nhất đáng bỏ công vẽ sprite riêng.
 
-### Điều kiện mở khóa
+### Điều kiện mở khóa — CẤP CHỈ HUY
 
 **Đừng bắt phải thắng run mới được mở.** Người chơi mới sẽ thua vài run đầu,
 và nếu thua không cho gì thì họ bỏ game trước khi thấy được chiều sâu.
 
-| Nguồn | Mở khóa |
-|---|---|
-| Lần đầu tới được chapter N | 1 gói |
-| Thắng run | 1 gói thêm |
+Trước đây tiến trình đi qua **ba kênh riêng** — lớp sâu nhất trả công thức, trùm trả hero,
+cứ 3 nhiệm vụ phụ trả thêm một công thức. Cả ba đều chạy, và **không cái nào nhìn thấy được**:
+người chơi không trả lời nổi câu "còn bao xa nữa thì được thêm thứ gì". Giờ gộp thành **một
+con số duy nhất**.
 
-Thua vẫn tiến — miễn là run đó đi xa hơn lần trước.
+**Cấp chỉ huy** được trả bằng **kết quả của một lượt chơi**, chốt sổ khi run kết thúc — thắng
+hay thua đều tính:
+
+| Nguồn KN | Giá trị |
+|---|---|
+| Mỗi lớp bản đồ đi được | 10 |
+| Mỗi nhiệm vụ phụ hoàn thành | 15 |
+| Hạ trùm (thắng run) | 60 |
+| Mỗi lớp vượt kỷ lục cũ của chính mình | +10 |
+
+Cần để lên cấp `n → n+1`: **100 + 50×(n−1)** (100, 150, 200, 250…).
+
+**Mỗi cấp mở 1 công thức fusion.** Các cấp có tên trong `HERO_UNLOCKS` mở thêm 1 hero
+(kèm công thức cây gốc của hero đó): cấp 3 → Maw, cấp 6 → Frostpod, cấp 9 → Cobb.
+
+Nhịp thực tế: run đầu chết giữa chừng ≈ 1 cấp; run thắng gọn ≈ 1 cấp có dư. Thua vẫn tiến,
+và đi sâu hơn lần trước thì tiến nhanh hơn — nhưng **không có kênh nào trả thưởng giữa run**
+nữa: đúng một khoảnh khắc tiến trình rơi xuống, và một con số giải thích nó.
+
+Số ở `data/unlocks.ts` (`XP_PER_*`, `xpForNextLevel`) — đó là toàn bộ núm vặn.
 
 ### Rủi ro cần canh: pool 5 quá nhỏ so với nhịp fusion
 

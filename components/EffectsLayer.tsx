@@ -158,6 +158,79 @@ const Drown: React.FC<{ ms: number }> = ({ ms }) => (
     </>
 );
 
+const HitFire: React.FC<{ ms: number }> = ({ ms }) => (
+    <>
+        <div className="absolute inset-[5%] rounded-full border-2 border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.8)]"
+             style={{ animation: `fxRing ${ms}ms ease-out forwards` }} />
+        <div className="absolute inset-[20%] rounded-full blur-[2px]"
+             style={{ background: 'radial-gradient(circle, #fff 0%, #f97316 45%, #ef4444 80%, transparent 100%)',
+                      animation: `fxBoom ${ms}ms ease-out forwards` }} />
+        {[15, 75, 135, 195, 255, 315].map((deg, i) => (
+            <Ray key={deg} deg={deg} length="45%" thickness={3} color="#f97316"
+                 animation={`fxRay ${ms}ms cubic-bezier(0.1,0.8,0.3,1) ${i * 20}ms forwards`} />
+        ))}
+    </>
+);
+
+const HitIce: React.FC<{ ms: number }> = ({ ms }) => (
+    <>
+        <div className="absolute inset-[10%] rounded-full border-2 border-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.9)]"
+             style={{ animation: `fxShock ${ms}ms ease-out forwards` }} />
+        <div className="absolute inset-[28%] rounded-full blur-[1px]"
+             style={{ background: 'radial-gradient(circle, #ffffff 0%, #38bdf8 50%, #0284c7 90%, transparent 100%)',
+                      animation: `fxFlash ${ms * 0.7}ms ease-out forwards` }} />
+        {[0, 60, 120, 180, 240, 300].map(deg => (
+            <Ray key={deg} deg={deg} length="40%" thickness={2} color="#e0f2fe"
+                 animation={`fxRay ${ms}ms ease-out forwards`} />
+        ))}
+    </>
+);
+
+const HitElec: React.FC<{ ms: number }> = ({ ms }) => (
+    <>
+        <div className="absolute inset-[12%] rounded-full border-2 border-amber-300 shadow-[0_0_15px_rgba(250,204,21,0.9)]"
+             style={{ animation: `fxRing ${ms}ms ease-out forwards` }} />
+        <div className="absolute inset-[25%] rounded-full blur-[2px]"
+             style={{ background: 'radial-gradient(circle, #fff 0%, #facc15 40%, #06b6d4 85%, transparent 100%)',
+                      animation: `fxBoom ${ms * 0.8}ms ease-out forwards` }} />
+        {[30, 90, 150, 210, 270, 330].map(deg => (
+            <Ray key={deg} deg={deg} length="48%" thickness={3} color="#facc15"
+                 animation={`fxRay ${ms}ms cubic-bezier(0.2,0.9,0.2,1) forwards`} />
+        ))}
+    </>
+);
+
+const HeavyShake: React.FC<{ ms: number }> = ({ ms }) => (
+    <>
+        <div className="absolute inset-[0%] rounded-full border-4 border-red-500 shadow-[0_0_25px_rgba(239,68,68,0.95)]"
+             style={{ animation: `fxShock ${ms}ms cubic-bezier(0.1,0.9,0.2,1) forwards` }} />
+        <div className="absolute inset-[15%] rounded-full blur-[4px]"
+             style={{ background: 'radial-gradient(circle, #ffffff 0%, #ef4444 40%, #7f1d1d 90%, transparent 100%)',
+                      animation: `fxBoom ${ms}ms ease-out forwards` }} />
+    </>
+);
+
+const ShieldGrant: React.FC<{ ms: number }> = ({ ms }) => (
+    <>
+        <div className="absolute inset-[8%] rounded-full border-2 border-blue-400 shadow-[0_0_15px_rgba(96,165,250,0.85)]"
+             style={{ animation: `fxRing ${ms}ms ease-out forwards` }} />
+        <div className="absolute inset-[22%] rounded-full blur-[2px]"
+             style={{ background: 'radial-gradient(circle, #93c5fd 0%, #3b82f6 60%, transparent 100%)',
+                      animation: `fxFlash ${ms * 0.8}ms ease-out forwards` }} />
+    </>
+);
+
+const TauntBurst: React.FC<{ ms: number }> = ({ ms }) => (
+    <>
+        <div className="absolute inset-[2%] rounded-full border-3 border-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.9)]"
+             style={{ animation: `fxShock ${ms}ms ease-out forwards` }} />
+        {[0, 45, 90, 135, 180, 225, 270, 315].map(deg => (
+            <Ray key={deg} deg={deg} length="50%" thickness={3} color="#f43f5e"
+                 animation={`fxRay ${ms}ms ease-out forwards`} />
+        ))}
+    </>
+);
+
 export const EffectsLayer: React.FC<{ effects: VisualEffect[] }> = ({ effects }) => (
     <div className="absolute inset-0 pointer-events-none">
         {effects.map(fx => {
@@ -176,6 +249,12 @@ export const EffectsLayer: React.FC<{ effects: VisualEffect[] }> = ({ effects })
                     {fx.type === 'PUSH' && <Push ms={ms} rotation={rot} />}
                     {fx.type === 'EMERGE' && <Emerge ms={ms} />}
                     {fx.type === 'DROWN' && <Drown ms={ms} />}
+                    {fx.type === 'HIT_FIRE' && <HitFire ms={ms} />}
+                    {fx.type === 'HIT_ICE' && <HitIce ms={ms} />}
+                    {fx.type === 'HIT_ELEC' && <HitElec ms={ms} />}
+                    {fx.type === 'HEAVY_SHAKE' && <HeavyShake ms={ms} />}
+                    {fx.type === 'SHIELD_GRANT' && <ShieldGrant ms={ms} />}
+                    {fx.type === 'TAUNT_BURST' && <TauntBurst ms={ms} />}
                 </div>
             );
         })}

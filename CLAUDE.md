@@ -33,6 +33,12 @@ React 19 + Vite + TypeScript, không dùng thư viện state/router nào. Alias 
 
 **Dữ liệu tĩnh trong `data/`:** heroes, plants, zombies, skills, fusionRecipes, unlocks, tutorial, missions... Thêm nội dung game = thêm entry vào các bảng này; `types.ts` và `constants.ts` giữ type + hằng số cân bằng (có chú thích lý do từng con số).
 
+**Trùm — mọi thứ riêng của trùm nằm trong `utils/bossBehaviours.ts`.** Bảng `BOSS_HOOKS` khoá theo `Unit.bossId` (KHÔNG theo unit class — hai trùm có thể dùng chung class, và class của trùm cũng có thể là lính thường). Ba móc: `plan` quyết định intent, `onMoved` là hệ quả của việc đã đi, `onTurnEnd` là trạng thái bàn cờ. Móc trả `null` = "lượt này không có gì đặc biệt", rơi xuống AI thường. `turnManager` gọi bảng ở đúng bốn điểm và không biết ai nằm trong đó — **đừng thêm `if (unit.bossId === …)` vào engine**, đó chính là thứ bảng này sinh ra để chặn. Thân + cờ luật của trùm nằm trong `data/bosses.ts`.
+
+> **Ba luật dễ phá khi đụng tới trùm.** (1) Chỉ 3/9 trùm miễn `PUSH`; `isMassive` KHÁC miễn `PUSH` — nó còn chặn bị ăn và bị đóng băng, tức xoá hai hero đẩy khỏi trận đó. (2) Vì trùm thường không massive, mọi hiệu ứng xoá-sổ-tức-thì phải kiểm `bossId` chứ không kiểm `isMassive`. (3) Trùm không cướp não: unit cướp não bị xoá khỏi bàn, mà `SLAY_BOSS` đọc "không còn trùm sống".
+
+**Tia lan điện chỉ có MỘT bản: `chainStep` trong `utils/elements.ts`.** Nó trả về **thân thể, không trả số** — mỗi nơi gọi tự khai hop của mình đáng bao nhiêu. Đó là hàng rào chống bug đã từng xảy ra: một lần phân giải thứ hai *kế thừa* con số của lần đầu (`DAMAGE 999` của Nuốt Chửng lan tiếp thành 499). Vòng lan từng bị viết hai lần trước khi được viết một lần; đừng viết bản thứ ba.
+
 **Persistence — 3 vùng localStorage, đừng lẫn** (lý do ghi trong từng file):
 - `utils/persistence.ts`: `pitb_config_v1` (config admin, xóa thoải mái) tách riêng khỏi `pitb_progress_v1` (**tiến trình mở khóa của người chơi — không được làm mất**).
 - `utils/runPersistence.ts`: `pitb_run_v1` — snapshot run tại điểm an toàn (map/shop/event), cố ý KHÔNG lưu giữa trận.

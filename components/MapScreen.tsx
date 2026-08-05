@@ -1,13 +1,36 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { MapNode, Unit, UnitType, UnitClass, UnitDefinition } from '../types';
-import { Skull, Swords, Tent, Crown, HelpCircle, Sun, ShoppingBag, Map as MapIcon, Check, Crosshair, ZoomIn, ZoomOut, Users, X, Info, Bug, Library } from 'lucide-react';
+import { MapNode, Unit, UnitType, UnitClass, UnitDefinition, WorldType } from '../types';
+import { WORLD_META } from '../data/worlds';
+import { Skull, Swords, Tent, Crown, HelpCircle, Sun, ShoppingBag, Map as MapIcon, Check, Crosshair, ZoomIn, ZoomOut, Users, X, Info, Bug, Library, Settings } from 'lucide-react';
 import { useI18n } from '../i18n';
 
 // --- CONFIGURATION & HELPERS ---
 
 const NODE_INFO: Record<string, { label: string; desc: string; icon: React.ReactNode; color: string; border: string; bg: string }> = {
+    // Legend order = insertion order (the panel renders Object.entries directly), and it
+    // is deliberately curiosity-first / danger-last: event, rest, shop, then the three
+    // fight tiers in ascending threat. The old order led with combat, which put the two
+    // scariest symbols on top of the list a brand-new player reads first.
+    'EVENT': {
+        label: 'Unknown Signal', desc: 'Random event.',
+        icon: <HelpCircle size={20} />,
+        // Cyan/Blue
+        color: 'text-cyan-300', border: 'border-cyan-400', bg: 'bg-cyan-950'
+    },
+    'CAMPFIRE': {
+        label: 'Rest Site', desc: 'Rest, Heal, or Train.',
+        icon: <Tent size={20} />,
+        // Changed to GREEN (Safety/Recovery)
+        color: 'text-emerald-400', border: 'border-emerald-500', bg: 'bg-emerald-950'
+    },
+    'SHOP': {
+        label: 'Supply Depot', desc: 'Spend Sun on items.',
+        icon: <ShoppingBag size={20} />,
+        // Gold/Yellow
+        color: 'text-yellow-300', border: 'border-yellow-400', bg: 'bg-yellow-900'
+    },
     'BATTLE': {
         label: 'Skirmish', desc: 'Standard combat. Moderate rewards.',
         icon: <Swords size={20} />,
@@ -20,29 +43,11 @@ const NODE_INFO: Record<string, { label: string; desc: string; icon: React.React
         // Changed to ORANGE (Danger level 2)
         color: 'text-orange-400', border: 'border-orange-500', bg: 'bg-orange-950'
     },
-    'CAMPFIRE': {
-        label: 'Rest Site', desc: 'Rest, Heal, or Train.',
-        icon: <Tent size={20} />,
-        // Changed to GREEN (Safety/Recovery)
-        color: 'text-emerald-400', border: 'border-emerald-500', bg: 'bg-emerald-950'
-    },
     'BOSS': {
         label: 'Sector Boss', desc: 'Final objective. Extreme danger.',
         icon: <Crown size={24} />,
         // Changed to RED (Extreme Danger)
         color: 'text-red-500', border: 'border-red-600', bg: 'bg-red-950'
-    },
-    'SHOP': {
-        label: 'Supply Depot', desc: 'Spend Sun on items.',
-        icon: <ShoppingBag size={20} />,
-        // Gold/Yellow
-        color: 'text-yellow-300', border: 'border-yellow-400', bg: 'bg-yellow-900'
-    },
-    'EVENT': {
-        label: 'Unknown Signal', desc: 'Random event.',
-        icon: <HelpCircle size={20} />,
-        // Cyan/Blue
-        color: 'text-cyan-300', border: 'border-cyan-400', bg: 'bg-cyan-950'
     },
 };
 
@@ -67,6 +72,7 @@ interface MapScreenProps {
   onEvolveUnit: (unitId: string, targetClass: UnitClass) => void;
   /** Opens the heroes-and-fusions reference. Mid-run it answers "is this plant worth buying". */
   onOpenCodex?: () => void;
+  onOpenSettings?: () => void;
 }
 
 // --- SUB-COMPONENTS ---
@@ -92,7 +98,7 @@ const NodeTooltip = ({ type, x, y, zoom }: { type: string, x: number, y: number,
     );
 };
 
-export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units, sun, unitDefs, onUpgradeUnit, onEvolveUnit, debugMode = false, onToggleDebug, onDebugGrant, onDebugLoseBrain, forceLegend = false, highlightLegend, onOpenCodex }) => {
+export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units, sun, unitDefs, onUpgradeUnit, onEvolveUnit, debugMode = false, onToggleDebug, onDebugGrant, onDebugLoseBrain, forceLegend = false, highlightLegend, onOpenCodex, onOpenSettings }) => {
   const { t } = useI18n();
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -108,6 +114,52 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
   const [showSquadModal, setShowSquadModal] = useState(false);
 
   const MAP_HEIGHT_BASE = 1800;
+
+  /**
+   * THE SECTORS THIS RUN WALKS, as bands down the page.
+   *
+   * Read off the nodes rather than passed in, because the nodes are the only thing that knows:
+   * `sectorForLayer` stamped a world onto each one when the map was generated, and a stage is
+   * exactly which three it stamped. Deriving it means the Breach's nine-sector gauntlet gets
+   * banded correctly without this component learning what the Breach is.
+   *
+   * Each band runs to the MIDPOINT between its last node and the next band's first, so the
+   * border falls in the gap between two layers rather than through a node — a boundary drawn
+   * across the middle of a battle icon reads as a glitch, not a border.
+   */
+  const bands = useMemo(() => {
+      const extent = new Map<WorldType, { min: number; max: number }>();
+      nodes.forEach(n => {
+          const cur = extent.get(n.world);
+          if (!cur) extent.set(n.world, { min: n.y, max: n.y });
+          else { cur.min = Math.min(cur.min, n.y); cur.max = Math.max(cur.max, n.y); }
+      });
+      const ordered = [...extent.entries()]
+          .map(([world, e]) => ({ world, ...e }))
+          .sort((a, b) => a.min - b.min);
+      return ordered.map((b, i) => ({
+          world: b.world,
+          index: i,
+          labelAt: b.min,
+          top: i === 0 ? 0 : (ordered[i - 1].max + b.min) / 2,
+          bottom: i === ordered.length - 1 ? 100 : (b.max + ordered[i + 1].min) / 2,
+      }));
+  }, [nodes]);
+
+  /**
+   * Where the player actually is: the node they may enter next, or the last one they cleared.
+   * The title bar used to be the literal string "Sector 1: Grasslands" no matter what, which
+   * is a label that is wrong more often than it is right — two thirds of every run, and all of
+   * stages II and III.
+   */
+  const here = useMemo(() => {
+      const open = nodes.find(n => n.status === 'AVAILABLE');
+      if (open) return open;
+      const done = nodes.filter(n => n.status === 'COMPLETED').sort((a, b) => b.y - a.y)[0];
+      return done ?? nodes[0];
+  }, [nodes]);
+  const hereBand = bands.find(b => b.world === here?.world);
+  const hereMeta = here ? WORLD_META[here.world] : undefined;
 
   // AUTO SCROLL
   useEffect(() => {
@@ -299,7 +351,12 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
              <div className="flex items-center gap-4">
                  <MapIcon className="text-green-500" />
                  <div>
-                     <h1 className="text-lg font-bold uppercase tracking-widest text-white leading-none">{t('Sector 1: Grasslands')}</h1>
+                     <h1 className="text-lg font-bold uppercase tracking-widest leading-none"
+                         style={{ color: hereMeta?.accent ?? '#ffffff' }}>
+                         {hereMeta
+                             ? t('Sector {n}: {name}', { n: (hereBand?.index ?? 0) + 1, name: t(hereMeta.name) })
+                             : t('Operation: Blightfall')}
+                     </h1>
                      <span className="text-xs text-gray-500 uppercase">{t('Operation: Blightfall')}</span>
                  </div>
              </div>
@@ -359,6 +416,17 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
                      </button>
                  )}
 
+                  {/* SETTINGS MODAL TRIGGER */}
+                  {onOpenSettings && (
+                      <button
+                         onClick={onOpenSettings}
+                         className="p-2 border border-gray-700 hover:border-gray-500 hover:bg-gray-800 rounded text-gray-400 hover:text-white"
+                         title={t('Cài Đặt')}
+                      >
+                          <Settings size={18} />
+                      </button>
+                  )}
+
                  {/* SQUAD MODAL TRIGGER */}
                  <button
                     onClick={() => setShowSquadModal(true)}
@@ -374,9 +442,11 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
 
             {/* --- MAP AREA (FULL WIDTH) --- */}
             <div className="flex-1 relative bg-[#0a0a0a] overflow-hidden">
-                {/* Background Grid */}
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#151515_0%,#050505_100%)]"></div>
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[length:50px_50px]"></div>
+                {/* The dark floor every sector is painted on top of. The 50px grid that used to
+                    sit here as well is gone: each sector brings its own texture now, and a
+                    second grid underneath all of them was the thing making nine places look
+                    like one. */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,#141414_0%,#050505_100%)]"></div>
 
                 <div
                     ref={scrollRef}
@@ -403,6 +473,47 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
                                 left: 0
                             }}
                         >
+                            {/* SECTOR BANDS. Inside the transform wrapper, not outside it, so a
+                                band and the nodes standing in it zoom and scroll as one thing —
+                                painted on the static frame they would slide off the layers they
+                                are labelling the moment anybody dragged the map. */}
+                            {bands.map(band => {
+                                const meta = WORLD_META[band.world];
+                                const hereNow = here?.world === band.world;
+                                return (
+                                    <div
+                                        key={`${band.world}-${band.index}`}
+                                        className="absolute left-0 right-0 pointer-events-none"
+                                        style={{ top: `${band.top}%`, height: `${band.bottom - band.top}%` }}
+                                    >
+                                        <div className="absolute inset-0" style={{
+                                            background: `linear-gradient(180deg, ${meta.accent}00 0%, ${meta.accent}1f 18%, ${meta.accent}1f 82%, ${meta.accent}00 100%)`,
+                                        }} />
+                                        <div className="absolute inset-0" style={{
+                                            backgroundImage: meta.texture,
+                                            backgroundSize: meta.textureSize,
+                                            // Faded at the seams for the same reason the tint is:
+                                            // a hard edge between two textures reads as a UI
+                                            // panel, and this is meant to read as ground.
+                                            maskImage: 'linear-gradient(180deg, transparent 0%, black 16%, black 84%, transparent 100%)',
+                                            WebkitMaskImage: 'linear-gradient(180deg, transparent 0%, black 16%, black 84%, transparent 100%)',
+                                            opacity: hereNow ? 1 : 0.55,
+                                        }} />
+                                        {/* The name, at the band's own left margin. The title bar
+                                            can only say where you are standing; this says where
+                                            you are GOING, which is the question a branching map
+                                            is asking. */}
+                                        <span className="absolute left-3 top-3 flex items-center gap-2">
+                                            <span className="w-8 h-[2px] rounded" style={{ background: meta.accent, opacity: hereNow ? 1 : 0.5 }} />
+                                            <span className="text-[11px] font-black uppercase tracking-[0.2em]"
+                                                  style={{ color: meta.accent, opacity: hereNow ? 0.95 : 0.45 }}>
+                                                {t(meta.name)}
+                                            </span>
+                                        </span>
+                                    </div>
+                                );
+                            })}
+
                             {renderConnections()}
 
                             {nodes.map(node => (

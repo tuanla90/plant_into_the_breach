@@ -27,6 +27,8 @@ interface TileProps {
   isEnemySpawn: boolean;
   isPlacementZone?: boolean;
   pushDirection?: 'UP' | 'DOWN' | 'LEFT' | 'RIGHT' | null;
+  /** How many tiles that shove covers. One chevron is drawn per tile. */
+  pushDistance?: number;
   ghostImgUrl?: string;
   onClick: () => void;
   onMouseEnter: () => void; 
@@ -50,6 +52,7 @@ export const Tile: React.FC<TileProps> = ({
   isEnemySpawn,
   isPlacementZone,
   pushDirection,
+  pushDistance = 1,
   ghostImgUrl,
   onClick, 
   onMouseEnter,
@@ -248,6 +251,28 @@ export const Tile: React.FC<TileProps> = ({
           </div>
       )}
 
+      {/* 2.35 SPINE FIELD — Thornquill's Spine Wall, laid across the tiles her shot crossed.
+              It hurt everything that walked in from the day it was built and was drawn NOWHERE,
+              which in a game that promises perfect information is worse than the damage being
+              wrong: a zombie bled crossing an empty-looking square and read as a bug.
+
+              A tile DECAL, not an object like the trap above: spines are part of the ground, and
+              a unit standing on them has to stay readable, so this sits under the unit layer.
+              The counter is the other half of the promise — a hazard on a clock is only a plan
+              the player can make if they can see how long it lasts. */}
+      {data.spikes && data.spikes.turns > 0 && (
+          <div className="absolute inset-0 z-[5] pointer-events-none">
+              <div
+                  className="absolute inset-0 opacity-90"
+                  style={{ backgroundImage: `url(/img/terrain/spikes.svg)`, backgroundSize: 'cover' }}
+              />
+              <div className="absolute inset-[3px] border border-emerald-400/40" />
+              <span className="absolute bottom-0.5 right-1 text-[9px] leading-none font-bold text-emerald-300/90 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                  {data.spikes.turns}
+              </span>
+          </div>
+      )}
+
       {/* 2.4 ARMED TRAP — a Potato Mine waiting for a footstep. Sits at unit z-level so it
               reads as a thing ON the board, not a tile decal; slight bob sells "armed". */}
       {data.trap && (
@@ -338,8 +363,12 @@ export const Tile: React.FC<TileProps> = ({
               {isHovered && (
                   <div className="absolute inset-0 flex items-center justify-center">
                       {pushDirection ? (
-                           <div style={{ transform: `rotate(${pushRot}deg)` }}>
-                               <ArrowBigRight size={32} className="text-yellow-400 drop-shadow-[0_0_4px_black] animate-[pulse_0.5s_infinite]" fill="currentColor" />
+                           <div className="flex items-center" style={{ transform: `rotate(${pushRot}deg)` }}>
+                               {/* One chevron per tile travelled: a two-tile throw has to LOOK
+                                   like two tiles, or the telegraph is lying about its reach. */}
+                               {Array.from({ length: Math.max(1, pushDistance) }).map((_, i) => (
+                                   <ArrowBigRight key={i} size={32} className="-ml-3 first:ml-0 text-yellow-400 drop-shadow-[0_0_4px_black] animate-[pulse_0.5s_infinite]" fill="currentColor" />
+                               ))}
                            </div>
                       ) : (
                            <Crosshair size={32} className="text-white drop-shadow-[0_0_4px_black] animate-[spin_3s_linear_infinite]" />

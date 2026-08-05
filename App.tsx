@@ -2,28 +2,31 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Position, UnitClass, Skill, UnitType, Unit,
-  HeroId, MaterialId, EventEffect, GameState, MapNode
+  HeroId, ItemDefinition, MaterialId, EventEffect, GameState, MapNode
 } from './types';
 import {
   INITIAL_GAME_STATE, UNIT_SKILLS as INITIAL_SKILLS, DEFAULT_UNIT_DEFINITIONS,
-  DEFAULT_TERRAIN_DEFS, DEFAULT_ITEM_DEFINITIONS, UNIT_ROLE_MAP,
-  GENERATE_MAP, SHOP_OFFER_COUNT, shopRerollCost, BENCH_CAPACITY, COIN_ON_RUN_START
+  DEFAULT_TERRAIN_DEFS, DEFAULT_ITEM_DEFINITIONS,
+  GENERATE_MAP, GENERATE_BREACH_MAP, SHOP_OFFER_COUNT, shopRerollCost, BENCH_CAPACITY, SQUAD_SIZE,
+  coinOnRunStart, COIN_FUSE, COIN_HEAL_PER_HP, COIN_REPAIR_SEEDLING
 } from './constants';
 import { HERO_DEFINITIONS } from './data/heroes';
+import { bossById, elementsUnlocked } from './data/unlocks';
 import { MATERIAL_DEFINITIONS, STARTING_MATERIALS } from './data/materials';
-import { applyFusion, applyFusionToSkill, hasFusionEffect, getFusionEffectValue, canFuse } from './utils/fusion';
+import { applyFusion, applyFusionToSkill, applyUpgrade, hasFusionEffect, getFusionEffectValue, canFuse } from './utils/fusion';
 import { computeThreatenedTiles, computeThreatDetail } from './utils/threat';
 import { missionMarkers } from './data/missions';
 import { useGameEngine, FAST_SPEED } from './hooks/useGameEngine';
-import { useGameProgression } from './hooks/useGameProgression';
+import { useGameProgression, RunPayout } from './hooks/useGameProgression';
 import { processTurn } from './utils/turnManager';
 import {
   getValidMoves, getValidSkillTargets, getSkillGeometry,
-  getSkillTargetPath, getUnitAt, getTileAt, isSunProducingSkill, gustDirection
-} from './utils/gameLogic';
+  getSkillTargetPath, getUnitAt, getTileAt, isSunProducingSkill, gustDirection, getSolidUnitAt } from './utils/gameLogic';
 // Combat resolution used to live in this file, as ~500 lines inside handleTileClick.
 // It is pure — units in, TurnAction[] out — so it belongs beside the rest of the rules.
 import { planSkillActions } from './utils/skillResolution';
+import { activeResonance } from './utils/elements';
+import { freshHero } from './utils/unitFactory';
 import { itemTargetInvalid, planItemActions } from './utils/itemResolution';
 import { loadConfigFromStorage } from './utils/persistence';
 import { saveRunState, loadRunState, clearRunState, hasSavedRun } from './utils/runPersistence';
@@ -35,26 +38,34 @@ import { Board } from './components/Board';
 import { HUD } from './components/HUD';
 import { ActionPanel } from './components/ActionPanel';
 import { SquadSidebar } from './components/SquadSidebar';
+import { OrientationOverlay } from './components/OrientationOverlay';
 import { MapScreen } from './components/MapScreen';
 import { ShopScreen } from './components/ShopScreen';
 import { StartMenu } from './components/StartMenu';
+import { StageSelectScreen } from './components/StageSelectScreen';
 import { IntroComic } from './components/IntroComic';
+import { OutroComic, OUTRO_PANELS } from './components/OutroComic';
 import { TutorialPrompt } from './components/TutorialPrompt';
+import { LevelBar } from './components/LevelBar';
 import { TutorialScreen } from './components/TutorialScreen';
-import { SquadSelectScreen } from './components/SquadSelectScreen';
+import { SquadSelectScreen, type HeroElementMap } from './components/SquadSelectScreen';
 import { VictoryScreen } from './components/VictoryScreen';
 import { FusionPanel } from './components/FusionPanel';
+import { CampScreen } from './components/CampScreen';
+import { UpgradePicker } from './components/UpgradePicker';
 import { SquadViewer } from './components/SquadViewer';
 import { BalanceScreen } from './components/BalanceScreen';
+import { DebugPanel, buildDebugMap, type DebugJump } from './components/DebugPanel';
 import { EventScreen } from './components/EventScreen';
 import { CoachMark } from './components/CoachMark';
 import { Spotlight } from './components/Spotlight';
+import { TutorialSkipButton } from './components/TutorialSkipButton';
 import { TUTORIAL_CHAIN, tutorialBattle, tutorialNode, tutorialSteps, stepActor, stepMaterial, stepItem, stepCopies, stepSatisfied } from './data/tutorial';
 import { Flag } from 'lucide-react';
 import { GAME_EVENTS } from './data/events';
 import { useI18n } from './i18n';
 import { sfx, playMusic, installAudioUnlock, type MusicTrack } from './utils/audio';
-import { AudioControls } from './components/AudioControls';
+import { SettingsModal } from './components/SettingsModal';
 import { balancedGlobal } from './utils/balance';
 import { TUTORIAL_RECIPES } from './data/unlocks';
 import { ScreenFade } from './components/ScreenFade';
@@ -90,11 +101,19 @@ const App: React.FC = () => {
   useEffect(() => {
       const onDown = (e: PointerEvent) => {
           const el = e.target as HTMLElement | null;
-          if (el?.closest?.('button, [role="button"]')) sfx('ui-click');
+          const btn = el?.closest?.('button, [role="button"]') as HTMLElement | null;
+          if (!btn) return;
+          // Backing out gets its own note. `ui-back` shipped with a file and a mix level and
+          // was never called, because the one global listener above cannot tell "confirm" from
+          // "cancel" by looking at a <button>. The button says which it is, via data-sfx —
+          // one decision here, one attribute there, instead of an onClick in twenty components
+          // that goes stale the moment somebody adds the twenty-first.
+          sfx(btn.dataset.sfx === 'back' ? 'ui-back' : 'ui-click');
       };
       document.addEventListener('pointerdown', onDown, true);
       return () => document.removeEventListener('pointerdown', onDown, true);
   }, []);
+
 
   // The screen-driven music effects live below, next to the state they read — `gameState`
   // is declared further down and touching it here would be a temporal dead zone error.
@@ -102,20 +121,38 @@ const App: React.FC = () => {
   const {
       gameState, setGameState, board, setBoard, units, setUnits,
       projectiles, effects, addDamageEvent, addEffect, executeTurnActions,
+      turnResetsUsed, resetTurn, beginTurnRewindWindow,
       speed, setSpeed, skipAnimation
   } = useGameEngine();
 
   const {
       mapNodes, selectNode, completeLevel, previewRewards, performTurnZeroAI, setMapNodes,
       registerSquad, handleHeroFallen, reviveHero, reviveHeroPaid, addBenchPlant, removeBenchPlant,
-      brainCost, buyBrain, finishTutorial, previewUnlocks, recordRunLost, fusableHeroes, fuseQueuedHero,
-      unlocks
+      brainCost, buyBrain, finishTutorial, previewUnlocks, runPayoutPreview, recordRunLost, fusableHeroes, fuseQueuedHero, upgradeQueuedHero,
+      unlocks, unlockEverything, resetProgress, reviveAllHeroes
   } = useGameProgression({
       gameState, setGameState, setBoard, units, setUnits, unitDefs, terrainDefs
   });
 
   // The music effect lives further down, below `showIntro` — it reads that flag, and this
   // point in the function body is still inside its temporal dead zone.
+
+  /**
+   * Coin changed hands. Watched centrally for the same reason the click is: Coin moves through
+   * level rewards, shop purchases, rerolls, revives, brain buy-backs and half the event
+   * outcomes, and `ui-coin` had a file and a mix level but no call site because no single one
+   * of those places felt like the obvious owner. The BALANCE is the event.
+   *
+   * Deliberately fires for spending as well as earning — the sample is coins being handled, and
+   * a purchase is the moment the player most wants to hear that it went through.
+   */
+  const prevCoinsRef = useRef(gameState.coins);
+  useEffect(() => {
+      if (gameState.coins !== prevCoinsRef.current) {
+          prevCoinsRef.current = gameState.coins;
+          sfx('ui-coin');
+      }
+  }, [gameState.coins]);
 
   // Heroes carry their own two skills instead of the class skill table. Each of the five
   // heroes has a distinct base class, so keying the override by class is unambiguous.
@@ -164,6 +201,12 @@ const App: React.FC = () => {
    * saved run could resume with the encyclopedia open over the map.
    */
   const [showCodex, setShowCodex] = useState(false);
+  /**
+   * The payout a lost run just banked. Captured from `recordRunLost` rather than recomputed,
+   * because committing it is what zeroes the run's tally — by the time the defeat screen
+   * renders there is nothing left to read.
+   */
+  const [lostRunPayout, setLostRunPayout] = useState<RunPayout | null>(null);
 
   /** Whether the menu should offer "Continue Campaign". Re-checked whenever the menu shows. */
   const [hasResumableRun, setHasResumableRun] = useState(() => hasSavedRun());
@@ -179,7 +222,7 @@ const App: React.FC = () => {
   // A dead run must not be resumable. It still pays out, though: objectives banked on the
   // way down convert to fusion recipes here, same as they would on a boss clear.
   useEffect(() => {
-      if (gameState.screen === 'GAME_OVER') { clearRunState(); recordRunLost(); }
+      if (gameState.screen === 'GAME_OVER') { clearRunState(); setLostRunPayout(recordRunLost()); }
   }, [gameState.screen]);
   const [hoveredTile, setHoveredTile] = useState<Position | null>(null);
   
@@ -194,6 +237,24 @@ const App: React.FC = () => {
   const [showIntro, setShowIntro] = useState(false);
   /** True when the comic was opened from the menu's replay button rather than by starting. */
   const introWasReplay = React.useRef(false);
+
+  /**
+   * The outro comic — the intro's bookend, shown once the Blightlord falls.
+   *
+   * ART GATE: the epilogue's artwork ships separately (art-src/ART-PROMPTS.md § outro), so
+   * the screen must not exist until the files do. One probe of the FIRST panel decides for
+   * the whole page — the panels are one commission in one style, so "panel 1 exists" is the
+   * honest proxy for "the set exists", and probing all eight would just be eight ways to
+   * learn the same fact. Until it loads, a campaign win goes straight to the normal victory
+   * flow and nothing half-built is ever shown.
+   */
+  const [outroReady, setOutroReady] = useState(false);
+  const [showOutro, setShowOutro] = useState(false);
+  useEffect(() => {
+      const probe = new Image();
+      probe.onload = () => setOutroReady(true);
+      probe.src = OUTRO_PANELS[0].art;
+  }, []);
 
   /**
    * The tutorial is OFFERED, never forced. It used to be the only road into a first run —
@@ -244,7 +305,7 @@ const App: React.FC = () => {
       // Starting a NEW mission explicitly abandons whatever run was saved before.
       clearRunState();
       setHasResumableRun(false);
-      setGameState(prev => ({ ...prev, screen: 'SQUAD_SELECT' }));
+      setGameState(prev => ({ ...prev, screen: 'STAGE_SELECT', targetBossId: null }));
   };
 
   /** Pick the saved run back up exactly where the last safe point left it. */
@@ -496,6 +557,23 @@ const App: React.FC = () => {
       return null;
   }, [gameState.interactionMode, selectedUnit, gameState.selectedSkillId, hoveredTile, skillDefs]);
 
+  /**
+   * HOW FAR the shove goes, not just which way.
+   *
+   * The arrow above only ever showed a direction, which was true while every PUSH in the game
+   * moved exactly one tile. Chardwall shoves TWO, and a fusion can add more — and this game
+   * promises the player perfect information, so an arrow that says "that way" about a two-tile
+   * throw is the telegraph lying. Read off the FUSED skill for the same reason the direction is:
+   * what is drawn has to be what resolves.
+   */
+  const previewPushDistance = useMemo(() => {
+      if (gameState.interactionMode !== 'TARGETING' || !selectedUnit || !gameState.selectedSkillId) return 1;
+      const baseSkill = skillsFor(selectedUnit).find(s => s.id === gameState.selectedSkillId);
+      const skill = baseSkill ? applyFusionToSkill(baseSkill, selectedUnit) : null;
+      const shove = skill?.effects.find(e => e.type === 'PUSH' || e.type === 'PULL');
+      return Math.max(1, shove?.value ?? 1);
+  }, [gameState.interactionMode, selectedUnit, gameState.selectedSkillId, skillDefs]);
+
   // Blast preview for the item being aimed: mirrors the exact area the use-code hits,
   // so what the player sees is what resolves. Follows the hovered tile.
   const itemAoeTiles = useMemo((): Position[] => {
@@ -526,29 +604,51 @@ const App: React.FC = () => {
       return tiles;
   }, [gameState.interactionMode, gameState.selectedItemId, hoveredTile, itemDefs]);
 
-  const handleStartGame = (selectedHeroes: HeroId[]) => {
-      const initialUnits: Unit[] = selectedHeroes.map((heroId, idx) => {
-          const hero = HERO_DEFINITIONS[heroId];
-          return {
-              id: `player-${idx}-${Date.now()}`,
-              type: UnitType.PLANT, class: hero.baseClass, role: UNIT_ROLE_MAP[hero.baseClass],
-              hp: hero.maxHp, maxHp: hero.maxHp, damage: hero.damage, moveRange: hero.moveRange,
-              cooldownReduction: 0,
-              level: 1, position: { x: -1, y: -1 },
-              isEnemy: false, hasMoved: false, hasAttacked: false, statusEffects: [],
-              movementType: hero.movementType, immunities: hero.immunities, imgUrl: hero.boardImgUrl ?? hero.imgUrl,
-              isHero: true, heroId, fusions: []
-          };
-      });
+  /**
+   * @param heroElements The element each picked hero carries for this run, from the squad
+   *        screen. It travels two ways on purpose: into the BODIES built right here (so the
+   *        map's squad panel already shows the health that was paid for), and into GameState
+   *        via `registerSquad`, which is what rebuilds a revived hero correctly three nodes
+   *        later and what survives an F5.
+   */
+  const handleStartGame = (selectedHeroes: HeroId[], heroElements: HeroElementMap = {}) => {
+      // Was a hand-inlined copy of `freshHero` that differed only in the id — and once the
+      // element arrived, that copy would also have had to re-derive the max-HP price. One
+      // factory, one place the bill is charged (utils/unitFactory.ts).
+      const initialUnits: Unit[] = selectedHeroes.map((heroId, idx) =>
+          freshHero(heroId, `player-${idx}-${Date.now()}`, heroElements[heroId]));
 
       setUnits(initialUnits);
-      registerSquad(selectedHeroes);
+      registerSquad(selectedHeroes, heroElements);
       // A picked squad always means an ordinary run, so the map is generated here rather than
       // inherited. Without this, a player who declined the tutorial still carried the scripted
       // seven-node map that useGameProgression lays down for anyone who has not finished it.
-      setMapNodes(GENERATE_MAP());
+      //
+      // Bosses beaten picks the sector chain: three of them means the run walks stage II's
+      // coast, thornwaste and ice instead of the opening three (utils/mapGenerator.ts).
+      // The campaign screen chose an act: the map is laid out for that stage and its boss
+      // node carries that boss. Falling back to the save's progress keeps every other entry
+      // point (tutorial skip, debug jump) behaving exactly as before.
+      const target = gameState.targetBossId ? bossById(gameState.targetBossId) : undefined;
+      // Stage 0 is the Breach, and it is not a stage: it is a hand-authored gauntlet of all ten
+      // bosses. Routing it through GENERATE_MAP gave it a stage III map with Blightlord stapled
+      // to the end, which is the one thing the final act was never supposed to be.
+      setMapNodes(target?.stage === 0
+          ? GENERATE_BREACH_MAP()
+          : GENERATE_MAP(
+              unlocks.bossesBeaten.length,
+              target && target.stage > 0 ? target.stage - 1 : undefined,
+              target?.id,
+          ));
       // Coin is the cross-level currency now; Sun is granted per level by setupCombat.
-      setGameState(prev => ({ ...prev, screen: 'MAP', sun: 0, coins: balancedGlobal('global.COIN_ON_RUN_START') }));
+      // The purse is sized to the act being attempted: a stage III run is the same ten layers
+      // against harder boards, and the Breach is ten bosses with no shop in it at all.
+      setGameState(prev => ({
+          ...prev,
+          screen: 'MAP',
+          sun: 0,
+          coins: coinOnRunStart(target?.stage ?? 1, balancedGlobal('global.COIN_ON_RUN_START')),
+      }));
   };
 
   // --- SHOP: rolling offers, rerolling, buying base plants ---
@@ -626,8 +726,11 @@ const App: React.FC = () => {
 
   // Fusion consumes the plant: it can no longer be held back as insurance.
   // That trade is the whole point, so App owns both halves of it.
-  /** Set once a fuse happens at the current campfire — spends the rest (see closeFusionPanel). */
+  /** Set once a fuse happens at a stage campfire — spends the rest (see the effect below). */
   const fusedAtCampfire = React.useRef(false);
+
+  /** The node the player is standing in, when they are standing in one. */
+  const currentNode = mapNodes.find(n => n.id === gameState.currentLevelId);
 
   const handleFuse = (heroUnitId: string, materialId: MaterialId, benchId?: string) => {
       // By bench id when the caller knows it. Falling back to the first material match
@@ -647,6 +750,21 @@ const App: React.FC = () => {
           : [...(unlocks?.recipes ?? []), ...TUTORIAL_RECIPES];
       if (heroUnit && !canFuse(heroUnit, materialId, t, allowedRecipes, benchEntry).ok) return;
 
+      // IN THE BREACH a graft is bought; at a stage campfire it is free.
+      //
+      // Not an inconsistency — the two rest points charge for different things. A campfire
+      // costs you the OTHER two options (see MapNode.paidCamp), so billing the graft as well
+      // would be charging twice for one visit. A Breach camp has no such rule: nothing is
+      // exclusive there, so Coin is the only thing standing between the player and all of it.
+      //
+      // Charged here rather than on the button that opens the panel, because the panel can be
+      // opened, browsed and closed again without committing to anything.
+      const paidGraft = !!currentNode?.paidCamp;
+      if (paidGraft) {
+          if (gameState.coins < COIN_FUSE) return;
+          setGameState(prev => ({ ...prev, coins: prev.coins - COIN_FUSE }));
+      }
+
       sfx('fusion');
       // A fusion is also a night's rest for the recipient: hp snaps to the (possibly
       // just raised) maximum. Fusing only ever happens at the campfire.
@@ -663,17 +781,15 @@ const App: React.FC = () => {
           fuseQueuedHero(heroUnit.heroId, materialId);
       }
       removeBenchPlant(benchEntry.id);
-      fusedAtCampfire.current = true;
-      // A fuse IS the campfire visit's one choice, so the bench closes on the spot and the
-      // effect below files the rest as spent. Waiting for the player to close it by hand
-      // only worked while the bench emptied itself: with a second plant still sitting there
-      // the panel stayed open over the rest options, and a tutorial step pointing past it
-      // had nothing to advance to.
+      // At a campfire the graft IS the visit's one choice, so the bench closes on the spot and
+      // the effect below files the rest as spent. At a Breach camp nothing is spent by fusing:
+      // the panel closes and the player is back in the camp with whatever Coin is left.
+      if (!paidGraft) fusedAtCampfire.current = true;
       setShowFusionPanel(false);
   };
 
   /**
-   * The campfire is one visit, one choice: closing the bench after at least one fuse
+   * A stage campfire is one visit, one choice: closing the bench after at least one fuse
    * resolves the event just like picking any other option — no second choice after.
    */
   const closeFusionPanel = () => setShowFusionPanel(false);
@@ -833,13 +949,20 @@ const App: React.FC = () => {
       if (sunCost > gameState.sun) return;
       const stateAfterSpend = { ...gameState, sun: gameState.sun - sunCost };
 
-      const actions = planSkillActions(selectedUnit, skill, pos, { units, board, terrainDefs });
+      // Resonance is derived from the SQUAD THAT WAS PICKED, never from who is still standing —
+      // see the note on resonanceOf. Computed at the call site so the resolver stays pure and
+      // knows nothing about GameState. `activeResonance` adds the one exception the pick
+      // cannot know about: a SEVERED hero suspends the bonus while the theft lasts.
+      const resonance = activeResonance(gameState.heroElements, SQUAD_SIZE, units);
+      const actions = planSkillActions(selectedUnit, skill, pos, { units, board, terrainDefs, resonance });
       executeTurnActions(actions, stateAfterSpend);
   };
 
   /** No mode active: the click either selects a unit, walks the selected one, or clears. */
   const selectOrMove = (pos: Position) => {
-      const unit = getUnitAt(pos, units);
+      // Solid, not present. Clicking the sand must not open the boss's stat card — the burrow
+      // rule is worth nothing if the sidebar reads its exact HP out for free.
+      const unit = getSolidUnitAt(pos, units);
       if (unit) {
           if (unit.id === gameState.selectedUnitId) {
               setGameState(prev => ({ ...prev, selectedUnitId: null, selectedTile: pos }));
@@ -1010,6 +1133,9 @@ const App: React.FC = () => {
       }));
       const newUnits = performTurnZeroAI(units, board, !!gameState.scriptedBattleId);
       setUnits(newUnits);
+      // Chrona's rewind: fresh charge, and the turn-1 photo. Queued AFTER setUnits, so
+      // the no-op reducers inside read the deployed board, not the placement roster.
+      beginTurnRewindWindow();
   };
 
   // --- DEV TRAVEL (debug) ---
@@ -1026,6 +1152,50 @@ const App: React.FC = () => {
       ...prev,
       brainsRemaining: Math.max(0, prev.brainsRemaining - 1),
   }));
+
+  // --- DEV CONSOLE (F9) -------------------------------------------------------------
+  // Dev-only: `import.meta.env.DEV` is statically replaced, so neither the panel nor its
+  // hotkey survives a production build.
+  const [showDebug, setShowDebug] = useState(false);
+
+  /** The squad a debug jump deploys when the player has not started a run yet. */
+  const debugFallbackSquad = useMemo(() => {
+      const owned = (Object.keys(HERO_DEFINITIONS) as HeroId[])
+          .filter(h => unlocks?.heroes.includes(h));
+      return (owned.length ? owned : (Object.keys(HERO_DEFINITIONS) as HeroId[])).slice(0, SQUAD_SIZE);
+  }, [unlocks]);
+
+  /**
+   * Drop straight into a fight of the chosen shape.
+   *
+   * It goes through the ORDINARY path — build a squad the way handleStartGame does, lay a
+   * throwaway map of the requested depth, then `selectNode` — instead of assembling an
+   * encounter directly. Depth is read off the map graph (layerOfNode counts node rows), and
+   * mission, hazard, Sun and reward all hang off the node, so a shortcut around the map
+   * would be a second, quietly different game to test against.
+   */
+  const debugJumpToFight = (jump: DebugJump) => {
+      const squad = units.filter(u => u.isHero && u.hp > 0).map(u => u.heroId as HeroId);
+      const roster = squad.length ? squad : debugFallbackSquad;
+      const fresh = roster.map((heroId, idx) =>
+          freshHero(heroId, `dbg-${idx}-${Date.now()}`, gameState.heroElements?.[heroId]));
+      setUnits(fresh);
+      registerSquad(roster, gameState.heroElements ?? {});
+
+      const { nodes, target } = buildDebugMap(jump);
+      setMapNodes(nodes);
+      setShowDebug(false);
+      setGameState(prev => ({
+          ...prev,
+          screen: 'MAP',
+          sun: 0,
+          coins: Math.max(prev.coins, balancedGlobal('global.COIN_ON_RUN_START')),
+          currentWorld: jump.world,
+          scriptedBattleId: null,
+      }));
+      // After the state above lands, so setupCombat reads the map it is meant to.
+      setTimeout(() => selectNode(target, undefined, true), 0);
+  };
 
   /**
    * COMBAT HOTKEYS. The keycaps were drawn on the buttons long before anything listened
@@ -1094,6 +1264,15 @@ const App: React.FC = () => {
           const target = e.target as HTMLElement | null;
           if (target && (/^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || target.isContentEditable)) return;
           if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+          // F9 is the one key that works on EVERY screen: the console's whole job is
+          // reaching a state you are not currently in. Checked before the combat gate below.
+          if (import.meta.env.DEV && e.key === 'F9') {
+              e.preventDefault();
+              setShowDebug(v => !v);
+              return;
+          }
+          if (showDebug) return;
 
           // Modals own the keyboard while they are up.
           if (gameState.screen !== 'COMBAT') return;
@@ -1164,13 +1343,16 @@ const App: React.FC = () => {
    */
   /**
    * Which tutorial screen the player is on, in the vocabulary TutorialStep.phase uses.
-   * The campfire and a plain event share the EVENT screen, so the node's own type is what
-   * separates them.
+   * The camp has its own screen now, so it no longer has to be told apart from a plain event
+   * by looking at the node type.
    */
   const tutNode = gameState.currentLevelId ? tutorialNode(gameState.currentLevelId) : undefined;
   const tutPhase: 'PLACEMENT' | 'COMBAT' | 'SHOP' | 'EVENT' | 'CAMPFIRE' | null =
       gameState.screen === 'COMBAT' ? (gameState.interactionMode === 'PLACEMENT' ? 'PLACEMENT' : 'COMBAT')
       : gameState.screen === 'SHOP' ? 'SHOP'
+      // Both rest points speak the same phase word. A stage run's campfire is an EVENT the
+      // node type identifies; the Breach's is its own screen.
+      : gameState.screen === 'CAMP' ? 'CAMPFIRE'
       : gameState.screen === 'EVENT' ? (tutNode?.type === 'CAMPFIRE' ? 'CAMPFIRE' : 'EVENT')
       : null;
 
@@ -1204,6 +1386,7 @@ const App: React.FC = () => {
           bench: gameState.bench,
           inventory: gameState.inventory,
           fallenHeroes: gameState.fallenHeroes,
+          turnResetsUsed,
           eventPicking,
           fusionOpen: showFusionPanel,
           fusionHeroId: fusionSel.heroId,
@@ -1243,7 +1426,7 @@ const App: React.FC = () => {
       return i;
   }, [tutTurnSteps, tutAcked, units, gameState.selectedUnitId, gameState.selectedSkillId,
       gameState.selectedItemId, gameState.bench, gameState.inventory, gameState.fallenHeroes,
-      eventPicking, showFusionPanel, fusionSel]);
+      turnResetsUsed, eventPicking, showFusionPanel, fusionSel]);
 
   const activeTutStep = tutTurnSteps[tutIndex] ?? null;
   tutFocusRef.current = activeTutStep?.focus;
@@ -1276,19 +1459,42 @@ const App: React.FC = () => {
       setShowQuitConfirm(true);
   };
 
+  /**
+   * True when the fight just won was the boss — i.e. this victory ends the run.
+   *
+   * A Breach corridor boss is deliberately excluded: the victory screen it triggers is the
+   * end-of-run payout screen, and showing it after the first of ten fights would tell the
+   * player the gauntlet was over nine bosses early.
+   */
+  const currentNodeIsBoss = (() => {
+      const node = mapNodes.find(n => n.id === gameState.currentLevelId);
+      return node?.type === 'BOSS' && node.endsRun !== false;
+  })();
+
   const confirmQuit = () => {
       clearRunState();
       setGameState(INITIAL_GAME_STATE);
       setUnits([]);
-      setMapNodes(GENERATE_MAP());
+      setMapNodes(GENERATE_MAP(unlocks.bossesBeaten.length));
       setShowQuitConfirm(false);
   };
+
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const isInRun = !['START_MENU', 'STAGE_SELECT', 'SQUAD_SELECT', 'TUTORIAL'].includes(gameState.screen);
 
   return (
     <div className="w-full h-screen bg-[#111] flex flex-col overflow-hidden select-none">
 
-      {/* Outside the screen switch on purpose: the player must be able to mute from anywhere. */}
-      <AudioControls />
+      <OrientationOverlay />
+
+      {/* Global Settings Modal (Audio, Language, Abandon Run) */}
+      <SettingsModal
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+        showFloatingTrigger={false}
+        inRun={isInRun}
+        onAbandonRun={confirmQuit}
+      />
       <ScreenFade screen={gameState.screen} />
 
       {gameState.screen === 'START_MENU' && (
@@ -1296,6 +1502,7 @@ const App: React.FC = () => {
             onStart={startRun}
             onContinue={hasResumableRun ? continueRun : undefined}
             onTutorial={() => setGameState(prev => ({ ...prev, screen: 'TUTORIAL' }))}
+            onOpenSettings={() => setShowSettingsModal(true)}
             onReplayTutorial={replayTutorial}
             onReplayIntro={() => { introWasReplay.current = true; setShowIntro(true); }}
           />
@@ -1315,8 +1522,27 @@ const App: React.FC = () => {
         announcement were all working; the one screen that hands the hero to the player
         was reading a constant.
       */}
+      {gameState.screen === 'STAGE_SELECT' && (
+          <StageSelectScreen
+            unlocks={unlocks}
+            onBack={() => setGameState(prev => ({ ...prev, screen: 'START_MENU' }))}
+            onOpenSettings={() => setShowSettingsModal(true)}
+            onSelectAct={bossId => setGameState(prev => ({
+                ...prev, targetBossId: bossId, screen: 'SQUAD_SELECT',
+            }))}
+          />
+      )}
+
       {gameState.screen === 'SQUAD_SELECT' && (
-          <SquadSelectScreen unlockedHeroes={unlocks?.heroes} onStartGame={handleStartGame} />
+          <SquadSelectScreen
+            unlockedHeroes={unlocks?.heroes}
+            /* Derived from the bosses on the save, not stored: an element belongs to the
+               stage-ending boss that pays it, so beating that boss IS owning it. */
+            unlockedElements={elementsUnlocked(unlocks?.bossesBeaten ?? [])}
+            onStartGame={handleStartGame}
+            onBack={() => setGameState(prev => ({ ...prev, screen: 'STAGE_SELECT' }))}
+            onOpenSettings={() => setShowSettingsModal(true)}
+          />
       )}
 
       {/*
@@ -1338,6 +1564,7 @@ const App: React.FC = () => {
             forceLegend={showMapIntro}
             highlightLegend={mapIntroHighlight}
             onOpenCodex={() => setShowCodex(true)}
+            onOpenSettings={() => setShowSettingsModal(true)}
             debugMode={gameState.debugMode}
             onToggleDebug={toggleDebugMode}
             onDebugGrant={debugGrant}
@@ -1422,6 +1649,77 @@ const App: React.FC = () => {
           />
       )}
 
+      {/*
+        AN ACT'S UPGRADE, spent on the map rather than on the victory screen.
+
+        The victory screen is a report — it tells the player what just happened and is
+        dismissed by a button. A choice that changes the squad for the rest of the run does not
+        belong inside something people click through. On the map the fight is over, the state
+        is saved (MAP is a safe screen for runPersistence), and the picker can reopen for as
+        many picks as are owed without fighting the report for the same space.
+      */}
+      {gameState.screen === 'MAP' && (gameState.upgradePicks ?? 0) > 0 && (
+          <UpgradePicker
+             squad={fusableHeroes(units)}
+             picks={gameState.upgradePicks ?? 0}
+             onPick={(heroId, upgradeId) => {
+                 // On the field or waiting on a revive — the same two homes a fusion has.
+                 const onField = units.some(u => u.heroId === heroId);
+                 if (onField) {
+                     setUnits(prev => prev.map(u => u.heroId === heroId ? applyUpgrade(u, upgradeId) : u));
+                 } else {
+                     upgradeQueuedHero(heroId, upgradeId);
+                 }
+                 setGameState(prev => ({ ...prev, upgradePicks: Math.max(0, (prev.upgradePicks ?? 0) - 1) }));
+             }}
+          />
+      )}
+
+      {gameState.screen === 'CAMP' && (
+          <CampScreen
+             coins={gameState.coins}
+             units={units}
+             bench={gameState.bench}
+             fallenHeroes={gameState.fallenHeroes}
+             items={(gameState.shopItemOffers ?? []).map(id => itemDefs.find(i => i.id === id)).filter(Boolean) as ItemDefinition[]}
+             gear={gameState.shopOffers}
+             canFuseHere={gameState.bench.length > 0 && fusableHeroes(units).length > 0}
+             onHeal={unitId => {
+                 const target = units.find(u => u.id === unitId);
+                 if (!target) return;
+                 const cost = (target.maxHp - target.hp) * COIN_HEAL_PER_HP;
+                 if (cost <= 0 || gameState.coins < cost) return;
+                 setUnits(prev => prev.map(u => u.id === unitId ? { ...u, hp: u.maxHp } : u));
+                 setGameState(prev => ({ ...prev, coins: prev.coins - cost }));
+             }}
+             onRepairSeedling={benchId => {
+                 if (gameState.coins < COIN_REPAIR_SEEDLING) return;
+                 setGameState(prev => ({
+                     ...prev,
+                     coins: prev.coins - COIN_REPAIR_SEEDLING,
+                     // `undefined` is the bench's word for "never deployed, still whole" —
+                     // the same state a fusion demands (types.ts BenchPlant.hp).
+                     bench: prev.bench.map(b => b.id === benchId ? { ...b, hp: undefined } : b),
+                 }));
+             }}
+             onRevive={reviveHeroPaid}
+             onBuyItem={item => {
+                 if (gameState.coins < item.coinCost) return;
+                 setGameState(prev => ({
+                     ...prev,
+                     coins: prev.coins - item.coinCost,
+                     inventory: [...prev.inventory, item.id],
+                     // One card, one sale — the same rule the shop shelf follows.
+                     shopItemOffers: (prev.shopItemOffers ?? []).filter(id => id !== item.id),
+                 }));
+             }}
+             /* Same handler the shop uses: one card, one sale, straight to the bench. */
+             onBuyGear={handleBuyMaterial}
+             onOpenFusion={() => setShowFusionPanel(true)}
+             onLeave={handleLevelComplete}
+          />
+      )}
+
       {gameState.screen === 'EVENT' && (
           <EventScreen
             event={GAME_EVENTS.find(e => e.id === gameState.currentEventId) || GAME_EVENTS[0]}
@@ -1441,7 +1739,20 @@ const App: React.FC = () => {
           <VictoryScreen
              rewards={previewRewards()}
              unlocks={previewUnlocks()}
-             onContinue={handleLevelComplete}
+             // Between nodes this is what the run WOULD be worth — the level is paid by the
+             // result of the whole run, so showing it early is the only way the player can
+             // watch it grow instead of being handed a number at the end.
+             payout={{ ...runPayoutPreview(currentNodeIsBoss), pending: !currentNodeIsBoss }}
+             // The ledger is shown only where it can carry a story: a boss fight. Ordinary
+             // 3-4 turn battles would print a table of ones and teach nothing.
+             bossStats={gameState.mission?.objective === 'SLAY_BOSS' ? gameState.battleStats : undefined}
+             // The Blightlord's win routes through the epilogue first — AFTER the report and
+             // payout, because the story is the last word, not a gate in front of the loot.
+             onContinue={() => {
+                 const node = mapNodes.find(n => n.id === gameState.currentLevelId);
+                 if (node?.bossId === 'BLIGHTLORD' && outroReady) setShowOutro(true);
+                 else handleLevelComplete();
+             }}
           />
       )}
 
@@ -1453,7 +1764,16 @@ const App: React.FC = () => {
               <p className="text-cyan-400 mb-3 uppercase tracking-widest animate-pulse">{t('TICK... TICK...')}</p>
               <h1 className="text-5xl text-cyan-300 mb-4 font-bold uppercase tracking-widest drop-shadow-[0_0_12px_rgba(34,211,238,0.6)]">{t('Timeline Lost')}</h1>
               <p className="text-gray-400 mb-2 uppercase tracking-widest">{t('The Zombies ate your brains...')}</p>
-              <p className="text-gray-300 mb-8 tracking-widest">{t('Chrona: "I still hold a copy of this timeline. Jump with me."')}</p>
+              <p className="text-gray-300 mb-6 tracking-widest">{t('Chrona: "I still hold a copy of this timeline. Jump with me."')}</p>
+
+              {/* Losing pays too, and this is the only place that can prove it. Without a
+                  readout here the promise in DESIGN.md section 7 — that a deeper run always
+                  moves the save forward — is invisible exactly when it matters most. */}
+              {lostRunPayout && (
+                  <div className="w-full max-w-sm mb-8">
+                      <LevelBar {...lostRunPayout} />
+                  </div>
+              )}
               <button onClick={() => setGameState(INITIAL_GAME_STATE)} className="px-8 py-4 bg-gray-900 border border-cyan-400 text-cyan-300 hover:bg-cyan-300 hover:text-black uppercase tracking-widest font-bold transition-colors">
                   {t('Rewind Time')}
               </button>
@@ -1467,6 +1787,7 @@ const App: React.FC = () => {
                 itemDefs={itemDefs}
                 onEndTurn={handleEndTurn} 
                 onToggleAdmin={() => setGameState(prev => ({ ...prev, showAdmin: !prev.showAdmin }))}
+                onOpenSettings={() => setShowSettingsModal(true)}
                 onSelectItem={(id) => setGameState(prev => ({ 
                     ...prev, 
                     selectedItemId: prev.selectedItemId === id ? null : id, 
@@ -1505,6 +1826,7 @@ const App: React.FC = () => {
                         skillRangeTiles={skillGeometryTiles}
                         itemAoeTiles={itemAoeTiles}
                         previewPushDirection={previewPushDirection}
+                        previewPushDistance={previewPushDistance}
                         interactionMode={gameState.interactionMode}
                         selectedRosterUnit={selectedRosterUnit}
                     />
@@ -1537,6 +1859,8 @@ const App: React.FC = () => {
                     rosterUnits={units.filter(u => u.type === UnitType.PLANT)}
                     onSelectRosterUnit={setSelectedRosterId}
                     selectedRosterId={selectedRosterId}
+                    onResetTurn={() => { if (gameState.interactionMode === 'IDLE') resetTurn(); }}
+                    turnResetsLeft={1 - turnResetsUsed}
                 />
             </div>
 
@@ -1549,6 +1873,7 @@ const App: React.FC = () => {
       )}
 
       {showIntro && <IntroComic onDone={closeIntro} />}
+      {showOutro && <OutroComic onDone={() => { setShowOutro(false); handleLevelComplete(); }} />}
 
       {showTutorialPrompt && (
           <TutorialPrompt
@@ -1609,7 +1934,6 @@ const App: React.FC = () => {
                 key: tutPhaseKey,
                 done: [...(prev.key === tutPhaseKey ? prev.done : []), tutIndex],
             }))}
-            onSkip={() => leaveTutorial('START_MENU')}
           />
       )}
 
@@ -1618,7 +1942,25 @@ const App: React.FC = () => {
             note={coachNote.note}
             index={coachNote.index}
             total={coachNote.total}
-            onSkip={() => leaveTutorial('START_MENU')}
+          />
+      )}
+
+      {/* THE one exit from the tutorial, pinned top-right for the whole run. It replaces
+          the per-surface skips (Spotlight footer, CoachMark X, dialogue corner button),
+          each of which read as "dismiss this text" while actually ending everything.
+          Mounted whenever the loaded map IS the tutorial chain, on every screen the run
+          passes through — so it is one fixed thing in one fixed place, not a control
+          that chases the content around. */}
+      {mapNodes.some(n => n.tutorialId)
+          && ['MAP', 'COMBAT', 'SHOP', 'EVENT'].includes(gameState.screen) && (
+          <TutorialSkipButton
+            onSkip={() => {
+                // A pre-node dialogue may be mid-scene; left set, it would render its
+                // overlay on top of the start menu after the state reset below.
+                setPendingDialogueNode(null);
+                setShowMapIntro(false);
+                leaveTutorial('START_MENU');
+            }}
           />
       )}
 
@@ -1642,6 +1984,21 @@ const App: React.FC = () => {
           paths — and persisting those is what silently broke the Vietnamese translation and
           later the terrain textures. BalanceScreen stores numbers only, and generates its
           rows from the data tables so it cannot drift behind them the way that one did. */}
+      {import.meta.env.DEV && showDebug && (
+          <DebugPanel
+            unlocks={unlocks}
+            squad={units.filter(u => u.isHero && u.hp > 0).map(u => u.heroId as HeroId)}
+            fallbackSquad={debugFallbackSquad}
+            onClose={() => setShowDebug(false)}
+            onUnlockAll={unlockEverything}
+            onResetProgress={resetProgress}
+            onJump={debugJumpToFight}
+            onGrantCoin={debugGrant}
+            onGrantSun={() => setGameState(prev => ({ ...prev, sun: prev.sun + 200 }))}
+            onHealSquad={reviveAllHeroes}
+          />
+      )}
+
       {gameState.showAdmin && (
           <BalanceScreen onClose={() => setGameState(prev => ({ ...prev, showAdmin: false }))} />
       )}

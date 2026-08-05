@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { GameState, Unit, TileData, DamageEvent, Position, TurnAction, Projectile, UnitClass, VisualEffect } from '../types';
+import { BattleHeroStats, GameState, HeroId, Unit, TileData, DamageEvent, Position, TurnAction, Projectile, UnitClass, VisualEffect } from '../types';
 import { INITIAL_GAME_STATE, INITIAL_BOARD, ANIMATION_CONFIG } from '../constants';
 import { sfx } from '../utils/audio';
 
@@ -52,6 +52,70 @@ export const useGameEngine = () => {
   /** Wait an already-scaled duration (used when the same value drives a CSS transition). */
   const waitExact = (ms: number) => new Promise(r => setTimeout(r, Math.max(0, ms)));
 
+  // --- REWIND TURN (Chrona) -----------------------------------------------
+  // PLAN-progression.md: one free rewind per battle, snapshotting exactly ONE moment —
+  // the start of the player's turn, AFTER enemy intents are locked. Restoring returns
+  // the very board the player mis-clicked on: same intents, same telegraphs, no re-roll.
+  // A rewind whose intents change is a slot machine, not an undo button.
+  //
+  // The snapshot is three refs written inside no-op reducers rather than one object
+  // built from `units`/`board` closures, because this hook's async loops taught the
+  // same lesson three times already: closures here are stale the moment an await runs.
+  // Reading `prev` inside a setter is the one always-fresh source.
+  const snapUnitsRef = useRef<Unit[] | null>(null);
+  const snapBoardRef = useRef<TileData[] | null>(null);
+  const snapGsRef = useRef<Pick<GameState,
+      'sun' | 'brainsRemaining' | 'inventory' | 'mission' | 'fallenHeroes' | 'battleStats'> | null>(null);
+  const [turnResetsUsed, setTurnResetsUsed] = useState(0);
+
+  /** Photograph the board as it stands right now (start of a player turn). */
+  const captureTurnSnapshot = useCallback(() => {
+      setUnits(prev => { snapUnitsRef.current = structuredClone(prev); return prev; });
+      setBoard(prev => { snapBoardRef.current = structuredClone(prev); return prev; });
+      setGameState(prev => {
+          snapGsRef.current = {
+              sun: prev.sun,
+              brainsRemaining: prev.brainsRemaining,
+              inventory: [...prev.inventory],
+              mission: prev.mission ? { ...prev.mission } : null,
+              // A hero can die during the player's OWN turn now (friendly fire, a shove
+              // into water) — the rewind must un-record that death too.
+              fallenHeroes: [...prev.fallenHeroes],
+              // The ledger rewinds with the board: damage the rewind un-dealt must not
+              // stay on the report, or the screen inflates exactly when Chrona was used.
+              battleStats: structuredClone(prev.battleStats),
+          };
+          return prev;
+      });
+  }, []);
+
+  /** Called by App when a battle actually begins (Start Battle): fresh charge + photo. */
+  const beginTurnRewindWindow = useCallback(() => {
+      setTurnResetsUsed(0);
+      captureTurnSnapshot();
+  }, [captureTurnSnapshot]);
+
+  /** Chrona's rewind. True if the board went back; false if the button lied. */
+  const resetTurn = useCallback((): boolean => {
+      if (turnResetsUsed >= 1) return false;
+      const su = snapUnitsRef.current, sb = snapBoardRef.current, sg = snapGsRef.current;
+      if (!su || !sb || !sg) return false;
+      setUnits(structuredClone(su));
+      setBoard(structuredClone(sb));
+      setGameState(prev => ({
+          ...prev,
+          ...structuredClone(sg),
+          selectedUnitId: null,
+          selectedTile: null,
+          selectedSkillId: null,
+          selectedItemId: null,
+          interactionMode: 'IDLE',
+          damageEvents: [],
+      }));
+      setTurnResetsUsed(1);
+      return true;
+  }, [turnResetsUsed]);
+
   // Use a ref for shake timer to handle overlaps
   const shakeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -69,11 +133,11 @@ export const useGameEngine = () => {
   // turn-snapshot reconcile has to reason about. Projectiles already live outside it too.
   const [effects, setEffects] = useState<VisualEffect[]>([]);
 
-  /** Authored at 1x. `scaleMs` shortens them when the player fast-forwards. */
   const EFFECT_MS: Record<VisualEffect['type'], number> = {
       // DROWN runs long on purpose: the ripples have to outlive the death animation, or the
       // water closes before the player has registered what went into it.
-      IMPACT: 380, EXPLOSION: 620, SLASH: 300, MUZZLE: 220, PUSH: 420, EMERGE: 700, DROWN: 900
+      IMPACT: 380, EXPLOSION: 620, SLASH: 300, MUZZLE: 220, PUSH: 420, EMERGE: 700, DROWN: 900,
+      HIT_FIRE: 550, HIT_ICE: 500, HIT_ELEC: 480, HEAVY_SHAKE: 600, SHIELD_GRANT: 550, TAUNT_BURST: 600,
   };
 
   const addEffect = (x: number, y: number, type: VisualEffect['type'], rotation = 0) => {
@@ -128,7 +192,15 @@ export const useGameEngine = () => {
           sunGained: 0,        // from GAIN_SUN / RESOURCE_GAIN
           brainsAfter: -1,     // authoritative brain count after BRAIN_LOST; -1 = untouched
           runEnded: false,     // brains hit 0
-          zombiesKilled: 0     // from UNIT_DIE, for the KILL_COUNT bonus objective
+          zombiesKilled: 0,    // from UNIT_DIE, for the KILL_COUNT bonus objective
+          // The battle ledger's inbox: TRACK_STAT lines (and engine-counted damageTaken)
+          // land here, then fold into gameState.battleStats in the reconcile below — the
+          // same clobber-avoidance route Sun and kills already take past `finalState`.
+          stats: {} as Partial<Record<HeroId, Partial<BattleHeroStats>>>
+      };
+      const bumpStat = (heroId: HeroId, stat: keyof BattleHeroStats, amount: number) => {
+          const row = (turnDelta.stats[heroId] ??= {});
+          row[stat] = (row[stat] ?? 0) + amount;
       };
 
       for (const action of actions) {
@@ -151,7 +223,20 @@ export const useGameEngine = () => {
                       // HYPNOTIZED is intentionally kept — that one is meant to be permanent.
                       // DORMANT is absent from this list on purpose: it is scripted content's way of
                       // saying "this unit is out of the fight", and nothing should hand it back.
-                      statusEffects: u.statusEffects.filter(e => e !== 'STUN' && e !== 'BURN' && e !== 'SLOW')
+                      //
+                      // ...and STUN/SLOW only for the HORDE. This reset fires at the END of the
+                      // enemy turn, which is the right clock for something the PLAYER applied
+                      // during their own turn: the zombie skips one turn, then thaws. It is the
+                      // wrong clock for the other direction. Anything an ENEMY applies is applied
+                      // inside this same call, so it was being erased in the same action batch it
+                      // was created in — which is why nothing in the horde has ever been able to
+                      // cost a hero a turn. The squad's clock is spent at the top of the next
+                      // processTurn instead (see PLAYER STATUS EXPIRY in utils/turnManager.ts).
+                      // BURN stays on both sides: it ticks in PHASE 2 for everyone and is billed
+                      // there, so its clock is already correct.
+                      statusEffects: u.isEnemy
+                          ? u.statusEffects.filter(e => e !== 'STUN' && e !== 'BURN' && e !== 'SLOW')
+                          : u.statusEffects.filter(e => e !== 'BURN')
                   })));
                   await wait(50);
                   break;
@@ -166,12 +251,36 @@ export const useGameEngine = () => {
                   break;
 
               case 'MODIFY_TERRAIN':
+                  // Spines only announce themselves when they are LAID. The same action carries
+                  // the per-turn countdown back to the board (turnManager writes every surviving
+                  // field after PHASE 4), so keying the sound off "this action has spikes" would
+                  // rattle once per field per turn for as long as the field lived.
+                  if (action.spikes && action.spikes.turns > 0
+                      && !boardRef.current.find(t => t.x === action.pos.x && t.y === action.pos.y)?.spikes) {
+                      sfx('spikes');
+                  }
                   setBoard(prev => prev.map(t => {
                       if (t.x === action.pos.x && t.y === action.pos.y) {
                           return {
                               ...t,
                               environment: action.environment !== undefined ? action.environment : t.environment,
-                              terrain: action.terrain !== undefined ? action.terrain : t.terrain
+                              terrain: action.terrain !== undefined ? action.terrain : t.terrain,
+                              // Spines ride on the same action but are neither terrain nor
+                              // environment: the ground underneath is untouched. `turns: 0` is
+                              // how the expiry writes "this field is over" — storing it would
+                              // leave a dead husk that renders as a hazard and hurts nobody.
+                              spikes: action.spikes !== undefined
+                                  ? (action.spikes.turns > 0 ? action.spikes : undefined)
+                                  : t.spikes,
+                              // Dust and sea keep the same contract spines do: `turns: 0`
+                              // means the field is over, and storing it would leave a husk
+                              // that renders as weather and does nothing.
+                              smoke: action.smoke !== undefined
+                                  ? (action.smoke.turns > 0 ? action.smoke : undefined)
+                                  : t.smoke,
+                              flood: action.flood !== undefined
+                                  ? (action.flood.turns > 0 ? action.flood : undefined)
+                                  : t.flood,
                           };
                       }
                       return t;
@@ -196,7 +305,10 @@ export const useGameEngine = () => {
 
                           // The swing/shot, not the landing — 'hit' fires later on APPLY_DAMAGE,
                           // so a projectile gets both a launch and an impact.
-                          sfx(isMelee ? 'attack-melee' : isLob ? 'attack-lob' : 'attack-shot');
+                          // An arc keeps the shot's ANIMATION but not its voice: it is the same
+                          // hero firing twice in one tick, and hearing the identical shot again
+                          // reads as a stutter rather than as the current jumping onward.
+                          sfx(action.isArc ? 'arc' : isMelee ? 'attack-melee' : isLob ? 'attack-lob' : 'attack-shot');
 
                           // A swing lands on the target; a shot flashes at the muzzle. Both
                           // point along the line of attack, which is what sells the direction
@@ -279,6 +391,16 @@ export const useGameEngine = () => {
               case 'APPLY_DAMAGE':
                   addDamageEvent(action.pos.x, action.pos.y, action.amount, action.eventType);
 
+                  // The victim's line of the battle ledger. Counted off the wire rather than
+                  // emitted at a source, because the victim needs no attribution — the action
+                  // already names them.
+                  if (action.eventType === 'DAMAGE' && (action.amount || 0) > 0) {
+                      const victim = unitsRef.current.find(u => u.id === action.targetId);
+                      if (victim && !victim.isEnemy && victim.heroId) {
+                          bumpStat(victim.heroId, 'damageTaken', action.amount || 0);
+                      }
+                  }
+
                   // The floating number and the sound describe the same beat, so they are
                   // chosen from the same field. Currency pickups are deliberately silent
                   // here — GAIN_SUN and the shop own those, and doubling up sounds broken.
@@ -288,24 +410,25 @@ export const useGameEngine = () => {
                       case 'BLOCKED':
                       case 'IMMUNE': sfx('hit-blocked'); break;
                       case 'DROWN': sfx('drown'); break;
-                      case 'BURN': sfx('hit-heavy'); break;
+                      case 'BURN': sfx('hit-fire'); break;
                       case 'MISS':
                       case 'SUN': case 'COIN': case 'DIAMOND': case 'BUFF': case 'EMERGE': break;
-                      // Big hits get the heavier sample, so a 5-damage ultimate does not land
-                      // with the same thud as a 1-damage nibble.
                       default: if (action.amount > 0) sfx(action.amount >= 4 ? 'hit-heavy' : 'hit');
                   }
 
-                  // A drowning carries no damage number — the water is the kill — so it has to
-                  // be checked before the amount test below, which would skip it.
                   if (action.eventType === 'DROWN') {
                       addEffect(action.pos.x, action.pos.y, 'DROWN');
-                  }
-                  // Same split for the visual: a nibble sparks, a heavy hit detonates. Reusing
-                  // the damage threshold keeps the sound and the burst agreeing with each other.
-                  else if (typeof action.amount === 'number' && action.amount > 0
+                  } else if (action.eventType === 'BURN') {
+                      addEffect(action.pos.x, action.pos.y, 'HIT_FIRE');
+                  } else if (typeof action.amount === 'number' && action.amount > 0
                       && !['SUN', 'COIN', 'DIAMOND', 'BUFF', 'EMERGE', 'MISS'].includes(action.eventType)) {
-                      addEffect(action.pos.x, action.pos.y, action.amount >= 4 ? 'EXPLOSION' : 'IMPACT');
+                      if (action.amount >= 5) {
+                          addEffect(action.pos.x, action.pos.y, 'HEAVY_SHAKE');
+                      } else if (action.amount >= 4) {
+                          addEffect(action.pos.x, action.pos.y, 'EXPLOSION');
+                      } else {
+                          addEffect(action.pos.x, action.pos.y, 'IMPACT');
+                      }
                   }
 
                   setUnits(prev => prev.map(u => {
@@ -366,6 +489,11 @@ export const useGameEngine = () => {
                       // SAVE PREVIOUS POSITION FOR UNDO (If not forced movement)
                       if (!action.isForced) {
                           setUnits(prev => prev.map(u => u.id === action.unitId ? { ...u, prevPosition: u.position } : u));
+                      } else {
+                          // ONE thud per body shoved, not one per tile travelled. Chardwall throws
+                          // two tiles and his Sweep throws four bodies at once; per-tile would be
+                          // eight impacts for a single click and would drown the turn.
+                          sfx('push');
                       }
 
                       // Process each tile in the path sequentially
@@ -440,9 +568,30 @@ export const useGameEngine = () => {
                   setUnits(prev => prev.map(u => u.id === action.unitId ? { ...u, intent: action.intent } : u));
                   break;
 
-              case 'UPDATE_UNIT_STATE':
+              case 'UPDATE_UNIT_STATE': {
+                  // Two of the nine-hero mechanics move no unit and deal no damage, so this
+                  // bookkeeping action is the only place they exist. Without a sound they are
+                  // the quietest things in the game despite being among the loudest decisions.
+                  const before = unitsRef.current.find(u => u.id === action.unitId);
+                  if (before && action.updates?.statusEffects?.includes('TAUNTED')
+                      && !before.statusEffects.includes('TAUNTED')) {
+                      sfx('taunt');
+                      addEffect(before.position.x, before.position.y, 'TAUNT_BURST');
+                  }
+                  if (before && typeof action.updates?.shield === 'number'
+                      && action.updates.shield > (before.shield ?? 0)) {
+                      sfx('shield');
+                      addEffect(before.position.x, before.position.y, 'SHIELD_GRANT');
+                  }
+                  if (before && action.updates?.statusEffects
+                      && (['SLOW', 'FREEZE'] as const).some(s =>
+                          action.updates!.statusEffects!.includes(s) && !before.statusEffects.includes(s))) {
+                      sfx('hit-ice');
+                      addEffect(before.position.x, before.position.y, 'HIT_ICE');
+                  }
                   setUnits(prev => prev.map(u => u.id === action.unitId ? { ...u, ...action.updates } : u));
                   break;
+              }
 
               case 'RESOURCE_GAIN':
                   if (action.resource === 'SUN') {
@@ -506,6 +655,13 @@ export const useGameEngine = () => {
                   await wait(120);
                   break;
               }
+
+              // A ledger line from a resolver. Pure bookkeeping: no sound, no effect, no wait.
+              case 'TRACK_STAT':
+                  if (action.heroId && action.stat && (action.amount || 0) > 0) {
+                      bumpStat(action.heroId, action.stat, action.amount || 0);
+                  }
+                  break;
           }
       }
 
@@ -532,11 +688,32 @@ export const useGameEngine = () => {
               ? { ...finalState.mission, zombiesKilled: finalState.mission.zombiesKilled + turnDelta.zombiesKilled }
               : finalState.mission;
 
+          // The ledger folds in additively, like Sun: `finalState` predates the loop, so it
+          // carries every earlier batch's totals and this batch's inbox is added on top.
+          let resolvedStats = finalState.battleStats;
+          const inbox = Object.entries(turnDelta.stats) as Array<[HeroId, Partial<BattleHeroStats>]>;
+          if (inbox.length > 0) {
+              resolvedStats = { ...(finalState.battleStats ?? {}) };
+              inbox.forEach(([heroId, d]) => {
+                  const cur = resolvedStats![heroId] ?? {
+                      damageDealt: 0, kills: 0, pushes: 0, intentsCancelled: 0, damageTaken: 0,
+                  };
+                  resolvedStats![heroId] = {
+                      damageDealt: cur.damageDealt + (d.damageDealt ?? 0),
+                      kills: cur.kills + (d.kills ?? 0),
+                      pushes: cur.pushes + (d.pushes ?? 0),
+                      intentsCancelled: cur.intentsCancelled + (d.intentsCancelled ?? 0),
+                      damageTaken: cur.damageTaken + (d.damageTaken ?? 0),
+                  };
+              });
+          }
+
           return {
               ...finalState,
               brainsRemaining: resolvedBrains,
               sun: Math.max(0, finalState.sun + turnDelta.sunGained),
               mission: resolvedMission,
+              battleStats: resolvedStats,
               screen: resolvedScreen,
               interactionMode: 'IDLE',
               // IDLE means "nothing is being aimed", so the aim has to be dropped with it.
@@ -561,6 +738,14 @@ export const useGameEngine = () => {
 
       setUnits(prev => prev.map(u => ({ ...u, isAttacking: false, visualOffset: undefined })));
 
+      // A NEW_TURN_RESET in this batch means a fresh player turn just began — enemy
+      // intents re-planned and locked. That is the one moment the rewind photographs.
+      // Taken AFTER the cleanup writes above, so the photo holds the same board the
+      // player is about to click on, not one mid-teardown.
+      if (actions.some(a => a.type === 'NEW_TURN_RESET')) {
+          captureTurnSnapshot();
+      }
+
       // Skip is per-turn: the next turn plays at the chosen speed again.
       skipRef.current = false;
   };
@@ -577,6 +762,10 @@ export const useGameEngine = () => {
       addDamageEvent,
       addEffect,
       executeTurnActions,
+      // --- Chrona's rewind (wire to ActionPanel) ---
+      turnResetsUsed,
+      resetTurn,
+      beginTurnRewindWindow,
       // --- pacing controls (wire to HUD) ---
       speed,
       setSpeed,

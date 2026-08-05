@@ -1,22 +1,39 @@
 import { FusionEffect, HeroId, MaterialId } from '../types';
 
 /**
- * The 5 x 5 fusion matrix.
+ * The 10 x 10 fusion matrix.
  *
  * A fusion's effect depends on the PAIR, not on the material alone. This is the PvZ Fusion
- * idea applied where it is affordable: five plants produce twenty-five authored recipes from
- * five sprites, instead of four hundred bespoke ones.
+ * idea applied where it is affordable: ten plants produce one hundred authored recipes from
+ * ten sprites, instead of a bespoke asset for every result.
  *
  * Design rule for every row: the fusion answers that hero's *core weakness*.
  *   - Sunspot cannot attack and must be escorted -> her fusions arm or armour her.
  *   - Maw is helpless while digesting        -> her fusions all attack that window.
  *   - Ironhusk blocks but contributes little     -> her fusions make blocking pay.
  *   - Shadeleaf is a plain shooter               -> her fusions change what a shot does.
- *   - Frostpod delays but barely damages           -> her fusions convert control into value.
+ *   - Cobb paid for her arc with reach, tempo and durability -> her fusions buy them back.
+ *   - Thornquill sweeps a whole row but finishes nothing thick -> her fusions buy damage or
+ *     extra shots.
+ *   - Thornhide is only strong when the enemy comes to HIM -> his fusions make him last longer,
+ *     hurt more to touch, and reach further when he calls.
+ *   - Chardwall is close to harmless on a bare board -> his fusions hand him hazards, distance
+ *     and slam damage. Never a damage number: 0 damage is the hero, not a gap (see the
+ *     BONUS_DAMAGE note in utils/fusion.ts, which maps rather than appends for exactly this).
+ *   - Gourdward is worth precisely what the ally he is covering is worth -> his fusions make
+ *     the shell bigger, cheaper, and able to reach more people.
  *
  * SUN ECONOMY RULE: Sun is never paid for merely attacking. It comes from finishing something
  * off (SUN_ON_KILL) or from spending a whole turn on it (Harvest). Passive trickles are small
  * and belong to heroes that gave up offence for them.
+ *
+ * STUN RULE: no fusion grants a free stun, full stop. It used to be phrased as "nobody but
+ * Frostpod", who owned `UPGRADE_SLOW_TO_FREEZE` (Blizzard) — every one of her attacks
+ * becoming a lost turn, free, forever. She is retired (data/heroes.ts) and no recipe grants
+ * that effect today; the engine still honours it because it is what the ICE element will
+ * hand out. Either way the ban on new rows is unchanged, and for the same reason: a free
+ * stun every turn is a lost turn every turn. New rows get ON_HIT_SLOW instead; see the note
+ * on KERNEL_PULT.MAT_SNOW_PEA.
  *
  * `live: false` marks a recipe whose effect is authored but not yet wired into combat.
  */
@@ -41,15 +58,15 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_PEASHOOTER: {
-            name: 'Sun Shooter',
-            description: 'Gains a ranged shot — but every shot spends 25 Sun.',
-            effect: { type: 'GRANT_ATTACK', value: 25 },
+            name: 'Solar Pea',
+            description: 'Gains a free ranged shot that deals 1 damage and gathers 10 Sun on hit.',
+            effect: { type: 'GRANT_ATTACK', value: 0 },
             live: true,
         },
         MAT_CHOMPER: {
             name: 'Hungry Bloom',
-            description: 'Hero skill costs 25 less Sun.',
-            effect: { type: 'SKILL_DISCOUNT', value: 25 },
+            description: 'Hero skill costs 15 less Sun.',
+            effect: { type: 'SKILL_DISCOUNT', value: 15 },
             live: true,
         },
         MAT_WALLNUT: {
@@ -60,17 +77,38 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_SNOW_PEA: {
             name: 'Winter Flare',
-            description: 'Sun Burn freezes whatever it lands on.',
-            effect: { type: 'ON_HIT_FREEZE' },
+            description: 'Sun Burn slows whatever it lands on.',
+            effect: { type: 'ON_HIT_SLOW' },
             live: true,
         },
         MAT_CORN: {
             name: 'Mortar Bloom',
-            // The arc is useless to her — Sun Burn is already lobbed. What the catapult arm
-            // gives her instead is REACH, which answers the escort problem at its root: the
-            // further back she can stand, the less of the squad has to stand around her.
             description: 'Sun Burn reaches 2 tiles further.',
             effect: { type: 'ATTACK_RANGE_BONUS', value: 2 },
+            live: true,
+        },
+        MAT_CACTUS: {
+            name: 'Needle Bloom',
+            description: 'Sun Burn bursts into needles, dealing 4 damage to the target and 2 damage to surrounding tiles.',
+            effect: { type: 'SKILL_SPLASH' },
+            live: true,
+        },
+        MAT_ENDURIAN: {
+            name: 'Thorned Bloom',
+            description: 'Anything that hits her in melee is impaled for 2.',
+            effect: { type: 'RETALIATE_DAMAGE', value: 2 },
+            live: true,
+        },
+        MAT_CHARD: {
+            name: 'Shoving Bloom',
+            description: 'Sun Burn knocks whatever survives it a tile further away from her.',
+            effect: { type: 'ON_HIT_PUSH', value: 1 },
+            live: true,
+        },
+        MAT_PUMPKIN: {
+            name: 'Gourd Bloom',
+            description: '+3 max HP — the escort she has always needed, worn instead of assigned.',
+            effect: { type: 'BONUS_HP', value: 3 },
             live: true,
         },
     },
@@ -86,20 +124,21 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_PEASHOOTER: {
             name: 'Repeater',
-            description: 'The basic shot fires two full peas.',
-            // A true double: both peas hit for her full 2. It used to be 2+1 to keep the
-            // other fusions competitive, but the mismatched second number read as a BUG in
-            // play — the same click dealt 3 into a tank and 2 into anything the first pea
-            // killed, and a player watching the popups cannot tell design from glitch.
-            // Consistency wins; the tutorial boss's HP is asserted against this value, so
-            // the scripted defeat stays arithmetically real either way.
-            effect: { type: 'DOUBLE_ATTACK', value: 2 },
+            description: 'A second pea for 1 damage. If the first kills, it flies on to the next target.',
+            // 2+1, and the second pea NEVER fizzles. The old failure mode: whenever the
+            // first pea killed, the second resolved against a corpse and vanished — the
+            // same click read 3 into a tank and 2 into a kill, which players filed as a
+            // bug. A brief "both peas hit for 2" experiment fixed the optics but doubled
+            // her free damage forever; the real fix keeps the 1 and re-aims instead — an
+            // overkill second shot rolls over to the next body in the lane
+            // (skillResolution's DOUBLE_ATTACK pass). Every shot now reads 2+1, always.
+            effect: { type: 'DOUBLE_ATTACK', value: 1 },
             live: true,
         },
         MAT_CHOMPER: {
-            name: 'Snapping Pea',
-            description: 'Anything she hits is dragged one tile toward her.',
-            effect: { type: 'ON_HIT_PUSH', value: -1 },
+            name: 'Vampire Pea',
+            description: 'Finishing off a zombie with a shot restores 1 HP or grants 1 Shield.',
+            effect: { type: 'SHIELD_ON_KILL', value: 1 },
             live: true,
         },
         MAT_WALLNUT: {
@@ -110,19 +149,40 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_SNOW_PEA: {
             name: 'Frost Pea',
-            // Was a full freeze — a permanent lockdown on one zombie for zero Sun.
-            // A slow keeps the tempo advantage without deleting the target.
             description: 'Her shots slow the target — half movement for a turn.',
             effect: { type: 'ON_HIT_SLOW' },
             live: true,
         },
         MAT_CORN: {
             name: 'Mortar Pea',
-            // The single fusion that fixes the game's oldest self-inflicted problem: the brain
-            // rule tells you to plug the corridor with Ironhusk, and Ironhusk then stands
-            // directly in Shadeleaf's line. Now the pea goes over her.
-            description: 'Her shot arcs over anything in the way — at half the range.',
+            // 4, not 5: the arc formula is ceil(range/2) off her LINE 8, and the card must
+            // print what the engine computes rather than a rounder-sounding number.
+            description: 'Her shot arcs over anything in the way — with a range of 4 tiles.',
             effect: { type: 'ARC_ATTACK' },
+            live: true,
+        },
+        MAT_CACTUS: {
+            name: 'Spike Lane',
+            description: 'Precision Blast leaves every tile it crosses spiked for two turns.',
+            effect: { type: 'SPIKE_TRAIL' },
+            live: true,
+        },
+        MAT_ENDURIAN: {
+            name: 'Spineguard',
+            description: 'Anything that hits her in melee is thrown a tile back — into the range she shoots at.',
+            effect: { type: 'RETALIATE_PUSH' },
+            live: true,
+        },
+        MAT_CHARD: {
+            name: 'Sling Pea',
+            description: 'Every shove she lands travels a tile further — take it with Pea-nut or Sling Pea.',
+            effect: { type: 'PUSH_DISTANCE', value: 1 },
+            live: true,
+        },
+        MAT_PUMPKIN: {
+            name: 'Gourd Sniper',
+            description: 'Every zombie she finishes off wraps her in 1 shield, up to 3 max.',
+            effect: { type: 'SHIELD_ON_KILL', value: 1, cap: 3 },
             live: true,
         },
     },
@@ -149,22 +209,50 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_WALLNUT: {
             name: 'Shelled Chomper',
-            description: 'Immune to damage while digesting.',
-            effect: { type: 'ARMOR_WHILE_DIGESTING' },
+            description: 'Gains 3 shield while digesting.',
+            // The value IS the 3 on the card. It used to be a bare flag meaning "immune for
+            // the whole window" — stronger than the text in the player's favour, which is
+            // still a lie the player plans around.
+            effect: { type: 'ARMOR_WHILE_DIGESTING', value: 3 },
             live: true,
         },
         MAT_SNOW_PEA: {
             name: 'Flash Freeze',
-            description: 'Her bite leaves the target frozen — cover while she chews.',
-            effect: { type: 'ON_HIT_FREEZE' },
+            description: 'Her bite slows the target — half movement for a turn.',
+            effect: { type: 'ON_HIT_SLOW' },
             live: true,
         },
         MAT_CORN: {
             name: 'Buttered Hide',
-            // Nothing to arc — she is melee. The butter goes on her back instead, and it
-            // covers the two turns she cannot defend herself at all.
-            description: 'Anything that bites her is buttered stiff — including while she digests.',
-            effect: { type: 'RETALIATE_FREEZE' },
+            description: 'The first enemy that bites her per digesting turn is buttered stiff.',
+            // Its own type, not RETALIATE_FREEZE: butter pins on the FIRST hit but only
+            // guards the digest window, once per turn. The shared type is why this card and
+            // Frostbite Armor drifted from the engine in opposite directions.
+            effect: { type: 'BUTTER_RETALIATE' },
+            live: true,
+        },
+        MAT_CACTUS: {
+            name: 'Spineclamp',
+            description: 'The tile she bites is left spiked for two turns.',
+            effect: { type: 'SPIKE_TRAIL' },
+            live: true,
+        },
+        MAT_ENDURIAN: {
+            name: 'Bristleback',
+            description: 'Anything that bites her takes 2 back — including through both digesting turns.',
+            effect: { type: 'RETALIATE_DAMAGE', value: 2 },
+            live: true,
+        },
+        MAT_CHARD: {
+            name: 'Chard Gullet',
+            description: 'Anything that hits her is hurled a tile back, digesting or not.',
+            effect: { type: 'RETALIATE_PUSH' },
+            live: true,
+        },
+        MAT_PUMPKIN: {
+            name: 'Gourd Gut',
+            description: 'Every kill wraps her in 2 shield, up to 4 max.',
+            effect: { type: 'SHIELD_ON_KILL', value: 2, cap: 4 },
             live: true,
         },
     },
@@ -173,17 +261,14 @@ export const FUSION_RECIPES: Matrix = {
     WALL_KNIGHT: {
         MAT_SUNFLOWER: {
             name: 'Sunstone Shield',
-            description: 'Plugging a spawn hole pays 50 Sun — she is rewarded for standing on it.',
-            // Ties the economy to the spawn-blocking mechanic, which already existed but paid
-            // nothing. Conditional by design: no block, no Sun.
-            effect: { type: 'SUN_ON_BLOCK_SPAWN', value: 50 },
+            description: 'Plugging a spawn hole pays 35 Sun — she is rewarded for standing on it.',
+            effect: { type: 'SUN_ON_BLOCK_SPAWN', value: 35 },
             live: true,
         },
         MAT_PEASHOOTER: {
-            name: 'Pea Lance',
-            description: 'Shield Bash reaches 1 tile further — but loses its push.',
-            // Reach is bought WITH the push, not stacked on it: the bash becomes a poke.
-            effect: { type: 'MELEE_REACH_TRADE', value: 1 },
+            name: 'Spear Bash',
+            description: 'Shield Bash reaches 1 tile further while keeping its push.',
+            effect: { type: 'ATTACK_RANGE_BONUS', value: 1 },
             live: true,
         },
         MAT_CHOMPER: {
@@ -194,76 +279,56 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_WALLNUT: {
             name: 'Iron Bulwark',
-            description: 'Takes 1 less damage from every hit, is never hurt by collisions, and plugs spawn holes painlessly.',
+            description: 'Takes 1 less damage from every hit, reduces collision damage by 50%, and plugs spawn holes painlessly.',
             effect: { type: 'STEADFAST', value: 1 },
             live: true,
         },
         MAT_SNOW_PEA: {
             name: 'Frostbite Armor',
-            description: 'Zombies that bite the wall freeze solid.',
+            description: 'Zombies that bite the wall are slowed (frozen on second hit).',
             effect: { type: 'RETALIATE_FREEZE' },
             live: true,
         },
         MAT_CORN: {
             name: 'Cob Turret',
-            // The wall's whole problem is that everything it is good at happens at range 1.
-            // A free ranged shot means holding the corridor is no longer the same as being
-            // switched off for the turn.
             description: 'Gains a free ranged shot — the wall is no longer idle when nothing is next to it.',
             effect: { type: 'GRANT_ATTACK', value: 0 },
+            live: true,
+        },
+        MAT_CACTUS: {
+            name: 'Bramble Charge',
+            description: 'Every tile she bashes or rolls through is left spiked for one turn.',
+            effect: { type: 'SPIKE_TRAIL' },
+            live: true,
+        },
+        MAT_ENDURIAN: {
+            name: 'Spiked Bulwark',
+            description: 'Shield Bash lands on every enemy beside her, not just the one she aimed at.',
+            effect: { type: 'ADJACENT_STRIKE' },
+            live: true,
+        },
+        MAT_CHARD: {
+            name: 'Chard Bash',
+            description: 'Every shove she makes travels a tile further — the bash throws 2, and so does the charge.',
+            effect: { type: 'PUSH_DISTANCE', value: 1 },
+            live: true,
+        },
+        MAT_PUMPKIN: {
+            name: 'Pumpkin Shell',
+            description: 'Takes 1 less damage from every hit and gains +2 max HP.',
+            effect: { type: 'DAMAGE_REDUCTION', value: 1 },
             live: true,
         },
     },
 
     // --- COLD SNAP: delays everything, kills almost nothing. Fusions cash that control in. ---
-    COLD_SNAP: {
-        MAT_SUNFLOWER: {
-            name: 'Glacial Bloom',
-            description: 'Harvests 15 Sun whenever a shot finishes a zombie off.',
-            effect: { type: 'SUN_ON_KILL', value: 15 },
-            live: true,
-        },
-        MAT_PEASHOOTER: {
-            name: 'Frost Repeater',
-            description: 'Ice Shot fires a second, weaker shot for 1 damage — another target delayed, or one hit harder.',
-            effect: { type: 'DOUBLE_ATTACK', value: 1 },
-            live: true,
-        },
-        MAT_CHOMPER: {
-            name: 'Brittle Bite',
-            description: '+2 damage — the one fusion that lets her actually finish a kill.',
-            effect: { type: 'BONUS_DAMAGE', value: 2 },
-            live: true,
-        },
-        MAT_WALLNUT: {
-            name: 'Icicle Wall',
-            description: '+3 max HP — she can stand in the front rank she is slowing.',
-            effect: { type: 'BONUS_HP', value: 3 },
-            live: true,
-        },
-        MAT_SNOW_PEA: {
-            name: 'Blizzard',
-            description: 'Her slow becomes a full freeze — targets lose the turn entirely.',
-            effect: { type: 'UPGRADE_SLOW_TO_FREEZE' },
-            live: true,
-        },
-        MAT_CORN: {
-            name: 'Arcing Frost',
-            description: 'Ice Shot arcs over anything in the way — at half the range.',
-            effect: { type: 'ARC_ATTACK' },
-            live: true,
-        },
-    },
-
     // --- COBB: the arc is free, everything else about her is short. Her fusions buy back
     //     the reach, the tempo and the durability that the trajectory cost her. ---
     KERNEL_PULT: {
         MAT_SUNFLOWER: {
             name: 'Buttered Sun',
-            // Her whole ceiling is how often she can afford to pin something. At 25 the butter
-            // becomes a play she can make most turns instead of a once-a-fight event.
-            description: 'Butter Splat costs 25 less Sun.',
-            effect: { type: 'SKILL_DISCOUNT', value: 25 },
+            description: 'Butter Splat costs 15 less Sun.',
+            effect: { type: 'SKILL_DISCOUNT', value: 15 },
             live: true,
         },
         MAT_PEASHOOTER: {
@@ -286,17 +351,298 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_SNOW_PEA: {
             name: 'Frostbutter',
-            // DELIBERATELY a slow and not a freeze. Frostpod's entire ceiling is Blizzard —
-            // every attack becoming a stun, free, forever. Handing Cobb a free stun on every
-            // arcing shot would be that ceiling, on a better chassis, three recipes early.
             description: 'Her kernels slow the target — half movement for a turn.',
             effect: { type: 'ON_HIT_SLOW' },
             live: true,
         },
         MAT_CORN: {
             name: 'Cob Cannon',
-            description: 'Butter Splat also hits the four tiles around the target.',
+            description: 'Butter Splat stuns the main target and slows surrounding tiles.',
             effect: { type: 'SKILL_SPLASH' },
+            live: true,
+        },
+        MAT_CACTUS: {
+            name: 'Longspine Cob',
+            description: 'Every kernel reaches 1 tile further.',
+            effect: { type: 'ATTACK_RANGE_BONUS', value: 1 },
+            live: true,
+        },
+        MAT_ENDURIAN: {
+            name: 'Durian Shot',
+            description: '+1 damage on everything she throws.',
+            effect: { type: 'BONUS_DAMAGE', value: 1 },
+            live: true,
+        },
+        MAT_CHARD: {
+            name: 'Chard Recoil',
+            description: 'Anything that hits her in melee is thrown a tile back.',
+            effect: { type: 'RETALIATE_PUSH' },
+            live: true,
+        },
+        MAT_PUMPKIN: {
+            name: 'Gourd Battery',
+            description: 'Every kernel that finishes a zombie off wraps her in 1 shield, up to 3 max.',
+            effect: { type: 'SHIELD_ON_KILL', value: 1, cap: 3 },
+            live: true,
+        },
+    },
+
+    // --- THORNQUILL: pierces a whole row for free, and cannot finish anything thick. Her
+    //     fusions buy damage or extra shots — and one of them buys the ground itself. ---
+    THORNQUILL: {
+        MAT_SUNFLOWER: {
+            name: 'Sunspine',
+            description: 'Every zombie her row-sweep finishes off pays 15 Sun.',
+            effect: { type: 'SUN_ON_KILL', value: 15 },
+            live: true,
+        },
+        MAT_PEASHOOTER: {
+            name: 'Repeating Quill',
+            description: 'A second spine follows down the same row for 1 damage.',
+            effect: { type: 'DOUBLE_ATTACK', value: 1 },
+            live: true,
+        },
+        MAT_CHOMPER: {
+            name: 'Barbed Quill',
+            description: '+1 damage — one sweep now kills a whole row of 2-hp zombies.',
+            effect: { type: 'BONUS_DAMAGE', value: 1 },
+            live: true,
+        },
+        MAT_WALLNUT: {
+            name: 'Barrel Cactus',
+            description: '+3 max HP — she has to stand in the row she is sweeping.',
+            effect: { type: 'BONUS_HP', value: 3 },
+            live: true,
+        },
+        MAT_SNOW_PEA: {
+            name: 'Frostquill',
+            description: 'Her spine slows the first zombie hit in the row — half movement for a turn.',
+            effect: { type: 'ON_HIT_SLOW' },
+            live: true,
+        },
+        MAT_CORN: {
+            name: 'Longbarrel Quill',
+            description: 'Her spine runs 2 tiles further — end to end, that is the whole board.',
+            effect: { type: 'ATTACK_RANGE_BONUS', value: 2 },
+            live: true,
+        },
+        MAT_CACTUS: {
+            name: 'Spikeweed',
+            description: 'Spine Wall leaves every tile it flies through spiked for two turns.',
+            effect: { type: 'SPIKE_TRAIL' },
+            live: true,
+        },
+        MAT_ENDURIAN: {
+            name: 'Bristlequill',
+            description: 'Anything that hits her in melee is impaled for 2.',
+            effect: { type: 'RETALIATE_DAMAGE', value: 2 },
+            live: true,
+        },
+        MAT_CHARD: {
+            name: 'Sweeping Spine',
+            description: 'The first zombie hit in the row is shoved a tile back.',
+            effect: { type: 'ON_HIT_PUSH', value: 1 },
+            live: true,
+        },
+        MAT_PUMPKIN: {
+            name: 'Gourd Quill',
+            description: 'Every zombie she finishes off wraps her in 1 shield, up to 3 max.',
+            effect: { type: 'SHIELD_ON_KILL', value: 1, cap: 3 },
+            live: true,
+        },
+    },
+
+    // --- THORNHIDE: catches nobody on his own, and is deadly the moment the enemy chooses to
+    //     come to him. His fusions make him last longer, hurt more to touch, and call louder. ---
+    THORNHIDE: {
+        MAT_SUNFLOWER: {
+            name: 'Sunlit Thorn',
+            description: 'Provoke costs 15 less Sun.',
+            effect: { type: 'SKILL_DISCOUNT', value: 15 },
+            live: true,
+        },
+        MAT_PEASHOOTER: {
+            name: 'Twin Thorn',
+            description: 'His swipe lands a second time for 1 damage.',
+            effect: { type: 'DOUBLE_ATTACK', value: 1 },
+            live: true,
+        },
+        MAT_CHOMPER: {
+            name: 'Gnashing Husk',
+            description: 'His free swipe hits every enemy standing beside him.',
+            effect: { type: 'ADJACENT_STRIKE' },
+            live: true,
+        },
+        MAT_WALLNUT: {
+            name: 'Ironthorn',
+            description: '+3 max HP — 13, the largest body in the game, because everything is aimed at it.',
+            effect: { type: 'BONUS_HP', value: 3 },
+            live: true,
+        },
+        MAT_SNOW_PEA: {
+            name: 'Chill Thorns',
+            description: 'His swipe slows the target — half movement for a turn.',
+            effect: { type: 'ON_HIT_SLOW' },
+            live: true,
+        },
+        MAT_CORN: {
+            name: 'Reaching Thorn',
+            description: 'His swipe reaches 2 tiles instead of 1.',
+            effect: { type: 'ATTACK_RANGE_BONUS', value: 1 },
+            live: true,
+        },
+        MAT_CACTUS: {
+            name: 'Needlecoat',
+            description: 'Melee attackers are hurled a tile back as well as bled.',
+            effect: { type: 'RETALIATE_PUSH' },
+            live: true,
+        },
+        MAT_ENDURIAN: {
+            name: 'Spiked Endurian',
+            description: 'Melee attackers take 3 back instead of 2.',
+            effect: { type: 'RETALIATE_DAMAGE', value: 1 },
+            live: true,
+        },
+        MAT_CHARD: {
+            name: 'Far Provoke',
+            description: 'Provoke reaches 4 tiles instead of 3.',
+            effect: { type: 'TAUNT_RADIUS', value: 1 },
+            live: true,
+        },
+        MAT_PUMPKIN: {
+            name: 'Gourd Husk',
+            description: 'Every zombie he finishes off with a swipe wraps him in 1 shield, up to 3 max.',
+            effect: { type: 'SHIELD_ON_KILL', value: 1, cap: 3 },
+            live: true,
+        },
+    },
+
+    // --- CHARDWALL: 0 damage is the hero. His row buys hazards, distance and slam damage —
+    //     never a damage number, which utils/fusion.ts enforces on its side as well. ---
+    CHARDWALL: {
+        MAT_SUNFLOWER: {
+            name: 'Sunlit Guard',
+            description: 'Every zombie he shoves into water, rock or another body pays 15 Sun.',
+            effect: { type: 'SUN_ON_KILL', value: 15 },
+            live: true,
+        },
+        MAT_PEASHOOTER: {
+            name: 'Longarm Chard',
+            description: 'Backswing reaches 2 tiles — he throws without stepping into contact.',
+            effect: { type: 'ATTACK_RANGE_BONUS', value: 1 },
+            live: true,
+        },
+        MAT_CHOMPER: {
+            name: 'Snapping Guard',
+            description: 'Melee attackers take 2 back.',
+            effect: { type: 'RETALIATE_DAMAGE', value: 2 },
+            live: true,
+        },
+        MAT_WALLNUT: {
+            name: 'Bulwark Chard',
+            description: '+3 max HP — he has to walk into contact to do anything at all.',
+            effect: { type: 'BONUS_HP', value: 3 },
+            live: true,
+        },
+        MAT_SNOW_PEA: {
+            name: 'Frostguard',
+            description: 'Anything that hits him in melee is slowed (frozen on second hit).',
+            effect: { type: 'RETALIATE_FREEZE' },
+            live: true,
+        },
+        MAT_CORN: {
+            name: 'Cob Catapult',
+            description: 'Every shove he throws travels a tile further — 3 from the swing, 3 from the sweep.',
+            effect: { type: 'PUSH_DISTANCE', value: 1 },
+            live: true,
+        },
+        MAT_CACTUS: {
+            name: 'Bramble Guard',
+            description: 'The tiles he sweeps are left spiked for one turn.',
+            effect: { type: 'SPIKE_TRAIL' },
+            live: true,
+        },
+        MAT_ENDURIAN: {
+            name: 'Thorned Guard',
+            description: 'Melee attackers are thrown a tile back.',
+            effect: { type: 'RETALIATE_PUSH' },
+            live: true,
+        },
+        MAT_CHARD: {
+            name: 'Grand Chard',
+            description: 'Anything he slams into a body, a rock or the map edge takes 2 extra damage.',
+            effect: { type: 'COLLISION_BONUS', value: 2 },
+            live: true,
+        },
+        MAT_PUMPKIN: {
+            name: 'Gourd Guard',
+            description: 'Takes 1 less damage from every hit.',
+            effect: { type: 'DAMAGE_REDUCTION', value: 1 },
+            live: true,
+        },
+    },
+
+    // --- GOURDWARD: worth exactly what the ally he is covering is worth. His fusions make the
+    //     shell bigger, cheaper and able to reach more people — and give him a floor of his own. ---
+    GOURDWARD: {
+        MAT_SUNFLOWER: {
+            name: 'Sunlit Shell',
+            description: 'Encase costs 15 less Sun.',
+            effect: { type: 'SKILL_DISCOUNT', value: 15 },
+            live: true,
+        },
+        MAT_PEASHOOTER: {
+            name: 'Rind Repeater',
+            description: 'His bash lands a second time for 1 damage.',
+            effect: { type: 'DOUBLE_ATTACK', value: 1 },
+            live: true,
+        },
+        MAT_CHOMPER: {
+            name: 'Fanged Gourd',
+            description: '+1 damage — 2 a swing, so he cannot simply be walked past.',
+            effect: { type: 'BONUS_DAMAGE', value: 1 },
+            live: true,
+        },
+        MAT_WALLNUT: {
+            name: 'Ironrind',
+            description: '+3 max HP — the shell around the ally only lasts while its carrier does.',
+            effect: { type: 'BONUS_HP', value: 3 },
+            live: true,
+        },
+        MAT_SNOW_PEA: {
+            name: 'Frostrind',
+            description: 'His bash slows the target — half movement for a turn.',
+            effect: { type: 'ON_HIT_SLOW' },
+            live: true,
+        },
+        MAT_CORN: {
+            name: 'Gourd Cannon',
+            description: 'Encase also shells everyone standing beside the target for 2 shield.',
+            effect: { type: 'SKILL_SPLASH' },
+            live: true,
+        },
+        MAT_CACTUS: {
+            name: 'Thornrind',
+            description: 'The tile he bashes is left spiked for two turns — a hazard laid in front of whoever he is covering.',
+            effect: { type: 'SPIKE_TRAIL' },
+            live: true,
+        },
+        MAT_ENDURIAN: {
+            name: 'Spined Shell',
+            description: 'Anything that hits him takes 2 back — going through him to reach his ward costs.',
+            effect: { type: 'RETALIATE_DAMAGE', value: 2 },
+            live: true,
+        },
+        MAT_CHARD: {
+            name: 'Chard Rind',
+            description: 'His bash shoves the target a tile back — off whoever he is guarding.',
+            effect: { type: 'ON_HIT_PUSH', value: 1 },
+            live: true,
+        },
+        MAT_PUMPKIN: {
+            name: 'Great Gourd',
+            description: 'Every shield he hands out is 2 bigger — 7 instead of 5.',
+            effect: { type: 'SHIELD_BONUS', value: 2 },
             live: true,
         },
     },

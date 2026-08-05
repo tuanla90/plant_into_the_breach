@@ -1,18 +1,27 @@
 
-import { Unit, TileData, GameState, UnitClass, UnitType, UnitDefinition, Position, TerrainDefinition, TurnAction, Intent } from '../types';
-import { getTileAt, getUnitAt, findPath, calculateDamage, canStopOn, canCrossBodies, planPush } from './gameLogic';
+import { Unit, TileData, GameState, UnitClass, UnitType, UnitDefinition, Position, TerrainDefinition, TurnAction, Intent, StatusEffectType, AreaHit, TerrainType } from '../types';
+import { getTileAt, getUnitAt, findPath, calculateDamage, canStopOn, canCrossBodies, planPush, canRideTo, survivesWater } from './gameLogic';
+import { applyPushPlan } from './actionBuilders';
 import { planEnemyIntent } from './aiLogic';
 import { tutorialBattle } from '../data/tutorial';
 import { getFusionEffectValue, hasFusionEffect } from './fusion';
+import { activeResonance, chainDamageFor, chainStep, ELEMENT_WORLDS, rollEnemyElement } from './elements';
 import { planHazard } from '../data/hazards';
+import { hooksFor } from './bossBehaviours';
 import { isMissionFailed, isMissionCompleteEarly, isMissionSatisfied } from '../data/missions';
-import { SUN_PER_TURN_INCOME, GRAVE_DIG_PERIOD, advancedZombieCap, ADVANCED_ZOMBIES } from '../constants';
+import { SUN_PER_TURN_INCOME, GRAVE_DIG_PERIOD, advancedZombieCap, ADVANCED_ZOMBIES, SQUAD_SIZE } from '../constants';
 import { balancedGlobal } from './balance';
 
 /** Ceiling on live zombies. Reinforcements queue behind it instead of piling on. */
 const MAX_LIVE_ENEMIES = 8;
-/** PvZ's huge wave. From here on a Flag Zombie leads the horde. */
-const FLAG_WAVE_TURN = 6;
+/**
+ * PvZ's huge wave. From here on a Flag Zombie leads the horde.
+ *
+ * 4, not 6: a battle is BASE_MAX_TURNS = 5 turns long now, so a herald that first appeared
+ * on turn 6 was a mechanic no player would ever see. 4 puts it one turn before the clock
+ * runs out, which is where a "final wave" belongs.
+ */
+const FLAG_WAVE_TURN = 4;
 
 interface TurnResult {
     actions: TurnAction[];
@@ -40,10 +49,116 @@ export const processTurn = (
                 .map(u => u.id)
     );
 
+    /**
+     * The squad's resonance, if it has one. Derived from the SQUAD THAT WAS PICKED
+     * (`gameState.heroElements`) and never from who is still standing — the reasoning is on
+     * `resonanceOf` itself, and it matters most right here: this file is where heroes die, and
+     * a resonance read off the board would switch itself on the moment the odd hero out fell.
+     *
+     * processTurn already receives gameState, so nothing about the signature changes.
+     */
+    // `activeResonance`, not the raw rule: a hero under SEVERED suspends the squad bonus for
+    // as long as the theft lasts. Read off simUnits so it sees the statuses this very turn.
+    const resonance = activeResonance(gameState.heroElements, SQUAD_SIZE, simUnits);
+
+    /** Tiles this turn has already set alight, so two corpses on one tile emit one fire. */
+    const ignitedTiles = new Set<string>();
+
     // Kills no longer pay Sun on their own — only the SUN_ON_KILL fusions do, and those
     // resolve on the player's turn. Free kill income let shooters refund their own skills.
+    //
+    // FIRE RESONANCE rides in here rather than at the individual death sites for the same
+    // reason skillResolution scans its finished action list: an enemy in this file can die to
+    // a hazard, a blocked spawn, a spike field, the burn tick, retaliation or a chain arc, and
+    // every one of those funnels through this one function. Put it here and the rule cannot be
+    // forgotten by whoever adds the seventh way to die.
     const killUnit = (u: Unit) => {
         actions.push({ type: 'UNIT_DIE', unitId: u.id });
+        if (resonance !== 'FIRE') return;
+        if (!u.isEnemy || u.type === UnitType.OBSTACLE) return;
+        if (!u.statusEffects.includes('BURN')) return;
+        const key = `${u.position.x},${u.position.y}`;
+        if (ignitedTiles.has(key)) return;
+        const tile = getTileAt(u.position, currentBoard);
+        // Ground something could stand on, and not already ablaze — a burning zombie that
+        // drowns is put out, and re-lighting the fire tile that killed it is noise.
+        if (!tile || !terrainDefs[tile.terrain]?.isWalkable) return;
+        if (tile.environment === 'FIRE') return;
+        ignitedTiles.add(key);
+        // The same pair of actions `ignite` emits, so the game has exactly one kind of fire
+        // tile. Written to the board by the reducer, so PHASE 2 above (which reads
+        // currentBoard) will not bite anyone with it until next turn — the corpse's fire is a
+        // problem the horde walks into, not a free second tick.
+        actions.push({ type: 'MODIFY_TERRAIN', pos: { ...u.position }, environment: 'FIRE' });
+        actions.push({ type: 'APPLY_DAMAGE', targetId: 'tile', amount: 0, eventType: 'BURN', pos: { ...u.position } });
+    };
+
+    /**
+     * SPIKE FIELDS, simulated. The board belongs to the reducer, so the countdown is kept
+     * here and only the damage leaves as actions — the same split PHASE 0 uses for terrain.
+     *
+     * The countdown DOES reach the board: after PHASE 4 every field still in this map is
+     * written back through MODIFY_TERRAIN's `spikes`, carrying its post-decrement value. That
+     * write-back is not optional — without it the counter would only ever age inside one
+     * `processTurn` call and a spike wall would bite for the rest of the fight.
+     */
+    const simSpikes = new Map<string, { damage: number; turns: number }>();
+    currentBoard.forEach(t => {
+        if (t.spikes && t.spikes.turns > 0) simSpikes.set(`${t.x},${t.y}`, { ...t.spikes });
+    });
+
+    /**
+     * DUST and SEA, on the same clock and for the same reason.
+     *
+     * Both were blocked for months on "state that outlives one telegraph", and both turned out
+     * to need exactly what a spike field already needed: a counter that lives on the TILE, is
+     * aged once per turn here, and is written back through MODIFY_TERRAIN. Written as a third
+     * and fourth bespoke system they would each have needed a home in GameState; sharing the
+     * spike lifecycle they cost two maps and one line in the ageing block.
+     */
+    const simSmoke = new Map<string, { turns: number }>();
+    const simFlood = new Map<string, { turns: number; was: TerrainType }>();
+    currentBoard.forEach(t => {
+        if (t.smoke && t.smoke.turns > 0) simSmoke.set(`${t.x},${t.y}`, { ...t.smoke });
+        if (t.flood && t.flood.turns > 0) simFlood.set(`${t.x},${t.y}`, { ...t.flood });
+    });
+
+    /**
+     * Blinded: this tile is under dust right now.
+     *
+     * Read off `currentBoard` and not off `simSmoke`, because a veil laid THIS turn (PHASE 0)
+     * must not blind on the turn it lands — the player is owed the turn of warning every
+     * hazard in this file gives, and the telegraph already showed them the patch.
+     */
+    const blinded = (pos: Position): boolean => {
+        const t = getTileAt(pos, currentBoard);
+        return !!t?.smoke && t.smoke.turns > 0;
+    };
+
+    /**
+     * Spines hurt everything that walks in and are NOT spent doing it. That difference from a
+     * trap is the entire point of the effect: a mine is one answer to one zombie, a spike field
+     * is a piece of ground the horde has to route around. Read off the whole route rather than
+     * the destination, because walking ACROSS spikes has to cost the same as stopping on them.
+     *
+     * Same exemptions a trap gets: enemies only, and never a flier.
+     */
+    const stepOnSpikes = (u: Unit, path: Position[]) => {
+        if (simSpikes.size === 0 || !u.isEnemy || u.movementType === 'FLYING') return;
+        for (const step of path) {
+            const field = simSpikes.get(`${step.x},${step.y}`);
+            if (!field) continue;
+            // Spikes come up under the boots, not against the helmet — armour is bypassed,
+            // which keeps Thornquill's fields an honest answer to an armoured lane.
+            const r = calculateDamage(u, field.damage, false, true);
+            actions.push({ type: 'APPLY_DAMAGE', targetId: u.id, amount: r.finalDamage, eventType: 'DAMAGE', pos: step });
+            u.hp = r.remainingHp;
+            u.shield = r.remainingShield;
+            if (r.isFatal) {
+                killUnit(u);
+                return;
+            }
+        }
     };
 
     // --- PHASE 0: SECTOR HAZARD ---
@@ -57,6 +172,131 @@ export const processTurn = (
             pending.tiles.forEach(pos => {
                 actions.push({ type: 'MODIFY_TERRAIN', pos, terrain: 'LAVA' });
                 actions.push({ type: 'APPLY_DAMAGE', targetId: 'tile', amount: 0, eventType: 'BURN', pos });
+            });
+        } else if (pending.type === 'SPOTLIGHT') {
+            /**
+             * The beam picks its people, and the horde looks where it is pointed.
+             *
+             * TAUNTED normally names the unit that shouted (`tauntedBy`), because a taunt is a
+             * hero making itself the problem. A searchlight has no shouter — so every enemy is
+             * pointed at whichever CAUGHT hero is nearest to it, which is the same sentence the
+             * hazard says in English: the crowd goes for whoever is lit.
+             *
+             * Deliberately no damage. It is the one hazard that cannot kill anybody by itself,
+             * and that is what makes stepping out of the beam a real choice rather than an
+             * obligation — a squad that is winning the corridor may well decide to eat it.
+             */
+            const caught = simUnits.filter(u =>
+                !u.isEnemy && u.hp > 0 && marked.has(`${u.position.x},${u.position.y}`));
+            if (caught.length > 0) {
+                caught.forEach(u => actions.push({
+                    type: 'APPLY_DAMAGE', targetId: u.id, amount: 0, eventType: 'BUFF', pos: u.position,
+                }));
+                simUnits.forEach(u => {
+                    if (!u.isEnemy || u.hp <= 0 || u.type === UnitType.OBSTACLE) return;
+                    if (u.immunities.includes('STATUS')) return;
+                    const lit = caught.reduce((best, c) =>
+                        !best || (Math.abs(c.position.x - u.position.x) + Math.abs(c.position.y - u.position.y))
+                               < (Math.abs(best.position.x - u.position.x) + Math.abs(best.position.y - u.position.y))
+                            ? c : best, null as Unit | null);
+                    if (!lit) return;
+                    const next: typeof u.statusEffects = u.statusEffects.includes('TAUNTED')
+                        ? u.statusEffects
+                        : [...u.statusEffects, 'TAUNTED'];
+                    u.statusEffects = next;
+                    u.tauntedBy = lit.id;
+                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: u.id, updates: { statusEffects: [...next], tauntedBy: lit.id } });
+                });
+            }
+        } else if (pending.type === 'SURGE') {
+            /**
+             * The grid lets go: 1 damage and a STUN on everything standing in it, friend or
+             * horde. Symmetric on purpose — the tiles belong to the board, not to either side,
+             * and a hazard that only hurt the player would make the +1 damage they grant a
+             * straight gift instead of a bargain.
+             */
+            pending.tiles.forEach(pos => {
+                const victim = simUnits.find(u => u.hp > 0 && u.position.x === pos.x && u.position.y === pos.y);
+                if (!victim) return;
+                const r = calculateDamage(victim, 1, false);
+                actions.push({ type: 'APPLY_DAMAGE', targetId: victim.id, amount: r.finalDamage, eventType: 'DAMAGE', pos });
+                victim.hp = r.remainingHp;
+                victim.shield = r.remainingShield;
+                if (r.isFatal) { killUnit(victim); return; }
+                // Same immunity split the rest of the file uses: STATUS stops everything,
+                // FREEZE stops a stun.
+                if (victim.immunities.includes('STATUS') || victim.immunities.includes('FREEZE')) {
+                    actions.push({ type: 'APPLY_DAMAGE', targetId: victim.id, amount: 0, eventType: 'IMMUNE', pos });
+                } else if (!victim.statusEffects.includes('STUN')) {
+                    const stunned: typeof victim.statusEffects = [...victim.statusEffects, 'STUN'];
+                    victim.statusEffects = stunned;
+                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: victim.id, updates: { statusEffects: stunned } });
+                }
+            });
+        } else if (pending.type === 'TIDE') {
+            /**
+             * The sea comes over, and it does not care whose side anything is on.
+             *
+             * DROWN, not damage, and it is the same rule `planPush` has always used for a body
+             * shoved into water — `survivesWater` is that predicate, asked here of a unit the
+             * water arrived at instead of the other way round. Two spellings of drowning would
+             * have been two bugs; there is one.
+             *
+             * `was` is captured from the board BEFORE the write, which is the whole reason
+             * TIDE needed a field of its own: the recede below has to put back sand on sand and
+             * bridge on bridge, and by then the tile no longer knows.
+             */
+            pending.tiles.forEach(pos => {
+                const tile = getTileAt(pos, currentBoard);
+                if (!tile || tile.isHouse || tile.terrain === 'WATER') return;
+                actions.push({
+                    type: 'MODIFY_TERRAIN', pos,
+                    terrain: 'WATER',
+                    flood: { turns: 2, was: tile.terrain },
+                });
+                const victim = simUnits.find(u => u.hp > 0 && u.position.x === pos.x && u.position.y === pos.y);
+                if (!victim) return;
+                if (survivesWater(victim)) return;
+                actions.push({ type: 'APPLY_DAMAGE', targetId: victim.id, amount: 0, eventType: 'DROWN', pos });
+                victim.hp = 0;
+                killUnit(victim);
+            });
+        } else if (pending.type === 'DUST_VEIL') {
+            /**
+             * Nothing is hurt and nothing is blocked. The tile is simply dark for two turns,
+             * and `blinded` above is the whole of the rule.
+             *
+             * `environment: 'SMOKE'` is set alongside the counter because that is the field
+             * Tile.tsx has been drawing since long before anything could put it there — the
+             * art for this hazard already existed and was waiting for a writer.
+             */
+            pending.tiles.forEach(pos => {
+                const tile = getTileAt(pos, currentBoard);
+                if (!tile) return;
+                actions.push({
+                    type: 'MODIFY_TERRAIN', pos,
+                    environment: 'SMOKE',
+                    smoke: { turns: 2 },
+                });
+            });
+        } else if (pending.type === 'COLLAPSE') {
+            // Hit first, THEN wall the tile. The other order would drop rubble on a living
+            // unit and leave it standing inside a wall — every movement rule downstream
+            // assumes a body is on walkable ground.
+            //
+            // 3 damage, and it does not care what the unit is: this is the one hazard that
+            // reads the same to both sides, which is what makes standing a zombie on a marked
+            // tile a real play rather than a coincidence.
+            pending.tiles.forEach(pos => {
+                const victim = simUnits.find(u => u.hp > 0 && u.position.x === pos.x && u.position.y === pos.y);
+                if (victim) {
+                    const r = calculateDamage(victim, 3, false);
+                    actions.push({ type: 'APPLY_DAMAGE', targetId: victim.id, amount: r.finalDamage, eventType: 'DAMAGE', pos });
+                    victim.hp = r.remainingHp;
+                    victim.shield = r.remainingShield;
+                    if (r.isFatal) killUnit(victim);
+                }
+                actions.push({ type: 'MODIFY_TERRAIN', pos, terrain: 'WALL' });
             });
         } else {
             // WIND_GUST and RAIL_SLIDE both shove whatever stands on a marked tile.
@@ -92,6 +332,18 @@ export const processTurn = (
                     actions.push({ type: 'APPLY_DAMAGE', targetId: id, amount: 0, eventType: 'DROWN', pos: t.position });
                     t.hp = 0;
                     killUnit(t);
+                });
+                // Same trade the skill path makes (utils/actionBuilders.ts, applyPushPlan): a
+                // boss blown into the sea by the wind lives, and pays for it with the turn it
+                // had already telegraphed. Written here too because this hazard path builds its
+                // own actions rather than going through applyPushPlan.
+                plan.doused.forEach(id => {
+                    const t = simUnits.find(s2 => s2.id === id);
+                    if (!t) return;
+                    actions.push({ type: 'APPLY_DAMAGE', targetId: id, amount: 0, eventType: 'DROWN', pos: t.position });
+                    const wait: Intent = { type: 'WAIT', description: 'Dragged out of the water...' };
+                    actions.push({ type: 'UPDATE_INTENT', unitId: id, intent: wait });
+                    t.intent = wait;
                 });
                 plan.tookBrain.forEach(({ unitId, house }) => {
                     const t = simUnits.find(s2 => s2.id === unitId);
@@ -136,8 +388,8 @@ export const processTurn = (
     const spawnQueue = scriptedWave
         ? scriptedWave.map(sp => ({ x: sp.x, y: sp.y }))
         : (gameState.enemySpawnQueue || []);
-    /** Class per queued tile, when the script names it. Index-aligned with spawnQueue. */
-    const scriptedClassAt = (i: number) => scriptedWave?.[i]?.cls;
+    /** The script's entry for a queued tile, when it names one. Index-aligned with spawnQueue. */
+    const scriptedSpawnAt = (i: number) => scriptedWave?.[i];
     /** At most one herald per batch, even when several tiles resolve this turn. */
     let flagQueued = false;
     /**
@@ -215,23 +467,36 @@ export const processTurn = (
             }
 
             // The script wins over every roll above.
-            const scripted = scriptedClassAt(spawnIndex);
-            if (scripted) spawnClass = scripted;
+            const scripted = scriptedSpawnAt(spawnIndex);
+            if (scripted?.cls) spawnClass = scripted.cls;
 
             const enemyDef = unitDefs[spawnClass];
-            
+            // A scripted entry may hand-tune the body it places. Reinforcements are built here
+            // and NOWHERE else, while `opening` spawns are built in useGameProgression — so
+            // before this, an hpBonus/dmgBonus written on a WAVE entry silently did nothing.
+            const scriptedHp = enemyDef.maxHp + (scripted?.hpBonus ?? 0);
+
             const newUnit: Unit = {
                 id: `zombie_${Date.now()}_${Math.random()}`,
                 type: UnitType.ZOMBIE, class: spawnClass, role: 'ENEMY',
-                hp: enemyDef.maxHp, maxHp: enemyDef.maxHp, damage: enemyDef.damage, moveRange: enemyDef.moveRange,
+                hp: scriptedHp, maxHp: scriptedHp, damage: enemyDef.damage + (scripted?.dmgBonus ?? 0), moveRange: enemyDef.moveRange,
                 cooldownReduction: 0, level: 1, position: { x: pos.x, y: pos.y },
                 isEnemy: true, hasMoved: false, hasAttacked: false, statusEffects: [],
                 movementType: enemyDef.movementType, immunities: enemyDef.immunities, imgUrl: enemyDef.imgUrl,
                 attackRange: enemyDef.attackRange ?? 1,
+                armor: enemyDef.armor,
                 intent: { type: 'MOVE', description: 'Hungry...' },
                 spawnDelay: 0
             };
-            
+
+            // The blighted horde (utils/elements.ts): Stage III reinforcements roll the same
+            // element the opening wave does. Skipped for scripted bodies — a replayed tutorial
+            // or authored wave has to land exactly the unit its script promised.
+            if (!scripted && ELEMENT_WORLDS.has(gameState.currentWorld)) {
+                const rolled = rollEnemyElement(newUnit.damage);
+                if (rolled) newUnit.element = rolled;
+            }
+
             simUnits.push(newUnit);
             spawnedThisTurn.add(newUnit.id);
             actions.push({ type: 'SPAWN_UNIT', unit: { ...newUnit, spawnDelay: 0 } });
@@ -247,10 +512,14 @@ export const processTurn = (
     // Derived every turn rather than stored, so the buff vanishes the instant the herald
     // dies — there is no stale +1 to unwind and no base stat to corrupt.
     {
-        const flagAlive = simUnits.some(u => u.isEnemy && u.hp > 0 && u.class === UnitClass.FLAG_ZOMBIE);
+        // Two things carry the aura, for the same reason: the Flag Zombie heralds a wave, and
+        // The Headliner IS one. Sharing the status rather than inventing a second is what let
+        // that boss ship without a new rule — see utils/bossBehaviours.ts.
+        const AURA_SOURCES: UnitClass[] = [UnitClass.FLAG_ZOMBIE, UnitClass.DISCO_ZOMBOSS];
+        const auraAlive = simUnits.some(u => u.isEnemy && u.hp > 0 && AURA_SOURCES.includes(u.class));
         simUnits.forEach(u => {
             if (!u.isEnemy || u.type === UnitType.OBSTACLE) return;
-            const shouldRage = flagAlive && u.class !== UnitClass.FLAG_ZOMBIE;
+            const shouldRage = auraAlive && !AURA_SOURCES.includes(u.class);
             const hasRage = u.statusEffects.includes('ENRAGED');
             if (shouldRage === hasRage) return;
             u.statusEffects = shouldRage
@@ -276,7 +545,8 @@ export const processTurn = (
         // last source's result and drifted out of sync with the real reducer.
         const applyEnvDamage = (amount: number, piercing: boolean) => {
             if (dead) return;
-            const result = calculateDamage(u, amount, piercing);
+            // Environment ignores helmet armour (gameLogic): the fire is inside the bucket.
+            const result = calculateDamage(u, amount, piercing, true);
             actions.push({ type: 'APPLY_DAMAGE', targetId: u.id, amount: result.finalDamage, eventType: 'BURN', pos });
             u.hp = result.remainingHp;
             u.shield = result.remainingShield;
@@ -334,8 +604,38 @@ export const processTurn = (
         }
     });
 
+    // Spike fields age here, with the BURN tick, so everything that happens "just because a
+    // turn passed" resolves in one block the player can predict. The field is only REMOVED at
+    // the end of the turn (after PHASE 4), never here: a one-turn spike that expired before the
+    // horde had moved could not be stepped on once, which is not an effect at all.
+    simSpikes.forEach(field => { field.turns -= 1; });
+    simSmoke.forEach(field => { field.turns -= 1; });
+    simFlood.forEach(field => { field.turns -= 1; });
+
     // Cleanup Dead (Sim only)
     simUnits = simUnits.filter(u => u.hp > 0);
+
+    /**
+     * PLAYER STATUS EXPIRY — the other half of NEW_TURN_RESET.
+     *
+     * The reducer no longer clears STUN/SLOW off the squad, because that reset runs at the end
+     * of THIS call and would erase a status the horde applied moments earlier. So the squad's
+     * clock is spent here instead, and the placement is the whole of it:
+     *   - AFTER PHASE 2, so a hero who sat out the last turn under a stun is correctly denied
+     *     that turn's Sun (the income gates read STUN);
+     *   - BEFORE PHASE 3, so an enemy is free to land a fresh stun on the same hero this turn,
+     *     and PHASE 4 plans against the new one rather than an expired one.
+     *
+     * Cleared here rather than in the reducer for the same reason TAUNTED is: that reset lives
+     * in the engine and knows nothing about which side of the turn a status came from.
+     */
+    simUnits.forEach(u => {
+        if (u.isEnemy) return;
+        if (!u.statusEffects.includes('STUN') && !u.statusEffects.includes('SLOW')) return;
+        const cleared = u.statusEffects.filter(e => e !== 'STUN' && e !== 'SLOW');
+        u.statusEffects = cleared;
+        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: u.id, updates: { statusEffects: cleared } });
+    });
 
     // --- PHASE 3: ENEMY ACTIONS (EXECUTE INTENT) ---
     const enemies = simUnits.filter(u => u.isEnemy && !stunnedUnitIds.has(u.id));
@@ -344,6 +644,12 @@ export const processTurn = (
     const brainsTakenThisTurn = new Set<string>();
     /** Zombies that left carrying a brain — removed from the board, not killed. */
     const brainThieves = new Set<string>();
+    /**
+     * Defenders whose Buttered Hide already fired this turn. The card sells "the FIRST enemy
+     * that bites her per digesting turn" — one pat of butter, not a stun aura — and this set
+     * is the whole of that limit.
+     */
+    const butteredThisTurn = new Set<string>();
 
     enemies.forEach(enemy => {
         if (enemy.hp <= 0) return;
@@ -351,63 +657,426 @@ export const processTurn = (
         const intent = enemy.intent;
         if (!intent) return;
 
-        // BRAIN GRAB — the follow-through on the telegraph set last turn (PHASE 4). The zombie
-        // stood on the house for a full turn first, so the player had a turn to answer it.
-        // Still standing there, brain still in place: it leaves with it now.
-        if (intent.type === 'ATTACK' && intent.target
-            && intent.target.x === enemy.position.x && intent.target.y === enemy.position.y) {
-            const houseTile = getTileAt(enemy.position, currentBoard);
-            if (houseTile?.isHouse && houseTile.hasBrain && !brainsTakenThisTurn.has(`${enemy.position.x},${enemy.position.y}`)) {
-                brainsTakenThisTurn.add(`${enemy.position.x},${enemy.position.y}`);
-                brainThieves.add(enemy.id);
-                actions.push({ type: 'UNIT_ATTACK', unitId: enemy.id, targetPos: enemy.position, attackRange: 'MELEE' });
-                actions.push({ type: 'BRAIN_LOST', pos: { x: enemy.position.x, y: enemy.position.y }, unitId: enemy.id });
+        /**
+         * BLINDED. The telegraph was made last turn in clear air; the dust arrived, or the
+         * player shoved this body into it. Either way the swing does not happen.
+         *
+         * Placed ahead of everything — ahead of the burrow surface, the brain grab, the strike
+         * loop and the blast — because "cancels attacks" has to mean the whole action and not
+         * its damage line. A Sandreaver blinded underground stays underground, which is the
+         * correct reading of both rules at once.
+         */
+        if ((intent.type === 'ATTACK' || intent.type === 'SPAWN') && blinded(enemy.position)) {
+            actions.push({ type: 'APPLY_DAMAGE', targetId: enemy.id, amount: 0, eventType: 'MISS', pos: enemy.position });
+            return;
+        }
+
+        /**
+         * COMING UP TO SWING. Written generically — "anything that attacks from under the board
+         * surfaces to do it" — rather than as a Sandreaver branch, so the Digger Zombie inherits
+         * it the day it sets the flag.
+         *
+         * It has to be HERE and not in a hook. Every boss hook runs in PHASE 4, after the blow
+         * has already landed, so a flag cleared there would leave the eruption being thrown by
+         * something the board is still drawing as empty sand — and the retaliation it eats would
+         * come from a hero swinging at nothing.
+         */
+        if (enemy.isBurrowed && intent.type === 'ATTACK') {
+            enemy.isBurrowed = false;
+            actions.push({ type: 'UPDATE_UNIT_STATE', unitId: enemy.id, updates: { isBurrowed: false, burrowTarget: undefined } });
+            actions.push({ type: 'APPLY_DAMAGE', targetId: 'tile', amount: 0, eventType: 'EMERGE', pos: { ...enemy.position } });
+        }
+
+        // BRAIN BITE — the follow-through on the telegraph set last turn (PHASE 4). The zombie
+        // stood beside the house for a full turn first, so the player had a turn to kill it or
+        // shove it away.
+        //
+        // It does NOT leave with the brain. It used to: the thief was struck off the board,
+        // which made robbing a house the safest thing a zombie could do and quietly removed
+        // the unit the player most wanted to punish. Under ITB's rule the building loses what
+        // it was holding and the thing that took it is still standing there next turn, with
+        // one fewer house between it and the next one.
+        if (intent.type === 'ATTACK' && intent.target) {
+            const houseTile = getTileAt(intent.target, currentBoard);
+            const houseKey = `${intent.target.x},${intent.target.y}`;
+            const adjacent = Math.abs(intent.target.x - enemy.position.x)
+                + Math.abs(intent.target.y - enemy.position.y) === 1;
+            if (adjacent && houseTile?.isHouse && houseTile.hasBrain && !brainsTakenThisTurn.has(houseKey)) {
+                brainsTakenThisTurn.add(houseKey);
+                actions.push({ type: 'UNIT_ATTACK', unitId: enemy.id, targetPos: intent.target, attackRange: 'MELEE' });
+                actions.push({ type: 'BRAIN_LOST', pos: { x: intent.target.x, y: intent.target.y } });
                 return;
             }
         }
 
         if (intent.type === 'ATTACK' && intent.target) {
-            actions.push({ type: 'UNIT_ATTACK', unitId: enemy.id, targetPos: intent.target, attackRange: (enemy.attackRange ?? 1) > 1 ? 'LOB' : 'MELEE' });
+          /**
+           * STRIKES — this intent is N SEPARATE BLOWS, not one blow with a footprint.
+           *
+           * The difference from BLAST below is not how many tiles are hit, it is who answers
+           * back. A blast is one weapon reaching several squares: no retaliation, no status
+           * rider, and it cannot kill its own owner partway through. A strike is a whole
+           * attack, so everything in this branch — thorns, the element rider, RETALIATE_FREEZE,
+           * RETALIATE_PUSH, statusOnHit, the fatal-blow cleanup — runs once per blow. That is
+           * what makes Thornhide the answer to a boss that swings twice, and it is exactly why
+           * the two fields were not merged.
+           *
+           * THE INVARIANT. With `strikes` absent — every other unit in every fight, including
+           * all seven tutorial replays — `blows` is `[intent.target]`, the SAME object, the
+           * loop turns once, and the actions emitted are identical element for element to what
+           * they were before. The break at the bottom fires on a loop that was ending anyway
+           * and pushes nothing. data/tutorial.assert.ts replays the whole chain through
+           * processTurn on every dev boot; that is the check.
+           */
+          const blows: AreaHit[] = intent.strikes?.length
+              ? intent.strikes
+              : [{ pos: intent.target, damage: intent.damage ?? 0 }];
+          for (const blow of blows) {
+            const at = blow.pos;
+            actions.push({ type: 'UNIT_ATTACK', unitId: enemy.id, targetPos: at, attackRange: (enemy.attackRange ?? 1) > 1 ? 'LOB' : 'MELEE' });
             
-            const targetUnit = getUnitAt(intent.target, simUnits);
+            const targetUnit = getUnitAt(at, simUnits);
             if (targetUnit) {
                 // Apply Damage logic consistent with App.tsx
-                const result = calculateDamage(targetUnit, intent.damage || 0, false);
+                // Each blow's own number. With `strikes` absent this is `intent.damage`
+                // verbatim — the seeded single entry above carries it — so the ordinary path
+                // is unchanged.
+                const result = calculateDamage(targetUnit, blow.damage || 0, false);
                 
                 // Shield Logic
                 if (result.shieldDamage > 0) {
-                    actions.push({ type: 'APPLY_DAMAGE', targetId: targetUnit.id, amount: 0, eventType: 'BLOCK', pos: intent.target });
+                    actions.push({ type: 'APPLY_DAMAGE', targetId: targetUnit.id, amount: 0, eventType: 'BLOCK', pos: at });
                     actions.push({ type: 'UPDATE_UNIT_STATE', unitId: targetUnit.id, updates: { shield: result.remainingShield } });
                     targetUnit.shield = result.remainingShield;
                 }
 
                 if (result.finalDamage > 0) {
-                    actions.push({ type: 'APPLY_DAMAGE', targetId: targetUnit.id, amount: result.finalDamage, eventType: 'DAMAGE', pos: intent.target });
+                    actions.push({ type: 'APPLY_DAMAGE', targetId: targetUnit.id, amount: result.finalDamage, eventType: 'DAMAGE', pos: at });
                     targetUnit.hp = result.remainingHp;
                 }
 
-                // --- RETALIATION FUSIONS (Biting Wall / Frostbite Armor) ---
+                /**
+                 * STATUS ON THE SWING (Intent.statusOnHit).
+                 *
+                 * Immunity rules are the ones the rest of this file already uses: STATUS stops
+                 * everything, FREEZE stops STUN and FREEZE only, and a plain SLOW gets through
+                 * FREEZE immunity on purpose — that carve-out (see UnitImmunity in types.ts) is
+                 * what keeps control tools alive against a Gargantuar.
+                 *
+                 * Skipped on a fatal blow: a corpse does not need freezing, and the update
+                 * would land on a unit UNIT_DIE is about to remove.
+                 */
+                if (!result.isFatal && intent.statusOnHit?.length) {
+                    // BURN joined this list with the blighted horde's FIRE rider — before
+                    // that no enemy ever put a burn on statusOnHit, so the gap was invisible.
+                    const blocked = (e: StatusEffectType) =>
+                        targetUnit.immunities.includes('STATUS')
+                        || ((e === 'STUN' || e === 'FREEZE') && targetUnit.immunities.includes('FREEZE'))
+                        || (e === 'BURN' && targetUnit.immunities.includes('BURN'));
+                    if (intent.statusOnHit.some(blocked)) {
+                        actions.push({ type: 'APPLY_DAMAGE', targetId: targetUnit.id, amount: 0, eventType: 'IMMUNE', pos: at });
+                    }
+                    const landed = intent.statusOnHit.filter(e => !blocked(e) && !targetUnit.statusEffects.includes(e));
+                    if (landed.length > 0) {
+                        const next: typeof targetUnit.statusEffects = [...targetUnit.statusEffects, ...landed];
+                        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: targetUnit.id, updates: { statusEffects: next } });
+                        targetUnit.statusEffects = next;
+                    }
+                }
+
+                /**
+                 * THE HORDE'S RULE L3 — a blighted LIGHTNING zombie's blow arcs one tile on.
+                 *
+                 * Part of the BLOW, so it sits here with the statusOnHit rider and ahead of
+                 * the retaliation blocks: thorns are the defender ANSWERING the swing, and the
+                 * arc must not be silenced by the answer killing the swinger. It also runs on
+                 * a fatal primary hit — the heroes' arc jumps onward from a body it just
+                 * killed, and one rulebook for both sides is the whole feature.
+                 *
+                 * `chainDamageFor` off the ZOMBIE's stat, exactly as heroes arc off theirs —
+                 * never off the blow (an ENRAGED +1 must not compound into the next tile).
+                 * `rollEnemyElement` already refuses LIGHTNING to damage-1 bodies, so the
+                 * zero-arc guard here is a backstop, not the rule.
+                 *
+                 * The struck set seeds the swinger's tile AND the target's: an arc that came
+                 * back to the attacker is nonsense, and the primary target already took the
+                 * whole blow. No resonance hop — resonance is the SQUAD's reward for a
+                 * unanimous pick, and the horde never picked anything.
+                 */
+                if (enemy.element === 'LIGHTNING' && !enemy.bossId) {
+                    const arcDamage = chainDamageFor(enemy);
+                    if (arcDamage > 0) {
+                        const struck = new Set<string>([
+                            `${enemy.position.x},${enemy.position.y}`, `${at.x},${at.y}`,
+                        ]);
+                        const [arcTarget] = chainStep(at,
+                            p => simUnits.find(u => u.hp > 0 && u.position.x === p.x && u.position.y === p.y),
+                            u => !u.isEnemy && u.type !== UnitType.OBSTACLE, struck);
+                        if (arcTarget) {
+                            actions.push({ type: 'UNIT_ATTACK', unitId: enemy.id, targetPos: { ...arcTarget.position }, attackRange: 'LINE', isArc: true });
+                            const arc = calculateDamage(arcTarget, arcDamage, false);
+                            if (arc.shieldDamage > 0) {
+                                actions.push({ type: 'APPLY_DAMAGE', targetId: arcTarget.id, amount: 0, eventType: 'BLOCK', pos: arcTarget.position });
+                                actions.push({ type: 'UPDATE_UNIT_STATE', unitId: arcTarget.id, updates: { shield: arc.remainingShield } });
+                            }
+                            if (arc.finalDamage > 0) {
+                                actions.push({ type: 'APPLY_DAMAGE', targetId: arcTarget.id, amount: arc.finalDamage, eventType: 'DAMAGE', pos: arcTarget.position });
+                            }
+                            arcTarget.hp = arc.remainingHp;
+                            arcTarget.shield = arc.remainingShield;
+                            if (arc.isFatal) {
+                                killUnit(arcTarget);
+                                const idx = simUnits.findIndex(u => u.id === arcTarget.id);
+                                if (idx !== -1) simUnits.splice(idx, 1);
+                            }
+                        }
+                    }
+                }
+
+                // --- RETALIATION (innate thorns + Biting Wall / Frostbite Armor) ---
                 // Resolved before the defender is cleared away: a wall built to be attacked
                 // gets its answer in even on the blow that destroys it, which is the whole
                 // reason the fusion is worth a slot.
-                const thorns = getFusionEffectValue(targetUnit, 'RETALIATE_DAMAGE');
+                //
+                // The two sources ADD. Thornhide's spines are the hero itself, so a fusion
+                // bought on top has to be an upgrade — if it replaced the innate value, the
+                // one hero the fusion is thematically for would gain nothing from it.
+                const thorns = (targetUnit.retaliateDamage ?? 0)
+                    + getFusionEffectValue(targetUnit, 'RETALIATE_DAMAGE');
                 if (thorns > 0) {
                     const back = calculateDamage(enemy, thorns, false);
                     actions.push({ type: 'APPLY_DAMAGE', targetId: enemy.id, amount: back.finalDamage, eventType: 'DAMAGE', pos: enemy.position });
+                    // Battle ledger. Retaliation is the one damage source with no skill cast
+                    // behind it, so without this line Thornhide's whole output happens during
+                    // the ENEMY's turn and the report prints him as a bystander.
+                    const ledgered = back.shieldDamage + back.finalDamage;
+                    if (targetUnit.heroId && ledgered > 0) {
+                        actions.push({ type: 'TRACK_STAT', heroId: targetUnit.heroId, stat: 'damageDealt', amount: ledgered });
+                    }
                     enemy.hp = back.remainingHp;
                     enemy.shield = back.remainingShield;
-                    if (back.isFatal) killUnit(enemy);
+                    if (back.isFatal) {
+                        killUnit(enemy);
+                        // Same credit pushKill hands out: the wall finished what bit it.
+                        if (targetUnit.heroId) {
+                            actions.push({ type: 'TRACK_STAT', heroId: targetUnit.heroId, stat: 'kills', amount: 1 });
+                        }
+                    }
                 }
 
+                /**
+                 * RULE L4 — the element rides the retaliation too (PLAN-progression.md § 3).
+                 *
+                 * An element belongs to the HERO, not to a skill object, so it has to reach
+                 * every source of damage that hero has. Retaliation is the one source no skill
+                 * is involved in at all — it is billed right here, off `retaliateDamage` — so
+                 * without this block Thornhide would be the single hero in the roster whose
+                 * element does nothing on the thing he is actually built to do.
+                 *
+                 * Gated on `thorns > 0` because the element rides the RETALIATION: a hero who
+                 * does not answer back has no attack here to attach anything to.
+                 *
+                 * This lands before PHASE 4, which is the point. PHASE 4 re-reads
+                 * statusEffects, so an ICE hero's SLOW halves the biter's ground on the very
+                 * turn it bit — the same immediacy RETALIATE_FREEZE below relies on.
+                 */
+                if (thorns > 0 && enemy.hp > 0 && targetUnit.element) {
+                    if (targetUnit.element === 'ICE') {
+                        // FREEZE immunity is deliberately NOT checked, matching skillResolution:
+                        // something too heavy to freeze solid can still be chilled into moving
+                        // slower. STATUS immunity (Screen Door) still stops everything.
+                        if (enemy.immunities.includes('STATUS')) {
+                            actions.push({ type: 'APPLY_DAMAGE', targetId: enemy.id, amount: 0, eventType: 'IMMUNE', pos: enemy.position });
+                        } else if (resonance === 'ICE'
+                            && enemy.statusEffects.includes('SLOW')
+                            && !enemy.statusEffects.includes('STUN')
+                            && !enemy.immunities.includes('FREEZE')) {
+                            // ICE RESONANCE, same rule as skillResolution: a chill landing on
+                            // something already chilled sets it solid. Retaliation is a slow
+                            // like any other, and leaving it out would make the one hero built
+                            // to be attacked the one hero the resonance ignores.
+                            //
+                            // FREEZE immunity IS checked on this branch only, because this
+                            // branch lands a STUN — the plain slow below stays exempt for the
+                            // Gargantuar reasons above.
+                            //
+                            // The set-up has to come from the player's own turn: SLOW is wiped
+                            // by NEW_TURN_RESET at the end of this call, so what triggers this
+                            // is a hero who slowed the biter before it ever reached the wall.
+                            const frozen: typeof enemy.statusEffects = [...enemy.statusEffects, 'STUN'];
+                            actions.push({ type: 'UPDATE_UNIT_STATE', unitId: enemy.id, updates: { statusEffects: frozen } });
+                            enemy.statusEffects = frozen;
+                        } else if (!enemy.statusEffects.includes('SLOW')) {
+                            const slowed: typeof enemy.statusEffects = [...enemy.statusEffects, 'SLOW'];
+                            actions.push({ type: 'UPDATE_UNIT_STATE', unitId: enemy.id, updates: { statusEffects: slowed } });
+                            enemy.statusEffects = slowed;
+                        }
+                    } else if (targetUnit.element === 'FIRE') {
+                        if (enemy.immunities.includes('BURN')) {
+                            actions.push({ type: 'APPLY_DAMAGE', targetId: enemy.id, amount: 0, eventType: 'IMMUNE', pos: enemy.position });
+                        } else if (!enemy.statusEffects.includes('BURN')) {
+                            const burning: typeof enemy.statusEffects = [...enemy.statusEffects, 'BURN'];
+                            actions.push({ type: 'UPDATE_UNIT_STATE', unitId: enemy.id, updates: { statusEffects: burning } });
+                            // PHASE 2 has already run this turn, so the first tick is next
+                            // turn's — the bite costs the horde a turn of standing still.
+                            actions.push({ type: 'APPLY_DAMAGE', targetId: enemy.id, amount: 0, eventType: 'BURN', pos: enemy.position });
+                            enemy.statusEffects = burning;
+                        }
+                    } else if (targetUnit.element === 'LIGHTNING') {
+                        // Half the HERO's damage stat, never the retaliation value: `thorns`
+                        // carries the RETALIATE_DAMAGE fusions on top of it, and letting the
+                        // arc compound off a stacked number is exactly the runaway L3 exists
+                        // to prevent. No minimum, so a 0-1 damage body arcs for nothing —
+                        // and unlike the skill arc there is no shove to carry, so an arc worth
+                        // 0 is skipped outright rather than emitted as an empty hit.
+                        const arcDamage = chainDamageFor(targetUnit);
+                        /**
+                         * LIGHTNING RESONANCE — one further hop, on from the body just struck.
+                         *
+                         * `arced` is what keeps the chain honest: the biter is in it from the
+                         * start (an arc that came back to the thing that bit you is a second
+                         * retaliation, not a chain) and every body it reaches joins it, so the
+                         * two hops can never share a target. The second hop carries the SAME
+                         * undiminished arcDamage — halving a half is 0 across most of the
+                         * roster, and a reward for committing three heroes that deals 0 is not
+                         * a reward.
+                         */
+                        // Keyed by TILE now that the walk is shared (chainStep, utils/elements.ts).
+                        // Same set as the old id-based one: a body stands on one square, and the
+                        // biter's own square going in is the same rule as the biter's id.
+                        const arced = new Set<string>([`${enemy.position.x},${enemy.position.y}`]);
+                        let arcFrom = enemy.position;
+                        for (let hop = 0; arcDamage > 0 && hop < (resonance === 'LIGHTNING' ? 2 : 1); hop++) {
+                            // One hop per iteration, so hop two reads the board hop one left.
+                            // Fixed CHAIN_OFFSETS order lives in chainStep now, for the same
+                            // reason it lived here: perfect information means no dice inside a
+                            // resolution.
+                            const [arcTarget] = chainStep(arcFrom,
+                                p => simUnits.find(u => u.position.x === p.x && u.position.y === p.y),
+                                u => u.isEnemy && u.type !== UnitType.OBSTACLE, arced);
+                            // Nothing adjacent left: the chain stops rather than reaching.
+                            if (!arcTarget) break;
+                            const arc = calculateDamage(arcTarget, arcDamage, false);
+                            actions.push({ type: 'APPLY_DAMAGE', targetId: arcTarget.id, amount: arc.finalDamage, eventType: 'DAMAGE', pos: arcTarget.position });
+                            // Battle ledger: the retaliation arc is the hero's element working,
+                            // same authorship as the thorns it rode in on.
+                            const arcLedgered = arc.shieldDamage + arc.finalDamage;
+                            if (targetUnit.heroId && arcLedgered > 0) {
+                                actions.push({ type: 'TRACK_STAT', heroId: targetUnit.heroId, stat: 'damageDealt', amount: arcLedgered });
+                            }
+                            arcTarget.hp = arc.remainingHp;
+                            arcTarget.shield = arc.remainingShield;
+                            if (arc.isFatal) {
+                                killUnit(arcTarget);
+                                if (targetUnit.heroId) {
+                                    actions.push({ type: 'TRACK_STAT', heroId: targetUnit.heroId, stat: 'kills', amount: 1 });
+                                }
+                            }
+                            arcFrom = arcTarget.position;
+                        }
+                    }
+                }
+
+                /**
+                 * RETALIATE_FREEZE — the TWO-STEP chill (Frostbite Armor / Frostguard).
+                 *
+                 * It used to stun outright on every bite: a free lost-turn-per-turn, the
+                 * exact thing the STUN RULE in data/fusionRecipes.ts bans, and stronger than
+                 * either card's own text. Now the first bite slows; a bite landed while the
+                 * attacker is ALREADY slowed sets it solid — the same escalation the ICE
+                 * element and its resonance use, so one lesson covers all three.
+                 *
+                 * Immunity split matches the rest of the file: STATUS refuses everything,
+                 * FREEZE refuses only the escalation to STUN — a Gargantuar still gets
+                 * chilled, it just never locks. Note the enemy-side SLOW is wiped by
+                 * NEW_TURN_RESET, so the freeze needs two bites in ONE turn (a boss's double
+                 * strike, two zombies on one wall) or a slow the player landed themselves.
+                 */
                 if (enemy.hp > 0 && hasFusionEffect(targetUnit, 'RETALIATE_FREEZE')) {
-                    if (enemy.immunities.includes('FREEZE') || enemy.immunities.includes('STATUS')) {
+                    if (enemy.immunities.includes('STATUS')) {
                         actions.push({ type: 'APPLY_DAMAGE', targetId: enemy.id, amount: 0, eventType: 'IMMUNE', pos: enemy.position });
-                    } else if (!enemy.statusEffects.includes('STUN')) {
+                    } else if (enemy.statusEffects.includes('SLOW')
+                        && !enemy.statusEffects.includes('STUN')
+                        && !enemy.immunities.includes('FREEZE')) {
                         // PHASE 4 re-reads statusEffects, so the attacker loses its move this
-                        // very turn — biting the wall costs it the ground it came for.
+                        // very turn — biting the wall twice costs it the ground it came for.
                         const frozen: typeof enemy.statusEffects = [...enemy.statusEffects, 'STUN'];
                         actions.push({ type: 'UPDATE_UNIT_STATE', unitId: enemy.id, updates: { statusEffects: frozen } });
                         enemy.statusEffects = frozen;
+                    } else if (!enemy.statusEffects.includes('SLOW')) {
+                        const chilled: typeof enemy.statusEffects = [...enemy.statusEffects, 'SLOW'];
+                        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: enemy.id, updates: { statusEffects: chilled } });
+                        enemy.statusEffects = chilled;
+                    }
+                }
+
+                /**
+                 * BUTTER_RETALIATE — Buttered Hide, Maw only. Butter is a PIN, not a chill:
+                 * it lands first try, but only while she is digesting (the window it exists
+                 * to guard) and only on the first biter each turn (`butteredThisTurn`).
+                 * FREEZE immunity refuses it because the payload is a STUN — same rule the
+                 * statusOnHit path applies to every pin in the game.
+                 */
+                if (enemy.hp > 0
+                    && (targetUnit.digestingTurns ?? 0) > 0
+                    && hasFusionEffect(targetUnit, 'BUTTER_RETALIATE')
+                    && !butteredThisTurn.has(targetUnit.id)) {
+                    if (enemy.immunities.includes('STATUS') || enemy.immunities.includes('FREEZE')) {
+                        actions.push({ type: 'APPLY_DAMAGE', targetId: enemy.id, amount: 0, eventType: 'IMMUNE', pos: enemy.position });
+                    } else if (!enemy.statusEffects.includes('STUN')) {
+                        butteredThisTurn.add(targetUnit.id);
+                        const pinned: typeof enemy.statusEffects = [...enemy.statusEffects, 'STUN'];
+                        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: enemy.id, updates: { statusEffects: pinned } });
+                        enemy.statusEffects = pinned;
+                    }
+                }
+
+                // --- RETALIATE_PUSH (the Chard Guard row) ---
+                // Damage is not the answer this fusion sells: the biter is thrown off the wall
+                // it just spent its turn walking up to, so it has to pay for the same ground
+                // twice. Routed through planPush/applyPushPlan like every other shove in the
+                // game, so it drowns, chains and hands over brains by identical rules.
+                if (enemy.hp > 0 && hasFusionEffect(targetUnit, 'RETALIATE_PUSH')) {
+                    const offX = enemy.position.x - targetUnit.position.x;
+                    const offY = enemy.position.y - targetUnit.position.y;
+                    // "Away from me" along one axis. A melee attacker is always axis-aligned;
+                    // a ranged one may not be, so the longer leg wins and the shove stays cardinal.
+                    const dx = Math.abs(offX) >= Math.abs(offY) ? Math.sign(offX) : 0;
+                    const dy = dx === 0 ? Math.sign(offY) : 0;
+                    if (dx !== 0 || dy !== 0) {
+                        const living = simUnits.filter(u => u.hp > 0);
+                        const plan = planPush(enemy, dx, dy, living, currentBoard, terrainDefs, 3, brainsTakenThisTurn);
+                        // applyPushPlan works on a map of the very same objects, so the sim
+                        // sees the new positions and hp without a second pass.
+                        applyPushPlan(plan, actions, new Map(living.map(u => [u.id, u])), targetUnit);
+                        plan.tookBrain.forEach(({ unitId, house }) => {
+                            brainsTakenThisTurn.add(`${house.x},${house.y}`);
+                            brainThieves.add(unitId);
+                        });
+                    }
+                }
+
+                /**
+                 * A blow that MOVES what it hits (Intent.pushOnHit). RETALIATE_PUSH above is
+                 * the defender's version of exactly this; this is the attacker's. It lives on
+                 * the INTENT rather than the unit because the shove belongs to the BLOW — the
+                 * eruption throws, the ordinary swipe does not — and it is routed through
+                 * planPush/applyPushPlan so it drowns, chains and hands over brains by the same
+                 * rules as every other shove in the game.
+                 */
+                if ((intent.pushOnHit ?? 0) > 0 && !result.isFatal && targetUnit.hp > 0) {
+                    const offX = targetUnit.position.x - enemy.position.x;
+                    const offY = targetUnit.position.y - enemy.position.y;
+                    const dx = Math.abs(offX) >= Math.abs(offY) ? Math.sign(offX) : 0;
+                    const dy = dx === 0 ? Math.sign(offY) : 0;
+                    if (dx !== 0 || dy !== 0) {
+                        const living = simUnits.filter(u => u.hp > 0);
+                        const plan = planPush(targetUnit, dx, dy, living, currentBoard, terrainDefs, 3, brainsTakenThisTurn, intent.pushOnHit);
+                        applyPushPlan(plan, actions, new Map(living.map(u => [u.id, u])), enemy);
+                        plan.tookBrain.forEach(({ unitId, house }) => {
+                            brainsTakenThisTurn.add(`${house.x},${house.y}`);
+                            brainThieves.add(unitId);
+                        });
                     }
                 }
 
@@ -418,28 +1087,98 @@ export const processTurn = (
                     if (idx !== -1) simUnits.splice(idx, 1);
                 }
             } else {
-                actions.push({ type: 'APPLY_DAMAGE', targetId: 'tile', amount: 0, eventType: 'MISS', pos: intent.target });
+                actions.push({ type: 'APPLY_DAMAGE', targetId: 'tile', amount: 0, eventType: 'MISS', pos: at });
             }
+            // A boss can die BETWEEN its own blows. Thornhide's spines answer each beat
+            // separately and RETALIATE_PUSH can drown the attacker outright — either way a
+            // corpse does not finish its swing. `killUnit` has already run above; this only
+            // stops a second UNIT_ATTACK being emitted after the death.
+            if (enemy.hp <= 0) break;
+          }
         } else if (intent.type === 'SPAWN' && intent.target) {
-            // Gargantuar logic
-            const impDef = unitDefs[UnitClass.IMP];
-            const newImp: Unit = {
-                id: `imp_${Date.now()}_${Math.random()}`,
-                type: UnitType.ZOMBIE, class: UnitClass.IMP, role: 'ENEMY',
-                hp: impDef.maxHp, maxHp: impDef.maxHp, damage: impDef.damage, moveRange: impDef.moveRange,
-                cooldownReduction: 0, level: 1, position: intent.target,
-                isEnemy: true, hasMoved: true, hasAttacked: true, statusEffects: [],
-                movementType: impDef.movementType, immunities: impDef.immunities, imgUrl: impDef.imgUrl,
-                intent: { type: 'MOVE', description: 'Landing...' },
-                spawnDelay: 0
-            };
-            
-            const landingOccupant = getUnitAt(intent.target, simUnits);
-            if (!landingOccupant) {
-                simUnits.push(newImp);
-                actions.push({ type: 'SPAWN_UNIT', unit: { ...newImp, spawnDelay: 0 } });
-            }
+            // Whatever the behaviour named, on every tile it named. This was hardcoded to one
+            // Imp on one tile because the Gargantuar was the only thing that summoned; the
+            // Headliner calls four dancers at once, and a summon that silently dropped three
+            // of them would make its own telegraph a lie.
+            const spawnClass = intent.spawnClass ?? UnitClass.IMP;
+            const def = unitDefs[spawnClass];
+            const tiles = intent.spawnTiles?.length ? intent.spawnTiles : [intent.target];
+
+            tiles.forEach((tile, i) => {
+                // Re-checked per tile against the LIVE sim: an earlier body in this same
+                // summon may have taken the tile a moment ago.
+                if (getUnitAt(tile, simUnits)) return;
+                // `spawnHp` overrides the class's own bar. An echo of a boss is that boss's
+                // body at 4 HP, not that boss.
+                const bodyHp = intent.spawnHp ?? def.maxHp;
+                const spawned: Unit = {
+                    id: `spawn_${Date.now()}_${i}_${Math.random()}`,
+                    type: UnitType.ZOMBIE, class: spawnClass, role: 'ENEMY',
+                    hp: bodyHp, maxHp: bodyHp, damage: def.damage, moveRange: def.moveRange,
+                    cooldownReduction: 0, level: 1, position: tile,
+                    isEnemy: true, hasMoved: true, hasAttacked: true, statusEffects: [],
+                    movementType: def.movementType, immunities: def.immunities, imgUrl: def.imgUrl,
+                    attackRange: def.attackRange ?? 1,
+                    armor: def.armor,
+                    intent: { type: 'MOVE', description: 'Landing...' },
+                    spawnDelay: 0
+                };
+                simUnits.push(spawned);
+                actions.push({ type: 'SPAWN_UNIT', unit: { ...spawned, spawnDelay: 0 } });
+            });
         }
+
+        /**
+         * BLAST — every extra tile this intent lands on (Intent.blast).
+         *
+         * OUTSIDE the type ladder on purpose. An arc rides an ATTACK, a grid discharging rides
+         * a WAIT, and the GRID sector's hazard will ride nothing at all: three callers, one
+         * resolution. Written inside the ladder it would have to be written three times, which
+         * is the mistake the shared field exists to prevent.
+         *
+         * PLAIN DAMAGE. No retaliation, no element rider, no shove, no brain grab. Thorns
+         * answer something that came and stood in front of you; a shell, a bolt across the
+         * floor and a bomb from altitude are none of those, and a Thornhide answering four
+         * blast tiles would kill a boss through a wall it never touched.
+         *
+         * Whoever is standing there, friend or horde. That is what lets a boss hurt ITSELF
+         * with no special case anywhere: the tile under its feet is in the list like any other.
+         */
+        (intent.blast ?? []).forEach(hit => {
+            const victim = getUnitAt(hit.pos, simUnits);
+            if (!victim || victim.hp <= 0) return;
+            actions.push({ type: 'UNIT_ATTACK', unitId: enemy.id, targetPos: hit.pos, attackRange: 'LINE' });
+
+            const res = calculateDamage(victim, hit.damage, false);
+            if (res.shieldDamage > 0) {
+                actions.push({ type: 'APPLY_DAMAGE', targetId: victim.id, amount: 0, eventType: 'BLOCK', pos: hit.pos });
+                actions.push({ type: 'UPDATE_UNIT_STATE', unitId: victim.id, updates: { shield: res.remainingShield } });
+                victim.shield = res.remainingShield;
+            }
+            if (res.finalDamage > 0) {
+                actions.push({ type: 'APPLY_DAMAGE', targetId: victim.id, amount: res.finalDamage, eventType: 'DAMAGE', pos: hit.pos });
+                victim.hp = res.remainingHp;
+            }
+
+            if (hit.stun && !res.isFatal) {
+                // Same immunity split the rest of the file uses: STATUS stops everything,
+                // FREEZE stops a stun. Voltmaw's own STATUS immunity is why the grid shocks it
+                // without stopping it — it takes the damage and keeps acting, which is the race.
+                if (victim.immunities.includes('STATUS') || victim.immunities.includes('FREEZE')) {
+                    actions.push({ type: 'APPLY_DAMAGE', targetId: victim.id, amount: 0, eventType: 'IMMUNE', pos: hit.pos });
+                } else if (!victim.statusEffects.includes('STUN')) {
+                    const stunned: typeof victim.statusEffects = [...victim.statusEffects, 'STUN'];
+                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: victim.id, updates: { statusEffects: stunned } });
+                    victim.statusEffects = stunned;
+                }
+            }
+
+            if (res.isFatal) {
+                killUnit(victim);
+                const idx = simUnits.findIndex(u => u.id === victim.id);
+                if (idx !== -1) simUnits.splice(idx, 1);
+            }
+        });
     });
 
     // --- PHASE 4: ENEMY MOVEMENT (PLAN NEXT TURN) ---
@@ -451,6 +1190,15 @@ export const processTurn = (
         // Scripted arrivals hold the tile they were authored on for one turn.
         && !(script && spawnedThisTurn.has(u.id)));
     
+    // A boss counts its own turns. Behaviours with a rhythm read this instead of the global
+    // turn number so a boss that arrives mid-fight starts its cycle at its own turn one
+    // (utils/bossBehaviours.ts). Ticked here, once, before the next intents are planned.
+    movingEnemies.forEach(u => {
+        if (!u.bossId) return;
+        u.bossClock = (u.bossClock ?? 0) + 1;
+        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: u.id, updates: { bossClock: u.bossClock } });
+    });
+
     // Sort by Y (Frontline moves first)
     movingEnemies.sort((a,b) => a.position.y - b.position.y); 
 
@@ -475,10 +1223,19 @@ export const processTurn = (
         // --- GRAVES DIG ---
         // A headstone used to be pure bookkeeping: 3 HP that KILL_ALL demanded you spend a
         // hit on, threatening nothing while it waited. Now it is on a clock — every
-        // GRAVE_DIG_PERIOD turns a Basic Zombie claws out onto the nearest open tile, so
-        // "clear the grave" is a deadline, not a chore. The countdown is telegraphed on the
-        // unit like any other intent; burning the grave before it strikes cancels the spawn,
+        // GRAVE_DIG_PERIOD turns something claws out onto the nearest open tile, so "clear
+        // the grave" is a deadline, not a chore. The countdown is telegraphed on the unit
+        // like any other intent; burning the grave before it strikes cancels the spawn,
         // because a dead grave never reaches this code.
+        //
+        // WHAT climbs out scales with how deep the run is. A fixed Basic Zombie made the
+        // grave a rounding error by act three — 2 HP against a squad that by then deletes
+        // that in one free attack — so the deadline stopped being a deadline. The seams are
+        // the same ones the sector chain and the event tiers use (3 and 6), so a grave in
+        // the Green Belt still coughs up a shambler and one in the City does not.
+        //
+        // Scripted battles are exempt: a tutorial board authors its own threat, and a
+        // Conehead appearing where the script measured a Basic would break the lesson.
         if (enemy.class === UnitClass.GRAVE) {
             const turnsLeft = GRAVE_DIG_PERIOD - ((gameState.turn - 1) % GRAVE_DIG_PERIOD) - 1;
             if (turnsLeft > 0) {
@@ -498,10 +1255,14 @@ export const processTurn = (
                 return !currentPositions.has(`${p.x},${p.y}`);
             });
             if (spot) {
-                const basicDef = unitDefs[UnitClass.BASIC_ZOMBIE];
+                const depth = script ? 1 : Math.max(1, gameState.depth || 1);
+                const risenClass = depth >= 7 ? UnitClass.BUCKETHEAD
+                    : depth >= 4 ? UnitClass.CONEHEAD
+                    : UnitClass.BASIC_ZOMBIE;
+                const basicDef = unitDefs[risenClass];
                 const risen: Unit = {
                     id: `grave_${enemy.id}_${gameState.turn}`,
-                    type: UnitType.ZOMBIE, class: UnitClass.BASIC_ZOMBIE, role: 'ENEMY',
+                    type: UnitType.ZOMBIE, class: risenClass, role: 'ENEMY',
                     hp: basicDef.maxHp, maxHp: basicDef.maxHp, damage: basicDef.damage,
                     moveRange: basicDef.moveRange, cooldownReduction: 0, level: 1,
                     position: spot, isEnemy: true, hasMoved: true, hasAttacked: true,
@@ -520,16 +1281,44 @@ export const processTurn = (
         }
 
         // Only units still on the board can block a route.
-        const collisionLayer = survivors.filter(u => !eatenZombies.has(u.id));
+        const collisionLayer = survivors.filter(u => u.hp > 0 && !eatenZombies.has(u.id));
+
+        /**
+         * A taunt has to move the body, not just the telegraph. planEnemyIntent redirects what
+         * this zombie will DO next turn, but the walk itself is chosen right here — leave this
+         * out and a provoked zombie announces "coming for you" while strolling on to the house.
+         *
+         * Cleared at the end of this same turn (see TAUNT EXPIRY below), so it buys exactly one
+         * enemy turn of the horde walking the wrong way. A dead taunter steers nobody.
+         */
+        const taunter = enemy.statusEffects.includes('TAUNTED') && enemy.tauntedBy
+            ? collisionLayer.find(u => !u.isEnemy && u.id === enemy.tauntedBy)
+            : undefined;
 
         // Find Target: the nearest house that still holds a brain. Plants are just walls on the way.
-        let target: Position | null = null;
+        let target: Position | null = taunter ? { x: taunter.position.x, y: taunter.position.y } : null;
         let minDist = 999;
 
-        currentBoard.forEach(t => {
+        if (!taunter) currentBoard.forEach(t => {
             if (!t.isHouse || !t.hasBrain || eatenHouses.has(`${t.x},${t.y}`)) return;
             const dist = Math.abs(t.x - enemy.position.x) + Math.abs(t.y - enemy.position.y);
             if (dist < minDist) { minDist = dist; target = { x: t.x, y: t.y }; }
+        });
+
+        /**
+         * THE CRATE IS A HOUSE.
+         *
+         * Considered in the same sweep and at the same priority — nearest wins — rather than
+         * ahead of or behind the brains. Ahead of them, the objective would empty the lanes and
+         * the houses would be free; behind them, nothing would ever walk at the crate and the
+         * objective would be a decoration. At equal priority the crate sits mid-board and is
+         * simply CLOSER to most of the horde, which splits the march in two without a single
+         * special case about which half goes where.
+         */
+        if (!taunter) nonEnemies.forEach(u => {
+            if (u.hp <= 0 || u.class !== UnitClass.GEAR_CRATE) return;
+            const dist = Math.abs(u.position.x - enemy.position.x) + Math.abs(u.position.y - enemy.position.y);
+            if (dist < minDist) { minDist = dist; target = { x: u.position.x, y: u.position.y }; }
         });
 
         if (!target) {
@@ -558,8 +1347,17 @@ export const processTurn = (
             const dest = path[path.length - 1];
             currentPositions.delete(`${enemy.position.x},${enemy.position.y}`);
             currentPositions.set(`${dest.x},${dest.y}`, enemy.id);
+            const from = { ...enemy.position };
             enemy.position = dest;
             actions.push({ type: 'UNIT_MOVE', unitId: enemy.id, path });
+            // Side effects of a boss having WALKED — the Colossus scorching its trail is the
+            // first, and the hook exists so the next one does not become another `if` in here.
+            const moveHook = hooksFor(enemy.bossId)?.onMoved;
+            if (moveHook) actions.push(...moveHook({ enemy: { ...enemy, position: from }, path, board: currentBoard }));
+            stepOnSpikes(enemy, path);
+            // Bled out on the way in: free the tile again so the zombies behind it can path
+            // through, exactly as if it had never arrived.
+            if (enemy.hp <= 0) currentPositions.delete(`${dest.x},${dest.y}`);
         };
 
         let moved = false;
@@ -595,12 +1393,21 @@ export const processTurn = (
                         // WALL stops even a flier. Everything else — water, lava, a plant's
                         // body — is only a floor problem, so a Balloon Zombie drifts over it.
                         if (!t || t.terrain === 'WALL') return;
+                        // PHASE 4 does not route through findPath — it has its own search — so
+                        // the rail leash has to be asked here too or it would only apply to the
+                        // telegraph and not to the walk.
+                        if (!canRideTo(enemy, t, currentBoard)) return;
                         if (!flying && !terrainDefs[t.terrain]?.isWalkable) return;
                         seen.add(key);
                         const entry = { pos: p, path: [...path, p] };
                         // Landing needs a free tile the player can reach (canStopOn); crossing
                         // terrain the movement type ignores is fine.
-                        const landable = isFree(p) && canStopOn(enemy, t, terrainDefs);
+                        //
+                        // A HOUSE IS NEVER A LANDING TILE. It is a building to be bitten from
+                        // beside, not a square to stand on — see the BRAIN BITE branch. Without
+                        // this the walk still finishes on top of the house and the zombie ends
+                        // up adjacent to nothing, telegraphing at a building underneath itself.
+                        const landable = isFree(p) && canStopOn(enemy, t, terrainDefs) && !t.isHouse;
                         if (landable) out.push(entry);
                         // A body only lets a flier or a burrower past. For anything that walks
                         // the search stops here, which is what turns a plant into a wall — and
@@ -627,10 +1434,39 @@ export const processTurn = (
          */
         const options = reachable();
 
-        const brainGrab = options.find(o => {
-            const t = getTileAt(o.pos, currentBoard);
-            return !!t?.isHouse && !!t.hasBrain && !eatenHouses.has(`${o.pos.x},${o.pos.y}`);
-        });
+        // A provoked zombie walks past an open house: that is the price the taunter paid for.
+        // A provoked zombie walks past an open house: that is the price the taunter paid for.
+        //
+        // A BOSS walks past for a different reason. A unit that leaves with a brain is struck
+        // off the board entirely (`brainThieves`, filtered out of `survivors` above) — and on
+        // a SLAY_BOSS node the objective is "no live boss left", so a boss that ate a brain
+        // and walked off would be scored as a WIN for the fight the player just lost. The
+        // alternative reading, counting it as a loss, is no better: either way the outcome
+        // turns on bookkeeping rather than on play.
+        //
+        // None of the nine is a thief anyway (PLAN-boards-bosses.md section 5) — every one of
+        // them is a problem you have to solve standing there. This makes that explicit rather
+        // than leaving it to the fact that the Gargantuar happens to move 2.
+        /**
+         * A tile from which this zombie can BITE a house — beside it, not on it.
+         *
+         * It used to be the house tile itself: a zombie walked on top of the building, spent a
+         * turn "prising the brain loose", then vanished off the board with it. Three things
+         * were wrong with that and all three were visible in play. The player was warned a
+         * turn early, because the telegraph fired as soon as a WALK was going to end on the
+         * house. Arriving was not enough — the zombie had to finish its move exactly there.
+         * And taking the brain deleted the zombie, so the strongest thing you could do about
+         * a house was let it be robbed.
+         *
+         * Into the Breach's rule instead: stand next to the building, telegraph the hit, and
+         * still be standing there afterwards.
+         */
+        const brainStrike = (taunter || enemy.bossId) ? undefined : options.find(o =>
+            [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }].some(d => {
+                const t = getTileAt({ x: o.pos.x + d.x, y: o.pos.y + d.y }, currentBoard);
+                return !!t?.isHouse && !!t.hasBrain && !eatenHouses.has(`${t.x},${t.y}`);
+            }));
+        const brainGrab = brainStrike;
 
         const engagePlant = brainGrab ? undefined : options
             .filter(o => distTo(o.pos, target) < startDist)
@@ -643,11 +1479,35 @@ export const processTurn = (
          * arc has no reason to give up the range advantage that defines it — before this it
          * walked to the front every turn and read as an ordinary biter.
          */
-        const alreadyInFiringPosition = reach > 1 && !brainGrab && nonEnemies.some(pl =>
-            !eatenZombies.has(pl.id) && distTo(enemy.position, pl.position) <= reach);
+        // Under a taunt only the taunter counts: holding station because some OTHER plant is in
+        // the arc is precisely the "shoot whatever is convenient" behaviour the taunt overrides.
+        const alreadyInFiringPosition = reach > 1 && !brainGrab && (taunter
+            ? distTo(enemy.position, taunter.position) <= reach
+            : nonEnemies.some(pl => !eatenZombies.has(pl.id) && distTo(enemy.position, pl.position) <= reach));
+
+        // A boss may own its destination. The ladder below asks "which tile is closest to a
+        // brain", which is the wrong question for a boss holding a victim still, and the exact
+        // opposite of the right one for artillery that wants maximum standoff. Kept as a hook
+        // rather than an `if (enemy.bossId === ...)` for the same reason the others are.
+        //
+        // The path is re-walked against LIVE occupancy and cut at the first blocked tile —
+        // that truncation is the counterplay: a hero standing on the track shortens the run.
+        const bossPath = hooksFor(enemy.bossId)?.move?.({
+            enemy, playerUnits: nonEnemies, board: currentBoard, range: effectiveRange,
+        });
 
         const chosen = brainGrab || (alreadyInFiringPosition ? undefined : engagePlant);
-        if (alreadyInFiringPosition && !brainGrab) {
+        if (bossPath) {
+            const legal: Position[] = [];
+            for (const step of bossPath.slice(0, effectiveRange)) {
+                if (!isFree(step)) break;
+                if (!canRideTo(enemy, getTileAt(step, currentBoard), currentBoard)) break;
+                if (!canStopOn(enemy, getTileAt(step, currentBoard), terrainDefs)) break;
+                legal.push(step);
+            }
+            if (legal.length > 0) commitMove(legal);
+            moved = true;
+        } else if (alreadyInFiringPosition && !brainGrab) {
             moved = true; // holds position on purpose; skip the walk-toward-brain fallbacks
         } else if (chosen) {
             commitMove(chosen.path);
@@ -699,17 +1559,41 @@ export const processTurn = (
             if (greedyPath.length > 0) commitMove(greedyPath);
         }
 
-        // Reached a house that still holds a brain. The brain is NOT taken yet: the zombie
-        // spends a turn prising it loose, telegraphed like any other attack, so the player
-        // always gets one turn to kill it or shove it off the doorstep. Losing a brain with
-        // no warning was the one thing on this board the player could not play around.
-        // The steal itself resolves in PHASE 3 next turn.
-        const standingOn = getTileAt(enemy.position, currentBoard);
-        const houseKey = `${enemy.position.x},${enemy.position.y}`;
-        if (standingOn?.isHouse && standingOn.hasBrain && !eatenHouses.has(houseKey)) {
+        // Spikes finished it somewhere along the walk: nothing left to telegraph.
+        if (enemy.hp <= 0) return;
+
+        // Standing NEXT TO a house that still holds a brain: the bite is telegraphed now and
+        // lands in PHASE 3 next turn, exactly like any other attack, so the player always has
+        // one turn to kill the zombie or shove it off the doorstep. Losing a brain with no
+        // warning is the one thing on this board a player cannot play around — but the
+        // warning has to come when the threat is real, not while the zombie is still walking.
+        /**
+         * Telegraphed blindness, read off where the walk ENDED rather than where it began.
+         *
+         * That order is the tactic: a zombie that starts in the dust and walks out of it is
+         * free to aim, and one that walks in is not. Otherwise the veil would be a wall — five
+         * tiles of frozen horde — instead of a shape the player pushes bodies into and out of.
+         *
+         * Ahead of the brain grab on purpose. A veil laid over a doorstep protects the house,
+         * which is the one case where this hazard is the defender's tool rather than the
+         * attacker's, and skipping the grab is what makes it true.
+         */
+        if (blinded(enemy.position)) {
+            enemy.intent = { type: 'WAIT', description: 'Blinded by dust!' };
+            actions.push({ type: 'UPDATE_INTENT', unitId: enemy.id, intent: enemy.intent });
+            return;
+        }
+
+        const houseBeside = [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }]
+            .map(d => getTileAt({ x: enemy.position.x + d.x, y: enemy.position.y + d.y }, currentBoard))
+            .find(t => !!t?.isHouse && !!t.hasBrain && !eatenHouses.has(`${t.x},${t.y}`));
+        const houseKey = houseBeside ? `${houseBeside.x},${houseBeside.y}` : '';
+        // ...unless it was provoked: a taunted zombie standing on a house is not reaching for
+        // the brain, it is turning around, and planEnemyIntent below says so.
+        if (!taunter && !enemy.bossId && houseBeside) {
             const grabIntent: Intent = {
                 type: 'ATTACK',
-                target: { x: enemy.position.x, y: enemy.position.y },
+                target: { x: houseBeside.x, y: houseBeside.y },
                 damage: 0,
                 description: 'Reaching for the brain!',
             };
@@ -724,7 +1608,127 @@ export const processTurn = (
         actions.push({ type: 'UPDATE_INTENT', unitId: enemy.id, intent: newIntent });
     });
 
-    const remainingUnits = survivors.filter(u => !eatenZombies.has(u.id));
+    /**
+     * THE WILD PLANT WAKES.
+     *
+     * Checked here, at the end of the enemy turn, because that is the moment the board has
+     * finished moving: the player walked a hero over during their turn, the horde has just
+     * had its answer, and whoever is still standing beside the sleeper is standing there for
+     * real. Waking it during the player's turn would have meant a body that appears mid-drag.
+     *
+     * DORMANT is simply removed. There is no partial state and no timer — a plant is either
+     * asleep or it is fighting for you, and the second one lasts the rest of the battle.
+     */
+    simUnits.forEach(u => {
+        if (u.isEnemy || u.hp <= 0 || !u.isWild) return;
+        if (!u.statusEffects.includes('DORMANT')) return;
+        const woken = simUnits.some(h =>
+            !h.isEnemy && h.hp > 0 && h.isHero && h.id !== u.id
+            && Math.abs(h.position.x - u.position.x) + Math.abs(h.position.y - u.position.y) <= 1);
+        if (!woken) return;
+        const cleared = u.statusEffects.filter(e => e !== 'DORMANT');
+        u.statusEffects = cleared;
+        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: u.id, updates: { statusEffects: cleared } });
+        actions.push({ type: 'APPLY_DAMAGE', targetId: u.id, amount: 0, eventType: 'BUFF', pos: { ...u.position } });
+    });
+
+    // --- BOSS END OF TURN ---
+    // Traits that are a state of the board rather than an action: the Colossus feeding off its
+    // own lava, and its shell cracking at half health. Runs after movement so it reads the
+    // tiles the boss actually ended on.
+    simUnits.forEach(u => {
+        if (!u.bossId || u.hp <= 0) return;
+        const hook = hooksFor(u.bossId)?.onTurnEnd;
+        if (!hook) return;
+        const emitted = hook({ enemy: u, units: simUnits.filter(x => x.hp > 0), board: currentBoard });
+        actions.push(...emitted);
+        // A hook may FINISH something — the Armada's wreck coming down in open water is the
+        // first that can. Hooks are forbidden to mutate (the caller owns the sim), so the sim
+        // has to be told, or `remainingUnits` below still sees a live boss and SLAY_BOSS scores
+        // the win a whole turn late.
+        emitted.forEach(act => {
+            if (act.type !== 'UNIT_DIE') return;
+            const dead = simUnits.find(x => x.id === act.unitId);
+            if (dead) dead.hp = 0;
+        });
+    });
+
+    // --- TAUNT EXPIRY ---
+    // TAUNTED lasts exactly one enemy turn: PHASE 4 above has just spent it, on the walk and on
+    // the intent, and it is gone before the next one is planned. It is cleared here rather than
+    // in NEW_TURN_RESET because that reset lives in the engine and only knows STUN/BURN/SLOW.
+    // `tauntedBy` goes with it — a taunter that dies three turns later must not still be
+    // steering the horde from the grave.
+    simUnits.forEach(u => {
+        if (!u.statusEffects.includes('TAUNTED')) return;
+        const cleared = u.statusEffects.filter(e => e !== 'TAUNTED');
+        u.statusEffects = cleared;
+        u.tauntedBy = undefined;
+        actions.push({
+            type: 'UPDATE_UNIT_STATE',
+            unitId: u.id,
+            updates: { statusEffects: cleared, tauntedBy: undefined },
+        });
+    });
+
+    // Spike fields whose counter ran out during PHASE 2 stop existing now that the horde has
+    // finished walking through them.
+    //
+    // Every surviving field is written back too, not just the expiring ones: the countdown has
+    // to reach the real board or a spike wall would bite forever. One MODIFY_TERRAIN per field
+    // carrying the POST-decrement value makes this idempotent — replaying the turn lands on the
+    // same board — where emitting "aged by one" deltas would not.
+    simSpikes.forEach((field, key) => {
+        const [x, y] = key.split(',').map(Number);
+        actions.push({
+            type: 'MODIFY_TERRAIN',
+            pos: { x, y },
+            spikes: field.turns > 0 ? { ...field } : { damage: field.damage, turns: 0 },
+        });
+        if (field.turns <= 0) simSpikes.delete(key);
+    });
+
+    // Dust and sea, written back on exactly the same terms: post-decrement value, one action
+    // per tile, idempotent on replay. The tide additionally carries the ground back with it —
+    // `was` is the only thing that knows what this tile is supposed to look like once dry.
+    simSmoke.forEach((field, key) => {
+        const [x, y] = key.split(',').map(Number);
+        actions.push({
+            type: 'MODIFY_TERRAIN',
+            pos: { x, y },
+            smoke: { turns: Math.max(0, field.turns) },
+            ...(field.turns <= 0 ? { environment: 'NONE' as const } : {}),
+        });
+        if (field.turns <= 0) simSmoke.delete(key);
+    });
+    simFlood.forEach((field, key) => {
+        const [x, y] = key.split(',').map(Number);
+        actions.push({
+            type: 'MODIFY_TERRAIN',
+            pos: { x, y },
+            flood: { turns: Math.max(0, field.turns), was: field.was },
+            ...(field.turns <= 0 ? { terrain: field.was } : {}),
+        });
+        if (field.turns <= 0) simFlood.delete(key);
+    });
+
+    const remainingUnits = survivors.filter(u => u.hp > 0 && !eatenZombies.has(u.id));
+
+    /**
+     * SQUAD WIPED — and the test is "is there anything left I can still give an order to",
+     * not "is there anything left on my side of the board".
+     *
+     * The gear crate is on the player's side and is `UnitType.PLANT`, so a plain headcount let
+     * a fight go on forever with every hero dead and a box standing in the middle: it has no
+     * skills and cannot move, so nothing could ever happen again. A wild plant still asleep is
+     * the same position for a different reason — only a hero wakes it, and by this line there
+     * are none left to do it.
+     */
+    const commandable = (u: Unit) =>
+        u.type === UnitType.PLANT
+        && u.class !== UnitClass.GEAR_CRATE
+        && !(u.isWild && u.statusEffects.includes('DORMANT'));
+
 
     // --- PHASE 5: SPAWN QUEUE GENERATION ---
     const nextSpawnQueue: Position[] = [];
@@ -747,7 +1751,19 @@ export const processTurn = (
             screen: gameState.screen,
         };
         const mission = gameState.mission;
-        const timeUp = turn > gameState.maxTurns;
+        /**
+     * EVERY objective runs on the clock, SLAY_BOSS included.
+     *
+     * This briefly did not: the arithmetic said a boss could not be killed inside five turns,
+     * and exempting SLAY_BOSS was one way to answer that. It is the wrong one. Without a limit
+     * a boss fight becomes attrition that the squad cannot lose while a single hero is standing
+     * — and "cannot lose" is not a fight, it is a formality with extra steps.
+     *
+     * The fix went to the number instead: a boss node gets BOSS_MAX_TURNS and the Breach gets
+     * BREACH_MAX_TURNS (constants.ts, with the measured reasoning). Failing to finish inside it
+     * is a defeat, exactly as failing to hold a tile is.
+     */
+    const timeUp = turn > gameState.maxTurns;
         if (isMissionFailed(mission, currentBoard)) {
             nextState.screen = 'GAME_OVER';
             if (mission) nextState.mission = { ...mission, failed: true };
@@ -756,7 +1772,7 @@ export const processTurn = (
         } else if (timeUp) {
             nextState.screen = isMissionSatisfied(mission, remainingUnits) ? 'VICTORY' : 'GAME_OVER';
         }
-        if (remainingUnits.filter(u => u.type === UnitType.PLANT).length === 0) nextState.screen = 'GAME_OVER';
+        if (remainingUnits.filter(commandable).length === 0) nextState.screen = 'GAME_OVER';
         const housesOnScriptBoard = currentBoard.filter(t => t.isHouse);
         if (housesOnScriptBoard.length > 0
             && housesOnScriptBoard.filter(t => t.hasBrain && !eatenHouses.has(`${t.x},${t.y}`)).length === 0) {
@@ -807,6 +1823,18 @@ export const processTurn = (
     // The objective sits on top of surviving: the clock still runs out at maxTurns, but the
     // player also has to have done what the mission asked.
     const mission = gameState.mission;
+    /**
+     * EVERY objective runs on the clock, SLAY_BOSS included.
+     *
+     * This briefly did not: the arithmetic said a boss could not be killed inside five turns,
+     * and exempting SLAY_BOSS was one way to answer that. It is the wrong one. Without a limit
+     * a boss fight becomes attrition that the squad cannot lose while a single hero is standing
+     * — and "cannot lose" is not a fight, it is a formality with extra steps.
+     *
+     * The fix went to the number instead: a boss node gets BOSS_MAX_TURNS and the Breach gets
+     * BREACH_MAX_TURNS (constants.ts, with the measured reasoning). Failing to finish inside it
+     * is a defeat, exactly as failing to hold a tile is.
+     */
     const timeUp = turn > gameState.maxTurns;
 
     if (isMissionFailed(mission, currentBoard)) {
@@ -822,7 +1850,7 @@ export const processTurn = (
 
     // Brains are a run-wide budget handled by the reducer via BRAIN_LOST. A level is also lost
     // outright when the squad is wiped out.
-    const remainingPlants = remainingUnits.filter(u => u.type === UnitType.PLANT);
+    const remainingPlants = remainingUnits.filter(commandable);
     if (remainingPlants.length === 0) {
         nextState.screen = 'GAME_OVER';
     }

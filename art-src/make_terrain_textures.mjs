@@ -9,7 +9,10 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
-const SRC = 'D:/Users/tuanla2/AppData/Local/Temp/claude/D--Users-tuanla2-game/71a63709-2d1a-443a-9430-15b626cce6e2/scratchpad/icons-master';
+// The icon library, as vendored in this repo. It used to point at a scratchpad directory from
+// the session that first ran this, which survived by luck — a regenerate script whose source
+// lives outside the repo is a script that stops working the day nobody notices.
+const SRC = process.env.ICONS_SRC || join(import.meta.dirname, 'game-icons');
 const OUT = 'D:/Users/tuanla2/game/plants-into-the-breach/public/img/terrain';
 
 // terrain -> [artist/file, opacity, motif count]. Opacity is tuned per terrain: ground the
@@ -28,6 +31,11 @@ const MAP = {
     WALL:       ['delapouite/brick-wall',    0.24, 'single'],
     BRIDGE:     ['delapouite/packed-planks', 0.20, 'single'],
     RAIL:       ['delapouite/rail-road',     0.20, 'single'],
+    // Thornquill's spine field. NOT a terrain type — it is an overlay on whatever ground is
+    // already there (TileData.spikes), so it is drawn on top rather than instead. Loud, at the
+    // hazard end of the opacity range: it damages everything that walks in, it expires on a
+    // clock, and a hazard the player cannot see is a promise of perfect information broken.
+    SPIKES:     ['delapouite/caltrops',      0.34, 'scatter'],
 };
 
 /**

@@ -5,6 +5,21 @@ import { getFusionEffectValue, hasFusionEffect } from './fusion';
 // Helper to get unit at position
 export const getUnitAt = (pos: Position, units: Unit[]) => units.find(u => u.position.x === pos.x && u.position.y === pos.y);
 
+/**
+ * The unit on this tile that the rest of the game is allowed to see.
+ *
+ * `getUnitAt` answers "what is here". This answers "what is here that can be shot at, walked
+ * into, blown up or shoved", and the two stopped being the same question the moment something
+ * learned to travel under the board. Seven call sites ask it — the four targeting doors, the
+ * pathfinder, the push planner and the click handler — because untargetable and non-solid have
+ * to travel together. A body the player cannot shoot but still cannot walk round is an
+ * invisible wall: worse than the thing this hides, because it also keeps moving.
+ */
+export const getSolidUnitAt = (pos: Position, units: Unit[]): Unit | undefined => {
+    const u = getUnitAt(pos, units);
+    return u && !u.isBurrowed ? u : undefined;
+};
+
 // Helper to get tile at position
 export const getTileAt = (pos: Position, board: TileData[]) => board.find(t => t.x === pos.x && t.y === pos.y);
 
@@ -41,9 +56,12 @@ export const gustDirection = (tile: Position): { dx: number; dy: number } => {
  *     units, but nothing in the codebase ever read it. Water now kills whatever cannot
  *     survive it, which is the whole reason a hand-authored map puts a lake beside a lane.
  *
- *  2. CHAINS. A body in the way is not automatically a wall — it gets shoved on. The line
- *     only jams when the far end has nowhere to go, and then the two units that actually
- *     collided take the hit. That turns positioning into a combo rather than a coin flip.
+ *  2. BODIES BLOCK. A shove into an occupied tile moves NOTHING: the two that collided each
+ *     take a point and the shove is spent. This planner used to chain instead, driving the
+ *     whole line along like dominoes. It was a deliberate deviation and it was wrong — it
+ *     meant shoving a zombie into your own plant pushed the PLANT back, so the tool you use
+ *     to hold a corridor gave up a tile of that corridor, and the enemy could walk a hero
+ *     backwards into water by standing in front of them.
  *
  * Pure: it decides, it does not mutate. Each caller turns the plan into its own actions.
  */
@@ -52,6 +70,14 @@ export interface PushPlan {
     moves: Array<{ unitId: string; to: Position }>;
     /** Units that end up in water they cannot survive. They die. */
     drowned: string[];
+    /**
+     * Bosses shoved into water that would have drowned anything else. They live — see
+     * `survivesWater` — but the shove costs them the action they had already telegraphed.
+     *
+     * A separate list from `drowned` rather than a flag on it, because the two produce
+     * completely different actions and sharing a list is how a caller ends up killing one.
+     */
+    doused: string[];
     /** Units that slammed into something. One point each, per the collision rule. */
     collided: string[];
     /**
@@ -62,12 +88,137 @@ export interface PushPlan {
     tookBrain: Array<{ unitId: string; house: Position }>;
 }
 
-/** Water only kills what cannot swim, fly, or is not alive to begin with. */
-const survivesWater = (unit: Unit): boolean =>
+/**
+ * Water only kills what cannot swim, fly, or is not alive to begin with.
+ *
+ * Exported because a body can now STOP being able to survive water mid-battle (The Armada's
+ * crash, utils/bossBehaviours.ts). A second copy of this test living in a boss file is exactly
+ * how `DROWN` once spent months declared, assigned and never read.
+ */
+/** Can this body be in water at all — by swimming, flying, or not being alive? */
+export const swims = (unit: Unit): boolean =>
     unit.immunities.includes('DROWN')
     || unit.movementType === 'FLYING'
     || unit.movementType === 'AMPHIBIOUS'
     || unit.type === UnitType.OBSTACLE;
+
+export const survivesWater = (unit: Unit): boolean =>
+    swims(unit)
+    /**
+     * A BOSS NEVER DROWNS, and this is the same rule Devour already follows.
+     *
+     * Drowning is an instant kill, and this codebase has one standing answer for those: check
+     * `bossId`, never `isMassive` (utils/skillResolution.ts caps burrow_strike the same way).
+     * Without it, thinning boss PUSH immunity down to one boss would have handed the player a
+     * one-action delete on any watery arena — Windward Sound has sea down both flanks.
+     *
+     * It survives; it does NOT get away with it. A boss that cannot swim and lands in the water
+     * anyway comes out of the plan as `doused`, and loses the turn it had already telegraphed.
+     */
+    || !!unit.bossId;
+
+/**
+ * ONE TILE of a shove. `planPush` below is just this, run again for each tile of distance.
+ *
+ * `bumped` is passed in rather than owned here because it has to survive across tiles: a body
+ * slammed on the first tile and again on the second still bleeds exactly once — which is what
+ * a two-tile shove into a wall must cost, one point and not two.
+ */
+interface PushStep {
+    moves: Array<{ unitId: string; to: Position }>;
+    drowned: string[];
+    /** Bosses that landed in water and survived it. See PushPlan.doused. */
+    doused: string[];
+    tookBrain: Array<{ unitId: string; house: Position }>;
+    /**
+     * Did anything actually move? False means the shove met something it cannot shift, and
+     * every remaining tile of distance would meet the same thing — the caller stops.
+     */
+    advanced: boolean;
+}
+
+const planPushStep = (
+    mover: Unit,
+    dx: number,
+    dy: number,
+    alive: Unit[],
+    board: TileData[],
+    terrainDefs: Record<string, TerrainDefinition>,
+    maxChain: number,
+    brainlessHouses: Set<string>,
+    bumped: Set<string>,
+): PushStep => {
+    const step: PushStep = { moves: [], drowned: [], doused: [], tookBrain: [], advanced: false };
+    // Solid, not merely present: without this a burrowed body JAMS an entire shove chain, and
+    // the player watches a gust die against an apparently empty square of sand.
+    const occupantAt = (p: Position) => alive.find(u => !u.isBurrowed && u.position.x === p.x && u.position.y === p.y);
+
+    const dest = { x: mover.position.x + dx, y: mover.position.y + dy };
+
+    // A BODY IS A WALL. Into the Breach's rule, and it was the one thing this planner had
+    // wrong: it treated a blocker as a domino, shoving the whole line along and billing every
+    // body a collision point. That reads fine in isolation and is a different game — shoving
+    // a zombie into your own plant moved the PLANT, so the shove you used to hold a corridor
+    // quietly gave up a tile of it, and a hero could be walked backwards into water by the
+    // enemy standing in front of them.
+    //
+    // Now: nothing moves, the two that collided each take a point, and the shove is spent.
+    // `maxChain` survives in the signature because every caller passes it, but there is no
+    // chain left to bound.
+    const blocker = occupantAt(dest);
+    if (blocker) {
+        bumped.add(mover.id);
+        bumped.add(blocker.id);
+        return step;
+    }
+
+    const inBounds = dest.x >= 0 && dest.x < 8 && dest.y >= 0 && dest.y < 8;
+    const destTile = inBounds ? getTileAt(dest, board) : undefined;
+
+    // A house with a brain still in it is not a wall to a zombie — it is the thing it wants.
+    // Shoving one in hands over the brain, which makes pushing toward your own side a real
+    // mistake rather than a free repositioning tool.
+    const houseWithBrain = !!destTile
+        && !!destTile.isHouse
+        && !!destTile.hasBrain
+        && !brainlessHouses.has(`${dest.x},${dest.y}`)
+        && mover.isEnemy;
+
+    if (!inBounds || !destTile || destTile.terrain === 'WALL' || (destTile.isHouse && !houseWithBrain)) {
+        // Board edge, barrier, or a house with nothing left to steal — a genuine wall. Only
+        // one body is involved now, so only one takes the hit.
+        bumped.add(mover.id);
+        return step;
+    }
+
+    if (houseWithBrain) {
+        step.tookBrain.push({ unitId: mover.id, house: { ...dest } });
+        step.moves.push({ unitId: mover.id, to: { ...dest } });
+        step.advanced = true;
+        return step;
+    }
+
+    const walkable = terrainDefs[destTile.terrain]?.isWalkable;
+    const isWater = destTile.terrain === 'WATER';
+
+    if (!walkable && !isWater) {
+        // Mountain and friends: solid to a shove.
+        bumped.add(mover.id);
+        return step;
+    }
+
+    if (!walkable && isWater && !survivesWater(mover)) {
+        step.drowned.push(mover.id);
+    } else if (!walkable && isWater && !swims(mover)) {
+        // Only a boss reaches here: it cannot swim, and the only thing keeping it alive is the
+        // guard in `survivesWater`. Standing in the sea costs it its telegraphed turn.
+        step.doused.push(mover.id);
+    }
+
+    step.moves.push({ unitId: mover.id, to: { ...dest } });
+    step.advanced = true;
+    return step;
+};
 
 export const planPush = (
     mover: Unit,
@@ -84,88 +235,75 @@ export const planPush = (
      * pass has to tell us, or two zombies could claim the same brain.
      */
     brainlessHouses: Set<string> = new Set(),
+    /**
+     * How many TILES the shove drives the mover. Chardwall throws 2, and PUSH_DISTANCE buys
+     * more on top; everything else still shoves the 1 tile this defaults to.
+     *
+     * Resolved one tile at a time on purpose. A long shove is NOT a teleport: each tile is its
+     * own chance to jam on a body, hit the map edge, drop into water, or hand a live house its
+     * brain, so a 2-tile throw that meets a mountain on the first tile stops there and still
+     * pays the collision. Sliding the target `distance` tiles in one calculation would let it
+     * skip over exactly the obstacles this hero exists to slam things into.
+     */
+    distance: number = 1,
 ): PushPlan => {
-    const plan: PushPlan = { moves: [], drowned: [], collided: [], tookBrain: [] };
-    if (mover.immunities.includes('PUSH')) return plan;
+    const plan: PushPlan = { moves: [], drowned: [], doused: [], collided: [], tookBrain: [] };
+    // PUSH immunity as a STATE rather than a stat. Sandreaver is not push-immune — it is
+    // push-immune while it is under the board, and an entry in `immunities` could never be
+    // turned back off when it surfaces.
+    if (mover.immunities.includes('PUSH') || mover.isBurrowed) return plan;
 
-    const alive = units.filter(u => u.hp > 0);
-    const occupantAt = (p: Position) => alive.find(u => u.position.x === p.x && u.position.y === p.y);
+    // Collision damage collects in a set that outlives the individual tiles: a middle unit in
+    // a three-body train is bumped from both sides — and now, over a long shove, possibly on
+    // several tiles — but still bleeds exactly once.
+    const bumped = new Set<string>();
 
-    // Walk the line of bodies the shove would drive.
-    const train: Unit[] = [mover];
-    let probe = { x: mover.position.x + dx, y: mover.position.y + dy };
-    while (train.length <= maxChain) {
-        const next = occupantAt(probe);
-        if (!next) break;
-        // An immovable body ends the line and jams everything behind it.
-        if (next.immunities.includes('PUSH')) {
-            plan.collided.push(mover.id, next.id);
-            return plan;
-        }
-        train.push(next);
-        probe = { x: probe.x + dx, y: probe.y + dy };
+    // Private copies. Each tile has to see where the previous one left everybody, and the
+    // caller's array must come back untouched.
+    const working = new Map<string, Unit>(
+        units.filter(u => u.hp > 0).map(u => [u.id, { ...u, position: { ...u.position } }]),
+    );
+    if (!working.has(mover.id)) {
+        working.set(mover.id, { ...mover, position: { ...mover.position } });
+    }
+    const claimedHouses = new Set(brainlessHouses);
+
+    const tiles = Math.max(1, Math.floor(distance));
+    for (let i = 0; i < tiles; i++) {
+        const current = working.get(mover.id);
+        // The mover drowned, or walked off with a brain. There is nothing left to shove.
+        if (!current) break;
+
+        const step = planPushStep(
+            current, dx, dy, [...working.values()], board, terrainDefs, maxChain, claimedHouses, bumped,
+        );
+        plan.moves.push(...step.moves);
+        plan.drowned.push(...step.drowned);
+        // A doused boss is NOT removed from `working`: it is still standing there, still
+        // blocking the tiles behind it, and still shovable next turn. Only its plan is gone.
+        //
+        // Deduped, because a two-tile shove that lands in water twice is still ONE dunking —
+        // undeduped it emitted the splash and the cancelled intent once per tile travelled.
+        step.doused.forEach(id => { if (!plan.doused.includes(id)) plan.doused.push(id); });
+        plan.tookBrain.push(...step.tookBrain);
+
+        // Jammed. Whatever stopped this tile stops every tile after it too.
+        if (!step.advanced) break;
+
+        step.moves.forEach(m => {
+            const u = working.get(m.unitId);
+            if (u) u.position = { ...m.to };
+        });
+        // A body that drowned or took a brain is off the board: it must stop blocking the
+        // tiles still to come, and must never be moved a second time.
+        step.drowned.forEach(id => working.delete(id));
+        step.tookBrain.forEach(({ unitId, house }) => {
+            working.delete(unitId);
+            claimedHouses.add(`${house.x},${house.y}`);
+        });
     }
 
-    // `probe` is now the first empty tile past the train — where the front unit would land.
-    const frontDest = probe;
-    const inBounds = frontDest.x >= 0 && frontDest.x < 8 && frontDest.y >= 0 && frontDest.y < 8;
-    const destTile = inBounds ? getTileAt(frontDest, board) : undefined;
-    const front = train[train.length - 1];
-
-    // The line is longer than one shove can drive: nothing moves, the ends take the hit.
-    if (train.length > maxChain) {
-        plan.collided.push(mover.id, train[1].id);
-        return plan;
-    }
-
-    // A house with a brain still in it is not a wall to a zombie — it is the thing it wants.
-    // Shoving one in hands over the brain, which makes pushing toward your own side a real
-    // mistake rather than a free repositioning tool.
-    const houseWithBrain = !!destTile
-        && !!destTile.isHouse
-        && !!destTile.hasBrain
-        && !brainlessHouses.has(`${frontDest.x},${frontDest.y}`)
-        && front.isEnemy;
-
-    if (!inBounds || !destTile || destTile.terrain === 'WALL' || (destTile.isHouse && !houseWithBrain)) {
-        // Board edge, barrier, or a house with nothing left to steal — a genuine wall.
-        plan.collided.push(mover.id);
-        if (train.length > 1) plan.collided.push(front.id);
-        return plan;
-    }
-
-    if (houseWithBrain) {
-        plan.tookBrain.push({ unitId: front.id, house: { ...frontDest } });
-        // The rest of the line still shifts up behind it, same as when the front drowns.
-        for (let i = train.length - 1; i >= 0; i--) {
-            const u = train[i];
-            plan.moves.push({ unitId: u.id, to: { x: u.position.x + dx, y: u.position.y + dy } });
-        }
-        return plan;
-    }
-
-    const walkable = terrainDefs[destTile.terrain]?.isWalkable;
-    const isWater = destTile.terrain === 'WATER';
-
-    if (!walkable && !isWater) {
-        // Mountain and friends: solid to a shove.
-        plan.collided.push(mover.id);
-        if (train.length > 1) plan.collided.push(front.id);
-        return plan;
-    }
-
-    // Only the FRONT unit ever meets new ground: everyone behind it steps into a tile the
-    // unit ahead just vacated, which they were already standing on.
-    if (!walkable && isWater && !survivesWater(front)) {
-        plan.drowned.push(front.id);
-    }
-
-    // Far end first, so applying the moves in order never double-occupies a tile. A drowning
-    // unit still vacates, which is what lets the one behind it take the bank.
-    for (let i = train.length - 1; i >= 0; i--) {
-        const u = train[i];
-        plan.moves.push({ unitId: u.id, to: { x: u.position.x + dx, y: u.position.y + dy } });
-    }
+    plan.collided = [...bumped];
     return plan;
 };
 
@@ -176,21 +314,38 @@ export interface DamageResult {
     remainingShield: number;
     remainingHp: number;
     isFatal: boolean;
+    /** A weapon hit that helmet armour zeroed out — the caller should SHOW the clang. */
+    absorbedByArmor?: boolean;
 }
 
-export const calculateDamage = (target: Unit, amount: number, isPiercing: boolean = false): DamageResult => {
-    // Shelled Chomper: the digest window is Maw's whole drawback, and this fusion
-    // closes it completely. Checked before anything else so no source can chip her — the
-    // same reason DAMAGE_REDUCTION lives here rather than at each call site.
-    if ((target.digestingTurns ?? 0) > 0 && hasFusionEffect(target, 'ARMOR_WHILE_DIGESTING')) {
+export const calculateDamage = (
+    target: Unit,
+    amount: number,
+    isPiercing: boolean = false,
+    /**
+     * Environment damage — burn ticks, lava, ground spikes — says true and walks straight
+     * past helmet armour: a bucket keeps a pea out, not the fire cooking the body inside it.
+     * That carve-out is what keeps FIRE and spike fields as real answers to an armoured lane
+     * instead of armour blanking every 1-damage tool in the game at once.
+     */
+    ignoresArmor: boolean = false,
+): DamageResult => {
+    // Untouchable. First line of the one function every damage source in the game funnels
+    // through, so "nothing hurts it this turn" needs no cooperation from any caller.
+    if (target.invulnerable) {
         return {
             finalDamage: 0,
             shieldDamage: 0,
             remainingShield: target.shield || 0,
             remainingHp: target.hp,
-            isFatal: false
+            isFatal: false,
         };
     }
+
+    // Shelled Chomper used to early-return here — total immunity for the whole digest
+    // window, which deleted Maw's one drawback and contradicted its own card ("gains 3
+    // shield"). The fusion now grants real shield when digestion begins (skillResolution),
+    // and the shield arithmetic below handles the rest with no special case.
 
     // Flat reduction from an armour fusion. Applied here rather than at each damage site so
     // every source — melee, projectiles, lava, hazards, push collisions — respects it.
@@ -198,6 +353,20 @@ export const calculateDamage = (target: Unit, amount: number, isPiercing: boolea
     const reduction = getFusionEffectValue(target, 'DAMAGE_REDUCTION')
         + getFusionEffectValue(target, 'STEADFAST');
     let damageToDeal = reduction > 0 && amount > 0 ? Math.max(1, amount - reduction) : amount;
+
+    /**
+     * HELMET ARMOUR (Unit.armor) — innate, and deliberately under the OPPOSITE floor rule to
+     * the fusion reduction above. Fusion armour never drops a hit below 1 because a hero built
+     * untouchable breaks the game. A Buckethead that shrugs a pea to ZERO is the point: the
+     * player is being told "bring a bigger answer" — push it, burn it, spike its path — which
+     * is exactly the triage this game is made of. Environment damage bypasses via the
+     * `ignoresArmor` flag, so armour can never make a body unkillable, only pea-proof.
+     */
+    const armor = ignoresArmor ? 0 : (target.armor ?? 0);
+    const beforeArmor = damageToDeal;
+    if (armor > 0 && damageToDeal > 0) damageToDeal = Math.max(0, damageToDeal - armor);
+    const absorbedByArmor = beforeArmor > 0 && damageToDeal === 0 && armor > 0;
+
     let shieldDmg = 0;
     let currentShield = target.shield || 0;
     
@@ -216,13 +385,14 @@ export const calculateDamage = (target: Unit, amount: number, isPiercing: boolea
 
     // 3. Apply to HP
     let currentHp = target.hp - damageToDeal;
-    
+
     return {
         finalDamage: damageToDeal,
         shieldDamage: shieldDmg,
         remainingShield: currentShield,
         remainingHp: currentHp,
-        isFatal: currentHp <= 0
+        isFatal: currentHp <= 0,
+        absorbedByArmor
     };
 };
 
@@ -240,6 +410,11 @@ const isTilePassable = (x: number, y: number, unit: Unit, units: Unit[], board: 
     // stop meaning anything.
     if (tile.terrain === 'WALL') return false;
 
+    // A rail-bound unit has one road and this is not it. Checked separately rather than folded
+    // into the walkability branch below because RAIL is not a passability problem — rail is
+    // ordinary walkable ground for everybody; it is the ONLY ground for one unit.
+    if (!canRideTo(unit, tile, board)) return false;
+
     // Terrain passability logic
     let canPassTerrain = true;
     if (tDef && !tDef.isWalkable) {
@@ -254,7 +429,10 @@ const isTilePassable = (x: number, y: number, unit: Unit, units: Unit[], board: 
     // Check Unit Collision. Landing on an occupied tile is forbidden for everyone; the
     // movement code walks the path back to the last free step.
     if (!ignoreUnits && !canCrossBodies(unit)) {
-        const occupant = getUnitAt({x, y}, units);
+        // Solid, not present: a burrowed body is not standing there as far as anything above
+        // the sand is concerned. getValidMoves runs through here, so leaving it out puts an
+        // unexplained hole in every hero's move range on the one tile showing nothing.
+        const occupant = getSolidUnitAt({x, y}, units);
         if (occupant && occupant.id !== unit.id) return false;
     }
 
@@ -295,6 +473,20 @@ export const canStopOn = (
     if (terrainDefs[tile.terrain]?.isWalkable) return true;
     return unit.movementType === 'AMPHIBIOUS' && tile.terrain === 'WATER';
 };
+
+/**
+ * Is this unit currently held to the rails?
+ *
+ * `movementType === 'RAIL'` alone is NOT the answer, and that gap is the whole design of the
+ * rule. The leash only bites once the unit is STANDING on rail: a cart placed on open ground
+ * walks to the nearest track like anything else, and only then can never leave it.
+ */
+export const isRailBound = (unit: Unit, board: TileData[]): boolean =>
+    unit.movementType === 'RAIL' && getTileAt(unit.position, board)?.terrain === 'RAIL';
+
+/** May this unit enter this tile, asking the RAIL rule and nothing else? True for everyone else. */
+export const canRideTo = (unit: Unit, tile: TileData | undefined, board: TileData[]): boolean =>
+    !isRailBound(unit, board) || tile?.terrain === 'RAIL';
 
 // --- PATHFINDING (BFS with Path Reconstruction) ---
 export const findPath = (
@@ -373,11 +565,19 @@ export const getValidMoves = (
         return [];
     }
 
+    // SLOW costs distance rather than the turn — that is the whole difference between a chill
+    // and a freeze. It has to cost the SQUAD what it costs the horde: turnManager PHASE 4 halves
+    // an enemy's range on exactly this rule, while a slowed plant walked its full range because
+    // nothing on this side of the board ever read the status. Same formula, floored at 1: a
+    // chill must never root anything, that is what STUN is for.
+    const slowed = unit.statusEffects?.includes('SLOW');
+
     const moves: Position[] = [];
     const queue: { x: number, y: number, dist: number }[] = [{ x: unit.position.x, y: unit.position.y, dist: 0 }];
     const visited = new Set<string>();
     visited.add(`${unit.position.x},${unit.position.y}`);
-    const moveRange = unit.moveRange || 2; 
+    const baseRange = unit.moveRange || 2;
+    const moveRange = slowed ? Math.max(1, Math.floor(baseRange / 2)) : baseRange;
 
     while (queue.length > 0) {
         const current = queue.shift()!;
@@ -468,6 +668,23 @@ export const getValidSkillTargets = (
 ): Position[] => {
     if (unit.hasAttacked || (unit.digestingTurns && unit.digestingTurns > 0) || unit.statusEffects?.includes('STUN') || unit.statusEffects?.includes('DORMANT')) return [];
 
+    /**
+     * DUST VEIL, the player's half. A hero standing in the dust cannot aim either.
+     *
+     * Symmetric on purpose, and the symmetry is what makes the hazard a tool rather than a
+     * tax: the veil is worth walking into to deny a boss its swing, and the price for doing
+     * it is your own. An asymmetric version would be either a free wall or pure punishment,
+     * and neither is a decision.
+     *
+     * Only offensive skills are stopped — "blinds units, cancels attacks" (data/terrain.ts).
+     * A shield, a taunt or a harvest needs no line of sight and is left alone, which is also
+     * what keeps Gourdward and Thornhide from being switched off by weather.
+     */
+    if (skill.effects.some(e => e.type === 'DAMAGE')) {
+        const here = getTileAt(unit.position, board);
+        if (here?.smoke && here.smoke.turns > 0) return [];
+    }
+
     if (unit.class === UnitClass.SCAREDY_SHROOM) {
         const adjacentOffsets = [{x:1,y:0}, {x:-1,y:0}, {x:0,y:1}, {x:0,y:-1}];
         let isScared = false;
@@ -489,16 +706,28 @@ export const getValidSkillTargets = (
     const hasGlobalPush = skill.effects.some(e => e.type === 'GLOBAL_PUSH');
 
     const isValidTargetUnit = (u: Unit) => {
-        const isAllyTargeting = skill.effects.some(e => 
-            e.type === 'BUFF_STAT' || 
-            e.type === 'HEAL' || 
-            e.type === 'SHIELD' || 
-            e.type === 'REFRESH_ACTION' 
+        const isAllyTargeting = skill.effects.some(e =>
+            e.type === 'BUFF_STAT' ||
+            e.type === 'HEAL' ||
+            e.type === 'SHIELD' ||
+            e.type === 'REFRESH_ACTION'
         );
-        
+
         if (isAllyTargeting) {
             return !u.isEnemy && u.id !== unit.id;
         }
+        // FRIENDLY FIRE: a damaging skill may be aimed at whatever stands in its geometry,
+        // ally included (never the caster). Allied bodies already STOPPED every line shot —
+        // pretending the impact was then harmless made stray fire read as a glitch, and it
+        // let a careless lane assignment cost nothing. Positioning mistakes should bleed.
+        if (skill.effects.some(e => e.type === 'DAMAGE')) {
+            return u.id !== unit.id;
+        }
+        // A skill with NO damage at all is still an attack. Chardwall's free swing carries
+        // only PUSH — where the target lands is its whole payload — so it has to reach this
+        // branch and come back valid against anything hostile. It deliberately stops short of
+        // the friendly-fire rule above: shoving is not an accident you can make with an ally
+        // in the way, so a 0-damage skill only ever aims at enemies and obstacles.
         return u.isEnemy || u.type === UnitType.OBSTACLE;
     };
 
@@ -507,7 +736,7 @@ export const getValidSkillTargets = (
             for (let y = 0; y < 8; y++) {
                 const dist = Math.abs(x - unit.position.x) + Math.abs(y - unit.position.y);
                 if (dist > 0 && dist <= skill.rangeValue) {
-                    const obstacle = getUnitAt({x, y}, units);
+                    const obstacle = getSolidUnitAt({x, y}, units);
                     if (obstacle) {
                         if (isValidTargetUnit(obstacle)) {
                              targets.push({ x, y });
@@ -529,10 +758,19 @@ export const getValidSkillTargets = (
 
                 const tile = getTileAt({x: tx, y: ty}, board);
                 const obstacle = getUnitAt({x: tx, y: ty}, units);
+                // Two lookups, and the split matters most on DASH. `solid` is what may be SHOT
+                // — a burrowed body is not, and must not stop the lane either, or it becomes a
+                // wall nobody can see. `obstacle` is what OCCUPIES the tile, a different
+                // question the moment a skill wants to LAND there.
+                const solid = obstacle && !obstacle.isBurrowed ? obstacle : undefined;
 
                 if (tile && terrainDefs[tile.terrain]?.type === 'MOUNTAIN') break; 
                 
                 if (skill.rangeType === 'DASH') {
+                     // Neither a target nor a landing spot, and the lane carries on past it:
+                     // Rolling Charge rolls over the sand, and must not come to rest on top of
+                     // a body it could not see.
+                     if (obstacle?.isBurrowed) continue;
                      if (!obstacle) {
                          targets.push({ x: tx, y: ty });
                      } else {
@@ -540,8 +778,8 @@ export const getValidSkillTargets = (
                          break;
                      }
                 } else {
-                    if (obstacle) {
-                        if (isValidTargetUnit(obstacle)) {
+                    if (solid) {
+                        if (isValidTargetUnit(solid)) {
                             targets.push({ x: tx, y: ty });
                         }
                         if (!hasPierce) {
@@ -565,7 +803,7 @@ export const getValidSkillTargets = (
                 const tile = getTileAt({x: tx, y: ty}, board);
                 if (tile && terrainDefs[tile.terrain]?.type === 'MOUNTAIN') break;
 
-                const u = getUnitAt({x:tx, y:ty}, units);
+                const u = getSolidUnitAt({x:tx, y:ty}, units);
                 if (u) {
                     if (isValidTargetUnit(u)) targets.push({ x: tx, y: ty });
                     break;

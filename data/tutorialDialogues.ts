@@ -13,11 +13,14 @@ import { HERO_SPRITES, ICONS } from '../utils/icons';
  * t(), so an English dictionary could be added later without touching this file.
  *
  * Rules:
- *   - 3–6 lines per scene. It plays BEFORE the node, so it must never spoil the outcome
+ *   - 4–8 lines per scene. It plays BEFORE the node, so it must never spoil the outcome
  *     of the board itself (board 2 does not announce the death it is about to script).
- *     The shop and campfire scenes run to six because those nodes now teach a mechanic
- *     rather than just setting a mood — the extra lines are the rule the overlay is about
- *     to make the player perform, said once in a character's voice first.
+ *     Length follows the job: a scene that only sets a mood stays at four, while the shop
+ *     and campfire run longer because those nodes teach a mechanic — the extra lines are
+ *     the rule the overlay is about to make the player perform, said once in a character's
+ *     voice first. Board 4 is the longest at eight, and it earns them: it is where Ironhusk
+ *     walks on. He is in no squad before it, so without an introduction the player met a
+ *     stranger already giving orders.
  *   - A scene shows once per run. Skippable with one click.
  */
 
@@ -54,70 +57,75 @@ export const TUTORIAL_DIALOGUES: Record<string, DialogueLine[]> = {
     // intro comic's final rooftop panel, explains the map symbols, and states the run's
     // goal — follow the path, find the lost squadmates, take the world back.
     tut_map: [
-        { ...GS, side: 'left', text: 'Đây là những gì còn lại của thành phố — từng điểm sáng nối nhau thành một con đường. Đường chỉ có tiến, không có lùi.' },
-        { ...GS, side: 'left', text: 'Nhìn ký hiệu mà chọn lối: KIẾM là giao tranh. TÚI VÀNG là trạm tiếp tế. LỀU là điểm nghỉ an toàn. DẤU HỎI là tín hiệu chưa rõ — có thể là quà, có thể là bẫy.', highlight: ['BATTLE', 'SHOP', 'CAMPFIRE', 'EVENT'] },
-        { ...GS, side: 'left', text: 'Còn VƯƠNG MIỆN đỏ ở cuối đường... là thứ đã xé nát quảng trường đêm đó.', highlight: ['BOSS'] },
-        { ...GS, side: 'left', text: 'Đêm tháo chạy, tôi lạc mất các bạn mình. Họ vẫn còn sống ngoài kia — tôi tin vậy.' },
-        { ...GS, side: 'left', text: 'Đi theo con đường. Tìm từng người một. Rồi cùng nhau giành lại thế giới này.' },
+        { ...GS, side: 'left', text: '(Trỏ tay về phía dải tàn tích) Nhìn xem... Đây là tất cả những gì còn lại. Những chấm sáng tàn úa nối liền thành con đường độc đạo. Đã bước lên đây, chỉ có tiến, không có lùi.' },
+        { ...GS, side: 'left', text: 'Hãy nhìn kỹ từng dấu vết trên bản đồ: KIẾM THÉP là nơi máu rơi. TÚI VÀNG là trạm tiếp tế của lão già Old Mulch. MÁI LỀU là chút bình yên hiếm hoi để dưỡng thương. Còn DẤU HỎI... là định mệnh chưa báo trước.', highlight: ['BATTLE','SHOP','CAMPFIRE','EVENT'] },
+        { ...GS, side: 'left', text: 'Và VƯƠNG MIỆN ĐỎ rực ở cuối chân trời... chính là ác mộng đã xé nát Quảng trường Neon đêm đó.', highlight: ['BOSS'] },
+        { ...GS, side: 'left', text: 'Đêm tháo chạy... tôi đã để lạc mất họ. Nhưng tôi tin, ở đâu đó trong bóng tối này, đồng đội của chúng ta vẫn đang chiến đấu.' },
+        { ...GS, side: 'left', text: 'Dấn bước thôi. Tìm lại từng người một, gom góp chút tàn lực cuối cùng để giành lại thế giới này!' },
     ],
 
     tut_1: [
-        { ...SF, side: 'left', text: '...đầu óc quay cuồng... tôi không đứng dậy nổi...' },
-        { ...GS, side: 'right', text: 'Nằm yên. Có tôi ở đây.' },
-        { ...ZOMBIE, side: 'left', text: 'Nãooo...' },
-        { ...GS, side: 'right', text: 'Chúng tới rồi. Chỉ cần sống qua ba lượt — tôi lo phần còn lại.' },
+        { ...GS, side: 'left', text: '(Phủi lớp tro tàn, giật mình) Sunspot?! Cậu còn sống sao?! Cố lên, mở mắt ra nhìn tôi này!' },
+        { ...SF, side: 'right', text: '(Mở mắt tiều tụy, thốt lên) ...Shadeleaf...? Là cậu thật sao... Đầu óc tôi quay cuồng quá... không còn chút sức lực nào để đứng dậy...' },
+        { ...GS, side: 'left', text: '(Nắm chặt tay Sunspot, giơ súng che chắn) Nằm yên đó! Đã có tôi ở đây. Không kẻ nào được chạm vào cậu!' },
+        { ...ZOMBIE, side: 'right', text: '(Tiếng gầm rú khàn đục trồi lên từ màn sương) Naõooo... thịt tươi...' },
+        { ...GS, side: 'left', text: 'Chúng ngửi thấy mùi sống rồi. Chỉ cần trụ vững ba lượt đấu — tôi sẽ dọn sạch lũ quái vật này!' },
     ],
 
     tut_2: [
-        { ...SF, side: 'left', text: 'Tôi khỏe lại rồi! Lần này để tôi giúp.' },
-        { ...GS, side: 'right', text: 'Nghe kỹ. Zombie không đi lung tung — chúng đánh hơi thấy NÃO.' },
-        { ...SF, side: 'left', text: 'Vậy... mấy cái hố trên mặt đất kia là gì?' },
-        { ...GS, side: 'right', text: 'Nơi chúng chui lên. Đứng chắn lên miệng hố là bịt được. Đi thôi.' },
+        { ...SF, side: 'left', text: '(Gia tăng hào quang, gật đầu) Năng lượng đã hồi phục rồi! Lần này tôi sẽ không làm gánh nặng nữa!' },
+        { ...GS, side: 'right', text: 'Ghi nhớ này: Zombie không lang thang vô định. Chúng lao thẳng theo mùi hương của các CĂN NHÀ.' },
+        { ...SF, side: 'left', text: '(Chỉ xuống đất) Nhìn kìa... mấy cái hố đen ngòm nứt nẻ kia là sao?' },
+        { ...GS, side: 'right', text: 'Nơi lòng đất thối rữa đẻ ra quái vật. Đứng đè lên miệng hố là khóa chặt đường sống của chúng. Đi thôi!' },
     ],
 
     tut_3: [
-        { ...DAVE, side: 'right', text: 'HÀNG NÓNG ĐÂYYYY! Ơ kìa... thiếu một người thì phải?' },
-        { ...SF, side: 'left', text: '...Shadeleaf đã không qua khỏi.' },
-        { ...DAVE, side: 'right', text: 'Nghe chú nói này nhóc. Cây dự bị không thay được NGƯỜI — nhưng thay được VỊ TRÍ. Ai đó phải đứng vào chỗ trống.' },
-        { ...DAVE, side: 'right', text: 'Kệ trên là CÂY: ra trận thay người, sống sót thì về ghế đánh tiếp. Nhưng chúng còn non — mỗi chuyến ra ngoài hít bụi độc là rụng một máu, không tự lại được. Kệ dưới là VẬT PHẨM: nổ một phát rồi hết.' },
-        { ...SF, side: 'left', text: 'Vậy cháu tiêu hết chỗ Xu này được không?' },
-        { ...DAVE, side: 'right', text: 'ĐỪNG. Đường còn dài, và có những thứ chỉ mua được bằng Xu để dành. Chú nói vậy thôi.' },
+        { ...DAVE, side: 'left', text: '(Rít một hơi thuốc rập rờn khói, nhìn quanh) HÀNG NÓNG ĐÂY! Hè hè... ơ kìa, sao đám nhóc lại thiếu mất một bóng người rồi?' },
+        { ...SF, side: 'right', text: '(Gục đầu, nghẹn ngào) ...Shadeleaf... cô ấy đã ngã xuống để bảo vệ cháu...' },
+        { ...DAVE, side: 'left', text: '(Thở dài, nét mặt trầm xuống) Nghe chú dặn này nhóc. Cây dự bị không bao giờ thay thế được MỘT LINH HỒN — nhưng nó gánh được VỊ TRÍ. Trận chiến không chờ ai đau thương cả.' },
+        { ...DAVE, side: 'left', text: 'Kệ trên là CÂY: thay người ra trận, sống sót thì lui về dưỡng sức. Nhưng chúng non lắm, mỗi đợt hít bụi độc là rụi một nấc máu. Kệ dưới là VẬT PHẨM: nổ một phát là tan thành mây khói.' },
+        { ...SF, side: 'right', text: 'Cháu... cháu tiêu hết chỗ Xu này để mua sạch đồ được không?' },
+        { ...DAVE, side: 'left', text: 'ĐỪNG ngốc thế! Chặng đường phía trước còn dài lắm. Có những thứ sinh tử chỉ mua được bằng Xu tích trữ. Nhớ lấy lời lão già này!' },
     ],
 
     tut_4: [
-        { ...WK, side: 'left', text: 'Từ giờ tôi đi đầu. Không ai gục thêm nữa.' },
-        { ...SF, side: 'right', text: 'Ba con, hai căn nhà, hai hướng... mình không kịp cứu cả hai đâu.' },
-        { ...WK, side: 'left', text: 'Ừ. Đánh trận là phải chọn. Nghe kỹ này: mỗi quả não mất là mất VĨNH VIỄN. Hết cả 5 quả — thua trắng cả hành trình.' },
-        { ...WK, side: 'left', text: 'Và nếu để chúng ăn sạch não ngay trong MỘT trận... cũng kết thúc luôn tại đó.' },
-        { ...WK, side: 'left', text: 'Khiên của tôi không giết nổi ai, nhưng ĐẨY được tất cả. Cú đẩy văng theo hướng từ TÔI ra — đứng sai phía là tự tay hất nó vào nhà.' },
-        { ...SF, side: 'right', text: 'Còn quả Mìn Khoai Tây mua hôm trước — gài xuống đất, con nào giẫm phải thì tự nổ. Để dành cho con trâu nhất ấy.' },
+        { ...SF, side: 'left', text: '(Bước đi trên tàn tích, ôm chậu cây dự bị vừa mua, nghẹn ngào) Shadeleaf mất rồi... một mình tôi làm sao tiếp tục hành trình này đây...' },
+        { ...WK, side: 'right', text: '(Bước ra từ hốc đá nứt, cắm phập tấm khiên thép xuống đất) Cô không đi một mình đâu, nhóc ạ.' },
+        { ...SF, side: 'left', text: '(Giật mình ngước nhìn) Anh... anh là Ironhusk! Anh cũng thoát khỏi đợt tấn công ở Quảng trường sao?!' },
+        { ...WK, side: 'right', text: '(Gật đầu trầm lắng) Tôi đuổi theo tiếng súng từ Cái Hố, nhưng tiếc là... đến không kịp để cứu cô ấy. Từ giờ, tôi sẽ đi đầu — không một ai được phép ngã xuống nữa!' },
+        { ...SF, side: 'left', text: '(Lau nước mắt, ánh mắt kiên định hơn) Cảm ơn anh... Nhưng nhìn kìa! Ba tên quái vật đang dồn vào hai căn nhà ở hai hướng... mình không thể cứu cả hai!' },
+        { ...WK, side: 'right', text: 'Đúng vậy. Chiến trường đòi hỏi sự đánh đổi. Mỗi Căn Nhà mất đi là mất vĩnh viễn. Mất sạch 5 Căn Nhà — toàn bộ chiến dịch sụp đổ!' },
+        { ...WK, side: 'right', text: 'Tấm khiên của tôi không hạ sát ai được, nhưng đòn ĐẨY lùi có thể chuyển hướng chúng. Hướng đẩy tính từ vị trí TÔI đứng — đứng sai góc là tự tay hất quái vào nhà!' },
+        { ...SF, side: 'left', text: 'Còn quả Mìn Khoai Tây mua từ xe hàng lão Mulch — gài xuống đất, kẻ nào giẫm lên sẽ nổ tung. Phải dành riêng cho con trâu nhất!' },
     ],
 
     tut_5: [
-        { ...PENNY, side: 'right', text: 'TÍCH... TÍCH... Xin chào. Tôi là Chrona — cỗ máy thời gian.' },
-        { ...SF, side: 'left', text: 'Máy... thời gian?' },
-        { ...PENNY, side: 'right', text: 'Dòng thời gian này đang mục rữa. Nhưng tôi còn giữ lại được một thứ mà các bạn tưởng đã mất. Lại gần xem đi.' },
-        { ...SF, side: 'left', text: 'Cái này... là một lựa chọn à? Cháu chọn sai thì sao?' },
-        { ...PENNY, side: 'right', text: 'Sự kiện luôn nói trước bạn ĐƯỢC gì và MẤT gì. Đọc kỹ, rồi chọn. Không có nút quay lại.' },
+        { ...PENNY, side: 'left', text: '(Tiếng bánh răng vang lên tích tắc, bóng dáng bí ẩn bước ra từ sương mù) TÍCH... TÍCH... Xin chào những kẻ sống sót. Ta là Chrona — kẻ nắm giữ những mảnh vỡ thời gian.' },
+        { ...SF, side: 'right', text: '(Kinh ngạc) Thời gian...? Cô có thể đảo ngược quá khứ sao?' },
+        { ...PENNY, side: 'left', text: 'Dòng thời gian này đang tan rữa. Nhưng trong lòng bàn tay ta, linh hồn đã mất của các người vẫn chưa hoàn toàn tan biến. Lại gần đây...' },
+        { ...SF, side: 'right', text: 'Đây là... một sự lựa chọn? Nếu chúng cháu chọn sai thì sao?' },
+        { ...PENNY, side: 'left', text: 'Mỗi sự kiện đều hiện rõ cái giá phải trả và điều nhận lại. Hãy nhìn cho kỹ rồi quyết định. Thời gian không có nút quay lại đâu.' },
     ],
 
     tut_6: [
-        { ...WK, side: 'left', text: 'Nghỉ ở đây. Có lửa, có tường chắn. An toàn.' },
-        { ...GS, side: 'right', text: '...Tôi bỏ lỡ gì không?' },
-        { ...SF, side: 'left', text: 'SHADELEAF!! Cậu... cậu thật sự trở lại rồi!' },
-        { ...PENNY, side: 'right', text: 'Ghi chú kỹ thuật: cây mua được chỉ HỢP NHẤT được ở điểm nghỉ như thế này. Không ai phẫu thuật giữa chiến trường cả.' },
-        { ...GS, side: 'right', text: 'Hợp nhất... nghĩa là cái cây đó biến mất khỏi ghế dự bị?' },
-        { ...PENNY, side: 'right', text: 'Đúng — và ghép thì cần cây LÀNH LẶN. Cây đã ra trận sứt mẻ phải ngủ một đêm bên lửa cho đầy máu đã. Càng dùng làm dự bị lâu, càng phải trả giá để ghép.' },
+        { ...WK, side: 'left', text: '(Đặt tảng đá lớn chặn gió, đốt lên đống lửa) Tạm nghỉ tại đây. Đống lửa này sẽ giữ ấm và xua đuổi bóng tối.' },
+        { ...GS, side: 'right', text: '(Từ trong bước ra, xoa cổ tay) ...Tôi... tôi đã bỏ lỡ điều gì sao?' },
+        { ...SF, side: 'left', text: '(Oà khóc chạy đến) SHADELEAF!! Cậu... cậu thực sự đã trở về từ cõi chết!' },
+        { ...PENNY, side: 'right', text: 'Ghi chú kỹ thuật: Các chiến sĩ dự bị chỉ có thể HỢP NHẤT năng lượng tại những điểm nghỉ an toàn như thế này. Không ai có thể ghép tế bào giữa mưa đạn.' },
+        { ...GS, side: 'left', text: 'Hợp nhất... nghĩa là linh hồn cây dự bị sẽ hòa làm một với tôi?' },
+        { ...PENNY, side: 'right', text: 'Chính xác. Nhưng ghép cần một cơ thể LÀNH LẶN. Cây bị thương phải ngủ một đêm bên lửa hồng mới đủ sức tiếp nhận sức mạnh mới.' },
     ],
 
     tut_7: [
-        { ...WK, side: 'left', text: '...Mặt đất đang rung. Cảm nhận thấy không?' },
-        { ...GARG, side: 'right', text: 'GRAAAAAH.' },
-        { ...GS, side: 'left', text: 'Hai mươi máu. Thứ đó... chúng ta không hạ nổi.' },
-        // Ironhusk's whole kit is the shove — and the boss is the one thing it cannot move.
-        // Said BEFORE the fight so the on-board IMMUNE popup reads as confirmation, not bug.
-        { ...WK, side: 'left', text: 'Khiên của tôi đẩy được mọi thứ... nhưng thứ đó quá to. Nó sẽ không lùi một bước nào đâu.' },
-        { ...PENNY, side: 'right', text: 'Chính xác. Và khi thua, tôi sẽ NHẢY — quay ngược dòng thời gian, làm lại từ đầu. Thua không phải kết thúc. Thua là dữ liệu.' },
-        { ...WK, side: 'left', text: 'Vậy thì trước khi tua lại... cho nó biết mùi đã.' },
+        { ...WK, side: 'left', text: '(Cắm chặt khiên xuống đất) ...Mặt đất rên siết. Cả ngọn núi đang rung chuyển... Cảm nhận thấy không?' },
+        { ...GARG, side: 'right', text: '(Tiếng gầm văng vẳng xé rách màng nhĩ) GRAAAAAAAAAAAAHHH!' },
+        { ...GS, side: 'left', text: '(Giơ súng, tay run nhẹ) Hai mươi lăm đơn vị sinh lực... Một quái vật khổng lồ... Chúng ta không thể hạ gục nó!' },
+        { ...WK, side: 'right', text: 'Tấm khiên của tôi đẩy lùi được muôn loài... nhưng thân hình nó quá đồ sộ. Nó sẽ không lùi dẫu chỉ một bước!' },
+        { ...PENNY, side: 'left', text: '(Tiếng tích tắc dồn dập) Khi cái chết cận kề, ta sẽ KÍCH HOẠT VÒNG LẶP — tua ngược dòng thời gian về điểm khởi đầu. Thua cuộc không phải kết thúc. Thua cuộc là dữ liệu để sinh tồn!' },
+        // The rewind BUTTON she is about to hand over mid-battle (turn 2 teaches it):
+        // promised here first, so the cyan control appearing beside End Turn reads as
+        // her gift, not as a random new widget.
+        { ...PENNY, side: 'left', text: 'Và một món quà nhỏ: ta luôn lưu giữ KHOẢNH KHẮC ĐẦU MỖI LƯỢT. Lỡ tay đi sai một nước — cứ gọi ta TUA LẠI. Mỗi trận, đúng một lần.' },
+        { ...WK, side: 'right', text: '(Nghiến răng, giơ cao khiên) Vậy thì trước khi thời gian quay ngược... hãy cho gã khổng lồ này biết thế nào là sự kiên cường của chúng ta!' },
     ],
 };

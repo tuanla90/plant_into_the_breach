@@ -20,8 +20,10 @@ export enum UnitClass {
   TALL_NUT = 'TALL_NUT', 
   ENDURIAN = 'ENDURIAN', 
   SWEET_POTATO = 'SWEET_POTATO', 
-  IRON_NUT = 'IRON_NUT', 
-  PUMPKIN = 'PUMPKIN', 
+  IRON_NUT = 'IRON_NUT',
+  PUMPKIN = 'PUMPKIN',
+  /** Chard Guard. The only plant whose whole job is moving somebody else. */
+  CHARD_GUARD = 'CHARD_GUARD',
   CHOMPER = 'CHOMPER',
   BONK_CHOY = 'BONK_CHOY',
   SUNFLOWER = 'SUNFLOWER',
@@ -33,6 +35,16 @@ export enum UnitClass {
   UMBRELLA_LEAF = 'UMBRELLA_LEAF',
   TORCHWOOD = 'TORCHWOOD',
   
+  /**
+    * A crate of gear left on the board. Not a plant and not a zombie: it cannot move, cannot
+    * act, and has no skills — it is a body with hit points and a thing inside it.
+    *
+    * Its own class rather than a flag on an existing plant, because the horde has to WANT it
+    * (turnManager's goal scan reads the class) and the player must never be able to select it
+    * and wonder why the action bar is empty.
+    */
+  GEAR_CRATE = 'GEAR_CRATE',
+
   BASIC_ZOMBIE = 'BASIC_ZOMBIE',
   CONEHEAD = 'CONEHEAD',
   BUCKETHEAD = 'BUCKETHEAD',
@@ -45,6 +57,24 @@ export enum UnitClass {
   BALLOON_ZOMBIE = 'BALLOON_ZOMBIE',
   CATAPULT_ZOMBIE = 'CATAPULT_ZOMBIE',
   FLAG_ZOMBIE = 'FLAG_ZOMBIE', 
+  /** The Headliner. A Disco Zombie with a stage, an aura, and twenty times the health. */
+  DISCO_ZOMBOSS = 'DISCO_ZOMBOSS',
+  /** Cinder Colossus. Leaves the ground burning behind it. */
+  CINDER_COLOSSUS = 'CINDER_COLOSSUS',
+  /** Voltmaw. The board is its circuit — a tile that pays you is a tile it can reach. */
+  VOLTMAW = 'VOLTMAW',
+  /** Yeti. Freezes a hero on one turn and breaks them on the next. */
+  YETI = 'YETI',
+  /** Ironcart. Artillery on wheels — it only leaves the rail feet first. */
+  IRONCART = 'IRONCART',
+  /** Clockjaw. Two hands, two blows, both telegraphed and neither preventable. */
+  CLOCKJAW = 'CLOCKJAW',
+  /** The Armada. Flies until the gas is shot out of it, then it is furniture with a temper. */
+  ARMADA = 'ARMADA',
+  /** Sandreaver. It does not walk around your line; it comes up inside it. */
+  SANDREAVER = 'SANDREAVER',
+  /** Blightlord. The one who walked backwards through time, and the last thing standing. */
+  BLIGHTLORD = 'BLIGHTLORD',
   GARGANTUAR = 'GARGANTUAR',
   IMP = 'IMP',
   ROCK = 'ROCK',
@@ -52,17 +82,67 @@ export enum UnitClass {
 }
 
 export type UnitRole = 'MELEE' | 'SHOOTER' | 'SUPPORT' | 'TACTICAL' | 'ENEMY';
-export type WorldType = 'GRASS' | 'ICE' | 'VOLCANO' | 'DESERT';
+/**
+ * A sector of the campaign. Each one owns a hazard (data/hazards.ts) and a pool of
+ * hand-authored boards (data/maps.ts); PLAN-boards-bosses.md section 1 lays out which act
+ * of which stage each belongs to.
+ *
+ * NEON and RUIN are the same city twice: lit and intact, then shelled and collapsing. They
+ * are two sectors rather than one because the pair is the point — an even, readable grid
+ * against a board with no straight line left in it.
+ */
+export type WorldType =
+    // Stage I — the Green Belt
+    'GRASS' | 'DESERT' | 'VOLCANO'
+    // Stage II — the Far Shore
+    | 'COAST' | 'THORN' | 'ICE'
+    // Stage III — the City
+    | 'NEON' | 'RUIN' | 'GRID';
 export type StatusEffectType = 'BURN' | 'FREEZE' | 'STUN' | 'HYPNOTIZED' | 'ENRAGED'
     /** Halves movement for a turn. Weaker than STUN, which removes the turn entirely. */
     | 'SLOW'
+    /**
+     * Forced to come at whoever taunted it, ignoring the brain it actually wants.
+     *
+     * This is the only status that redirects an enemy rather than delaying it, and it exists
+     * because three unit types are built specifically to walk AROUND a blocker: the Balloon
+     * flies, the Digger teleports, the Catapult outranges. A wall answers none of them. The
+     * taunter's id is on `Unit.tauntedBy` — the status alone cannot say who to go after.
+     */
+    | 'TAUNTED'
     /**
      * Cannot act at all, and never recovers on its own. Unlike STUN (one turn) and FREEZE
      * (until hit), nothing clears this — it is set by scripted content for a unit the player
      * has to protect rather than command.
      */
-    | 'DORMANT';
-export type MovementType = 'WALKING' | 'FLYING' | 'AMPHIBIOUS' | 'TELEPORT';
+    | 'DORMANT'
+    /**
+     * This hero's ELEMENT is cut. The body, the skills and the fusions are untouched — only
+     * the rider the element grafts on (utils/elements.ts, rules L1/L2) stops arriving.
+     *
+     * A status and not a unit flag, because it has to travel the same road every other
+     * affliction does: telegraphed a turn ahead as `statusOnHit`, refused by STATUS immunity,
+     * shown on the unit, and carried in the one field the reducer already syncs. A bespoke
+     * boolean would have needed its own telegraph, its own immunity check and its own UI.
+     *
+     * Deliberately NOT cleared by the turn reset: the reset spends STUN and SLOW because those
+     * are one-turn delays. This one is a theft, and it lasts the fight — which is the whole
+     * threat of the Blightlord's second phase.
+     */
+    | 'SEVERED';
+export type MovementType = 'WALKING' | 'FLYING' | 'AMPHIBIOUS' | 'TELEPORT'
+    /**
+     * Rides a rail line and nothing else: it may only ever ENTER a `TerrainType.RAIL` tile.
+     *
+     * Not a movement upgrade — a leash. Ironcart moves 3 where a Gargantuar moves 2, along
+     * exactly one line, and a body parked on that line is a wall it cannot go round.
+     *
+     * The rule only arms once the unit is STANDING on rail (`isRailBound`, utils/gameLogic.ts).
+     * Off the track it walks like anything else, which is what lets it reach the track from
+     * whatever spawn tile it was placed on — four of arena_ironcart's ten have no rail beside
+     * them, and a cart locked to rail from turn one would be a statue on those.
+     */
+    | 'RAIL';
 /**
  * NOTE: 'FREEZE' covers STUN/FREEZE only — it does NOT stop SLOW. Something too heavy to
  * freeze solid can still be chilled into moving slower, and having one immunity blank both
@@ -70,6 +150,25 @@ export type MovementType = 'WALKING' | 'FLYING' | 'AMPHIBIOUS' | 'TELEPORT';
  * game at once. 'STATUS' is the one that stops everything — that is what it is for.
  */
 export type UnitImmunity = 'BURN' | 'FREEZE' | 'DROWN' | 'PUSH' | 'STATUS';
+
+/**
+ * THE THREE ELEMENTS (PLAN-progression.md section 3).
+ *
+ * An element is a RULE applied to a whole hero, never a hand-authored kit. That distinction is
+ * the only reason the system is affordable: nine heroes times three elements would be 27 kits
+ * to design, balance, describe and draw — as three rules, all 36 configurations fall out for
+ * free, and "an all-ice squad" becomes a strategy rather than a colour scheme.
+ *
+ * The price is MAX HEALTH, and it is deliberately not damage. Damage runs 0..2 across this
+ * roster, so a flat deduction would be -100% for Ironhusk and -0% for Sunspot — not a price, a
+ * lottery. Everyone has health, everyone has several, and health persists between battles.
+ *
+ * The amount lives in ONE place, `ELEMENT_HP_COST` in utils/elements.ts, and is quoted nowhere
+ * else — not here, not in the element descriptions, not in the UI. It has already been retuned
+ * once (hero health doubled), and every copy of it is a chance for the screen to contradict
+ * itself in a game that promises perfect information.
+ */
+export type ElementId = 'ICE' | 'FIRE' | 'LIGHTNING';
 
 export interface Position {
     x: number;
@@ -106,6 +205,27 @@ export interface TileData {
      * it all count, because they all move through the same UNIT_MOVE/spawn paths.
      */
     trap?: { damage: number; imgUrl: string };
+    /**
+     * Spines left across a tile by Thornquill. Unlike `trap` this is NOT consumed by the first
+     * body through it — it hurts everything that enters while it lasts, and expires on its own.
+     * That difference is the whole point: a trap is one answer to one zombie, spikes are a
+     * piece of ground the enemy has to route around.
+     */
+    spikes?: { damage: number; turns: number };
+    /**
+     * Dust hanging over this tile (DUST_VEIL). Rides beside `environment: 'SMOKE'` rather
+     * than replacing it: the environment is what the tile LOOKS like and what Tile.tsx has
+     * always drawn, the counter is how long it lasts. Same split spikes make against terrain,
+     * and for the same reason — one of the two is on a clock and the other is not.
+     */
+    smoke?: { turns: number };
+    /**
+     * Sea standing over this tile (TIDE). `was` is the ground underneath, and it is the whole
+     * reason this is a field rather than a plain MODIFY_TERRAIN to WATER: the tide goes back
+     * out, and a hazard that could not name what it covered would have to guess on the way
+     * down. Guessing 'GRASS' would quietly pave over sand, bridge and rail.
+     */
+    flood?: { turns: number; was: TerrainType };
 }
 
 export interface Unit {
@@ -126,18 +246,110 @@ export interface Unit {
   statusEffects: StatusEffectType[];
   movementType: MovementType;
   immunities: UnitImmunity[];
+  /**
+   * Nothing can hurt this unit right now. Checked in `calculateDamage`, which is the single
+   * door every source of damage in the game goes through — hazards, thorns, blasts, drowning
+   * and skills alike — so it cannot be routed around by adding a tenth way to deal damage.
+   *
+   * Set for exactly one turn between the Blightlord's phases: the body is reforming, and the
+   * turn the player cannot spend on it is what makes three 12-HP bosses feel like three
+   * bosses rather than one 36-HP bar.
+   */
+  invulnerable?: boolean;
+  /**
+   * The Blightlord's phase-3 anchor: what this unit looked like at the START of last turn.
+   * Restored at the end of every turn the squad failed to land enough on it at once.
+   */
+  rewindMark?: { hp: number; position: Position };
+  /** Which phase this boss was in last turn, so a crossing can be noticed exactly once. */
+  bossPhase?: number;
+  /**
+   * A plant that was already on the board when the fight started and does not belong to the
+   * squad — a survivor rooted where it grew. It begins DORMANT and wakes when one of your
+   * heroes ends a turn beside it, after which it fights on your side for the rest of the
+   * battle and is gone when the battle is.
+   *
+   * It is NOT a bench plant and never becomes one: nothing about it is spent, carried or
+   * healed between fights, so it can be generous without touching the run's economy.
+   */
+  isWild?: boolean;
+  /** What this crate is carrying, paid into the bench if it is still standing at the end. */
+  gearMaterial?: MaterialId;
+  /** Turns of `invulnerable` still owed. Counted down by the boss's own end-of-turn hook. */
+  phaseGuard?: number;
   imgUrl: string;
   intent?: Intent;
   spawnDelay?: number;
   digestingTurns?: number;
+  /**
+   * Under the board.
+   *
+   * Untargetable and NON-SOLID together, never one without the other — `getSolidUnitAt`
+   * (utils/gameLogic.ts) is the single lookup that enforces both, and seven call sites go
+   * through it. A body you cannot shoot but still cannot walk through is an invisible wall,
+   * which is a worse bug than the one this flag exists to create: the player would see an
+   * unexplained hole in their own move range, on the one tile with nothing on it.
+   *
+   * The line it draws is "things that name a BODY miss; things that change the GROUND land".
+   * Spikes on the route, a mine on the tile it surfaces through, lava, and a TAUNT (which is a
+   * radius around the shouter and never asks what it can see) all still reach it. That is what
+   * keeps the buried turn a turn spent salting the ground rather than a turn spent watching.
+   */
   isBurrowed?: boolean;
+  /**
+   * The tile this unit has PROMISED to surface on, published a turn before it dives.
+   *
+   * Only Sandreaver's wounded phase sets it. It could have been re-derived each turn, and that
+   * is exactly the bug: re-deriving means re-choosing, against a squad that has since moved,
+   * and a telegraph the boss then declines to honour is worse than no telegraph at all.
+   */
+  burrowTarget?: Position;
   shield?: number;
+  /**
+   * Gas cells left on a lighter-than-air body (The Armada).
+   *
+   * NOT a shield, and the two must never be merged: a shield ABSORBS damage, a gas cell is
+   * spent BY damage getting through. Borrowing `shield` would have made the boss take three
+   * fewer points than the board said it did, and turned every Gourdward shell into balloons.
+   *
+   * At 0 the body falls: WALKING, no PUSH or DROWN immunity, one tile of movement, and a much
+   * heavier hit (utils/bossBehaviours.ts).
+   */
+  buoyancy?: number;
+  /**
+   * HP the last time `buoyancy` was audited — the end of the previous enemy turn.
+   *
+   * "One cell per TURN, however many hits" needs a way to ask "did anything get through since
+   * last time", and a boolean flag needs somebody to clear it on every path every turn. A
+   * high-water mark cannot fall out of step: hp only goes down, so `hp < mark` is true on
+   * exactly the rounds it was hurt — including by burn, spines and its own escort's blast,
+   * none of which a player-side flag would ever have seen.
+   */
+  buoyancyMark?: number;
   sunCharge?: number;
   prevPosition?: Position;
   visualOffset?: { x: number, y: number };
   isDying?: boolean;
   isAttacking?: boolean;
   isMassive?: boolean;
+  /**
+   * Which named boss this unit IS. Set only on the one body a boss encounter is about.
+   *
+   * Distinct from `isMassive`, which is a rules flag about being too big to eat, freeze or
+   * shove — Ironcart and The Headliner are bosses and neither is massive, while a future
+   * massive add would not be a boss. Two readers: SLAY_BOSS asks "is this the objective",
+   * and utils/bossBehaviours.ts asks "which behaviour do you run".
+   *
+   * Identity lives here rather than on the unit class because a class can serve both roles:
+   * the Headliner's own dance floor is full of ordinary Disco Zombies.
+   */
+  bossId?: BossId;
+  /**
+   * Turns this boss has acted for, counted from the moment it appeared. Behaviours with a
+   * rhythm — summon every other turn, phase on a beat — read it instead of the global turn
+   * number, so a boss that arrives mid-fight still starts its cycle at its own turn one.
+   */
+  bossClock?: number;
   /** Tiles this unit can strike from. 1 = melee (the default for everything that omits it). */
   attackRange?: number;
   /** True for the 3 squad heroes. Only heroes carry a hero skill and accept fusions. */
@@ -145,8 +357,72 @@ export interface Unit {
   heroId?: HeroId;
   /** Materials fused into this hero, in the order they were applied. */
   fusions?: MaterialId[];
+  /**
+   * Act upgrades taken this run (`data/heroUpgrades.ts` ids), in the order they were chosen.
+   *
+   * Beside `fusions` rather than folded into it, because the two are earned by different
+   * things and bounded by different rules — a fusion costs a bench plant and a slot, an
+   * upgrade costs a boss and may be taken once ever. They MERGE at `getFusionEffects`, which
+   * is the only place anything downstream reads either of them.
+   */
+  upgrades?: string[];
   /** Set on a bench plant deployed to fill a fallen hero's slot. */
   materialId?: MaterialId;
+  /**
+   * Id of the unit that taunted this one. Read together with the TAUNTED status: the status
+   * says "you are not walking to a brain this turn", this says who to go at instead. Ignored
+   * the moment the taunter is dead — otherwise a corpse would keep steering the enemy line.
+   */
+  tauntedBy?: string;
+  /**
+   * Damage dealt back to anything that hits this unit in melee, WITHOUT a fusion.
+   *
+   * RETALIATE_DAMAGE already exists as a fusion effect, but Thornhide retaliates because it is
+   * a durian — the thorns are the hero, not an upgrade bought for it. Fusion retaliation adds
+   * to this rather than replacing it.
+   */
+  retaliateDamage?: number;
+  /**
+   * Helmet armour: every WEAPON hit is reduced by this much, and unlike fusion armour it may
+   * reduce a hit to ZERO — a pea plinking off a bucket is the whole identity (brainstorm_balance
+   * § 2, the one idea from that document worth keeping). Environment ignores it on purpose:
+   * burn, lava and ground spikes cook or stab the body inside the helmet, which keeps FIRE and
+   * Thornquill's spike fields as the honest answers to an armoured lane.
+   */
+  armor?: number;
+  /**
+   * The element this hero carries into the battle, or undefined for the base form.
+   *
+   * Lives on the UNIT rather than on the skill because that is exactly what the rules say: an
+   * element is a property of the hero, so it reaches every source of damage they have —
+   * including Thornhide's retaliation, which no skill object is involved in at all (rule L4).
+   */
+  element?: ElementId;
+}
+
+/**
+ * One extra tile an intent lands on, carrying its OWN number.
+ *
+ * Five bosses were designed against this hole independently and each invented a different
+ * field for it — extra swings, splash, an arc, a bomb, an eruption. They are not five things.
+ * They are two, and the line between them is whether the hit provokes an answer:
+ *
+ *   - A BLAST is ground being hurt. No retaliation, no push, no element rider. Thorns answer
+ *     something that came and stood in front of you; they do not answer a shell, an arc across
+ *     the floor, or a bomb from altitude. That is this type.
+ *   - Several SWINGS are several attacks, each of which a defender may punish. That is a
+ *     different feature and it is not built yet — when it is, it belongs on `Intent` beside
+ *     this one and NOT folded into it, because collapsing the two is how a boss ends up
+ *     killing itself on spines it never touched.
+ *
+ * Positions, not unit ids: a telegraph in this game is a promise about GROUND, and a blast
+ * that followed the body it was aimed at would make stepping out of it pointless.
+ */
+export interface AreaHit {
+    pos: Position;
+    damage: number;
+    /** Also stuns whoever is standing there, immunities permitting. */
+    stun?: boolean;
 }
 
 export interface Intent {
@@ -158,6 +434,76 @@ export interface Intent {
     moveTo?: Position;
     /** Path it will take to `moveTo`, for drawing the route. */
     movePath?: Position[];
+    /** SPAWN: what arrives. Defaults to IMP, which is what the Gargantuar throws. */
+    spawnClass?: UnitClass;
+    /**
+     * SPAWN: every tile a body lands on. `target` stays the first of them so the existing
+     * single-tile readers (threat map, telegraph) keep working unchanged; anything that wants
+     * the whole set reads this.
+     */
+    spawnTiles?: Position[];
+    /**
+     * SPAWN: HP the arrival is built with, overriding its class definition.
+     *
+     * Exists for one summon and is written generically anyway: the Blightlord calls back the
+     * bosses you already beat as 4-HP echoes. Without it a summoned Voltmaw would arrive with
+     * Voltmaw's 26, i.e. the final fight would spawn a second final fight every turn.
+     */
+    spawnHp?: number;
+    /**
+     * Tiles this intent ALSO lands on, each with its own damage — see AreaHit.
+     *
+     * Read for every intent type, not just ATTACK: an arc rides an attack, but a grid
+     * discharging rides a WAIT, and the tiles are threatened either way. Deliberately not
+     * typed to any one boss; the GRID sector's SURGE hazard is the same effect with no unit
+     * behind it at all.
+     */
+    blast?: AreaHit[];
+    /**
+     * ATTACK: every tile this intent lands a SEPARATE, COMPLETE blow on, worth `damage` each.
+     *
+     * NOT a second spelling of `blast`, and the line between them is not how many tiles get
+     * hit — it is who answers back. A blast is one weapon reaching several squares: it pays no
+     * retaliation, carries no status rider, and cannot kill its own owner halfway through. A
+     * strike is a whole attack, so every rule in turnManager's ATTACK branch runs once per
+     * entry: thorns answer EACH beat, an ICE hero chills on each beat, and a boss that swings
+     * twice can bleed out between its own two hands.
+     *
+     * Merging the two would mean either billing a five-tile shell four retaliations, or taking
+     * retaliation away from the one hero a twice-acting boss exists to reward. Both are wrong,
+     * so they are two fields.
+     *
+     * `target` stays the FIRST strike, exactly as it stays the first of `spawnTiles`, so every
+     * single-tile reader keeps working untouched. Absent or empty means "one blow at `target`"
+     * for `damage` — which is every other unit in the game, and must stay bit-for-bit what it
+     * always was.
+     *
+     * `AreaHit[]`, the same shape as `blast`, so the two differ ONLY in how the engine resolves
+     * them — one provokes an answer, one does not — and not in how they are written or read.
+     * Per-tile numbers are not decoration either: a boss that comes up through the floor marks
+     * the hole at 0 and the ring around it at full, in one intent.
+     */
+    strikes?: AreaHit[];
+    /**
+     * ATTACK: tiles this blow shoves whatever it lands on, away from the attacker.
+     *
+     * Applies to `target` and to every entry in `strikes`. Routed through planPush/applyPushPlan
+     * like every other shove in the game, so it drowns, chains and hands over brains by identical
+     * rules — the same reason RETALIATE_PUSH is not hand-rolled either.
+     */
+    pushOnHit?: number;
+    /**
+     * ATTACK: statuses this blow lands alongside (or instead of) its damage.
+     *
+     * An enemy attack could only ever move a health bar, so "the boss freezes you" had nowhere
+     * to live but a special case inside turnManager — the exact shape data/bosses.ts and
+     * utils/bossBehaviours.ts exist to prevent. A list rather than one value because the next
+     * enemy that needs two should not need a second field.
+     *
+     * Damage stays in `damage` and is telegraphed from there, so a 0-damage intent that only
+     * applies a status is legal and fully telegraphed — which is exactly what a grip is.
+     */
+    statusOnHit?: StatusEffectType[];
 }
 
 export interface DamageEvent {
@@ -186,7 +532,7 @@ export interface VisualEffect {
     /** Grid coordinates, same convention as Unit.position: x = row, y = column. */
     x: number;
     y: number;
-    type: 'IMPACT' | 'EXPLOSION' | 'SLASH' | 'MUZZLE' | 'PUSH' | 'EMERGE' | 'DROWN';
+    type: 'IMPACT' | 'EXPLOSION' | 'SLASH' | 'MUZZLE' | 'PUSH' | 'EMERGE' | 'DROWN' | 'HIT_FIRE' | 'HIT_ICE' | 'HIT_ELEC' | 'HEAVY_SHAKE' | 'SHIELD_GRANT' | 'TAUNT_BURST';
     /** Degrees, 0 = pointing right. Only the directional types use it. */
     rotation?: number;
     /** ms. Already scaled by the fast-forward multiplier when it reaches the renderer. */
@@ -214,7 +560,13 @@ export interface GameState {
     maxTurns: number;
     selectedUnitId: string | null;
     selectedTile: Position | null;
-    screen: 'START_MENU' | 'SQUAD_SELECT' | 'MAP' | 'COMBAT' | 'SHOP' | 'GAME_OVER' | 'VICTORY' | 'TUTORIAL' | 'EVENT';
+    /**
+     * CAMP is where a CAMPFIRE node goes. It replaced the `rest_site` EVENT, which was one
+     * visit and one free choice — heal, or revive, or take 60 Coin, and the run moved on.
+     * Free choices are not decisions: with nothing at stake the answer was whichever box was
+     * empty at the time. The camp charges for all four services out of one purse instead.
+     */
+    screen: 'START_MENU' | 'STAGE_SELECT' | 'SQUAD_SELECT' | 'MAP' | 'COMBAT' | 'SHOP' | 'CAMP' | 'GAME_OVER' | 'VICTORY' | 'TUTORIAL' | 'EVENT';
     currentLevelId: string | null;
     currentWorld: WorldType;
     /** Map layer of the battle in progress, 1-based. Scales how many advanced zombies spawn. */
@@ -248,8 +600,23 @@ export interface GameState {
      * stopped existing, and the 75 Coin with her.
      */
     pendingRevives: HeroId[];
+    /**
+     * The act this run is aimed at, chosen on the campaign screen. It picks the stage the map
+     * generator lays out and names the boss waiting at the end of it; without one the run
+     * falls back to "wherever the save had got to", which is what happened before there was a
+     * screen to say otherwise.
+     */
+    targetBossId: BossId | null;
     /** Base plants bought but not yet fused or deployed. */
     bench: BenchPlant[];
+    /**
+     * Element chosen per hero for this run. A hero missing from the map is in its base form.
+     *
+     * Run-scoped, not save-scoped: the element is a build decision made when the squad is
+     * picked, and re-picking it every run is what makes "all-ice this time" a thing the player
+     * chooses rather than a state they drift into.
+     */
+    heroElements: Partial<Record<HeroId, ElementId>>;
     /** Rerolls already bought at the current shop; resets on entering a new shop. */
     shopRerolls: number;
     /** Material ids currently offered by the shop. */
@@ -278,6 +645,13 @@ export interface GameState {
     hazard: HazardTelegraph | null;
     /** What this battle is actually asking of the player. Null outside combat. */
     mission: Mission | null;
+    /**
+     * Per-hero ledger for the battle in progress, keyed by HeroId. Reset when a battle is set
+     * up, fed by TRACK_STAT actions (and by the engine for `damageTaken`), read by the boss
+     * victory report. Optional so every historical save and INITIAL_GAME_STATE spread stays
+     * valid — an absent ledger just means "nothing counted yet".
+     */
+    battleStats?: Partial<Record<HeroId, BattleHeroStats>>;
 }
 
 export interface TurnAction {
@@ -285,7 +659,17 @@ export interface TurnAction {
         /** A zombie reached a house: clear that house's brain and remove the zombie. */
         | 'BRAIN_LOST'
         /** In-combat Sun income (zombie kills, passive generators). */
-        | 'GAIN_SUN';
+        | 'GAIN_SUN'
+        /**
+         * A line in a hero's battle ledger (`GameState.battleStats`). Emitted AT THE SOURCE —
+         * the one place that still knows who caused what — because the action stream is
+         * anonymous by the time the engine applies it: an APPLY_DAMAGE carries a target and a
+         * number, and reverse-engineering its author from ordering ("the last UNIT_ATTACK
+         * wins") mis-books exactly the heroes the ledger exists to defend — a thorn answer or
+         * an arc lands right after the ZOMBIE's swing. No visuals, no wait; the engine just
+         * adds `amount` to `battleStats[heroId][stat]`.
+         */
+        | 'TRACK_STAT';
     unitId?: string;
     targetId?: string;
     targetPos?: Position;
@@ -299,11 +683,58 @@ export interface TurnAction {
     updates?: Partial<Unit>;
     environment?: EnvironmentType;
     terrain?: TerrainType;
+    /**
+     * Spines laid across `pos` by a MODIFY_TERRAIN action. Rides alongside `terrain` /
+     * `environment` rather than becoming one of them: the tile underneath is unchanged — grass
+     * that was grass stays grass — and it expires on a clock of its own, which neither of the
+     * other two do.
+     */
+    spikes?: { damage: number; turns: number };
+    /** Dust laid (or expiring) on `pos`. `turns: 0` is how the expiry writes "this is over". */
+    smoke?: { turns: number };
+    /** Sea laid (or receding) on `pos`. `turns: 0` recedes, and `terrain` carries it back. */
+    flood?: { turns: number; was: TerrainType };
     isForced?: boolean;
     resource?: 'SUN';
     /** How the attack should be animated. Lets the engine stay ignorant of unit classes. */
     attackRange?: SkillRangeType;
+    /**
+     * This UNIT_ATTACK is a lightning arc jumping onward, not the attack that started it.
+     *
+     * It exists only so the arc can SOUND different. Everything else about it is already a
+     * normal shot on purpose (it flies, it flashes), and without the flag the engine has no way
+     * to tell the two apart — an arc emits the same action, from the same caster, in the same
+     * tick as the blow that spawned it.
+     */
+    isArc?: boolean;
+    /** TRACK_STAT: whose ledger. Only heroes keep one — non-hero sources simply never emit. */
+    heroId?: HeroId;
+    /** TRACK_STAT: which line of the ledger `amount` lands on. */
+    stat?: BattleStatKey;
 }
+
+/**
+ * One hero's ledger for the current battle. The four counted things are chosen so every ROLE
+ * shows up in at least one column: damage flatters the shooters, kills flatter the finishers,
+ * pushes and cancelled intents are the only place Chardwall's 0-damage turns become visible —
+ * which is the reason the screen exists (a support's value is real but never printed anywhere).
+ *
+ * `damageTaken` is counted by the engine off plain APPLY_DAMAGE (the victim needs no
+ * attribution); the other four arrive as TRACK_STAT lines from whichever resolver knew the
+ * author. BURN ticks lit by a FIRE element are deliberately uncounted — a tick has no author
+ * by the time it fires, and a wrong ledger is worse than a short one.
+ */
+export interface BattleHeroStats {
+    damageDealt: number;
+    kills: number;
+    /** Enemy bodies shoved — by skill, or by the RETALIATE_PUSH answer. One per body, not per tile. */
+    pushes: number;
+    /** Telegraphed enemy turns removed: doused bosses. The invisible half of a shove's value. */
+    intentsCancelled: number;
+    damageTaken: number;
+}
+
+export type BattleStatKey = keyof BattleHeroStats;
 
 // ---------------------------------------------------------------------------
 // HEROES, FUSION MATERIALS, RUN STATE  (see DESIGN.md sections 2, 6, 7)
@@ -315,19 +746,51 @@ export type HeroId =
     | 'WALL_KNIGHT'
     | 'SOLAR_FLARE'
     | 'CHOMPZILLA'
-    | 'COLD_SNAP'
     /**
      * Cobb, the Kernel-pult. The only hero whose attacks ARC: every other attack in the game
      * is a straight line that stops at the first body in the way, including your own wall
      * (see getValidTargets' LINE branch). Unlocked from the third boss.
      */
-    | 'KERNEL_PULT';
+    | 'KERNEL_PULT'
+    /**
+     * The four heroes that complete the roster of nine (PLAN-heroes-9.md): three ranged,
+     * three melee, three support. Each one occupies an axis nothing else in the cast touches.
+     */
+    /** Thornquill, the Cactus. Pierces a whole row on the FREE attack, for 1 damage. */
+    | 'THORNQUILL'
+    /** Thornhide, the Endurian. Retaliates innately, and can force enemies to come to it. */
+    | 'THORNHIDE'
+    /** Chardwall, the Chard Guard. 0 damage: it kills with terrain, by shoving 2 tiles. */
+    | 'CHARDWALL'
+    /** Gourdward, the Pumpkin. The only source of shields — nothing else protects an ally. */
+    | 'GOURDWARD';
 
 /** The 5 fusion materials shipped in the first build. */
 /**
  * The materials are the same five plants the heroes are built from — the fusion matrix
  * is 5 heroes x 5 materials, and each pairing is authored by hand.
  */
+/**
+ * The seven named bosses. Lives here rather than in data/unlocks.ts because UnlockState
+ * needs it and data/unlocks.ts already imports from this file — the other direction would
+ * be a cycle. The table itself (which hero each one frees) stays in data/unlocks.ts.
+ */
+export type BossId =
+    | 'GARGANTUAR' | 'CATAPULT_LORD' | 'CINDER_COLOSSUS'
+    | 'YETI' | 'DISCO_ZOMBOSS' | 'BALLOON_ARMADA'
+    /** Burrows and surfaces BEHIND your line. A taunt is the only thing it cannot walk around. */
+    | 'SANDREAVER'
+    /** Acts twice a turn: its damage cannot be prevented in time, only absorbed. */
+    | 'CLOCKJAW'
+    /**
+     * Closes stage III and pays out the LIGHTNING element. Named here ahead of its unit and
+     * its BOSSES row because its arena is already authored (data/maps.ts): the ground a boss
+     * needs is a map decision and can land before the boss does, but `arenaFor` has to be a
+     * real BossId to say so.
+     */
+    | 'VOLTMAW'
+    | 'BLIGHTLORD';
+
 export type MaterialId =
     | 'MAT_SUNFLOWER'
     | 'MAT_PEASHOOTER'
@@ -335,7 +798,20 @@ export type MaterialId =
     | 'MAT_WALLNUT'
     | 'MAT_SNOW_PEA'
     /** Cobb's own plant. Grafts the arc onto somebody else's straight shot. */
-    | 'MAT_CORN';
+    | 'MAT_CORN'
+    /**
+     * The four gears belonging to the four new heroes. Every hero's base plant is also a
+     * material: bring it to the field as a bench body, or burn it into a hero. One or the
+     * other, never both.
+     */
+    /** Cactus. Spines: things that go through, and ground that hurts to cross. */
+    | 'MAT_CACTUS'
+    /** Endurian. Thorns worn outward — being hit becomes a way of dealing damage. */
+    | 'MAT_ENDURIAN'
+    /** Chard Guard. Leverage: whatever it touches ends up somewhere else. */
+    | 'MAT_CHARD'
+    /** Pumpkin. A shell that goes around somebody other than the wearer. */
+    | 'MAT_PUMPKIN';
 
 export type FusionEffectType =
     | 'BONUS_HP'                // +maxHp
@@ -355,9 +831,31 @@ export type FusionEffectType =
     | 'GRANT_ATTACK'            // gives a ranged basic attack to a hero that had none
     | 'SKILL_DISCOUNT'          // hero skill costs less Sun
     | 'DIGEST_REDUCTION'        // Maw digests for fewer turns
-    | 'ARMOR_WHILE_DIGESTING'   // immune while digesting
+    /**
+     * Grants `value` shield the moment digestion begins. This USED to be total immunity for
+     * the whole digest window, checked inside calculateDamage — which deleted Maw's one
+     * drawback outright and made the card ("gains 3 shield while digesting") a lie in the
+     * player's favour. Shield is the honest version: it absorbs, it runs out, and the window
+     * stays a window.
+     */
+    | 'ARMOR_WHILE_DIGESTING'
     | 'RETALIATE_BURN'          // melee attackers catch fire
-    | 'RETALIATE_FREEZE'        // melee attackers are frozen solid
+    /**
+     * Melee attackers are CHILLED — slowed on the first hit, frozen (STUN) only when they
+     * strike while already slowed. It used to stun outright on every bite, which was a free
+     * lost-turn-per-turn and the exact thing the STUN RULE in data/fusionRecipes.ts bans;
+     * the two-step is the same escalation the ICE element's retaliation uses, so a player
+     * who has learned one has learned both.
+     */
+    | 'RETALIATE_FREEZE'
+    /**
+     * Maw only: while DIGESTING, the first enemy to bite her each turn is buttered stiff
+     * (STUN). Its own type rather than RETALIATE_FREEZE because the two promise different
+     * sentences: butter is a pin that lands first try but only guards the helpless window,
+     * the chill is unconditional but needs the two-step. One type serving both cards is how
+     * the descriptions drifted from the engine in the first place.
+     */
+    | 'BUTTER_RETALIATE'
     | 'ATTACK_RANGE_BONUS'      // extends the reach of this hero's attacks
     | 'BONUS_DAMAGE'            // flat damage added to this hero's attacks
     | 'SUN_ON_BLOCK_SPAWN'      // Sun for standing on a spawn hole and plugging it
@@ -382,16 +880,52 @@ export type FusionEffectType =
      */
     | 'SKILL_SPLASH'
     | 'STEADFAST'               // -1 incoming damage, immune to collision damage, plugs spawn holes painlessly
-    | 'ON_HIT_SLOW';            // attacks apply SLOW
+    | 'ON_HIT_SLOW'             // attacks apply SLOW
+    // --- The palette for the four new heroes' rows (PLAN-heroes-9.md). ---
+    /** Every tile this hero's attack passes through is left spiked for a turn. */
+    | 'SPIKE_TRAIL'
+    /** Adds tiles to every push this hero causes. The Chard Guard axis. */
+    | 'PUSH_DISTANCE'
+    /** Shields this hero hands out are larger by `value`. */
+    | 'SHIELD_BONUS'
+    /** Finishing something off shields this hero for `value`. */
+    | 'SHIELD_ON_KILL'
+    /** Melee attackers are shoved back as well as hurt. */
+    | 'RETALIATE_PUSH'
+    /** The taunt reaches `value` tiles further. */
+    | 'TAUNT_RADIUS'
+    /** Bodies slammed by this hero's pushes take `value` extra collision damage. */
+    | 'COLLISION_BONUS'
+    /** The melee basic attack lands on EVERY adjacent enemy, not just the one aimed at. */
+    | 'ADJACENT_STRIKE';
 
 export interface FusionEffect {
     type: FusionEffectType;
     value?: number;
+    /**
+     * Ceiling this effect may take its stat to (today: SHIELD_ON_KILL's shield total). The cap
+     * lives on the EFFECT, not in the resolver, because the recipe card is what promises it —
+     * "up to 3 max" printed on Gourd Sniper must be enforced by the same object that printed it,
+     * or the two drift apart again (they did: five cards promised caps no code applied).
+     */
+    cap?: number;
 }
+
+/**
+ * The three columns of PLAN-heroes-9.md's final table: three ranged, three melee, three
+ * support. This is the hero's COMBAT role and is authored per hero, NOT derived from
+ * `UNIT_ROLE_MAP[baseClass]` — that map answers a different question (what a plant does on
+ * the field) and disagrees on two of them: it calls Cobb and Chardwall TACTICAL, where the
+ * roster reads them as the arcing artillery piece and the support that repositions. A
+ * player choosing a squad needs the roster's answer.
+ */
+export type HeroRole = 'RANGED' | 'MELEE' | 'SUPPORT';
 
 export interface HeroDefinition {
     id: HeroId;
     name: string;
+    /** Which third of the roster this hero belongs to. Drives the squad-select grouping. */
+    role: HeroRole;
     /** Existing plant class used for the sprite and the fallback identity. */
     baseClass: UnitClass;
     maxHp: number;
@@ -402,6 +936,8 @@ export interface HeroDefinition {
     boardImgUrl?: string;
     movementType: MovementType;
     immunities: UnitImmunity[];
+    /** Melee attackers take this back, with no fusion involved. Thornhide only, so far. */
+    retaliateDamage?: number;
     /** Always free — guarantees a hero can act with 0 Sun. */
     basicAttack: Skill;
     /** Costs Sun via Skill.sunCost. */
@@ -448,6 +984,16 @@ export interface BenchPlant {
 export type ObjectiveType =
     /** Just live through it. The baseline. */
     | 'SURVIVE_TURNS'
+    /**
+     * A crate of gear sits in the middle of the board and the horde walks at it exactly as it
+     * walks at a house. Keep it standing to the end and its contents go to your bench.
+     *
+     * The one objective that moves the FIGHT rather than adding a condition to it: every other
+     * entry in this list leaves the horde marching at your houses and asks you to do something
+     * on the side. This one re-aims the horde, so the line you would normally hold is in the
+     * wrong place — which is the whole reason it is worth having.
+     */
+    | 'ESCORT_GEAR'
     /** One specific house is marked; losing its brain fails the mission outright. */
     | 'PROTECT_HOUSE'
     /** Clear every zombie off the board. Ends the moment the board is empty. */
@@ -455,7 +1001,16 @@ export type ObjectiveType =
     /** Stand on the marked spawn tiles when the clock runs out. */
     | 'BLOCK_SPAWNS'
     /** Hold one specific tile at the end. */
-    | 'HOLD_TILE';
+    | 'HOLD_TILE'
+    /**
+     * Put the boss down. Ends the moment it falls, and fails if the clock beats you to it.
+     *
+     * Boss nodes used to roll SURVIVE_TURNS, which meant the honest way to "beat" a boss was
+     * to keep away from it for seven turns and collect the hero it was holding. Every boss in
+     * PLAN-boards-bosses.md is built as a problem to solve; an objective that never asks you
+     * to solve it makes the whole table decorative.
+     */
+    | 'SLAY_BOSS';
 
 export type BonusType = 'NO_BRAIN_LOST' | 'NO_HERO_DOWN' | 'KILL_COUNT';
 
@@ -470,10 +1025,21 @@ export interface MissionBonus {
 export interface Mission {
     objective: ObjectiveType;
     description: string;
+    /**
+     * SLAY_BOSS: which boss this fight is about.
+     *
+     * Recorded at build time because "the boss is dead" and "there was never a boss" look
+     * identical once the fight is running: the engine strips corpses out of the unit list
+     * before the objective is ever asked (`remainingUnits`, turnManager), so a check that
+     * counted live bosses could not tell a victory from an empty board. It has to remember.
+     */
+    bossId?: BossId;
     /** PROTECT_HOUSE / HOLD_TILE marker. */
     target?: Position;
     /** BLOCK_SPAWNS markers. */
     targets?: Position[];
+    /** ESCORT_GEAR: what is in the crate, so the objective card can name the prize. */
+    gearMaterial?: MaterialId;
     bonuses: MissionBonus[];
     // --- runtime tracking ---
     zombiesKilled: number;
@@ -487,7 +1053,35 @@ export interface Mission {
  * an enemy intent. A hazard the player cannot see coming would break the perfect-information
  * promise the whole design rests on.
  */
-export type HazardType = 'NONE' | 'WIND_GUST' | 'LAVA_FLOW' | 'RAIL_SLIDE';
+export type HazardType = 'NONE' | 'WIND_GUST' | 'LAVA_FLOW' | 'RAIL_SLIDE'
+    /**
+     * Old Quarter: a marked tile is hit, then becomes rubble for good. The only hazard whose
+     * mark does not wash off — the board the fight ends on is smaller than the one it began
+     * on, which is exactly the pressure a boss that acts twice a turn needs.
+     */
+    | 'COLLAPSE'
+    /**
+     * Neon Rose: a sweeping searchlight. It deals no damage and changes no ground — it picks
+     * out whoever is standing in the beam and points the whole horde at them for a turn.
+     */
+    | 'SPOTLIGHT'
+    /**
+     * The Grid: every live tile discharges at once, plus one tile out. The sector's reward and
+     * its hazard are the same square.
+     */
+    | 'SURGE'
+    /**
+     * Windward: the sea comes up over the marked shore for two turns and then goes back out.
+     * The only hazard that DELETES ground rather than pricing it — and the only one whose
+     * effect is undone on a clock, which is why the tile has to remember what it used to be.
+     */
+    | 'TIDE'
+    /**
+     * Thornwaste: a blown patch of dust. It deals nothing and blocks nothing; whatever ends
+     * its turn inside it simply cannot line up a swing. The sector's question is not "where
+     * is it safe to stand" but "where can anything see from".
+     */
+    | 'DUST_VEIL';
 
 export interface HazardTelegraph {
     type: HazardType;
@@ -507,18 +1101,42 @@ export interface RunState {
     /** Hero ids knocked out and awaiting revival. */
     fallenHeroes: HeroId[];
     bench: BenchPlant[];
+    /** Element per hero for this run. Absent = base form. Optional so old saves still load. */
+    heroElements?: Partial<Record<HeroId, ElementId>>;
+    /**
+     * Act upgrades won and not yet spent. One is banked per boss put down; the player spends
+     * them from the victory screen, choosing which hero gets what.
+     *
+     * A COUNT, not a queue of offers: the three upgrades a hero has are fixed
+     * (data/heroUpgrades.ts) and each may be taken once, so what is owed is a number and what
+     * is available is derived from the squad. Banking rather than forcing the choice on the
+     * spot also means a boss cleared on the way out of a run does not strand its reward.
+     */
+    upgradePicks?: number;
 }
 
 /** Progress that persists across runs. Stored separately from Admin config. */
 export interface UnlockState {
     heroes: HeroId[];
     materials: MaterialId[];
+    /**
+     * Commander XP, total, ever. The one number meta-progression runs on: `levelFromXp`
+     * turns it into a level, and every level pays a fusion recipe plus — on the levels named
+     * in HERO_UNLOCKS — a hero. Paid out at the END of a run, from how that run went, so a
+     * run that ends in defeat still moves the save forward.
+     */
+    xp: number;
     deepestChapter: number;
     runsWon: number;
     /**
-     * Bosses beaten across the whole save. Drives hero unlocks (data/unlocks.ts) and is
-     * separate from `runsWon` on purpose: a run can end at a boss without being the run that
-     * wins the campaign, and later chapters will have several bosses per run.
+     * Bosses beaten across the whole save, BY NAME. Which one fell is what matters now: the
+     * hero a boss frees is the answer to the threat that boss is, so "the Yeti is down" and
+     * "three bosses are down" are different facts and only the first one can pay Frostpod.
+     */
+    bossesBeaten: BossId[];
+    /**
+     * How many have fallen, kept for stats and for old saves. Derived from `bossesBeaten` on
+     * every write; nothing reads it to decide an unlock.
      */
     bossesDefeated: number;
     /**
@@ -552,6 +1170,8 @@ export interface UnitDefinition {
     moveRange: number;
     /** Reach of its attack. Omitted means 1 — melee. */
     attackRange?: number;
+    /** Helmet armour — see Unit.armor. Data lives here so the codex can print it. */
+    armor?: number;
     imgUrl: string;
     movementType: MovementType;
     immunities: UnitImmunity[];
@@ -563,11 +1183,34 @@ export interface UnitDefinition {
 }
 
 export type SkillRangeType = 'LINE' | 'LOB' | 'MELEE' | 'ADJACENT' | 'SELF' | 'DASH' | 'RADIUS';
-export type EffectType = 'DAMAGE' | 'HEAL' | 'SHIELD' | 'STUN' | 'PUSH' | 'PULL' | 'SPAWN' | 'TERRAIN_MOD' | 'PIERCE_ATTACK' | 'GLOBAL_PUSH' | 'CHARGE_SUN' | 'RESOURCE_GAIN' | 'REFRESH_ACTION' | 'HYPNOTIZE' | 'BUFF_STAT' |
+export type EffectType = 'DAMAGE' | 'HEAL' | 'SHIELD' | 'STUN' | 'PUSH' | 'PULL' | 'SPAWN' | 'TERRAIN_MOD' | 'PIERCE_ATTACK' |
+                         /**
+                          * Fires `value` shots instead of one, each rolling on to the next body in the
+                          * lane when the one in front of it dies.
+                          *
+                          * NOT the same thing as PIERCE_ATTACK and deliberately so. Pierce hits every
+                          * body in the lane for full damage: its output scales with how many enemies
+                          * happen to be lined up, which is why it belongs to a 1-damage free attack and
+                          * not to a 50-Sun one. A volley is a FIXED budget of shots that is never wasted
+                          * — kill a 2 HP body with one pea and the other two fly past it — so it is
+                          * strong into a single fat target and merely efficient into a crowd.
+                          *
+                          * Damage per shot is the skill's own DAMAGE value, which means the hero's
+                          * BONUS_DAMAGE lifts every shot (applyFusionToSkill folds it in before this
+                          * resolves): the act upgrade that adds +1 adds +3 to the volley.
+                          */
+                         'VOLLEY' | 'GLOBAL_PUSH' | 'CHARGE_SUN' | 'RESOURCE_GAIN' | 'REFRESH_ACTION' | 'HYPNOTIZE' | 'BUFF_STAT' |
                          /** Sets the target on fire. */
                          'APPLY_BURN' |
                          /** Halves the target's movement for a turn. Frostpod's baseline. */
                          'APPLY_SLOW' |
+                         /**
+                          * Forces every enemy in range to come at the caster next turn.
+                          * `value` is the radius. Sets TAUNTED + Unit.tauntedBy.
+                          */
+                         'TAUNT' |
+                         /** Leaves spikes on each tile the attack covered. `value` = damage. */
+                         'SPIKE_TILE' |
                          // EVENT EFFECTS
                          // NOTE: GAIN_SUN / HEAL_SQUAD / HEAL_ONE_FULL / LOSE_HP_RANDOM / GAIN_STATS are
                          // retired. Sun still resets to SUN_ON_LEVEL_START every battle. Hero hp used to
@@ -657,6 +1300,39 @@ export interface MapNode {
     next: string[];
     /** Set on the hand-authored tutorial chain. Drives the scripted battle. */
     tutorialId?: string;
+    /**
+     * Which named boss this node holds. Only BOSS nodes carry it. Absent on the generated
+     * maps of today — the payout falls back to "the first boss not yet beaten" until the two
+     * continents exist as real chains.
+     */
+    bossId?: BossId;
+    /**
+     * Does clearing this node finish the run? Only ever set to `false`, and only on the
+     * Breach's gauntlet.
+     *
+     * Everywhere else "BOSS node" and "last fight of the run" are the same thing, and the code
+     * said so directly (`endsRun = node.type === 'BOSS'`). The Breach is nine boss fights back
+     * to back and then Blightlord, so that equation would end the run on the first one and pay
+     * out a campaign act for a boss the player had already beaten. The flag says which of the
+     * ten is the door out; the other nine are just the hardest corridor in the game.
+     */
+    endsRun?: boolean;
+    /**
+     * This CAMPFIRE is one of the Breach's paid camps rather than an ordinary rest.
+     *
+     * The two rest points are deliberately different economies and this flag is the seam:
+     *
+     *   A STAGE RUN'S CAMPFIRE is an EVENT — three separate options, take exactly one, and
+     *   some of them are free (sleep it off, search the packs). Scarcity is the CHOICE. That
+     *   is right for a run that is mostly ordinary battles with a shop in it: the campfire is
+     *   a breath, and its cost is the two things you did not pick.
+     *
+     *   A BREACH CAMP opens after every boss and charges for everything — healing, gear,
+     *   items, a graft. Scarcity is the PURSE. That is right for a gauntlet with no shops at
+     *   all: it is the only place money means anything, and ten boss fights back to back need
+     *   somewhere to convert winnings into survival.
+     */
+    paidCamp?: boolean;
 }
 
 /**
@@ -730,8 +1406,8 @@ export interface GameEvent {
      *   1 — small trades, tens of Coin
      *   2 — gambles and three-figure payouts
      *   3 — run-defining: a brain, a lost house, a wager on the next fight
-     * Omitted behaves as tier 1. `rest_site` has no tier: it is reached by CAMPFIRE nodes,
-     * never by the random EVENT pool.
+     * Omitted behaves as tier 1. Every event in the table is a random-pool event now — the
+     * one that was not, `rest_site`, became the camp screen.
      */
     tier?: 1 | 2 | 3;
 }

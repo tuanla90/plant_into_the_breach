@@ -2,32 +2,34 @@
 import { useState, useRef, useEffect, Dispatch, SetStateAction } from 'react';
 import {
     GameState, MapNode, Unit, UnitClass, UnitType, UnitDefinition, TerrainDefinition,
-    TileData, HeroId, MaterialId, BenchPlant, UnlockState, MissionBonus, StatusEffectType
+    TileData, ElementId, HeroId, MaterialId, BenchPlant, UnlockState, MissionBonus, StatusEffectType
 } from '../types';
 import {
     GENERATE_MAP, generateBoard,
-    SQUAD_SIZE, BENCH_CAPACITY, SUN_ON_LEVEL_START, BASE_MAX_TURNS,
+    SQUAD_SIZE, BENCH_CAPACITY, SUN_ON_LEVEL_START, BASE_MAX_TURNS, BOSS_MAX_TURNS, BREACH_MAX_TURNS,
     COIN_PER_LEVEL, COIN_ELITE_BONUS, COIN_BOSS_BONUS, COIN_REVIVE_HERO,
-    brainBuybackCost
+    CAMP_ITEM_OFFERS, SHOP_OFFER_COUNT, brainBuybackCost
 } from '../constants';
-import { applyFusion } from '../utils/fusion';
+import { DEFAULT_ITEM_DEFINITIONS } from '../data/items';
+import { applyFusion, applyUpgrade } from '../utils/fusion';
 // This hook used to hold all of the following inline. What is left here is the part that is
 // genuinely about React state and the run; the rules moved to utils/, where they can be run.
-import { withRecipes, withHeroesForBoss, LAYERS_PER_UNLOCK_PACKAGE } from '../utils/unlockLogic';
-import { freshHero, buildHeroFromSnapshot, buildBenchUnit, buildEnemy } from '../utils/unitFactory';
+import { withLevelUps, withBossDefeated } from '../utils/unlockLogic';
+import { freshHero, buildHeroFromSnapshot, buildBenchUnit, buildEnemy, isBattleOnlyUnit } from '../utils/unitFactory';
 import { buildEncounter, layerOfNode, tiersForLayer } from '../utils/encounterBuilder';
 import { performTurnZeroAI as runTurnZeroAI } from '../utils/turnZeroAI';
 import { GAME_EVENTS } from '../data/events';
 import { HERO_DEFINITIONS } from '../data/heroes';
-import { getMaterial } from '../data/materials';
+import { getMaterial, STARTING_MATERIALS } from '../data/materials';
 import { buildMission, earnedBonuses } from '../data/missions';
 import {
-    parseRecipeKey, unlockInfoFor,
-    BONUS_OBJECTIVES_PER_RECIPE, TUTORIAL_RECIPES, UnlockAward
+    parseRecipeKey, unlockInfoFor, TUTORIAL_RECIPES, UnlockAward,
+    RunResult, xpForRun, levelOf, levelCapFor, nextUnbeatenBoss, heroForBoss,
+    recipeKey, BOSSES, XP_PER_LEVEL,
 } from '../data/unlocks';
 import { FUSION_RECIPES } from '../data/fusionRecipes';
 import { tutorialNode, tutorialBattle, tutorialBoard, GENERATE_TUTORIAL_MAP, TUTORIAL_CHAIN } from '../data/tutorial';
-import { loadUnlockState, saveUnlockState } from '../utils/persistence';
+import { loadUnlockState, saveUnlockState, defaultUnlockState } from '../utils/persistence';
 import { balancedGlobal } from '../utils/balance';
 
 interface UseGameProgressionProps {
@@ -43,6 +45,20 @@ interface UseGameProgressionProps {
 
 const isHeroUnit = (u: Unit): boolean => !!u.isHero && !!u.heroId;
 
+/** Everything the level bar needs, for a run that has ended or is about to. */
+export interface RunPayout {
+    /** XP the run is worth. */
+    gained: number;
+    /** Commander level before and after cashing it in. */
+    before: number;
+    after: number;
+    /** Progress into the resulting level, and what the next one costs. */
+    into: number;
+    needed: number;
+    /** At the boss ceiling: XP keeps banking, but no further level can be paid out. */
+    capped?: boolean;
+}
+
 const newBenchId = () => `bench_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 
 export const useGameProgression = ({
@@ -52,7 +68,7 @@ export const useGameProgression = ({
     // A brand-new save walks the hand-authored tutorial chain; everyone else gets the
     // generated map. `tutorialDone` lives in the persisted UnlockState.
     const [mapNodes, setMapNodes] = useState<MapNode[]>(
-        loadUnlockState().tutorialDone ? GENERATE_MAP() : GENERATE_TUTORIAL_MAP()
+        loadUnlockState().tutorialDone ? GENERATE_MAP(loadUnlockState().bossesBeaten.length) : GENERATE_TUTORIAL_MAP()
     );
 
     /**
@@ -124,6 +140,12 @@ export const useGameProgression = ({
         return out;
     };
 
+    /**
+     * The level ceiling for a save: one level per pairing that exists for the heroes it owns.
+     * Derived, never stored — adding a hero or a plant moves it on its own.
+     */
+    const capOf = (state: UnlockState) => levelCapFor(state.heroes.length, STARTING_MATERIALS.length);
+
     /** Single write point: nothing else may touch localStorage progress. */
     const commitUnlocks = (next: UnlockState) => {
         if (next === unlocksRef.current) return;
@@ -135,6 +157,35 @@ export const useGameProgression = ({
     };
 
     /**
+     * DEBUG: hand the save everything, or take it all back.
+     *
+     * Both go through `commitUnlocks`, the single write point, so the panel cannot invent a
+     * shape the loader would reject — and the award queue fires exactly as it does on a real
+     * unlock, which is the point: this is also how the unlock POPUPS get tested.
+     */
+    const unlockEverything = () => {
+        const heroes = Object.keys(HERO_DEFINITIONS) as HeroId[];
+        const materials = [...STARTING_MATERIALS];
+        const recipes: string[] = [];
+        heroes.forEach(h => materials.forEach(m => recipes.push(recipeKey(h, m))));
+        commitUnlocks({
+            ...unlocksRef.current,
+            heroes,
+            materials,
+            recipes,
+            // Enough XP to sit at the ceiling the roster allows. Not Infinity: levelOf caps
+            // against it and a non-finite XP would render as "NaN" on the map header.
+            xp: XP_PER_LEVEL * capOf({ ...unlocksRef.current, heroes, materials }),
+            bossesBeaten: BOSSES.map(b => b.id),
+            bossesDefeated: BOSSES.length,
+            tutorialDone: true,
+        });
+    };
+
+    /** Back to a fresh save, without touching the run in progress. */
+    const resetProgress = () => commitUnlocks(defaultUnlockState());
+
+    /**
      * Everything leaving a node is worth, as a pure function of the current progress.
      *
      * ONE function, used by both the preview and the commit. The victory screen has to show
@@ -143,12 +194,14 @@ export const useGameProgression = ({
      * twin of the Coin maths) is exactly the kind of duplicate that drifts. Unlocks get one
      * source of truth instead: preview diffs against it, commit writes it.
      *
-     * Three payouts, in this order:
-     *   depth  -> recipes  (a personal-best layer pays even on a run that later dies:
-     *                       DESIGN.md section 7 is explicit that requiring a win would make
-     *                       new players quit before they ever see the depth)
-     *   boss   -> the city's hero, plus its signature recipe
-     *   bonus objectives -> banked now, converted to recipes when the RUN ends
+     * Two things happen here, and only one of them is a payout:
+     *   every fight  -> bonus objectives are TALLIED (banked on the run, nothing granted)
+     *   the run ends -> that tally, the depth and the boss become XP, and XP becomes levels
+     *
+     * Nothing unlocks mid-run any more. That is the point of the level: it is paid by the
+     * RESULT of a run, so there is one moment where progress lands and one number that
+     * explains it, instead of a recipe appearing after a good fight for reasons the player
+     * could not name.
      */
     const projectUnlocks = (node: MapNode | undefined, runEnded = false): UnlockState => {
         const current = unlocksRef.current;
@@ -156,21 +209,22 @@ export const useGameProgression = ({
         let next = current;
         // Clearing the boss ends the run. Running out of brains does too, and that path
         // comes in through `recordRunLost` below rather than through a node.
-        const endsRun = runEnded || node.type === 'BOSS';
+        //
+        // `endsRun: false` means "a boss, but not the door out" — the Breach's nine corridor
+        // fights, and acts one and two of an ordinary three-act run.
+        const endsRun = runEnded || (node.type === 'BOSS' && node.endsRun !== false);
 
-        const depth = Math.floor(layerOfNode(node, mapNodes));
-        if (Number.isFinite(depth) && depth > next.deepestChapter) {
-            const earned = Math.floor(depth / LAYERS_PER_UNLOCK_PACKAGE)
-                         - Math.floor(next.deepestChapter / LAYERS_PER_UNLOCK_PACKAGE);
-            next = withRecipes({ ...next, deepestChapter: depth }, Math.max(0, earned));
-        }
-
+        // EVERY boss banks the moment it falls, whether or not it ends the run. `RunResult`
+        // has always described it that way — "each boss is banked the moment it falls, so
+        // dying in act three still keeps what acts one and two paid" — and until a run had
+        // three bosses in it there was no way to tell the difference. Now there is: without
+        // this, clearing act 1 and dying in act 2 would pay nothing for act 1.
+        //
+        // Idempotent by construction (`withBossDefeated` returns the same state for a boss
+        // already in the list), which is what makes the Breach's re-kills cost nothing.
         if (node.type === 'BOSS') {
-            const bossNumber = next.bossesDefeated + 1;
-            next = withHeroesForBoss(
-                { ...next, runsWon: next.runsWon + 1, bossesDefeated: bossNumber },
-                bossNumber,
-            );
+            const boss = node.bossId ?? nextUnbeatenBoss(next.bossesBeaten);
+            if (boss) next = withBossDefeated(next, boss);
         }
 
         const isFight = node.type === 'BATTLE' || node.type === 'ELITE' || node.type === 'BOSS';
@@ -187,34 +241,100 @@ export const useGameProgression = ({
             }
         }
 
-        // Objectives only CASH IN when the run ends. Paying them out per fight handed the
-        // player new tools halfway through a plan, and made clearing an ordinary node feel
-        // the same as finishing a run. The remainder stays banked for the next run.
-        if (endsRun) next = cashInObjectives(next);
-
+        // The third argument is "did a boss fall", and it can only be true on the node that
+        // both is a boss and closes the run — otherwise it is the brains-lost path arriving
+        // here on some ordinary battle node.
+        if (endsRun) next = withRunPayout(next, node, node.type === 'BOSS' && node.endsRun !== false);
         return next;
     };
 
     /**
-     * Converts banked bonus objectives into fusion recipes. The leftover under the threshold
-     * is kept, not discarded — two objectives short of a recipe still count towards the next.
+     * The whole meta-progression payout, in one place: turn a finished run into XP, turn the
+     * XP into levels, and hand over what those levels are worth.
+     *
+     * `deepestChapter` is read BEFORE it is updated — the record bonus is paid for beating
+     * your own best, so it has to be measured against the old number.
      */
-    const cashInObjectives = (state: UnlockState): UnlockState => {
-        const earned = Math.floor(state.bonusObjectivesBanked / BONUS_OBJECTIVES_PER_RECIPE);
-        if (earned <= 0) return state;
-        return withRecipes(
-            { ...state, bonusObjectivesBanked: state.bonusObjectivesBanked - earned * BONUS_OBJECTIVES_PER_RECIPE },
-            earned,
-        );
+    const withRunPayout = (state: UnlockState, node: MapNode | undefined, bossDefeated: boolean): UnlockState => {
+        const layer = node ? Math.floor(layerOfNode(node, mapNodes)) : 0;
+        const layers = Number.isFinite(layer) ? Math.max(0, layer) : 0;
+
+        const result: RunResult = {
+            layers,
+            objectives: state.bonusObjectivesBanked,
+            actsCleared: bossDefeated ? 1 : 0,
+            recordLayers: Math.max(0, layers - state.deepestChapter),
+        };
+        const gained = xpForRun(result);
+
+        // The boss is banked FIRST, so the hero it frees widens the roster before the levels
+        // are handed out — a boss kill can pay its hero and, in the same breath, release the
+        // levels the XP had been sitting on under the old ceiling.
+        const before = levelOf(state.xp, capOf(state)).level;
+        let next: UnlockState = state;
+        if (bossDefeated) {
+            const boss = node?.bossId ?? nextUnbeatenBoss(state.bossesBeaten);
+            if (boss) next = withBossDefeated(next, boss);
+        }
+        const after = levelOf(state.xp + gained, capOf(next)).level;
+
+        next = {
+            ...next,
+            xp: state.xp + gained,
+            deepestChapter: Math.max(state.deepestChapter, layers),
+            runsWon: state.runsWon + (bossDefeated ? 1 : 0),
+            // Spent: they are XP now. The next run starts its own tally.
+            bonusObjectivesBanked: 0,
+        };
+        return withLevelUps(next, before, after);
     };
 
     /**
-     * A run ended in defeat. Objectives banked along the way still pay — DESIGN.md section 7
-     * is explicit that requiring a win would make new players quit before they see the depth,
-     * and the same logic applies to the objectives they did complete on the way down.
+     * What the run would be worth if it ended right now. Pure — it reads state and computes,
+     * so the victory screen can show the payout before `completeLevel` writes it.
      */
-    const recordRunLost = () => {
-        commitUnlocks(cashInObjectives(unlocksRef.current));
+    const runPayoutPreview = (bossDefeated = false): RunPayout => {
+        const state = unlocksRef.current;
+        const nodeId = gameState.currentLevelId;
+        const node = nodeId ? mapNodes.find(n => n.id === nodeId) : undefined;
+        const layer = node ? Math.floor(layerOfNode(node, mapNodes)) : 0;
+        const layers = Number.isFinite(layer) ? Math.max(0, layer) : 0;
+        const result: RunResult = {
+            layers,
+            objectives: state.bonusObjectivesBanked,
+            actsCleared: bossDefeated ? 1 : 0,
+            recordLayers: Math.max(0, layers - state.deepestChapter),
+        };
+        const gained = xpForRun(result);
+        const before = levelOf(state.xp, capOf(state)).level;
+        // Preview the widened roster too, or the bar would under-report a boss victory.
+        const boss = bossDefeated ? nextUnbeatenBoss(state.bossesBeaten) : undefined;
+        const freed = boss ? heroForBoss(boss) : undefined;
+        const heroesAfter = state.heroes.length + (freed && !state.heroes.includes(freed) ? 1 : 0);
+        const after = levelOf(state.xp + gained, levelCapFor(heroesAfter, STARTING_MATERIALS.length));
+        return {
+            gained, before, after: after.level,
+            into: after.into, needed: after.needed, capped: after.capped,
+        };
+    };
+
+    /**
+     * A run ended in defeat. It still pays: DESIGN.md section 7 is explicit that requiring a
+     * win would make new players quit before they ever see the depth. Losing at layer seven
+     * is worth more than winning nothing, and the level says so.
+     *
+     * Returns the payout so the defeat screen can show it — the numbers have to be read
+     * BEFORE the commit, because committing is what zeroes the run's tally.
+     */
+    const recordRunLost = (): RunPayout => {
+        const payout = runPayoutPreview(false);
+        const nodeId = gameState.currentLevelId;
+        const node = nodeId ? mapNodes.find(n => n.id === nodeId) : undefined;
+        commitUnlocks(withRunPayout(unlocksRef.current, node, false));
+        // The build dies with the run. Nothing reads it after this point, but leaving it set
+        // would mean the next squad screen is picking on top of a dead run's answers.
+        setGameState(prev => ({ ...prev, heroElements: {} }));
+        return payout;
     };
 
     /**
@@ -246,7 +366,7 @@ export const useGameProgression = ({
             // legitimately have no snapshot. Falling back to her definition is the
             // documented trade (runPersistence: "revive then restores base stats") — what
             // is not acceptable is her having no card at all.
-            queued.push(heroSnapshots.current.get(id) ?? freshHero(id));
+            queued.push(heroSnapshots.current.get(id) ?? freshHero(id, undefined, elementFor(id)));
         });
         return [...onField, ...queued];
     };
@@ -262,18 +382,41 @@ export const useGameProgression = ({
         return true;
     };
 
+    /**
+     * Same, for an act upgrade. A hero killed in the fight that just paid the upgrade is
+     * exactly the hero a player most wants to spend it on, and she has no Unit until the next
+     * battle rebuilds her — so the snapshot is where it has to land.
+     */
+    const upgradeQueuedHero = (heroId: HeroId, upgradeId: string): boolean => {
+        const snap = heroSnapshots.current.get(heroId);
+        if (!snap) return false;
+        heroSnapshots.current.set(heroId, applyUpgrade(snap, upgradeId));
+        return true;
+    };
+
     const rememberHero = (u: Unit) => {
         if (isHeroUnit(u)) heroSnapshots.current.set(u.heroId as HeroId, u);
     };
 
-    /** Call when a new run begins so the previous run's heroes cannot leak into it. */
-    const registerSquad = (heroIds: HeroId[]) => {
+    /**
+     * Call when a new run begins so the previous run's heroes cannot leak into it.
+     *
+     * `heroElements` is opened here and nowhere else, which is what makes it run-scoped: the
+     * squad screen is the only place the choice is made, so this is the only place it can be
+     * written. Every road into a run passes through here — including the tutorial, which calls
+     * `registerSquad([])` and therefore correctly starts elementless.
+     */
+    const registerSquad = (heroIds: HeroId[], heroElements: Partial<Record<HeroId, ElementId>> = {}) => {
         heroSnapshots.current.clear();
         pendingRevives.current.clear();
-        setGameState(prev => ({ ...prev, pendingRevives: [] }));
+        setGameState(prev => ({ ...prev, pendingRevives: [], heroElements }));
         brainsAtLevelStart.current = gameState.brainsMax;
         void heroIds;
     };
+
+    /** The element this run gave a hero, or undefined for the base form. */
+    const elementFor = (heroId: HeroId | undefined): ElementId | undefined =>
+        heroId ? (gameState.heroElements ?? {})[heroId] : undefined;
 
     // --- MAP LOGIC ---
     /**
@@ -348,6 +491,24 @@ export const useGameProgression = ({
         if (completedNodeType === 'ELITE') reward += COIN_ELITE_BONUS;
         if (completedNodeType === 'BOSS') reward += COIN_BOSS_BONUS;
 
+        /**
+         * THE CRATE PAYS OUT.
+         *
+         * Read off the live unit list rather than off a flag set during the fight: the crate is
+         * a body, so "did it survive" is the same question as "is it still there", and asking
+         * the board means no bookkeeping can drift out of sync with what the player watched.
+         *
+         * `addBenchPlant` refuses when the bench is full, and that refusal is left alone. A
+         * full bench is a decision the player made, and quietly evicting something to make room
+         * for a reward would spend a plant they were saving.
+         */
+        if (gameState.mission?.objective === 'ESCORT_GEAR' && gameState.mission.gearMaterial) {
+            const crate = units.find(u => !u.isEnemy && u.hp > 0 && u.class === UnitClass.GEAR_CRATE);
+            if (crate) {
+                addBenchPlant(gameState.mission.gearMaterial);
+            }
+        }
+
         // Bonus objectives replace the old flat "no brain lost" bonus — that condition is now
         // one of the bonuses the mission may or may not have rolled.
         // Coin only here. Bonus objectives also pay cross-run progress (fusion recipes), but
@@ -363,8 +524,23 @@ export const useGameProgression = ({
             ...prev,
             coins: prev.coins + reward,
             nextBattleMods: isFight ? {} : prev.nextBattleMods,
+            // AN ACT PAYS AN UPGRADE. One per boss, banked as a count rather than resolved
+            // here, because which hero gets it is the player's decision and this function is
+            // not a screen. The Breach hands out nine of these before the Blightlord, which is
+            // exactly enough to finish all three heroes (data/heroUpgrades.ts).
+            upgradePicks: (prev.upgradePicks ?? 0) + (completedNodeType === 'BOSS' ? 1 : 0),
         }));
         return reward;
+    };
+
+    const rollGear = (): MaterialId[] => {
+        const state = unlocksRef.current;
+        const pool = [...(state.materials.length ? state.materials : STARTING_MATERIALS)];
+        const picked: MaterialId[] = [];
+        while (picked.length < SHOP_OFFER_COUNT && pool.length > 0) {
+            picked.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+        }
+        return picked;
     };
 
     /**
@@ -423,27 +599,47 @@ export const useGameProgression = ({
             }));
         } else if (tut?.eventId) {
             setGameState(prev => ({ ...prev, screen: 'EVENT', currentEventId: tut.eventId }));
-        } else if (node.type === 'CAMPFIRE') {
-             // CHANGE: Open Rest Event instead of auto-heal
+        } else if (node.type === 'CAMPFIRE' && node.paidCamp) {
+             // THE BREACH'S CAMP. Everything is for sale and nothing is picked for you — see
+             // MapNode.paidCamp for why this is a different economy from a stage run's rest.
+             //
+             // Both shelves are rolled ON ARRIVAL and stored, for the same reason the shop's
+             // are: rolling during render would deal a new hand on every state change, and the
+             // player would watch the thing they were about to buy turn into something else.
+             const items = [...DEFAULT_ITEM_DEFINITIONS.map(i => i.id)];
+             const itemShelf: string[] = [];
+             while (itemShelf.length < CAMP_ITEM_OFFERS && items.length > 0) {
+                 itemShelf.push(items.splice(Math.floor(Math.random() * items.length), 1)[0]);
+             }
              setGameState(prev => ({
                  ...prev,
-                 screen: 'EVENT',
-                 currentEventId: 'rest_site'
+                 screen: 'CAMP',
+                 shopItemOffers: itemShelf,
+                 // Gear is the run's other half: the Breach has no shop node, so this is the
+                 // only place a bench plant can be bought — and a bench plant is what a graft
+                 // is made of.
+                 shopOffers: rollGear(),
+                 shopRerolls: 0,
              }));
+        } else if (node.type === 'CAMPFIRE') {
+             // An ordinary stage run's rest: the campfire EVENT, one visit and one choice,
+             // and some of those choices are free.
+             setGameState(prev => ({ ...prev, screen: 'EVENT', currentEventId: 'rest_site' }));
         } else if (node.type === 'EVENT') {
              // Stakes scale with depth, then prefer one this run has not shown yet. Without
              // the second filter a three-EVENT route could roll the same encounter three
              // times, which reads as a bug rather than as variety.
              const allowed = tiersForLayer(layerOfNode(node, mapNodes));
-             const pool = GAME_EVENTS.filter(e =>
-                 e.id !== 'rest_site' && allowed.includes(e.tier ?? 1));
+             // No rest_site exclusion any more: the campfire is its own screen, so every
+             // event left in the table is a random-pool event by definition.
+             const pool = GAME_EVENTS.filter(e => allowed.includes(e.tier ?? 1));
              const seen = gameState.seenEvents || [];
              const fresh = pool.filter(e => !seen.includes(e.id));
              // Each fallback is one step wider, so an exhausted tier still yields something
              // rather than dropping the player onto a blank screen.
              const candidates = fresh.length > 0
                  ? fresh
-                 : (pool.length > 0 ? pool : GAME_EVENTS.filter(e => e.id !== 'rest_site'));
+                 : (pool.length > 0 ? pool : GAME_EVENTS);
              const randomEvent = candidates[Math.floor(Math.random() * candidates.length)] || GAME_EVENTS[0];
 
              setGameState(prev => ({
@@ -518,7 +714,7 @@ export const useGameProgression = ({
         // finishing the tutorial meant every recipe earned afterwards competed with a head
         // start the player never worked for.
         commitUnlocks({ ...unlocksRef.current, tutorialDone: true });
-        setMapNodes(GENERATE_MAP());
+        setMapNodes(GENERATE_MAP(unlocksRef.current.bossesBeaten.length));
         setGameState(prev => ({
             ...prev,
             screen: 'MAP',
@@ -638,7 +834,13 @@ export const useGameProgression = ({
         // board, the squad, where they stand, and which zombies arrive. Nothing here is
         // rolled, because a lesson that changes shape between playthroughs is not a lesson.
         const script = node.tutorialId ? tutorialBattle(node.tutorialId) : undefined;
-        const newBoard = script ? tutorialBoard(script) : generateBoard(node.world);
+        // Same resolution the reward path uses (`completeLevel`): the node names its boss when
+        // it has one, otherwise it is whichever boss the campaign owes you next. Passing it here
+        // is what puts the fight on the arena instead of a random board of the right sector.
+        const boss = node.type === 'BOSS'
+            ? (node.bossId ?? nextUnbeatenBoss(unlocksRef.current.bossesBeaten))
+            : undefined;
+        const newBoard = script ? tutorialBoard(script) : generateBoard(node.world, boss);
         const fallen = gameState.fallenHeroes || [];
 
         // Terms an event imposed on exactly this battle. Read once here, cleared at the end
@@ -664,8 +866,51 @@ export const useGameProgression = ({
         // Rolled OUTSIDE the setUnits updater: React may invoke that updater twice (StrictMode
         // does, in development), and a wave rolled inside it would be a different wave each
         // time. Deploy tiles come back with it — same board, same pass.
-        const { enemies: rolledEnemies, deployTiles } =
-            buildEncounter(node, newBoard, depth, unitDefs, terrainDefs, mods);
+        const { enemies: rolledEnemies, allies: rolledAllies, deployTiles } =
+            buildEncounter(node, newBoard, depth, unitDefs, terrainDefs, mods, boss);
+
+        /**
+         * The mission is decided BEFORE the units are built, which is a change of order and a
+         * deliberate one: ESCORT_GEAR names the tile its crate stands on, and the crate is a
+         * unit. Built afterwards, as it used to be, the objective would have had to reach back
+         * into a list that had already been handed to React.
+         *
+         * Nothing else moved. `buildMission` reads only the node, the board and the rolled
+         * wave, all of which exist by this line.
+         */
+        const isFirstLevel = mapNodes.every(n => n.status !== 'COMPLETED');
+        const mission = script
+            ? {
+                objective: script.objective,
+                description: script.objectiveText,
+                target: undefined,
+                targets: undefined,
+                bonuses: script.bonuses,
+                zombiesKilled: 0,
+                failed: false,
+              }
+            // The rolled wave goes in because SLAY_BOSS may only be offered when a boss is
+            // standing in it — see buildMission.
+            : buildMission(node.type, newBoard, isFirstLevel, rolledEnemies);
+
+        // The crate itself, if this fight has one. A body like any other, on the player's side,
+        // carrying the material the objective promised.
+        const gearUnits: Unit[] = [];
+        if (!script && mission.objective === 'ESCORT_GEAR' && mission.target) {
+            const crateDef = unitDefs[UnitClass.GEAR_CRATE];
+            if (crateDef) {
+                gearUnits.push({
+                    id: `gear_${node.id}`,
+                    type: UnitType.PLANT, class: UnitClass.GEAR_CRATE, role: 'TACTICAL',
+                    hp: crateDef.maxHp, maxHp: crateDef.maxHp, damage: 0, moveRange: 0,
+                    cooldownReduction: 0, level: 1, position: { ...mission.target },
+                    isEnemy: false, hasMoved: true, hasAttacked: true, statusEffects: [],
+                    movementType: crateDef.movementType, immunities: crateDef.immunities,
+                    imgUrl: crateDef.imgUrl, attackRange: 1,
+                    gearMaterial: mission.gearMaterial,
+                } as Unit);
+            }
+        }
 
         setUnits(prevUnits => {
             if (script) {
@@ -680,7 +925,9 @@ export const useGameProgression = ({
                     .map((h, idx) => {
                         const prev = existing.get(h);
                         // Was a hand-inlined copy of freshHero that differed only in the id.
-                        const base = prev ? buildHeroFromSnapshot(prev) : freshHero(h, `tut-${h}-${idx}`);
+                        const base = prev
+                            ? buildHeroFromSnapshot(prev, false, elementFor(h))
+                            : freshHero(h, `tut-${h}-${idx}`, elementFor(h));
                         rememberHero(base);
                         return {
                             ...base,
@@ -728,7 +975,11 @@ export const useGameProgression = ({
                     rememberHero(u);
                     if (seen.has(hid) || fallen.includes(hid)) return;
                     seen.add(hid);
-                    heroUnits.push(buildHeroFromSnapshot(u));
+                    // The run's map is handed to EVERY rebuild, not just the ones that lack an
+                    // element: it is the authority on what this hero carries, and the factory
+                    // treats "the element she already has" as a no-op. That is what lets a body
+                    // restored from a pre-element save still take the shape the run says it has.
+                    heroUnits.push(buildHeroFromSnapshot(u, false, elementFor(hid)));
                 });
 
             // Heroes revived at a Campfire / chapter end have no Unit left — rebuild them,
@@ -737,14 +988,24 @@ export const useGameProgression = ({
                 if (seen.has(hid) || fallen.includes(hid)) return;
                 const snap = heroSnapshots.current.get(hid);
                 seen.add(hid);
-                heroUnits.push(snap ? buildHeroFromSnapshot(snap, true) : freshHero(hid));
+                // No snapshot means a reload wiped it, so the body is rebuilt from the sheet —
+                // and the run's element has to be handed back with it, or a revived hero would
+                // silently return in her base form after the player already paid the health.
+                heroUnits.push(snap
+                    ? buildHeroFromSnapshot(snap, true, elementFor(hid))
+                    : freshHero(hid, undefined, elementFor(hid)));
             });
             pendingRevives.current.clear();
             queueConsumed = true;
 
             // Legacy squads created before heroes existed: keep them so nothing disappears.
             const legacyUnits = prevUnits
-                .filter(u => !u.isEnemy && u.type === UnitType.PLANT && !isHeroUnit(u) && !u.materialId)
+                // `isBattleOnlyUnit` keeps the crate and the wild plant out. They match every
+                // other clause here — player side, PLANT, not a hero, no materialId — so the
+                // legacy-squad rescue adopted them, and with a hero down they took the open
+                // slot a bench plant should have had.
+                .filter(u => !u.isEnemy && u.type === UnitType.PLANT && !isHeroUnit(u)
+                    && !u.materialId && !isBattleOnlyUnit(u))
                 .map(u => ({
                     ...u,
                     position: { x: -1, y: -1 },
@@ -770,24 +1031,13 @@ export const useGameProgression = ({
             benchDeployedRef.current = chosenBench.map((p, i) => ({ benchId: p.id, unitId: `bench-${p.id}-${i}` }));
             const benchUnits = chosenBench.map(buildBenchUnit);
 
-            return [...roster, ...benchUnits, ...rolledEnemies];
+            // Wild plants and the gear crate are neither squad nor wave. They go in last and
+            // are never recorded in `benchDeployedRef`, so the end-of-battle ledger cannot
+            // charge the player for a body they did not buy.
+            return [...roster, ...benchUnits, ...gearUnits, ...rolledAllies, ...rolledEnemies];
         });
 
         setBoard(newBoard);
-        // The very first battle of a run always teaches the base rule before layering an
-        // objective on top of it.
-        const isFirstLevel = mapNodes.every(n => n.status !== 'COMPLETED');
-        const mission = script
-            ? {
-                objective: script.objective,
-                description: script.objectiveText,
-                target: undefined,
-                targets: undefined,
-                bonuses: script.bonuses,
-                zombiesKilled: 0,
-                failed: false,
-              }
-            : buildMission(node.type, newBoard, isFirstLevel);
 
         setGameState(prev => {
             // Remember the brain count now so completeLevel can pay the "no brain lost" bonus.
@@ -807,7 +1057,14 @@ export const useGameProgression = ({
                 turn: 1,
                 // Rebuilt from the base every battle: maxTurns lives in GameState, so without
                 // this an event's +1 turn would apply to every remaining fight in the run.
-                maxTurns: script ? script.maxTurns : Math.max(3, BASE_MAX_TURNS + (mods.turns || 0)),
+                // A boss node runs on its own clock — see BOSS_MAX_TURNS in constants.ts for
+                // the measurement. Event terms still shift it, so "one more turn" is worth the
+                // same anywhere.
+                maxTurns: script
+                    ? script.maxTurns
+                    : Math.max(3, (node.type === 'BOSS'
+                        ? (boss === 'BLIGHTLORD' ? BREACH_MAX_TURNS : BOSS_MAX_TURNS)
+                        : BASE_MAX_TURNS) + (mods.turns || 0)),
                 scriptedBattleId: script ? node.tutorialId! : null,
                 // Consumed. `coinOnWin` is deliberately kept — completeLevel pays it out.
                 nextBattleMods: { coinOnWin: mods.coinOnWin || 0 },
@@ -823,8 +1080,26 @@ export const useGameProgression = ({
                 enemySpawnQueue: script
                     ? (script.waves?.[2] ?? []).map(sp => ({ x: sp.x, y: sp.y }))
                     : [], // RESET: Clear any pending spawns from previous levels
+                /**
+                 * RESET, for the same reason the spawn queue above is reset — and it was the
+                 * one field of the pair that got missed.
+                 *
+                 * A hazard telegraph is planned at the END of a turn and fired at the START of
+                 * the next, so a battle that ends on the wrong beat leaves one pending. Nothing
+                 * cleared it, so it survived into the NEXT fight and PHASE 0 fired it on that
+                 * battle's first enemy turn — tiles picked from a board that no longer exists,
+                 * and a hazard belonging to a sector the player may have left.
+                 *
+                 * It did not stay harmless once the last two hazards landed: TIDE turns the
+                 * tiles it names into open water and drowns whatever cannot swim, and COLLAPSE
+                 * walls them for good. Both, on turn one, chosen against someone else's map.
+                 */
+                hazard: null,
                 interactionMode: 'PLACEMENT',
-                selectedUnitId: null
+                selectedUnitId: null,
+                // Fresh ledger for a fresh fight — the boss report must never carry a line
+                // from the battle before it.
+                battleStats: {}
             };
         });
     };
@@ -837,6 +1112,7 @@ export const useGameProgression = ({
         completeLevel,
         previewRewards,
         previewUnlocks,
+        runPayoutPreview,
         recordRunLost,
         // Bound to this hook's terrainDefs so App keeps the same three-argument call it had.
         performTurnZeroAI: (currentUnits: Unit[], currentBoard: TileData[], holdPositions = false) =>
@@ -854,6 +1130,9 @@ export const useGameProgression = ({
         brainCost,
         canBuyBrain,
         buyBrain,
+        // --- debug (DebugPanel) ---
+        unlockEverything,
+        resetProgress,
         // --- new: cross-run unlock progress (persisted) ---
         unlocks,
         pendingUnlocks,
@@ -862,6 +1141,7 @@ export const useGameProgression = ({
         removeBenchPlant,
         fusableHeroes,
         fuseQueuedHero,
+        upgradeQueuedHero,
         benchSpaceRemaining,
     };
 };

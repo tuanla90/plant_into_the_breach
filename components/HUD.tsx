@@ -9,6 +9,7 @@ interface HUDProps {
   itemDefs?: ItemDefinition[];
   onEndTurn: () => void;
   onToggleAdmin: () => void;
+  onOpenSettings?: () => void;
   onSelectItem: (itemId: string) => void;
   onOpenSquad: () => void;
   onQuitRun: () => void;
@@ -21,6 +22,7 @@ export const HUD: React.FC<HUDProps> = ({
   gameState,
   itemDefs = [],
   onToggleAdmin,
+  onOpenSettings,
   onSelectItem,
   onOpenSquad,
   onQuitRun,
@@ -148,7 +150,13 @@ export const HUD: React.FC<HUDProps> = ({
           <div className="flex flex-col items-center leading-none px-3 py-1 bg-[#131722] border border-[#293245] rounded-md">
               <span className="text-[8px] uppercase tracking-[0.2em] text-sky-400 font-bold">{t('Turn')}</span>
               <span className="text-base font-black text-gray-200 tabular-nums">
-                  {gameState.turn}<span className="text-gray-500 text-xs">/{gameState.maxTurns}</span>
+                  {gameState.turn}
+                  {/* A boss arena has no clock (utils/turnManager.ts, SLAY_BOSS). Showing
+                      "3/5" there would promise a deadline that cannot arrive, and the
+                      player would spend the fight racing something imaginary. */}
+                  {gameState.mission?.objective !== 'SLAY_BOSS' && (
+                      <span className="text-gray-500 text-xs">/{gameState.maxTurns}</span>
+                  )}
               </span>
           </div>
 
@@ -250,9 +258,9 @@ export const HUD: React.FC<HUDProps> = ({
              <Users size={18} />
          </button>
          <button
-             onClick={onToggleAdmin}
-             className="bg-[#181d2a] p-2 border border-[#293245] text-gray-400 hover:text-white hover:border-sky-400 transition-all shadow-md active:scale-95 rounded-lg cursor-pointer"
-             title={t('Settings')}
+             onClick={() => onOpenSettings ? onOpenSettings() : onToggleAdmin()}
+             className="bg-[#181d2a] p-2 border border-[#293245] text-sky-400 hover:text-white hover:border-sky-400 transition-all shadow-md active:scale-95 rounded-lg cursor-pointer"
+             title={t('Cài Đặt')}
          >
              <Settings size={18} />
          </button>

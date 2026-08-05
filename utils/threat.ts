@@ -48,12 +48,32 @@ const isValidPos = (p?: Position | null): p is Position =>
     !!p && Number.isFinite(p.x) && Number.isFinite(p.y) && p.x >= 0 && p.y >= 0;
 
 /**
- * A unit only telegraphs if it will actually get to act next turn.
- * Stunned units skip their turn, dying units are already gone, and a hypnotised
- * zombie (`isEnemy === false`) now fights for the player.
+ * WILL THIS UNIT ACTUALLY GET TO ACT NEXT TURN? The one predicate, and it is exported because
+ * there were two.
+ *
+ * Stunned and frozen units skip their turn, dead ones are gone, and a hypnotised zombie
+ * (`isEnemy === false`) fights for the player now.
+ *
+ * `UnitComponent` used to answer the same question with its own inline copy, and the two had
+ * already drifted apart in both directions: the arrow over a unit's head ignored FREEZE, so a
+ * frozen zombie pointed at a hero the overlay said was safe — the board contradicting itself in
+ * two places at once. Now the arrow and the overlay cannot disagree, because there is nothing
+ * left to disagree with.
  */
-const willAct = (unit: Unit): boolean => {
+export const willAct = (unit: Unit): boolean => {
     if (!unit.isEnemy) return false;
+    /**
+     * DEAD IS DEAD, and `isDying` alone was not enough to say so.
+     *
+     * `isDying` is a rendering flag: the reducer sets it when it starts the death animation,
+     * which is a separate action from the APPLY_DAMAGE that emptied the health bar. Between
+     * those two — and on any path that removes a body without animating it — the corpse is
+     * still in `units` with an intent on it, so the board went on warning that a house was
+     * about to lose its brain to a zombie the player had already killed. The whole point of
+     * the telegraph is that it can be trusted; one warning that cannot be acted on teaches
+     * people to ignore the ones that can.
+     */
+    if (unit.hp <= 0) return false;
     if (unit.isDying) return false;
     // FREEZE skips the turn exactly like STUN (turnManager builds stunnedUnitIds from both),
     // but only STUN was listed here — so a frozen zombie went on telegraphing an attack it
@@ -86,9 +106,29 @@ export const computeThreatenedTiles = (units: Unit[]): Position[] => {
     for (const unit of units || []) {
         if (!willAct(unit)) continue;
         const intent = unit.intent!;
+
+        // Blast tiles are read for EVERY intent type, ahead of the ladder below: a bolt rides
+        // an ATTACK but a grid discharging rides a WAIT, and both threaten ground. A telegraph
+        // that only believed ATTACK would show the punch and hide what jumps off it.
+        (intent.blast ?? []).forEach(h => { if (isValidPos(h.pos)) hits.push(h.pos); });
+        // Same three lines for the same reason. `strikes` and `blast` differ in how the engine
+        // RESOLVES them — one provokes an answer, one does not — and not at all in whether the
+        // ground is about to be hurt. This overlay only asks the second question.
+        (intent.strikes ?? []).forEach(h => { if (isValidPos(h.pos)) hits.push(h.pos); });
+
         if (intent.type !== 'ATTACK' && intent.type !== 'SPAWN') continue;
-        if (!isValidPos(intent.target)) continue;
-        hits.push(intent.target);
+        // A multi-tile summon threatens every tile it lands on, not just the first. Without
+        // this the player is shown one of the four and surprised by three.
+        // A multi-blow attack is the same problem as a multi-tile summon: `target` is only
+        // the first hand. computeThreatDetail keeps one mark per entry and sumThreatDamageAt
+        // adds them by tile, so two blows on one body print -6 on one square with no new UI.
+        // `target` is `strikes[0]` by contract, so a multi-blow intent has ALREADY listed it
+        // above — adding it again here billed the first hand twice and printed -9 for two
+        // 3-damage swings. When `strikes` speaks for the whole attack, this line says nothing.
+        const landing = intent.type === 'SPAWN' && intent.spawnTiles?.length
+            ? intent.spawnTiles
+            : (intent.strikes?.length ? [] : [intent.target]);
+        landing.filter(isValidPos).forEach(p => hits.push(p!));
     }
     return dedupePositions(hits);
 };
@@ -96,10 +136,14 @@ export const computeThreatenedTiles = (units: Unit[]): Position[] => {
 /**
  * Houses that lose their brain next turn, and who takes it.
  *
- * A zombie steals a brain by ENDING its move on a house that still holds one — see
- * turnManager's "Reached a house that still holds a brain" branch. So the telegraph is
- * simply: does this unit's walk finish on an occupied house? Attack intents never take a
- * brain, only movement does, which is exactly why the plain threat overlay missed it.
+ * A zombie takes a brain by BITING the house from the tile beside it, and that bite is an
+ * ordinary ATTACK intent aimed at the house (turnManager, "BRAIN BITE"). So the telegraph is
+ * simply: is something aiming an attack at a house?
+ *
+ * There used to be a second case — a walk whose destination was a house — and removing it is
+ * the point. It fired a full turn before the zombie could do anything, on a unit the player
+ * could still intercept, which trained people to read the red house marker as noise. A
+ * warning that cannot be acted on yet is worse than no warning.
  */
 export const computeBrainThreats = (units: Unit[], board: TileData[]): BrainThreat[] => {
     const houses = new Map<string, TileData>();
@@ -123,15 +167,6 @@ export const computeBrainThreats = (units: Unit[], board: TileData[]): BrainThre
             continue;
         }
 
-        if (intent.type !== 'MOVE') continue;
-
-        // Where the walk actually ends: the last path step, or a bare moveTo.
-        const path = intent.movePath;
-        const destination = path && path.length > 0 ? path[path.length - 1] : intent.moveTo;
-        if (!isValidPos(destination)) continue;
-        if (!houses.has(key(destination))) continue;
-
-        threats.push({ pos: { x: destination.x, y: destination.y }, sourceId: unit.id });
     }
     return threats;
 };
@@ -157,19 +192,40 @@ export const computeThreatDetail = (units: Unit[]): ThreatMark[] => {
     for (const unit of units || []) {
         if (!willAct(unit)) continue;
         const intent = unit.intent!;
+
+        // Each blast tile prints its OWN number. That is the whole point of a falloff: the
+        // player has to read 3 / 2 / 1 off the board and decide which body to walk out of the
+        // pattern. One summed figure would hide the shape the fight is teaching.
+        (intent.blast ?? []).forEach(h => {
+            if (isValidPos(h.pos)) marks.push({ pos: { x: h.pos.x, y: h.pos.y }, damage: h.damage, sourceId: unit.id });
+        });
+        (intent.strikes ?? []).forEach(h => {
+            if (isValidPos(h.pos)) marks.push({ pos: { x: h.pos.x, y: h.pos.y }, damage: h.damage, sourceId: unit.id });
+        });
+
         if (intent.type !== 'ATTACK' && intent.type !== 'SPAWN') continue;
-        if (!isValidPos(intent.target)) continue;
+        // A multi-tile summon threatens every tile it lands on, not just the first. Without
+        // this the player is shown one of the four and surprised by three.
+        // A multi-blow attack is the same problem as a multi-tile summon: `target` is only
+        // the first hand. computeThreatDetail keeps one mark per entry and sumThreatDamageAt
+        // adds them by tile, so two blows on one body print -6 on one square with no new UI.
+        // `target` is `strikes[0]` by contract, so a multi-blow intent has ALREADY listed it
+        // above — adding it again here billed the first hand twice and printed -9 for two
+        // 3-damage swings. When `strikes` speaks for the whole attack, this line says nothing.
+        const landing = intent.type === 'SPAWN' && intent.spawnTiles?.length
+            ? intent.spawnTiles
+            : (intent.strikes?.length ? [] : [intent.target]);
 
         // A SPAWN telegraphs a body arriving, not damage — show it as 0.
         const damage = intent.type === 'SPAWN'
             ? (intent.damage ?? 0)
             : (intent.damage ?? unit.damage ?? 0);
 
-        marks.push({
-            pos: { x: intent.target.x, y: intent.target.y },
+        landing.filter(isValidPos).forEach(p => marks.push({
+            pos: { x: p!.x, y: p!.y },
             damage,
             sourceId: unit.id,
-        });
+        }));
     }
     return marks;
 };

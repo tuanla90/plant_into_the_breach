@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SkipForward, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import { DialogueLine } from '../data/tutorialDialogues';
 import { useI18n } from '../i18n';
 
@@ -42,15 +42,15 @@ export const TutorialDialogue: React.FC<TutorialDialogueProps> = ({ lines, onDon
             className="fixed inset-0 z-[70] bg-black/75 flex flex-col justify-end font-pixel select-none cursor-pointer"
             onClick={advance}
         >
-            {/* Skip — the only control that does not advance */}
-            <button
-                onClick={(e) => { e.stopPropagation(); onDone(); }}
-                className="absolute top-4 right-4 flex items-center gap-2 px-3 py-2 text-xs uppercase font-bold tracking-widest text-gray-400 hover:text-white border border-gray-700 hover:border-gray-400 rounded-md transition-colors bg-black/60"
-            >
-                <SkipForward size={14} /> {t('Skip')}
-            </button>
+            {/* No skip button of its own: it sat exactly where the run-wide skip now
+                lives and read as "skip this scene" — TutorialSkipButton (App, top-right)
+                is the single exit. A scene is short enough to click through. */}
 
-            <div className="w-full max-w-4xl mx-auto px-4 pb-6 relative">
+            {/* pb-16, not pb-6: the run-wide skip button lives in the bottom-left corner
+                (~46px tall with its margin), and on narrow viewports the near-full-width
+                box used to slide under it. The extra padding keeps the two apart at
+                every width instead of relying on the box being narrower than the screen. */}
+            <div className="w-full max-w-4xl mx-auto px-4 pb-16 relative">
                 {/* Portrait, standing on the dialogue box */}
                 <img
                     src={line.img}

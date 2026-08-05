@@ -3,6 +3,10 @@ import React, { useState } from 'react';
 import { Unit, UnitClass } from '../types';
 import { Zap, Shield, Sun, Utensils, Flame, CloudFog, ArrowRight, Skull, Flag, Brain, Snowflake } from 'lucide-react';
 import { ANIMATION_CONFIG, BOARD_TILT_DEG } from '../constants';
+import { facingFlip, spriteFor } from '../utils/icons';
+import { willAct } from '../utils/threat';
+import { ElementBadge } from './ElementBadge';
+import { useI18n } from '../i18n';
 
 interface UnitComponentProps {
   unit: Unit;
@@ -12,7 +16,12 @@ interface UnitComponentProps {
 }
 
 export const UnitComponent: React.FC<UnitComponentProps> = ({ unit, isSelected, isBrainThief = false }) => {
+  const { t } = useI18n();
   const [imgError, setImgError] = useState(false);
+  // Reset on a sprite swap: without this a single failed load would keep the skull fallback
+  // for the rest of the fight, including for the phase-two art that might load perfectly.
+  const shownSprite = spriteFor(unit);
+  React.useEffect(() => { setImgError(false); }, [shownSprite]);
 
   const isSunflower = unit.class === UnitClass.SUNFLOWER || unit.class === UnitClass.TWIN_SUNFLOWER || unit.class === UnitClass.SUN_SHROOM;
   const isDigesting = (unit.digestingTurns || 0) > 0;
@@ -53,7 +62,7 @@ export const UnitComponent: React.FC<UnitComponentProps> = ({ unit, isSelected, 
   // The Gargantuar's art is drawn facing right; every other zombie in the set marches
   // left, toward the lawn. Mirror it on the WRAPPER, not the <img> — the idle-bob
   // animation owns the img's transform and would silently erase a flip put there.
-  const flip = unit.class === UnitClass.GARGANTUAR ? ' scaleX(-1)' : '';
+  const flip = facingFlip(unit.class);
   const transformStyle: any = { transformOrigin: '50% 100%' };
   if (unit.visualOffset) {
       transformStyle.transform = `translate(${unit.visualOffset.y * 100}%, ${unit.visualOffset.x * 100}%) ${standUp}${flip}`;
@@ -67,7 +76,11 @@ export const UnitComponent: React.FC<UnitComponentProps> = ({ unit, isSelected, 
   // --- INTENT ARROW LOGIC ---
   // A stunned / dying / still-spawning unit will not act, so it must not telegraph.
   // Hypnotised zombies (isEnemy === false) fight for the player, so their stale intent is not a threat.
-  const telegraphs = unit.isEnemy && !isDying && !hasStun && !isSpawning;
+  // One predicate for "will it act", shared with the threat overlay (utils/threat.ts). The
+  // inline copy that used to live here had drifted: no health check and no FREEZE, so a dead
+  // or frozen zombie kept pointing at a target the overlay had already cleared.
+  // `isSpawning` stays local — it is about this frame's animation, not about the rules.
+  const telegraphs = willAct(unit) && !isSpawning;
 
   let intentArrow = null;
   if (unit.intent?.type === 'ATTACK' && unit.intent.target && telegraphs) {
@@ -160,7 +173,10 @@ export const UnitComponent: React.FC<UnitComponentProps> = ({ unit, isSelected, 
                     </div>
                 ) : (
                     <img 
-                        src={unit.imgUrl} 
+                        // Not `unit.imgUrl` — a boss in its second phase is a different
+                        // picture, and which one is a question about state, not about art
+                        // (utils/icons.ts SPRITE_VARIANTS).
+                        src={spriteFor(unit)}
                         alt={unit.class} 
                         referrerPolicy="no-referrer"
                         onError={() => setImgError(true)}
@@ -176,6 +192,49 @@ export const UnitComponent: React.FC<UnitComponentProps> = ({ unit, isSelected, 
                         `}
                     />
                 )}
+            </div>
+        )}
+
+        {/* --- DYNAMIC ELEMENTAL AURA OVERLAY --- */}
+        {!isDying && unit.element === 'FIRE' && (
+            <div className="absolute inset-0 rounded-full pointer-events-none z-10 border border-orange-500/80 shadow-[0_0_15px_rgba(249,115,22,0.85)] animate-pulse">
+                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-yellow-300 rounded-full blur-[1px] animate-[bounce_1.2s_infinite]"></div>
+                <div className="absolute -bottom-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full blur-[1px] animate-[ping_1.5s_infinite]"></div>
+            </div>
+        )}
+        {!isDying && unit.element === 'ICE' && (
+            <div className="absolute inset-0 rounded-full pointer-events-none z-10 border border-sky-400/80 shadow-[0_0_15px_rgba(56,189,248,0.9)] animate-pulse">
+                <div className="absolute top-0 right-1 w-2 h-2 bg-sky-200 rotate-45 animate-ping opacity-75"></div>
+            </div>
+        )}
+        {!isDying && unit.element === 'ELEC' && (
+            <div className="absolute inset-0 rounded-full pointer-events-none z-10 border border-amber-300/80 shadow-[0_0_15px_rgba(250,204,21,0.9)] animate-[pulse_0.6s_infinite]">
+                <div className="absolute -top-2 left-2 w-1 h-3 bg-yellow-300 rotate-12 blur-[0.5px]"></div>
+                <div className="absolute -bottom-1 left-1/2 w-3 h-1 bg-cyan-300 -rotate-12 blur-[0.5px]"></div>
+            </div>
+        )}
+
+        {/* --- CONTINUOUS STATUS EFFECTS OVERLAYS --- */}
+        {!isDying && hasBurn && (
+            <div className="absolute inset-0 pointer-events-none z-15 rounded-full bg-gradient-to-t from-orange-600/40 via-red-500/20 to-transparent animate-pulse border border-orange-500/50">
+                <div className="absolute -top-2 left-1/2 -translate-x-1/2 flex gap-1">
+                    <Flame size={14} className="text-orange-500 animate-bounce drop-shadow-[0_0_4px_rgba(249,115,22,1)]" />
+                </div>
+            </div>
+        )}
+        {!isDying && hasFreeze && (
+            <div className="absolute inset-0 pointer-events-none z-15 rounded-md bg-sky-400/30 border-2 border-sky-300/80 shadow-[0_0_10px_rgba(56,189,248,0.8)] backdrop-blur-[1px]">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                    <Snowflake size={20} className="text-sky-100 animate-spin opacity-90 drop-shadow-[0_0_6px_rgba(56,189,248,1)]" />
+                </div>
+            </div>
+        )}
+        {!isDying && hasStun && (
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 pointer-events-none z-30 animate-spin">
+                <div className="flex gap-1">
+                    <span className="text-yellow-300 text-xs font-bold drop-shadow-[0_0_3px_black]">★</span>
+                    <span className="text-amber-400 text-xs font-bold drop-shadow-[0_0_3px_black]">★</span>
+                </div>
             </div>
         )}
 
@@ -224,11 +283,32 @@ export const UnitComponent: React.FC<UnitComponentProps> = ({ unit, isSelected, 
                      </div>
                 )}
 
+                {/* Element carried into the fight. Bottom-LEFT, and a bordered chip rather than
+                    a bare glyph, because the status column above is bare glyphs in the SAME
+                    two icons: a flame there means "burning", a flame here means "sets things
+                    burning". Sharing a corner or a shape would invert the reading. */}
+                {unit.element && (
+                    <div className="absolute bottom-2 left-0 z-20">
+                        <ElementBadge element={unit.element} size={9} />
+                    </div>
+                )}
+
                 {/* Shield / Armor (from Harden-type skills, Pumpkin Shell, fusions) */}
                 {(unit.shield || 0) > 0 && (
                      <div className="absolute bottom-2 right-0 z-20 flex items-center gap-[1px] bg-black/70 rounded-sm px-[2px] py-[1px] border border-sky-500/60">
                          <Shield size={10} className="text-sky-400" fill="currentColor" />
                          <span className="text-[9px] font-bold leading-none text-sky-200">{unit.shield}</span>
+                     </div>
+                )}
+
+                {/* Helmet armour — permanent, so it must not look like a shield the player can
+                    chew through: grey, not sky-blue, and it never counts down. Perfect
+                    information: the rule "every hit loses N" has to be readable on the body. */}
+                {(unit.armor || 0) > 0 && (unit.shield || 0) === 0 && (
+                     <div title={t('Armor: every hit loses 1 damage. Fire and spikes ignore it.')}
+                          className="absolute bottom-2 right-0 z-20 flex items-center gap-[1px] bg-black/70 rounded-sm px-[2px] py-[1px] border border-zinc-400/60">
+                         <Shield size={10} className="text-zinc-300" />
+                         <span className="text-[9px] font-bold leading-none text-zinc-200">{unit.armor}</span>
                      </div>
                 )}
             </>

@@ -1,6 +1,8 @@
 
-import { Unit, Intent, Position, TileData, TerrainDefinition, UnitClass } from '../types';
+import { Unit, Intent, Position, TileData, TerrainDefinition } from '../types';
 import { findPath } from './gameLogic';
+import { behaviourFor } from './bossBehaviours';
+import { enemyElementRider } from './elements';
 
 const manhattan = (a: Position, b: Position) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 
@@ -38,7 +40,33 @@ const findGoal = (enemy: Unit, board: TileData[]): Position => {
     return fallback || { x: enemy.position.x, y: 0 };
 };
 
+/**
+ * THE HORDE'S ELEMENT RIDER (utils/elements.ts, "blighted horde").
+ *
+ * A wrapper over the planner rather than edits inside it, because an ATTACK leaves this file
+ * through four different doors (taunt, boss hook, blocker, brain bite) and a rider stapled to
+ * each one is four chances to miss the fifth. Decorating the finished intent means every
+ * current and future attack path pays the same way.
+ *
+ * Boss intents pass through untouched: bosses never roll an element (`rollEnemyElement`), and
+ * the guard here keeps a hand-tuned `statusOnHit` on a boss intent from ever being appended to.
+ */
+const withElementRider = (enemy: Unit, intent: Intent): Intent => {
+    if (!enemy.element || enemy.bossId || intent.type !== 'ATTACK') return intent;
+    const rider = enemyElementRider(enemy.element).filter(e => !intent.statusOnHit?.includes(e));
+    if (rider.length === 0) return intent;
+    return { ...intent, statusOnHit: [...(intent.statusOnHit ?? []), ...rider] };
+};
+
 export const planEnemyIntent = (
+    enemy: Unit,
+    playerUnits: Unit[],
+    board: TileData[] = [],
+    terrainDefs: Record<string, TerrainDefinition> = {},
+    collisionUnits: Unit[] = playerUnits
+): Intent => withElementRider(enemy, planIntentCore(enemy, playerUnits, board, terrainDefs, collisionUnits));
+
+const planIntentCore = (
     enemy: Unit,
     playerUnits: Unit[],
     board: TileData[] = [],
@@ -48,6 +76,51 @@ export const planEnemyIntent = (
     const goal = findGoal(enemy, board);
     // A Flag Zombie on the board hands every other zombie +1 damage (turnManager PHASE 1.5).
     const damage = enemy.damage + (enemy.statusEffects.includes('ENRAGED') ? 1 : 0);
+
+    /**
+     * TAUNT — the one status that redirects rather than delays, and the reason Thornhide exists.
+     *
+     * It runs ahead of every rule below, including the Gargantuar's private branch: a provoked
+     * Gargantuar swings at the plant that provoked it instead of lobbing an Imp over the wall.
+     * That is the whole promise of the skill — the three units built to go AROUND a blocker
+     * (Balloon flies, Digger burrows, Catapult outranges) have to come at it instead.
+     *
+     * A dead taunter steers nobody: with no living unit behind `tauntedBy` this falls straight
+     * through to the normal brain hunt rather than freezing the zombie on an empty tile.
+     */
+    const taunter = enemy.statusEffects.includes('TAUNTED') && enemy.tauntedBy
+        ? playerUnits.find(u => u.id === enemy.tauntedBy && u.hp > 0)
+        : undefined;
+
+    if (taunter) {
+        const tauntReach = Math.max(1, enemy.attackRange ?? 1);
+        if (manhattan(enemy.position, taunter.position) <= tauntReach) {
+            return { type: 'ATTACK', target: { ...taunter.position }, damage };
+        }
+
+        // Close the distance. Deliberately NOT subject to the "never turn around to eat what
+        // is behind you" rule that governs the blocker search below — making the horde turn
+        // around IS the effect being paid for.
+        const tauntRoute = board.length > 0
+            ? findPath(enemy, taunter.position, collisionUnits, board, terrainDefs)
+            : [];
+        const tauntIdeal = board.length > 0 && tauntRoute.length === 0
+            ? findPath(enemy, taunter.position, [], board, terrainDefs)
+            : tauntRoute;
+        // moveTo / movePath drive the telegraph, so they must be set on every MOVE intent.
+        const tauntWalk = tauntIdeal.slice(0, Math.max(1, enemy.moveRange));
+        if (tauntWalk.length > 0) {
+            return {
+                type: 'MOVE',
+                description: 'Provoked! Coming for you...',
+                moveTo: tauntWalk[tauntWalk.length - 1],
+                movePath: tauntWalk,
+            };
+        }
+        // Walled off from the taunter: still telegraph that it is straining toward the taunt
+        // rather than silently reverting to hunting brains, which would read as the skill failing.
+        return { type: 'MOVE', description: 'Provoked, but blocked...' };
+    }
 
     // Route with the board empty of units, and the route it can actually walk today.
     const idealRoute = board.length > 0 ? findPath(enemy, goal, [], board, terrainDefs) : [];
@@ -70,7 +143,15 @@ export const planEnemyIntent = (
     // Using movement range instead made rule 1 fire almost every turn on an open board (a
     // brain is nearly always within 3 steps), so nothing was ever bitten. Adjacency is the
     // reading that keeps rule 2 alive.
-    const brainWithinReach = distToGoal <= 1;
+    //
+    // And the goal must still HOLD something. `findGoal` falls back to the nearest house when
+    // every brain is gone, which is the right heading to walk in — but a zombie that has
+    // already robbed the house it is standing beside would otherwise keep telegraphing a bite
+    // on an empty building for the rest of the fight, red arrow and all. It survives the theft
+    // now (see turnManager's BRAIN BITE), so this stopped being a state nobody could reach.
+    const goalTile = board.find(t => t.x === goal.x && t.y === goal.y);
+    const goalIsWorthBiting = !goalTile?.isHouse || !!goalTile.hasBrain;
+    const brainWithinReach = distToGoal <= 1 && goalIsWorthBiting;
 
     // Melee bites at 1. Catapult Zombie shells from 3 and never has to close.
     const reach = Math.max(1, enemy.attackRange ?? 1);
@@ -92,55 +173,21 @@ export const planEnemyIntent = (
         }
     }
 
-    // --- GARGANTUAR SPECIAL AI ---
-    if (enemy.class === UnitClass.GARGANTUAR) {
-        // If something is in melee range, ALWAYS Smash
-        if (blocker) {
-            return { type: 'ATTACK', target: blocker.position, damage };
-        }
-
-        // Otherwise try to throw an Imp behind the lines, next to the closest plant
-        let closest: Unit | null = null;
-        let minDist = 999;
-        for (const p of playerUnits) {
-            const dist = manhattan(p.position, enemy.position);
-            if (dist < minDist) {
-                minDist = dist;
-                closest = p;
-            }
-        }
-
-        if (closest) {
-            const neighbors = [
-                { x: closest.position.x + 1, y: closest.position.y },
-                { x: closest.position.x - 1, y: closest.position.y },
-                { x: closest.position.x, y: closest.position.y + 1 },
-                { x: closest.position.x, y: closest.position.y - 1 }
-            ];
-
-            // Find an empty spot (loose check, turnManager does the strict one)
-            let landingSpot: Position | null = null;
-            for (const n of neighbors) {
-                if (n.x < 0 || n.x >= 8 || n.y < 0 || n.y >= 8) continue;
-                const tile = board.find(t => t.x === n.x && t.y === n.y);
-                if (tile?.isHouse) continue;
-                const isOccupied = playerUnits.some(u => u.position.x === n.x && u.position.y === n.y);
-                if (!isOccupied) {
-                    landingSpot = n;
-                    break;
-                }
-            }
-
-            // Was `Math.random() < 0.3 || minDist > 4`. The coin flip made the same board
-            // play differently on every attempt, which a scripted tutorial cannot tolerate —
-            // and outside the tutorial it only ever produced "why did it do that this time?".
-            // Distance alone is both deterministic and better reasoning: throw when too far
-            // to swing, walk in and swing when close.
-            const shouldThrow = minDist > 4;
-            if (shouldThrow && landingSpot) {
-                return { type: 'SPAWN', target: landingSpot, description: 'Throwing Imp!' };
-            }
-        }
+    // --- BOSS BEHAVIOUR ---
+    //
+    // One lookup, ahead of the standard ladder, and nothing else in this file knows a boss
+    // exists. The Gargantuar's rules used to sit here inline; they now live in
+    // utils/bossBehaviours.ts alongside every other boss, because nine of them written this
+    // way would bury the ordinary zombie AI under nine exceptions that never apply to it.
+    //
+    // A behaviour returning null means "nothing special this turn" and falls through to the
+    // standard ladder below — which is the common case, and should be.
+    const behaviour = behaviourFor(enemy.bossId);
+    if (behaviour) {
+        const special = behaviour({
+            enemy, playerUnits, board, terrainDefs, goal, damage, blocker,
+        });
+        if (special) return special;
     }
 
     // --- STANDARD AI ---

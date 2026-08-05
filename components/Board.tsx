@@ -51,6 +51,8 @@ interface BoardProps {
   /** Blast area of the item currently being aimed — follows the hovered tile. */
   itemAoeTiles?: Position[];
   previewPushDirection?: 'UP' | 'DOWN' | 'LEFT' | 'RIGHT' | null;
+  /** Tiles that shove travels. Drawn as one chevron per tile. */
+  previewPushDistance?: number;
   interactionMode?: string;
   selectedRosterUnit?: Unit | null;
   /** Tiles the sector hazard will hit next turn. Telegraphed a full turn ahead. */
@@ -84,6 +86,7 @@ export const Board: React.FC<BoardProps> = ({
   skillRangeTiles = [],
   itemAoeTiles = [],
   previewPushDirection = null,
+  previewPushDistance = 1,
   interactionMode,
   selectedRosterUnit,
   hazardTiles = [],
@@ -197,6 +200,7 @@ export const Board: React.FC<BoardProps> = ({
                                 isInItemAoe={isInItemAoe(tile.x, tile.y)}
                                 isPlacementZone={isPlacementZone}
                                 pushDirection={isHoveredTarget ? previewPushDirection : null}
+                                pushDistance={previewPushDistance}
                                 ghostImgUrl={showGhost ? selectedRosterUnit?.imgUrl : undefined} 
                                 onClick={() => onTileClick({ x: tile.x, y: tile.y })}
                                 onMouseEnter={() => {

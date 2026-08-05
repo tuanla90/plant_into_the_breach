@@ -22,6 +22,7 @@ initBalance();
  */
 if (import.meta.env.DEV) {
     import('./data/tutorial.assert');
+    import('./data/roster.assert');
 }
 
 const rootElement = document.getElementById('root');

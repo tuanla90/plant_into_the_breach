@@ -20,7 +20,9 @@ export type SfxName =
     | 'ui-click' | 'ui-select' | 'ui-back' | 'ui-coin' | 'ui-item'
     | 'step' | 'attack-melee' | 'attack-shot' | 'attack-lob'
     | 'skill-cast' | 'skill-ult'
-    | 'hit' | 'hit-heavy' | 'hit-freeze' | 'hit-blocked' | 'heal' | 'drown'
+    | 'hit' | 'hit-heavy' | 'hit-freeze' | 'hit-fire' | 'hit-ice' | 'hit-elec' | 'hit-blocked' | 'heal' | 'drown'
+    /** The nine-hero mechanics: shove, taunt, spike field, shield grant, lightning arc. */
+    | 'push' | 'taunt' | 'spikes' | 'shield' | 'arc'
     | 'die-enemy' | 'die-plant'
     | 'spawn' | 'turn-start' | 'gain-sun' | 'brain-lost'
     | 'victory' | 'defeat' | 'fusion';
@@ -51,9 +53,22 @@ const SFX: Record<SfxName, { files: string[]; gain: number }> = {
     'hit':          { files: ['hit-1.wav', 'hit-2.wav', 'hit-3.wav'], gain: 0.65 },
     'hit-heavy':    { files: ['hit-heavy.wav'],   gain: 0.75 },
     'hit-freeze':   { files: ['hit-freeze.wav'],  gain: 0.60 },
+    'hit-fire':     { files: ['hit-heavy.wav', 'attack-melee.wav'], gain: 0.75 },
+    'hit-ice':      { files: ['hit-freeze.wav'],  gain: 0.65 },
+    'hit-elec':     { files: ['arc.wav'],         gain: 0.70 },
     'hit-blocked':  { files: ['hit-blocked.wav'], gain: 0.50 },
     'heal':         { files: ['heal.wav'],        gain: 0.55 },
     'drown':        { files: ['drown.wav'],       gain: 0.70 },
+
+    // A shove happens several times in one Sweep, so it sits UNDER the impact layer —
+    // loud enough to feel, quiet enough that four of them are not four hits.
+    'push':         { files: ['push.wav'],        gain: 0.45 },
+    // Deliberately near the top of the mix. A taunt turns the whole horde around; it is the
+    // loudest decision a player makes in a turn and the board is about to look very different.
+    'taunt':        { files: ['taunt.wav'],       gain: 0.75 },
+    'spikes':       { files: ['spikes.mp3'],      gain: 0.55 },
+    'shield':       { files: ['shield.wav'],      gain: 0.55 },
+    'arc':          { files: ['arc.wav'],         gain: 0.50 },
 
     'die-enemy':    { files: ['die-enemy.wav'],   gain: 0.70 },
     'die-plant':    { files: ['die-plant.wav'],   gain: 0.70 },

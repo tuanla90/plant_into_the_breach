@@ -1,7 +1,8 @@
 
-import { MapNode, WorldType, TileData, TerrainType } from '../types';
+import { BossId, MapNode, WorldType, TileData, TerrainType } from '../types';
 import { GRID_SIZE } from '../constants';
-import { pickTemplate, materializeTemplate } from '../data/maps';
+import { pickTemplate, pickArena, materializeTemplate } from '../data/maps';
+import { actsOfStage, bossById } from '../data/unlocks';
 
 /**
  * A run must never go more than this many layers without a place to revive a hero — measured
@@ -15,39 +16,90 @@ const MAX_LAYERS_BETWEEN_CAMPFIRES = 4;
 /**
  * The run walks through three sectors, each with its own hazard (see data/hazards.ts).
  * GRASS is deliberately calm so the opening levels teach the base rules first.
+ *
+ * Which THREE depends on how far the campaign has got. A stage is three acts and three bosses
+ * (PLAN-boards-bosses.md section 1), so the stage a save is on is simply how many bosses it
+ * has put down, divided by three — no new counter, and it cannot drift out of sync with the
+ * boss table because it IS the boss table.
  */
-const sectorForLayer = (layer: number): WorldType => {
-    if (layer <= 3) return 'GRASS';
-    if (layer <= 6) return 'DESERT';
-    return 'VOLCANO';
-};
+const STAGE_SECTORS: WorldType[][] = [
+    ['GRASS', 'DESERT', 'VOLCANO'],  // I  — the Green Belt
+    ['COAST', 'THORN', 'ICE'],       // II — the Far Shore
+    ['NEON', 'RUIN', 'GRID'],        // III— the City
+];
 
-// Slay the Spire style procedural generation
-export const GENERATE_MAP = (): MapNode[] => {
+/** 0-based stage index, clamped: a finished campaign keeps replaying the last chain. */
+export const stageForBosses = (bossesBeaten: number): number =>
+    Math.max(0, Math.min(STAGE_SECTORS.length - 1, Math.floor(bossesBeaten / 3)));
+
+/**
+ * Layers in one act: ordinary ground, a shop, more ground, the rest, the boss.
+ *
+ * FIVE, so a full three-act stage is a fifteen-layer run — the length this generator was
+ * originally written for, before it was cut to ten to fit a single boss on the end of it.
+ * Three acts of four would leave one ordinary battle per act, which is not a chapter, it is a
+ * corridor with a boss at the end.
+ */
+const LAYERS_PER_ACT = 5;
+
+/**
+ * A RUN IS THREE ACTS, and it always said so.
+ *
+ * `RunResult` has carried the sentence "a run is three acts, and each boss is banked the
+ * moment it falls" since before there was a campaign screen — but this generator built ONE
+ * boss, at layer 9, and that was the run. A stage was three acts on the map screen and one act
+ * in the code, so anything that wanted to happen "after an act" had exactly one place it could
+ * happen: the moment the whole run ended.
+ *
+ * Each act is now a band of `LAYERS_PER_ACT` layers ending in its own boss, in its own sector,
+ * behind its own pre-boss rest. Only the LAST boss carries the run out (`endsRun`); the others
+ * are banked as they fall and the run walks on into the next sector.
+ *
+ * ENTERING MID-STAGE. The campaign screen lets a player start at any act they have unlocked,
+ * and that choice is where the run BEGINS rather than all of it: pick act 2 and the run is
+ * acts 2 and 3. The alternative is making "enter act 2" mean "replay act 1 first", which is
+ * the opposite of what an unlocked act card promises.
+ *
+ * @param bossesBeaten  how far the save has got; picks the stage when nothing overrides it.
+ * @param stageOverride 0-based stage the player CHOSE on the campaign screen. The count is
+ *                      only ever a guess at where someone wants to be, and once there is a
+ *                      screen for saying so, the saying wins.
+ * @param bossId        the act the player chose. The run runs from that act to the end of its
+ *                      stage, and each act's boss is stamped onto its own boss node so
+ *                      `generateBoard` can pick that boss's authored arena.
+ */
+export const GENERATE_MAP = (bossesBeaten = 0, stageOverride?: number, bossId?: BossId): MapNode[] => {
+    const stage = stageOverride !== undefined
+        ? Math.max(0, Math.min(STAGE_SECTORS.length - 1, stageOverride))
+        : stageForBosses(bossesBeaten);
+    const chain = STAGE_SECTORS[stage] ?? STAGE_SECTORS[0];
+
+    // The acts this run walks: the chosen one through the end of the stage. Falling back to
+    // the whole stage keeps every other entry point — tutorial skip, debug jump, a save with
+    // no chosen act — behaving exactly as it did.
+    const startAct = bossId ? (bossById(bossId)?.act ?? 1) : 1;
+    const stageActs = actsOfStage((stage + 1) as 1 | 2 | 3);
+    const chosen = stageActs.filter(b => b.act >= startAct);
+    const plan = (chosen.length ? chosen : stageActs)
+        .map(b => ({ boss: b.id, world: chain[b.act - 1] ?? chain[0] }));
+
     const nodes: MapNode[] = [];
-    const layers = 10; // Reduced from 15 to 10
-    
-    // Generate nodes per layer logic
-    // Layer 0: Start (1 node)
-    // Layer 1-7: Random 2-4 nodes
-    // Layer 8: Rest Site (1 node) -> Pre-Boss
-    // Layer 9: Boss (1 node)
-    const nodesPerLayer: number[] = [1];
-    for (let i = 1; i < layers - 2; i++) {
+    const layers = plan.length * LAYERS_PER_ACT;
+
+    // Per act: ordinary ground, a shop, more ground, the rest, the boss. Those last two are
+    // ONE node each — a single node funnels every branch back together before the fight, which
+    // is what a pre-boss rest is for, and a boss the player could walk past is not a boss.
+    const nodesPerLayer: number[] = [];
+    for (let layer = 0; layer < layers; layer++) {
+        const within = layer % LAYERS_PER_ACT;
+        if (layer === 0 || within >= LAYERS_PER_ACT - 2) { nodesPerLayer.push(1); continue; }
         // Weighted random for width: mostly 2 or 3, rarely 4
         const rand = Math.random();
         if (rand > 0.9) nodesPerLayer.push(4);
         else if (rand > 0.4) nodesPerLayer.push(3);
         else nodesPerLayer.push(2);
     }
-    // The pre-boss rest is ONE node, as the header comment always said it was. It was being
-    // given a random 2-4 like any other layer, and since every node on it is forced to
-    // CAMPFIRE that alone made rest sites about half of all the campfires on the map — while
-    // the player still only ever steps on one of them. A single node also funnels every
-    // branch back together before the boss, which is what a pre-boss rest is for.
-    nodesPerLayer.push(1); // Pre-boss campfire
-    nodesPerLayer.push(1); // Boss
-    
+
     let nodeIdCounter = 0;
     const layerNodes: MapNode[][] = [];
 
@@ -68,20 +120,26 @@ export const GENERATE_MAP = (): MapNode[] => {
             const jitter = (Math.random() * 6) - 3; // +/- 3%
             const xPos = (segmentWidth * (i + 1)) + jitter;
             
-            // Determine Type
+            // Determine Type. Every act is the same shape: ordinary ground, a shop, a
+            // rest, then the thing the act is named after.
+            const within = layer % LAYERS_PER_ACT;
+            const actIndex = Math.floor(layer / LAYERS_PER_ACT);
             let type: MapNode['type'] = 'BATTLE';
-            
+
             if (layer === 0) {
                 type = 'BATTLE'; // Start
-            } else if (layer === layers - 1) {
-                type = 'BOSS'; // End
-            } else if (layer === layers - 2) {
-                // FORCE REST SITE BEFORE BOSS (Layer 8)
+            } else if (within === LAYERS_PER_ACT - 1) {
+                type = 'BOSS';
+            } else if (within === LAYERS_PER_ACT - 2) {
                 type = 'CAMPFIRE';
             } else {
                 const rand = Math.random();
-                // Hardcoded logic for pacing
-                if (layer === 3) {
+                // One shop per act, in the same slot every time, so a player can plan around
+                // it instead of hoping for one — but on ONE NODE of that layer, not all of
+                // them. Forcing the whole layer put nine shop icons on a three-act map and
+                // removed the choice it was meant to create: taking the shop should cost you
+                // whatever the branch beside it was offering.
+                if (within === 1 && i === 0) {
                      type = 'SHOP';
                 } else {
                     // INCREASED EVENT FREQUENCY
@@ -101,14 +159,26 @@ export const GENERATE_MAP = (): MapNode[] => {
                 }
             }
 
+            const act = plan[Math.min(actIndex, plan.length - 1)];
             const node: MapNode = {
                 id: `node_${nodeIdCounter++}`,
                 x: xPos,
                 y: yPos,
                 type,
-                world: sectorForLayer(layer), 
+                // The act's own sector, so the three bands on the map screen ARE the three
+                // acts — every border the player crosses is a boss they just put down.
+                world: act.world,
                 status: layer === 0 ? 'AVAILABLE' : 'LOCKED',
-                next: []
+                next: [],
+                ...(type === 'BOSS'
+                    ? {
+                        bossId: act.boss,
+                        // Only the stage's last act carries the run out. The others bank as
+                        // they fall (useGameProgression `projectUnlocks`) and the run walks
+                        // on — the same flag the Breach's gauntlet uses.
+                        ...(actIndex < plan.length - 1 ? { endsRun: false } : {}),
+                    }
+                    : {}),
             };
             currentLayer.push(node);
             nodes.push(node);
@@ -204,6 +274,88 @@ export const GENERATE_MAP = (): MapNode[] => {
     return nodes;
 };
 
+/**
+ * THE BREACH — a gauntlet, not a map.
+ *
+ * It used to be neither. Picking it generated an ordinary ten-layer stage III run with
+ * Blightlord swapped onto the final node: the same branching walk through Neon Rose, the same
+ * shops and campfires and random events, and the campaign screen's promise — "every boss
+ * again, back to back, with no brain rule, and then him" — delivered as one boss at the end of
+ * a normal Tuesday. The last act in the game was the third act again with different lighting.
+ *
+ * So it is authored rather than rolled, and it is authored as the opposite of a map:
+ *
+ *   NO BRANCHES. A Slay-the-Spire map is a route-planning game — take the elite for the
+ *   reward, skip the shop, reach the rest with health to spare. The Breach is a test of a
+ *   finished build against every problem the campaign posed, in order. There is nothing to
+ *   plan around, and a fork that offers no choice is worse than a line.
+ *
+ *   NO SHOPS, NO EVENTS. Whatever the squad walks in with is what fights. Buying a counter to
+ *   Voltmaw two nodes before Voltmaw is exactly the answer this run is meant to refuse.
+ *
+ *   NINE SECTORS, IN CAMPAIGN ORDER. Each boss is fought on its own arena, in its own sector,
+ *   so its own hazard fires (data/hazards.ts) — the rails still slide under Ironcart, the tide
+ *   still comes in on the Armada. Fighting a boss on neutral ground is fighting half of it.
+ *
+ *   A CAMP AFTER EVERY BOSS, and every service in it costs money (`paidCamp`). Ten boss
+ *   fights with no revives is not difficulty, it is a coin toss settled in the first ten
+ *   minutes — but a FREE rest between each one is no decision either. Each boss pays out
+ *   (COIN_PER_LEVEL + COIN_BOSS_BONUS), the camp on the other side of it is the only place
+ *   that money can go, and it never stretches to everything: patch the squad, or buy the gear
+ *   that might mean nobody needs patching next time.
+ *
+ * Nine of the ten bosses carry `endsRun: false`. Only Blightlord is the way out.
+ */
+export const GENERATE_BREACH_MAP = (): MapNode[] => {
+    // Campaign order, and the sector each one is fought in — the same pairing STAGE_SECTORS
+    // makes for an ordinary run, so a boss's act (stage 1 act 2) IS its ground (DESERT).
+    const run: { boss: BossId; world: WorldType }[] = [
+        { boss: 'GARGANTUAR', world: 'GRASS' },
+        { boss: 'CATAPULT_LORD', world: 'DESERT' },
+        { boss: 'CINDER_COLOSSUS', world: 'VOLCANO' },
+        { boss: 'BALLOON_ARMADA', world: 'COAST' },
+        { boss: 'SANDREAVER', world: 'THORN' },
+        { boss: 'YETI', world: 'ICE' },
+        { boss: 'DISCO_ZOMBOSS', world: 'NEON' },
+        { boss: 'CLOCKJAW', world: 'RUIN' },
+        { boss: 'VOLTMAW', world: 'GRID' },
+    ];
+
+    const nodes: MapNode[] = [];
+    const push = (n: Omit<MapNode, 'id' | 'x' | 'y' | 'next'>): MapNode => {
+        const node: MapNode = { id: `breach_${nodes.length}`, x: 50, y: 0, next: [], ...n };
+        nodes.push(node);
+        return node;
+    };
+
+    // A camp AT THE DOOR as well as after each boss. Gear is only sold at camps here, so
+    // without this one the opening purse is money the player cannot spend until the first
+    // Gargantuar is already dead — they would walk into it with a bare bench and no way to
+    // have done anything about it.
+    push({ type: 'CAMPFIRE', world: run[0].world, status: 'LOCKED', paidCamp: true });
+    run.forEach(step => {
+        push({ type: 'BOSS', world: step.world, status: 'LOCKED', bossId: step.boss, endsRun: false });
+        // One camp per boss, in the sector that boss was fought in.
+        push({ type: 'CAMPFIRE', world: step.world, status: 'LOCKED', paidCamp: true });
+    });
+    // Blightlord fights on the Breach's own board (arena_breach, RUIN, no houses at all), and
+    // this is the node that ends the run and banks the win.
+    push({ type: 'BOSS', world: 'RUIN', status: 'LOCKED', bossId: 'BLIGHTLORD' });
+
+    // A straight line down the page, evenly spaced, first node live.
+    nodes.forEach((node, i) => {
+        node.y = 5 + (i * (90 / (nodes.length - 1)));
+        // A gauntlet is a column, but a perfectly straight one reads as a progress bar rather
+        // than ground. A small alternating offset keeps it a path without ever implying a
+        // choice — there is only one link out of every node.
+        node.x = 50 + (i % 2 === 0 ? -6 : 6);
+        node.status = i === 0 ? 'AVAILABLE' : 'LOCKED';
+        node.next = i < nodes.length - 1 ? [nodes[i + 1].id] : [];
+    });
+
+    return nodes;
+};
+
 const IMPASSABLE_FOR_CHECK: TerrainType[] = ['WATER', 'MOUNTAIN', 'WALL'];
 
 /**
@@ -245,8 +397,10 @@ export const findUnreachableHouses = (board: TileData[]): string[] => {
  * Picks one of the hand-authored maps for this sector (see `data/maps.ts` for why they are
  * authored rather than generated) and materialises it.
  */
-export const generateBoard = (world: WorldType = 'GRASS'): TileData[] => {
-    const template = pickTemplate(world);
+export const generateBoard = (world: WorldType = 'GRASS', boss?: BossId): TileData[] => {
+    // A named boss is fought on its own ground when that ground has been drawn — the arena is
+    // where its mechanic becomes a mechanic rather than a stat line (see MapTemplate.arenaFor).
+    const template = boss ? pickArena(boss, world) : pickTemplate(world);
     const board = materializeTemplate(template);
 
     const unreachable = findUnreachableHouses(board);

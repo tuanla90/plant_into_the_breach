@@ -2,12 +2,15 @@ import { MaterialDefinition, MaterialId, UnitClass } from '../types';
 import { ICONS, MATERIAL_SPRITES } from '../utils/icons';
 
 /**
- * The fusion materials are the SAME five plants the heroes are built from.
+ * The fusion materials are the SAME plants the heroes are built from — one per hero.
  *
- * That symmetry is the point: five plants x five heroes gives 25 hand-authored recipes
- * (data/fusionRecipes.ts) from five sprites. What a fusion does depends on the PAIR, not on
- * the material alone — Peashooter grafted onto Sunspot gives her the attack she lacks,
- * while Peashooter grafted onto Shadeleaf just makes her shoot twice.
+ * That symmetry is the point: ten plants x ten heroes gives a 10x10 grid of hand-authored
+ * recipes (data/fusionRecipes.ts) out of ten sprites. What a fusion does depends on the
+ * PAIR, not on the material alone — Peashooter grafted onto Sunspot gives her the attack she
+ * lacks, while Peashooter grafted onto Shadeleaf just makes her shoot twice.
+ *
+ * It also forces a real choice every time one is bought: the same plant can go on the bench
+ * as a spare body or be burned into a hero. Pick one, lose the other.
  *
  * Prices keep the PvZ sun scale already used elsewhere, paid in Coin.
  */
@@ -84,16 +87,72 @@ export const MATERIAL_DEFINITIONS: Record<MaterialId, MaterialDefinition> = {
         benchClass: UnitClass.SNOW_PEA,
         benchStats: { maxHp: 3, damage: 2, moveRange: 3 },
     },
+
+    /**
+     * Spines. Its axis is the GROUND the attack crossed, not the attack itself — the only
+     * material in the pool that leaves something behind after the shot resolves.
+     */
+    MAT_CACTUS: {
+        id: 'MAT_CACTUS',
+        name: 'Cactus',
+        description: 'Spines. Makes the ground an attack crossed dangerous to stand on.',
+        coinCost: 100,
+        imgUrl: MATERIAL_SPRITES.MAT_CACTUS,
+        effect: { type: 'SPIKE_TRAIL' },
+        benchClass: UnitClass.CACTUS,
+        benchStats: { maxHp: 3, damage: 1, moveRange: 3 },
+    },
+
+    MAT_ENDURIAN: {
+        id: 'MAT_ENDURIAN',
+        name: 'Endurian',
+        description: 'Barbed husk. Turns being hit into a way of hitting back.',
+        coinCost: 150,
+        imgUrl: MATERIAL_SPRITES.MAT_ENDURIAN,
+        effect: { type: 'RETALIATE_DAMAGE', value: 2 },
+        benchClass: UnitClass.ENDURIAN,
+        benchStats: { maxHp: 5, damage: 1, moveRange: 2 },
+    },
+
+    /**
+     * The stem. Its axis is DISTANCE on a shove, and distance is what decides whether a push
+     * merely relocates a zombie or drops it in water — so this one is worth most on maps that
+     * have somewhere bad to land.
+     */
+    MAT_CHARD: {
+        id: 'MAT_CHARD',
+        name: 'Chard Guard',
+        description: 'A swinging stem. Whatever gets shoved, goes further.',
+        coinCost: 125,
+        imgUrl: MATERIAL_SPRITES.MAT_CHARD,
+        effect: { type: 'PUSH_DISTANCE', value: 1 },
+        benchClass: UnitClass.CHARD_GUARD,
+        benchStats: { maxHp: 3, damage: 0, moveRange: 3 },
+    },
+
+    MAT_PUMPKIN: {
+        id: 'MAT_PUMPKIN',
+        name: 'Pumpkin',
+        description: 'Shell to spare. Damage that never lands is health carried into the next fight.',
+        coinCost: 150,
+        imgUrl: MATERIAL_SPRITES.MAT_PUMPKIN,
+        effect: { type: 'SHIELD_BONUS', value: 1 },
+        benchClass: UnitClass.PUMPKIN,
+        benchStats: { maxHp: 4, damage: 0, moveRange: 2 },
+    },
 };
 
 /**
- * All five materials are available from the start. What is gated is the RECIPE — which
+ * Every material is available from the start. What is gated is the RECIPE — which
  * (hero, material) pairings you have learned — because that is where the depth actually is:
- * five plants, twenty-five authored results.
+ * ten plants, a hundred authored results.
  *
  * Gating the materials instead was the first attempt and it was worse in two ways: the pool
- * was only five deep so it emptied in about three fights, and a locked material made a
+ * was only a handful deep so it emptied in about three fights, and a locked material made a
  * plant on the bench simply unusable rather than making a *combination* something to chase.
+ *
+ * This is also why a material ships before its hero does: the four newest plants pay off on
+ * the heroes you already own long before Thornquill and company are unlocked.
  */
 export const STARTING_MATERIALS: MaterialId[] = [
     'MAT_SUNFLOWER',
@@ -101,9 +160,11 @@ export const STARTING_MATERIALS: MaterialId[] = [
     'MAT_CHOMPER',
     'MAT_WALLNUT',
     'MAT_SNOW_PEA',
-    // Buyable from the start like the rest: what is gated is the RECIPE, so the corn arm
-    // starts paying off for the five existing heroes long before Cobb herself is unlocked.
     'MAT_CORN',
+    'MAT_CACTUS',
+    'MAT_ENDURIAN',
+    'MAT_CHARD',
+    'MAT_PUMPKIN',
 ];
 
 export const getMaterial = (id: MaterialId): MaterialDefinition => MATERIAL_DEFINITIONS[id];

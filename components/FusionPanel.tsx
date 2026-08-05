@@ -9,7 +9,9 @@ import { HERO_DEFINITIONS } from '../data/heroes';
 import { getMaterial } from '../data/materials';
 import { getRecipe } from '../data/fusionRecipes';
 import { canFuse, applyFusion, applyFusionToSkill, getFusionEffectValue, hasFusionEffect } from '../utils/fusion';
+import { ELEMENT_DEFINITIONS, ELEMENT_HP_COST } from '../utils/elements';
 import { HERO_ACCENTS } from '../utils/icons';
+import { ElementBadge } from './ElementBadge';
 import { useI18n } from '../i18n';
 
 interface FusionPanelProps {
@@ -174,6 +176,12 @@ const Diff: React.FC<{ before: number | string; after?: number | string; better?
  * skill as combat would resolve it, and the passive list — each shown as
  * before → after while a plant is selected. The trade-off note stays put:
  * fusing consumes the plant forever.
+ *
+ * The hero's ELEMENT is shown everywhere the hero is (tabs, showcase, stats,
+ * passives). It is not decoration here: the element rides every attack, so it is
+ * the thing the graft lands on top of — Blizzard on an ICE hero is why fusion.ts
+ * has an ordering rule at all — and it is already charged against max HP, which
+ * is why the HP figure on this screen disagrees with the hero sheet.
  */
 export const FusionPanel: React.FC<FusionPanelProps> = ({ squad, bench, onFuse, onClose, onSelectionChange, knownRecipes }) => {
     const { t } = useI18n();
@@ -260,7 +268,15 @@ export const FusionPanel: React.FC<FusionPanelProps> = ({ squad, bench, onFuse, 
                                             <span className="text-[10px] font-bold uppercase truncate w-full text-center" style={{ color: isFocused ? hAccent : '#9ca3af' }}>
                                                 {hDef ? t(hDef.name) : h.name}
                                             </span>
-                                            <span className="text-[9px] text-gray-500">{used}/{FUSION_SLOTS}</span>
+                                            {/* Slots used, and the element this hero already
+                                                carries — the tab is the only place a hero the
+                                                player is NOT focused on is visible, and which
+                                                element they hold decides which plant is worth
+                                                grafting onto which of them. */}
+                                            <span className="flex items-center gap-1">
+                                                <span className="text-[9px] text-gray-500">{used}/{FUSION_SLOTS}</span>
+                                                {h.element && <ElementBadge element={h.element} size={9} />}
+                                            </span>
                                         </button>
                                     );
                                 })}
@@ -389,6 +405,11 @@ export const FusionPanel: React.FC<FusionPanelProps> = ({ squad, bench, onFuse, 
                                     <div className="text-2xl font-black uppercase tracking-widest" style={{ color: accent }}>
                                         {t(heroDef.name)}
                                     </div>
+                                    {/* The element rides every attack this hero makes, so it
+                                        stacks with what is about to be grafted on — Blizzard on
+                                        an ICE hero turns that permanent slow into a permanent
+                                        stun. Planning a build blind to it is not planning. */}
+                                    {hero.element && <ElementBadge element={hero.element} size={12} showName />}
                                     {/* Fusion slots */}
                                     <div className="flex gap-2 mt-1">
                                         {Array.from({ length: FUSION_SLOTS }).map((_, slot) => {
@@ -444,7 +465,14 @@ export const FusionPanel: React.FC<FusionPanelProps> = ({ squad, bench, onFuse, 
                                         <Shield size={12} /> {t('Stats')}
                                     </h3>
                                     <div className="grid grid-cols-3 gap-2">
-                                        <div className="bg-black/40 border border-gray-700 rounded p-2 flex flex-col items-center gap-1">
+                                        {/* The element's bill is already baked into maxHp, so this
+                                            number disagrees with the hero sheet on its own. Say why,
+                                            and read the figure from the constant — it moved 1 -> 2
+                                            once already and a copy here would now be lying. */}
+                                        <div
+                                            className="bg-black/40 border border-gray-700 rounded p-2 flex flex-col items-center gap-1"
+                                            title={hero.element ? t('-{n} max HP', { n: ELEMENT_HP_COST }) : undefined}
+                                        >
                                             <Heart size={14} className="text-red-400" fill="currentColor" />
                                             <span className="text-sm font-black">
                                                 {hero.hp}/<Diff before={hero.maxHp} after={simHero?.maxHp} />
@@ -462,6 +490,12 @@ export const FusionPanel: React.FC<FusionPanelProps> = ({ squad, bench, onFuse, 
                                             <span className="text-[9px] uppercase text-gray-500">{t('Move')}</span>
                                         </div>
                                     </div>
+                                    {hero.element && (
+                                        <div className="mt-1.5 flex items-center gap-1.5 text-[9px] text-gray-500">
+                                            <ElementBadge element={hero.element} size={9} showName />
+                                            <span>{t('-{n} max HP', { n: ELEMENT_HP_COST })}</span>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
@@ -541,6 +575,33 @@ export const FusionPanel: React.FC<FusionPanelProps> = ({ squad, bench, onFuse, 
                                         <FlaskConical size={12} /> {t('Passives & fusions')}
                                     </h3>
                                     <div className="flex flex-col gap-2">
+                                        {/* The element is a permanent rider on every attack, which
+                                            makes it a passive in everything but name — and it is the
+                                            one already on the hero when the grafts land on top of it.
+                                            Listed first so the stack reads in the order it resolves. */}
+                                        {hero.element && (
+                                            <div className="border border-gray-700 rounded p-2.5 bg-black/40 flex gap-2.5">
+                                                <div className="w-8 h-8 flex items-center justify-center shrink-0">
+                                                    <ElementBadge element={hero.element} size={14} />
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs font-bold uppercase" style={{ color: ELEMENT_DEFINITIONS[hero.element].accent }}>
+                                                            {t(ELEMENT_DEFINITIONS[hero.element].name)}
+                                                        </span>
+                                                        <span
+                                                            className="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-sm"
+                                                            style={{ color: ELEMENT_DEFINITIONS[hero.element].accent, border: `1px solid ${ELEMENT_DEFINITIONS[hero.element].accent}55` }}
+                                                        >
+                                                            {t('Element')}
+                                                        </span>
+                                                    </div>
+                                                    <div className="text-[10px] text-gray-400 leading-snug mt-0.5">
+                                                        {t(ELEMENT_DEFINITIONS[hero.element].description)}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                         {fusionsOfHero(hero).map(({ id, mat, recipe }) => recipe && (
                                             <div key={id} className="border border-gray-700 rounded p-2.5 bg-black/40 flex gap-2.5">
                                                 <img src={mat?.imgUrl} className="w-8 h-8 object-contain shrink-0" />

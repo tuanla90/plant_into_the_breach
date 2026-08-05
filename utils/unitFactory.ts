@@ -1,9 +1,9 @@
 import {
-    BenchPlant, HeroId, Position, Unit, UnitClass, UnitDefinition, UnitType,
-} from '../types';
+    BenchPlant, ElementId, HeroId, Position, Unit, UnitClass, UnitDefinition, UnitType, BossId } from '../types';
 import { UNIT_ROLE_MAP } from '../constants';
 import { HERO_DEFINITIONS } from '../data/heroes';
 import { getMaterial } from '../data/materials';
+import { ELEMENT_HP_COST } from './elements';
 
 /**
  * EVERY UNIT THE GAME PUTS ON A BOARD IS BUILT HERE.
@@ -19,22 +19,72 @@ import { getMaterial } from '../data/materials';
  */
 
 /**
+ * THE ELEMENT BILL, AND THE ONE PLACE IT IS EVER CHARGED.
+ *
+ * Carrying an element costs max HP (PLAN-progression.md section 3), and hero health PERSISTS
+ * between battles here — so the failure mode to design against is not "the cost is missing",
+ * it is "the cost is taken twice". A hero rebuilt from her snapshot every battle, every
+ * revive and every reload would quietly shed a point of max HP each time until she was
+ * unplayable, and nothing in the UI would ever name the culprit.
+ *
+ * The rule that makes it impossible: THE COST IS SUBTRACTED FROM A DEFINITION'S maxHp, NEVER
+ * FROM A SNAPSHOT'S. A number that came off `HERO_DEFINITIONS` has never paid; a number that
+ * came off a snapshot always has. Every path below is one or the other, so the deduction is
+ * idempotent by construction rather than by a flag someone has to remember to set.
+ *
+ * It also composes with BONUS_HP in either order: the element subtracts from the sheet number
+ * and the fusion adds on top of the result, and `a - 1 + 3` is `a + 3 - 1`. (The floor is the
+ * single exception, and it cannot bite while the thinnest body in the roster is 6.)
+ *
+ * That floor is 1: a hero built at 0 max HP is a corpse the instant she is placed. No hero can
+ * reach it today, but a factory that is *able* to emit an unplayable unit eventually will.
+ */
+const pricedMaxHp = (baseMaxHp: number, element?: ElementId): number =>
+    Math.max(1, baseMaxHp - (element ? ELEMENT_HP_COST : 0));
+
+/**
  * A hero built from her definition alone — the fallback when no snapshot survives (a
  * reload wipes the snapshot ref) and what the scripted chain uses for a first appearance.
  * Base stats, no fusions: exactly what runPersistence already documents as the cost of
  * reloading with a fallen hero.
+ *
+ * `element` is the run's choice for this hero (RunState.heroElements). This is the sheet-reading
+ * path, so it is here that the max HP is actually charged for.
  */
-export const freshHero = (heroId: HeroId, id = `revived-${heroId}`): Unit => {
+/**
+ * A body that belongs to THIS BATTLE and to nothing else.
+ *
+ * Two things qualify and they arrived together: the ESCORT_GEAR crate (an objective wearing a
+ * unit, because the horde has to be able to walk at it and break it) and the wild plant found
+ * growing on the board. Both are `UnitType.PLANT` and both are on the player's side, which is
+ * exactly what every "is this part of my squad" filter in the run has always tested for — so
+ * without a name for them they were quietly adopted: saved into the run on the next map screen,
+ * and handed back as roster members in the next fight.
+ *
+ * Named here rather than tested inline at each site, because there are three sites and they
+ * would drift. The rule is one sentence: the run never owns these.
+ */
+export const isBattleOnlyUnit = (u: Unit): boolean =>
+    u.class === UnitClass.GEAR_CRATE || !!u.isWild;
+
+export const freshHero = (heroId: HeroId, id = `revived-${heroId}`, element?: ElementId): Unit => {
     const def = HERO_DEFINITIONS[heroId];
+    const maxHp = pricedMaxHp(def.maxHp, element);
     return {
         id,
         type: UnitType.PLANT, class: def.baseClass, role: UNIT_ROLE_MAP[def.baseClass],
-        hp: def.maxHp, maxHp: def.maxHp, damage: def.damage, moveRange: def.moveRange,
+        hp: maxHp, maxHp, damage: def.damage, moveRange: def.moveRange,
         cooldownReduction: 0, level: 1, position: { x: -1, y: -1 },
         isEnemy: false, hasMoved: false, hasAttacked: false, statusEffects: [],
         movementType: def.movementType, immunities: def.immunities,
+        // Innate thorns are part of the body, like immunities — not something bought. The
+        // Biting Wall fusion adds to this rather than replacing it (turnManager sums them).
+        retaliateDamage: def.retaliateDamage,
         imgUrl: def.boardImgUrl ?? def.imgUrl,
         isHero: true, heroId, fusions: [],
+        // On the UNIT, not on a skill: the element has to reach every source of damage the
+        // hero has, including retaliation, which no skill object is involved in (rule L4).
+        element,
     } as Unit;
 };
 
@@ -46,14 +96,50 @@ export const freshHero = (heroId: HeroId, id = `revived-${heroId}`): Unit => {
  * silently wiped the +3 every battle).
  *
  * `fullHeal` is for revives: a hero comes back on their feet, not on their last hp.
+ *
+ * `element` is an OVERRIDE, not the hero's element — omit it and the snapshot's own is kept.
+ * Pass one only to state what the run says this hero should be carrying now; see the
+ * re-pricing note below for why passing the element she already has changes nothing.
  */
-export const buildHeroFromSnapshot = (snapshot: Unit, fullHeal = false): Unit => {
+export const buildHeroFromSnapshot = (snapshot: Unit, fullHeal = false, element?: ElementId): Unit => {
     const def = HERO_DEFINITIONS[snapshot.heroId as HeroId];
-    const maxHp = snapshot.maxHp || (def ? def.maxHp : 1);
+
+    /**
+     * The snapshot's maxHp is the authoritative, ALREADY-PRICED number: it carries her BONUS_HP
+     * fusions, and if she was built carrying an element the cost came out at `freshHero`. So it
+     * is taken as-is — subtracting here is the double-charge this file exists to prevent.
+     *
+     * The legacy fallback is the exception that proves the rule: it reads the DEFINITION, which
+     * has never paid, so it pays here. (It only fires for a snapshot from before maxHp was
+     * persisted; such a snapshot cannot carry an element either, so in practice it pays nothing.)
+     */
+    const paidMaxHp = snapshot.maxHp || (def ? pricedMaxHp(def.maxHp, snapshot.element) : 1);
+
+    /**
+     * Re-pricing, for the one case that is not a plain rebuild: the caller naming an element the
+     * snapshot does not already carry — picked at squad select, or swapped later (the plan is
+     * explicit that changing element must not cost a hero her fusions).
+     *
+     * Refunding the old bill before charging the new one is what makes the ordinary case — every
+     * rebuild between battles, handed the element she is already wearing — a no-op. Calling this
+     * ten times in a row yields the same body as calling it once.
+     */
+    const nextElement = element ?? snapshot.element;
+    const maxHp = nextElement === snapshot.element
+        ? paidMaxHp
+        : pricedMaxHp(paidMaxHp + (snapshot.element ? ELEMENT_HP_COST : 0), nextElement);
+
     return {
         ...snapshot,
+        element: nextElement,
+        // Clamped, so taking on an element mid-run trims the wound rather than leaving a hero
+        // standing at 7/6. Dropping one never heals: only maxHp moves back up.
         hp: fullHeal ? maxHp : Math.max(1, Math.min(snapshot.hp, maxHp)),
         maxHp,
+        // Re-read from the definition, unlike maxHp: no fusion writes this field (fusion
+        // retaliation is a separate effect that stacks on top), so the sheet is always right
+        // — and a snapshot saved before the field existed still comes back with its thorns.
+        retaliateDamage: def?.retaliateDamage ?? snapshot.retaliateDamage,
         position: { x: -1, y: -1 },
         hasMoved: false,
         hasAttacked: false,
@@ -101,6 +187,8 @@ export interface EnemyOptions {
     dmgAdd?: number;
     /** Gargantuar-class: too big to be eaten, frozen or shoved. */
     isMassive?: boolean;
+    /** The encounter's named boss — what SLAY_BOSS and the behaviour table ask about. */
+    bossId?: BossId;
     /** Telegraph text before the first intent is planned. */
     intentText?: string;
 }
@@ -123,7 +211,10 @@ export const buildEnemy = (
         isEnemy: true, hasMoved: false, hasAttacked: false, statusEffects: [],
         movementType: def.movementType, immunities: def.immunities, imgUrl: def.imgUrl,
         attackRange: def.attackRange ?? 1,
+        armor: def.armor,
         intent: { type: 'MOVE', description: opts.intentText ?? 'Watching...' },
         isMassive: !!opts.isMassive,
+        bossId: opts.bossId,
+        bossClock: opts.bossId ? 0 : undefined,
     } as Unit;
 };

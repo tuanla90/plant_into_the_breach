@@ -27,6 +27,9 @@ export const UNIT_ROLE_MAP: Record<UnitClass, UnitRole> = {
     [UnitClass.HYPNO_SHROOM]: 'TACTICAL', // Controls Enemies
     [UnitClass.BLOVER]: 'TACTICAL', // Global Push
     [UnitClass.UMBRELLA_LEAF]: 'TACTICAL', // Radial Push
+    // TACTICAL rather than MELEE: it stands in the front line but deals no damage there.
+    // Everything it is worth comes from where the enemy ENDS UP, which is this column's job.
+    [UnitClass.CHARD_GUARD]: 'TACTICAL',
 
     // SUPPORT (Economy & Buffs)
     [UnitClass.SUN_SHROOM]: 'SUPPORT',
@@ -37,6 +40,7 @@ export const UNIT_ROLE_MAP: Record<UnitClass, UnitRole> = {
     [UnitClass.TORCHWOOD]: 'SUPPORT', // Fire Environment
     
     // ENEMY
+    [UnitClass.GEAR_CRATE]: 'TACTICAL',
     [UnitClass.BASIC_ZOMBIE]: 'ENEMY',
     [UnitClass.CONEHEAD]: 'ENEMY', 
     [UnitClass.BUCKETHEAD]: 'ENEMY',
@@ -49,6 +53,15 @@ export const UNIT_ROLE_MAP: Record<UnitClass, UnitRole> = {
     [UnitClass.BALLOON_ZOMBIE]: 'ENEMY',
     [UnitClass.CATAPULT_ZOMBIE]: 'ENEMY',
     [UnitClass.FLAG_ZOMBIE]: 'ENEMY',
+    [UnitClass.DISCO_ZOMBOSS]: 'ENEMY',
+    [UnitClass.CINDER_COLOSSUS]: 'ENEMY',
+    [UnitClass.VOLTMAW]: 'ENEMY',
+    [UnitClass.YETI]: 'ENEMY',
+    [UnitClass.IRONCART]: 'ENEMY',
+    [UnitClass.CLOCKJAW]: 'ENEMY',
+    [UnitClass.BLIGHTLORD]: 'ENEMY',
+    [UnitClass.ARMADA]: 'ENEMY',
+    [UnitClass.SANDREAVER]: 'ENEMY',
     [UnitClass.GARGANTUAR]: 'ENEMY', 
     [UnitClass.IMP]: 'ENEMY', 
     [UnitClass.ROCK]: 'ENEMY',

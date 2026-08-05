@@ -57,6 +57,27 @@ const PICKS = {
     'drown':         [BLEEPS, 'GravityBomb_01.wav'],
     'heal':          [BLEEPS, 'PowerUp_02.wav'],
 
+    // --- The nine-hero mechanics ----------------------------------------
+    // Every one of these was silent until now: the heroes that shove, taunt, shield and arc
+    // shipped without a sound, so the two loudest tools in the game (a shove that drowns a
+    // zombie, a taunt that turns the whole horde around) played as nothing at all.
+    //
+    // A shove is a body LEAVING, not an impact — the impact samples all read as "hit and
+    // stayed". Bounce is the only one in the pack that reads as knocked away.
+    'push':          [BLEEPS, 'Bounce.wav'],
+    // Sibling of brain-lost's Alarm_01 on purpose: both sounds mean "every zombie look here",
+    // and a taunt is the player choosing to make that happen.
+    'taunt':         [BLEEPS, 'Alarm_02.wav'],
+    // Blades coming out. The spikes are LAID by this sound; walking into them afterwards is an
+    // ordinary hit and already plays one.
+    'spikes':        [RPG, 'DrawKnife_01.mp3'],
+    // Sibling of hit-blocked's MetalBars_02, so granting a shield and that shield absorbing a
+    // blow rhyme — the player hears them as the same system.
+    'shield':        [BLEEPS, 'MetalBars_01.wav'],
+    // The lightning element's chain. Distinct from skill-cast (PowerZap) and attack-lob
+    // (ZapLauncher) so an arc is never mistaken for the attack that spawned it.
+    'arc':           [BLEEPS, 'ElectroZap.wav'],
+
     // --- Deaths ---------------------------------------------------------
     'die-enemy':     [BLEEPS, 'Break_01.wav'],
     'die-plant':     [BLEEPS, 'BreakGlass_02.wav'],

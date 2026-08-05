@@ -1,7 +1,8 @@
-import { HeroId, MaterialId, UnlockState } from '../types';
+import { BossId, HeroId, MaterialId, UnlockState } from '../types';
+import { HERO_DEFINITIONS } from '../data/heroes';
 import { MATERIAL_DEFINITIONS } from '../data/materials';
 import {
-    heroesForBossNumber, parseRecipeKey, recipeKey, SIGNATURE_MATERIAL, TUTORIAL_RECIPES,
+    heroForBoss, parseRecipeKey, recipeKey, SIGNATURE_MATERIAL, TUTORIAL_RECIPES,
 } from '../data/unlocks';
 
 /**
@@ -15,10 +16,10 @@ import {
  */
 
 /**
- * The unlock order is simply the declaration order of the data tables. DESIGN.md section 7
- * lists the roadmap (Grass Knuckles + Cactus, Nightcap + Coffee Bean, …), so appending new
- * entries to `data/materials.ts` in that order is all that is needed — no id list to keep in
- * sync here, and nothing to update when the pool grows.
+ * The order recipes are handed out in is simply the declaration order of the data tables, so
+ * appending an entry to `data/materials.ts` is all it takes to put that plant in the rotation —
+ * there is no id list to keep in sync here, and nothing to update when the pool grows. The four
+ * gears of PLAN-heroes-9.md joined the payout this way, without a line changing in this file.
  */
 const materialUnlockOrder = (): MaterialId[] => Object.keys(MATERIAL_DEFINITIONS) as MaterialId[];
 
@@ -73,21 +74,62 @@ export const withRecipes = (state: UnlockState, count: number): UnlockState => {
 };
 
 /**
- * Grants whatever heroes the Nth boss clear is worth, plus each one's signature recipe so it
- * arrives usable. Idempotent per hero, so replaying a chapter or a double-fired completion
- * cannot duplicate an entry.
+ * A boss has fallen. Record it, and hand over the hero it was holding — plus that hero's
+ * own-plant recipe, so it arrives usable rather than as a portrait with nothing to fuse.
+ *
+ * Granted the MOMENT the boss dies, not at the end of the run. A run is three acts; dying in
+ * the third must not take back what the first two freed, or "three bosses per run" becomes
+ * all-or-nothing and a new player never sees the fourth hero.
+ *
+ * Idempotent: re-clearing a boss already in the list changes nothing. `bossesBeaten` is the one
+ * source of truth and `bossesDefeated` is derived from its length here, so the two cannot drift
+ * however long the table grows.
+ *
+ * The `HERO_DEFINITIONS` check is not paranoia. `BossEntry.hero` is a ROADMAP field — the table
+ * is allowed to name the hero a boss will free before that hero has a definition — and
+ * `saveUnlockState` drops any hero id the data tables do not know. Granting one anyway would
+ * announce a hero on the victory screen and then lose it on the next reload, which reads to the
+ * player as progress being taken away. Better to pay nothing than to pay something that
+ * evaporates.
  */
-export const withHeroesForBoss = (state: UnlockState, bossNumber: number): UnlockState => {
-    const earned = heroesForBossNumber(bossNumber).filter((h: HeroId) => !state.heroes.includes(h));
-    if (!earned.length) return state;
+export const withBossDefeated = (state: UnlockState, boss: BossId): UnlockState => {
+    if (state.bossesBeaten.includes(boss)) return state;
 
-    const signatures = earned
-        .map((h: HeroId) => recipeKey(h, SIGNATURE_MATERIAL[h]))
-        .filter((k: string) => !state.recipes.includes(k));
+    const beaten = [...state.bossesBeaten, boss];
+    let next: UnlockState = { ...state, bossesBeaten: beaten, bossesDefeated: beaten.length };
 
-    return {
-        ...state,
-        heroes: [...state.heroes, ...earned],
-        recipes: [...state.recipes, ...signatures],
-    };
+    const hero = heroForBoss(boss);
+    if (hero && HERO_DEFINITIONS[hero] && !next.heroes.includes(hero)) {
+        const signature = recipeKey(hero, SIGNATURE_MATERIAL[hero]);
+        next = {
+            ...next,
+            heroes: [...next.heroes, hero],
+            recipes: next.recipes.includes(signature) ? next.recipes : [...next.recipes, signature],
+        };
+    }
+    return next;
+};
+
+/**
+ * Fusion recipes paid per commander level: exactly ONE.
+ *
+ * That is not a balance number, it is the definition. The level ceiling is the number of
+ * pairings that exist for the heroes you own (`levelCapFor`), so one recipe per level makes
+ * the level literally a count of what you know — reach the ceiling and you have learned every
+ * pairing available to your roster, with nothing left stranded above it.
+ */
+export const RECIPES_PER_LEVEL = 1;
+
+/**
+ * Everything gained by climbing from one level to another. Recipes only — heroes come from
+ * bosses now, by name, and are granted the moment the boss falls rather than at a level.
+ *
+ * Applied level by level rather than in one jump so nothing between the two is skipped.
+ */
+export const withLevelUps = (state: UnlockState, fromLevel: number, toLevel: number): UnlockState => {
+    let next = state;
+    for (let level = fromLevel + 1; level <= toLevel; level++) {
+        next = withRecipes(next, RECIPES_PER_LEVEL);
+    }
+    return next;
 };

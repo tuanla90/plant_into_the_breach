@@ -60,7 +60,7 @@ export interface ReplayResult {
 }
 
 /** The only skill-effect types the executor models. Anything else must fail, not guess. */
-const MODELLED_EFFECTS = new Set(['DAMAGE', 'PIERCE_ATTACK', 'PUSH', 'RESOURCE_GAIN']);
+const MODELLED_EFFECTS = new Set(['DAMAGE', 'PIERCE_ATTACK', 'PUSH', 'RESOURCE_GAIN', 'VOLLEY']);
 
 export const replayScriptedBattle = (
     nodeId: string,
@@ -119,6 +119,7 @@ export const replayScriptedBattle = (
             hasMoved: false, hasAttacked: false, statusEffects: [],
             movementType: def.movementType, immunities: def.immunities, imgUrl: '',
             attackRange: def.attackRange ?? 1,
+            armor: def.armor,
             intent: { type: 'MOVE', description: 'Watching...' },
             isMassive: sp.cls === UnitClass.GARGANTUAR,
         } as Unit);
@@ -191,12 +192,18 @@ export const replayScriptedBattle = (
         plan.collided.forEach(id => {
             const u = living().find(z => z.id === id);
             if (!u || hasFusionEffect(u, 'STEADFAST')) return;
-            const r = calculateDamage(u, 1, false);
+            // 4th arg mirrors applyPushPlan: a slam ignores helmet armour. This block is a
+            // copy of the real one and MUST stay in step with it — the armour change proved
+            // the drift is real, not theoretical.
+            const r = calculateDamage(u, 1, false, true);
             u.hp = r.remainingHp;
             log.push(`collision: ${u.heroId || u.class} -> hp${u.hp}`);
             if (r.isFatal) killUnit(u);
         });
     };
+
+    /** Guards the volley loop against re-entering itself on every shot. */
+    let castingVolleyShot = false;
 
     const castSkill = (caster: Unit, skill: Skill, pos: Position, damageOverride?: number) => {
         const targets: Position[] = [{ ...pos }];
@@ -206,6 +213,34 @@ export const replayScriptedBattle = (
                 if (p.x !== pos.x || p.y !== pos.y) targets.push(p);
             });
         }
+
+        /**
+         * A VOLLEY fires the same skill several times, each shot rolling on to the next body
+         * in the lane when the one in front dies (utils/skillResolution). Modelled here as a
+         * loop over the same resolution, which is what the resolver does — the alternative,
+         * "multiply the damage by the shot count", would silently disagree with the engine the
+         * moment a shot rolled over onto a second target, and this harness exists to catch
+         * exactly that kind of disagreement.
+         */
+        const volley = skill.effects.find(e => e.type === 'VOLLEY');
+        if (volley && !castingVolleyShot) {
+            const shots = Math.max(1, volley.value ?? 1);
+            castingVolleyShot = true;
+            for (let shot = 1; shot <= shots; shot++) {
+                // Aim: the clicked tile while something is standing on it, otherwise the first
+                // body still standing further down the lane.
+                let aim = pos;
+                if (skill.rangeType === 'LINE' && !unitAt(pos.x, pos.y)) {
+                    const onward = getSkillTargetPath(caster, skill, pos, board)
+                        .find(p => !!unitAt(p.x, p.y));
+                    if (onward) aim = onward;
+                }
+                castSkill(caster, skill, aim, damageOverride);
+            }
+            castingVolleyShot = false;
+            return;
+        }
+
         targets.forEach(targetPos => {
             const tgt = unitAt(targetPos.x, targetPos.y);
             const isSelf = targetPos.x === caster.position.x && targetPos.y === caster.position.y;
@@ -214,7 +249,11 @@ export const replayScriptedBattle = (
                 sun += res.value ?? 0;
                 log.push(`${caster.heroId} harvests -> ${sun} sun`);
             }
-            if (tgt && (tgt.isEnemy || tgt.type === UnitType.OBSTACLE)) {
+            // Friendly fire, mirroring skillResolution: an ally under a damaging skill is a
+            // combat target too (never the caster).
+            const friendly = !!tgt && !tgt.isEnemy && tgt.id !== caster.id
+                && skill.effects.some(e => e.type === 'DAMAGE');
+            if (tgt && (tgt.isEnemy || tgt.type === UnitType.OBSTACLE || friendly)) {
                 const dmgEffect = skill.effects.find(e => e.type === 'DAMAGE');
                 let dead = false;
                 if (dmgEffect) {
@@ -256,10 +295,29 @@ export const replayScriptedBattle = (
         gs = { ...(res.finalGameState as GameState), sun };
         turn += 1;
         log.push(`--- turn ${turn} begins: ${boardLine()}`);
+        takeTurnSnapshot();
+    };
+
+    // --- Chrona's rewind, mirrored (useGameEngine snapshots at the same moment) ---
+    // Photographed at the start of every player turn, after enemy intents are locked.
+    // A reset-turn step restores it: same tiles, same traps, same intents, no re-roll.
+    let rewindsUsed = 0;
+    let turnSnapshot: { units: Unit[]; board: TileData[]; sun: number; brainsLost: number } | null = null;
+    const takeTurnSnapshot = () => {
+        turnSnapshot = { units: structuredClone(units), board: structuredClone(board), sun, brainsLost };
+    };
+    const restoreTurnSnapshot = () => {
+        const snap = turnSnapshot!;
+        units = structuredClone(snap.units);
+        board.splice(0, board.length, ...structuredClone(snap.board));
+        sun = snap.sun;
+        brainsLost = snap.brainsLost;
+        log.push(`REWIND: back to the start of turn ${turn} — ${boardLine()}`);
     };
 
     // ------------------------------------------------------------------ the script
     log.push(`turn 1: ${boardLine()}`);
+    takeTurnSnapshot();
     let selected: Unit | null = null;
     let pendingSkill: Skill | null = null;
 
@@ -275,6 +333,15 @@ export const replayScriptedBattle = (
         if (f === 'start-battle') continue;
 
         if (f === 'end-turn') { runEngineTurn(); selected = null; pendingSkill = null; continue; }
+
+        if (f === 'reset-turn') {
+            if (rewindsUsed >= 1) fail('the script spends Chrona rewind twice — there is one per battle');
+            rewindsUsed += 1;
+            restoreTurnSnapshot();
+            selected = null;
+            pendingSkill = null;
+            continue;
+        }
 
         if (f.startsWith('hero-')) {
             const id = f.slice(5);
@@ -354,8 +421,23 @@ export const replayScriptedBattle = (
             sun -= cost;
             castSkill(sel, skill, { x, y });
             // The Repeater fusion: a second, weaker shot rides every free basic attack.
+            // Mirrors skillResolution's roll-over: if the first shot killed the target,
+            // a LINE's second shot re-aims at the next body down the lane instead of
+            // resolving against the corpse's empty tile.
             if (!skill.sunCost && hasFusionEffect(sel, 'DOUBLE_ATTACK')) {
-                castSkill(sel, skill, { x, y }, getFusionEffectValue(sel, 'DOUBLE_ATTACK'));
+                let p2 = { x, y };
+                if (skill.rangeType === 'LINE' && !unitAt(x, y)) {
+                    const dx = Math.sign(x - sel.position.x);
+                    const dy = Math.sign(y - sel.position.y);
+                    for (let i = 1; i <= (skill.rangeValue || 1); i++) {
+                        const p = { x: sel.position.x + dx * i, y: sel.position.y + dy * i };
+                        if (p.x < 0 || p.x >= 8 || p.y < 0 || p.y >= 8) break;
+                        const t = getTileAt(p, board);
+                        if (t && DEFAULT_TERRAIN_DEFS[t.terrain]?.type === 'MOUNTAIN') break;
+                        if (unitAt(p.x, p.y)) { p2 = p; break; }
+                    }
+                }
+                castSkill(sel, skill, p2, getFusionEffectValue(sel, 'DOUBLE_ATTACK'));
             }
             sel.hasAttacked = true;
             sel.hasMoved = true;

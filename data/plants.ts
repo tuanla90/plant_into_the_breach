@@ -86,6 +86,26 @@ export const PLANT_DEFINITIONS: Partial<Record<UnitClass, UnitDefinition>> = {
         maxStats: { hp: 5, dmg: 5, move: 5, cdr: 2 },
         upgradeCosts: { hp: 40, dmg: 100, move: 75, cdr: 150 }
     },
+    /**
+     * THE GEAR CRATE (ESCORT_GEAR).
+     *
+     * 8 HP and nothing else: no damage, no move, no skills. It is not meant to survive on its
+     * own — 8 is roughly three ordinary bites, which is how long the squad has to get across
+     * the board and stand in front of it. Making it tougher would turn the objective into
+     * "ignore it and win"; making it thinner would turn it into "lose on turn two".
+     *
+     * `PUSH` immunity because it is a crate, and because a shove that slid the objective into
+     * the sea would be a loss the player could inflict on themselves by accident with their
+     * own hero.
+     */
+    [UnitClass.GEAR_CRATE]: {
+        class: UnitClass.GEAR_CRATE, name: 'Gear Crate', maxHp: 8, damage: 0, moveRange: 0,
+        imgUrl: ICONS.GEAR_CRATE,
+        movementType: 'WALKING', immunities: ['PUSH'],
+        cost: 0,
+        maxStats: { hp: 8, dmg: 0, move: 0, cdr: 0 },
+        upgradeCosts: { hp: 0, dmg: 0, move: 0, cdr: 0 },
+    },
     [UnitClass.WALLNUT]: {
         class: UnitClass.WALLNUT, name: 'Wall-nut', maxHp: 6, damage: 2, moveRange: 2,
         imgUrl: ICONS.WALLNUT,
@@ -135,6 +155,17 @@ export const PLANT_DEFINITIONS: Partial<Record<UnitClass, UnitDefinition>> = {
         cost: 125,
         maxStats: { hp: 10, dmg: 0, move: 4, cdr: 2 },
         upgradeCosts: { hp: 60, dmg: 0, move: 100, cdr: 150 }
+    },
+    // The pusher. Damage 0 is the identity, not a gap: it relocates bodies and lets the
+    // terrain do the killing, so move 3 (to reach the shove) matters more than any dmg stat.
+    // dmg is capped at 0 for the same reason — upgrading it would erase what it is.
+    [UnitClass.CHARD_GUARD]: {
+        class: UnitClass.CHARD_GUARD, name: 'Chard Guard', maxHp: 5, damage: 0, moveRange: 3,
+        imgUrl: ICONS.CHARD_GUARD,
+        movementType: 'WALKING', immunities: [],
+        cost: 100,
+        maxStats: { hp: 9, dmg: 0, move: 5, cdr: 2 },
+        upgradeCosts: { hp: 60, dmg: 0, move: 90, cdr: 150 }
     },
     [UnitClass.CHOMPER]: {
         class: UnitClass.CHOMPER, name: 'Chomper', maxHp: 5, damage: 10, moveRange: 3,
@@ -227,6 +258,7 @@ export const PLAYER_ROSTER = [
     UnitClass.CACTUS, UnitClass.MELON_PULT, UnitClass.MAGNET_SHROOM,
     UnitClass.CABBAGE_PULT, UnitClass.TALL_NUT, UnitClass.PUMPKIN,
     UnitClass.SUN_SHROOM, UnitClass.SCAREDY_SHROOM, UnitClass.ENDURIAN, UnitClass.SWEET_POTATO,
+    UnitClass.CHARD_GUARD,
     UnitClass.COFFEE_BEAN, UnitClass.HYPNO_SHROOM, UnitClass.BLOVER, UnitClass.UMBRELLA_LEAF,
     UnitClass.TORCHWOOD
 ];

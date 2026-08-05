@@ -2,7 +2,7 @@
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Plant Heroes: Blightfall - Tactical Grid Strategy</title>
 
     <!-- SVG favicon so the one file covers every size, including the 16px tab. The theme
@@ -157,13 +157,24 @@
         background: #334155;
         border-radius: 3px;
       }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #0ea5e9;
-      }
     </style>
+
+    <!-- PWA Manifest & iOS Fullscreen Standalone Support -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Blightfall" />
+    <meta name="mobile-web-app-capable" content="yes" />
   </head>
   <body class="bg-itb-bg text-white overflow-hidden font-pixel">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW reg error:', err));
+        });
+      }
+    </script>
   </body>
 </html>

@@ -1,3 +1,4 @@
+import { Unit, UnitClass } from '../types';
 
 // All game art is stored LOCALLY in `public/img/` and referenced by absolute path
 // (`/img/<name>.<ext>`) — Vite serves `public/` at the site root.
@@ -32,8 +33,15 @@ export const HERO_ICONS = {
     WALL_KNIGHT: `/img/hero-wall-knight.jpg`,
     SOLAR_FLARE: `/img/hero-solar-flare.jpg`,
     CHOMPZILLA: `/img/hero-chompzilla.jpg`,
-    COLD_SNAP: `/img/hero-cold-snap.jpg`,
     KERNEL_PULT: `/img/hero-cobb.jpg`,
+    // The four heroes that finish the roster of nine. These four were rendered on white and
+    // cut out (art-src/make_sprites.py), so there is no separate card art for them — both
+    // this table and HERO_SPRITES point at the same cut-out, which is what the two 32-48px
+    // codex thumbnails want anyway.
+    THORNQUILL: `/img/sprite-thornquill.png`,
+    THORNHIDE: `/img/sprite-thornhide.png`,
+    CHARDWALL: `/img/sprite-chardwall.png`,
+    GOURDWARD: `/img/sprite-gourdward.png`,
 };
 
 // Transparent-background board sprites (512x512 PNG, normalized: shared baseline and scale).
@@ -43,8 +51,11 @@ export const HERO_SPRITES = {
     WALL_KNIGHT: `/img/sprite-wall-knight.png`,
     SOLAR_FLARE: `/img/sprite-solar-flare.png`,
     CHOMPZILLA: `/img/sprite-chompzilla.png`,
-    COLD_SNAP: `/img/sprite-cold-snap.png`,
     KERNEL_PULT: `/img/sprite-cobb.png`,
+    THORNQUILL: `/img/sprite-thornquill.png`,
+    THORNHIDE: `/img/sprite-thornhide.png`,
+    CHARDWALL: `/img/sprite-chardwall.png`,
+    GOURDWARD: `/img/sprite-gourdward.png`,
 };
 
 // Fusion-material art: bio-mech "gear" walkers (single-purpose war machines with a small
@@ -57,6 +68,11 @@ export const MATERIAL_SPRITES = {
     MAT_CHOMPER: `/img/gear-chomper.png`,
     MAT_SNOW_PEA: `/img/gear-snow-pea.png`,
     MAT_CORN: `/img/gear-corn.png`,
+    // The four gears belonging to the four new heroes.
+    MAT_CACTUS: `/img/gear-cactus.png`,
+    MAT_ENDURIAN: `/img/gear-endurian.png`,
+    MAT_CHARD: `/img/gear-chard.png`,
+    MAT_PUMPKIN: `/img/gear-pumpkin.png`,
 };
 
 // Combat-item icons: handheld bio-mech consumables (pins, triggers, rip-cords), centered
@@ -77,11 +93,98 @@ export const HERO_ACCENTS: Record<string, string> = {
     WALL_KNIGHT: '#f59e0b',
     SOLAR_FLARE: '#fb923c',
     CHOMPZILLA: '#d946ef',
-    COLD_SNAP: '#38bdf8',
     KERNEL_PULT: '#eab308',
+    THORNQUILL: '#22c55e',   // cactus green
+    THORNHIDE: '#b45309',    // durian husk
+    CHARDWALL: '#ef4444',    // chard stem red
+    GOURDWARD: '#f97316',    // pumpkin orange
 };
 
-// Plant / zombie art. ROCK and GRAVE stay inline SVG data URIs (no file needed).
+// Plant / zombie art. ROCK and GRAVE used to be inline SVG data URIs written by hand here —
+// two rectangles that predated the token set and looked it, sitting on the board beside art
+// made to a different brief. They are generated tokens now like everything else.
+/**
+ * Sprites drawn facing RIGHT, which every renderer has to mirror.
+ *
+ * EMPTY, and that is the correct state: the whole zombie set marches leftward toward the lawn
+ * and is now drawn that way, Gargantuar included — his art was redrawn facing left, so the
+ * mirror that used to correct him would now be the thing turning him around.
+ *
+ * The table stays because the fix belongs in ONE place. When it lived inline in the board
+ * component, the campaign screen kept showing him walking away from the heroes he is fighting;
+ * two renderers read this now, so the next sprite that arrives facing the wrong way is one
+ * entry here rather than a bug hunt across the screens that draw it.
+ */
+export const SPRITES_FACING_RIGHT: ReadonlySet<UnitClass> = new Set<UnitClass>([]);
+
+/** CSS transform fragment that turns a right-facing sprite around, or '' for the rest. */
+export const facingFlip = (cls: UnitClass | undefined): string =>
+    cls && SPRITES_FACING_RIGHT.has(cls) ? ' scaleX(-1)' : '';
+
+/**
+ * SECOND STATES — a unit whose art changes when its rules change.
+ *
+ * Three bosses already switch behaviour mid-fight, and until now all three did it invisibly:
+ * the board kept drawing the same picture while the thing in front of the player quietly
+ * became a different problem. In a game that promises perfect information, a phase the player
+ * can only discover by being surprised is the promise broken.
+ *
+ * Each predicate is written to fire on EXACTLY the condition the behaviour reads, so the art
+ * and the rule flip on the same tick — a sprite that changed a turn early would be worse than
+ * no sprite change at all, because the player would trust it.
+ *
+ * This is a pure lookup over the unit's own fields. It deliberately does NOT live in
+ * `utils/bossBehaviours.ts`: the renderer asking "what does this look like right now" must not
+ * be able to disturb the simulation, and the boss table must not grow a second reason to exist.
+ */
+interface SpriteVariant {
+    when: (u: Unit) => boolean;
+    src: string;
+    /** Why this state exists, for whoever reads the board and wonders. */
+    note: string;
+}
+
+export const SPRITE_VARIANTS: Partial<Record<UnitClass, SpriteVariant[]>> = {
+    // Underground. `isBurrowed` is set while it is travelling to wherever it will surface,
+    // and a mound of heaving earth is the only warning the player gets.
+    [UnitClass.SANDREAVER]: [{
+        when: u => !!u.isBurrowed,
+        src: `/img/sprite-sandreaver-mound.png`,
+        note: 'burrowed — the tile it will erupt from',
+    }],
+
+    // Shot out of the sky. Mirrors `armadaWrecked` in utils/bossBehaviours.ts: the moment it
+    // stops flying it stops being a flier for every rule too — it can be pushed, it can drown,
+    // and a melee wall finally means something to it.
+    [UnitClass.ARMADA]: [{
+        when: u => u.movementType !== 'FLYING',
+        src: `/img/sprite-armada-wreck.png`,
+        note: 'grounded — no longer a flier for any rule',
+    }],
+
+    // The imp on its back is the tell. It is NOT "has thrown its imp" — the Gargantuar throws
+    // imps repeatedly and nothing tracks a count — it is the shared boss phase line,
+    // `hp <= floor(maxHp / 2)`, which is the moment its throw range drops from 4 to 2.
+    // Losing the passenger is the most readable way to say "this thing changed".
+    [UnitClass.GARGANTUAR]: [{
+        when: u => u.hp <= Math.floor(u.maxHp / 2),
+        src: `/img/sprite-gargantuar-wounded.png`,
+        note: 'below half health — throw range 4 -> 2',
+    }],
+};
+
+/**
+ * The art a unit should be drawn with RIGHT NOW. First matching variant wins; otherwise the
+ * unit keeps whatever `imgUrl` its definition gave it.
+ */
+export const spriteFor = (unit: Unit): string => {
+    const variants = SPRITE_VARIANTS[unit.class];
+    if (variants) {
+        for (const v of variants) if (v.when(unit)) return v.src;
+    }
+    return unit.imgUrl;
+};
+
 export const ICONS = {
     PEASHOOTER: `/img/placeholder/peashooter.svg`,
     SNOW_PEA: `/img/placeholder/snow-pea.svg`,
@@ -95,11 +198,16 @@ export const ICONS = {
     SUN_SHROOM: `/img/placeholder/sun-shroom.svg`,
     SCAREDY_SHROOM: `/img/placeholder/scaredy-shroom.svg`,
     WALLNUT: `/img/placeholder/wallnut.svg`,
+    // Borrowed art on purpose: a crate reads as a nut-shaped lump at board scale, and a
+    // wrong-but-legible placeholder beats a missing image. One line to swap when the
+    // crate sprite lands (art-src/ART-PROMPTS.md).
+    GEAR_CRATE: `/img/placeholder/wallnut.svg`,
     TALL_NUT: `/img/placeholder/tall-nut.svg`,
     ENDURIAN: `/img/placeholder/endurian.svg`,
     SWEET_POTATO: `/img/placeholder/sweet-potato.svg`,
     IRON_NUT: `/img/placeholder/iron-nut.svg`,
     PUMPKIN: `/img/placeholder/pumpkin.svg`,
+    CHARD_GUARD: `/img/placeholder/chard-guard.svg`,
     CHOMPER: `/img/placeholder/chomper.svg`,
     BONK_CHOY: `/img/placeholder/bonk-choy.svg`,
     SUNFLOWER: `/img/placeholder/sunflower.svg`,
@@ -129,9 +237,30 @@ export const ICONS = {
 
     // BOSS/ETC
     GARGANTUAR: `/img/sprite-gargantuar.png`,
-    IMP: `/img/placeholder/imp.svg`,
-    ROCK: `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect x='2' y='4' width='12' height='10' rx='2' fill='%234b5563'/><path fill='%23374151' d='M4 6h4v2H4zM10 10h2v2h-2z'/></svg>`,
-    GRAVE: `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path fill='%231f2937' d='M4 12h8v3H4z'/><rect x='5' y='3' width='6' height='10' rx='2' fill='%236b7280'/><path fill='%23374151' d='M7 5h2v4H7zM6 7h4v1H6z'/></svg>`,
+    /**
+     * The eight bosses that came after the Gargantuar. All of them shipped borrowing a sprite
+     * from a unit they resembled, and each got its own key here rather than reaching for the
+     * borrowed one directly — because the swap documented in art-src/ART-TODO.md is "point that
+     * one entry in utils/icons.ts at the new file", and that is only true if the entry exists.
+     * That paid off on 2026-08-05: retiring all eight was eight edits to this list and nothing
+     * else. Reaching straight for ICONS.GARGANTUAR would have made it an edit to a balance table.
+     *
+     * Two SECOND STATES also exist as art and are not wired to anything yet:
+     * sprite-armada-wreck.png (shot down) and sprite-sandreaver-mound.png (still burrowed).
+     * Nothing reads Unit.isBurrowed for a sprite swap today.
+     */
+    IRONCART: `/img/sprite-ironcart.png`,
+    CINDER_COLOSSUS: `/img/sprite-cinder-colossus.png`,
+    ARMADA: `/img/sprite-armada.png`,
+    SANDREAVER: `/img/sprite-sandreaver.png`,
+    YETI: `/img/sprite-yeti.png`,
+    HEADLINER: `/img/sprite-headliner.png`,
+    CLOCKJAW: `/img/sprite-clockjaw.png`,
+    VOLTMAW: `/img/sprite-voltmaw.png`,
+    BLIGHTLORD: `/img/sprite-blightlord.png`,
+    IMP: `/img/sprite-imp.png`,
+    ROCK: `/img/sprite-rock.png`,
+    GRAVE: `/img/sprite-grave.png`,
     MINE: `/img/placeholder/mine.svg`,
     CHERRY: `/img/placeholder/cherry.svg`,
     JALAPENO: `/img/placeholder/jalapeno.svg`

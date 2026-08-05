@@ -34,6 +34,9 @@ interface ActionPanelProps {
    * the real value in.
    */
   currentSun?: number;
+  /** Chrona's rewind: back to the start of this turn. Free, once per battle. */
+  onResetTurn?: () => void;
+  turnResetsLeft?: number;
 }
 
 export const ActionPanel: React.FC<ActionPanelProps> = ({ 
@@ -53,12 +56,40 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
   rosterUnits = [],
   onSelectRosterUnit,
   selectedRosterId,
-  currentSun = Infinity
+  currentSun = Infinity,
+  onResetTurn,
+  turnResetsLeft = 0
 }) => {
   const { t } = useI18n();
 
+  // Chrona's rewind sits directly above End Turn: the two turn-level controls live
+  // together, and the pairing reads as "finish the turn — or take it back". Rendered
+  // inside the same component so all three EndTurnButton mounts get it for free.
+  const RewindTurnButton = () => {
+      const spent = turnResetsLeft <= 0;
+      const locked = interactionMode !== 'IDLE';
+      return (
+          <button
+              onClick={onResetTurn}
+              disabled={spent || locked || !onResetTurn}
+              data-tut="reset-turn"
+              title={t('Chrona rewinds the board to the start of this turn. Once per battle.')}
+              className={`w-full py-2 px-4 mb-2 border rounded-lg flex items-center justify-center gap-2 transition-all
+                  ${spent || locked
+                      ? 'border-gray-700 text-gray-600 bg-[#0b0d14] cursor-not-allowed opacity-60'
+                      : 'border-cyan-500/60 text-cyan-300 bg-gradient-to-r from-cyan-950 via-slate-900 to-cyan-950 hover:border-cyan-300 hover:text-white shadow-[0_0_12px_rgba(34,211,238,0.15)] active:scale-95 cursor-pointer'}`}
+          >
+              <RotateCcw size={14} />
+              <span className="text-xs font-black uppercase tracking-[0.15em]">{t('Rewind Turn')}</span>
+              <span className="text-[10px] font-mono opacity-80">{Math.max(0, turnResetsLeft)}/1</span>
+          </button>
+      );
+  };
+
   // COMPACT END TURN BUTTON
   const EndTurnButton = () => (
+      <>
+      <RewindTurnButton />
       <button
           onClick={onEndTurn}
           data-tut="end-turn"
@@ -67,6 +98,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
           <span className="text-base font-black uppercase tracking-[0.2em] group-hover:drop-shadow">{t('End Turn')}</span>
           <span className="keycap text-[10px] text-red-300 border-red-500/40">SPACE</span>
       </button>
+      </>
   );
 
   const StartBattleButton = ({ disabled }: { disabled: boolean }) => (
