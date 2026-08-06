@@ -422,7 +422,7 @@ const TileBase: React.FC<TileProps> = ({
            </div>
       )}
 
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-white/10 pointer-events-none transition-opacity z-20 mix-blend-overlay"></div>
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-white/10 pointer-events-none transition-opacity z-20"></div>
 
       {children}
 
