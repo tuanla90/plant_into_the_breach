@@ -173,13 +173,13 @@ export const StageSelectScreen: React.FC<StageSelectScreenProps> = ({ unlocks, o
                 </div>
 
                 {/* RAIL on the left, one stage's three acts on the right. */}
-                <div className="flex-1 min-h-0 flex gap-4">
+                <div className="flex-1 min-h-0 flex portrait:flex-col gap-4">
 
                     {/* THE RAIL. Vertical because the tabs carry a name, a subtitle and a score
                         each — that is a row of text, and rows of text stack downwards. Across the
                         top they would have had to shed the subtitle, which is the only thing on
                         the tab that says what the stage is ABOUT. */}
-                    <nav className="w-[188px] shrink-0 flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-1">
+                    <nav className="w-[188px] shrink-0 flex flex-col portrait:w-full portrait:grid portrait:grid-cols-2 gap-2 overflow-y-auto custom-scrollbar pr-1 portrait:pr-0 portrait:overflow-visible">
                         {STAGES.map(stage => {
                             const acts = actsOfStage(stage.id);
                             const cleared = acts.filter(b => done(b.id)).length;
@@ -466,7 +466,7 @@ export const StageSelectScreen: React.FC<StageSelectScreenProps> = ({ unlocks, o
                                                    there because past ~300px the pixel sprites are being blown
                                                    up rather than shown. */
                                                 className={`group relative text-left rounded-lg border-2 overflow-hidden transition-all
-                                                    flex items-stretch gap-3 pl-2 pr-2 py-2 flex-1 min-h-[168px] max-h-[300px]
+                                                    flex items-stretch portrait:flex-col portrait:max-h-none gap-3 pl-2 pr-2 py-2 flex-1 min-h-[168px] max-h-[300px]
                                                     ${!open
                                                         ? 'bg-[#0b0c0f] border-[#1e2128] cursor-not-allowed'
                                                         : cleared
@@ -502,7 +502,7 @@ export const StageSelectScreen: React.FC<StageSelectScreenProps> = ({ unlocks, o
 
                                                     THE REWARD. Heroes have portraits; a stage-closing act pays an
                                                     element instead, so it gets the element's glyph in its colour. */}
-                                                <div className="relative z-10 w-[150px] shrink-0 flex flex-col items-center justify-center gap-0.5 min-h-0">
+                                                <div className="relative z-10 w-[150px] portrait:w-full shrink-0 flex flex-col items-center justify-center gap-0.5 min-h-0">
                                                     {portrait ? (
                                                         <img
                                                             src={portrait}
@@ -581,7 +581,7 @@ export const StageSelectScreen: React.FC<StageSelectScreenProps> = ({ unlocks, o
                                                 {/* Bigger than the reward on the other side, deliberately: the card
                                                     is asking "do you want to fight this", and the thing being fought
                                                     should be the loudest object on it. */}
-                                                <div className="relative z-10 w-[208px] shrink-0 flex items-center justify-center min-h-0">
+                                                <div className="relative z-10 w-[208px] portrait:w-full shrink-0 flex items-center justify-center min-h-0">
                                                     {bossArt ? (
                                                         <img
                                                             src={bossArt}

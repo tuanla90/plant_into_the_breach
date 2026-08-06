@@ -134,7 +134,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
       const canStart = deployedCount > 0 && deployedCount <= MAX_DEPLOY;
 
       return (
-        <div className="w-64 md:w-80 lg:w-96 cyber-panel border-l border-[#293245] flex flex-col h-full shadow-2xl relative z-30 font-pixel shrink-0">
+        <div className="w-64 md:w-80 lg:w-96 cyber-panel border-l border-[#293245] flex flex-col h-full shadow-2xl relative z-30 font-pixel shrink-0 portrait:w-full portrait:h-[45%] portrait:border-l-0 portrait:border-t">
             {/* p-3/text-base below lg: at 375px of viewport height the padded header plus
                 the Start Battle footer alone were taller than the panel, and the button's
                 bottom edge left the screen. */}
@@ -226,7 +226,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
     return (
         // Same width ladder as every other branch: the one time this said plain `w-96`
         // (and skipped shrink-0) the board jumped size whenever the selection emptied.
-        <div className="w-64 md:w-80 lg:w-96 cyber-panel border-l border-[#293245] flex flex-col h-full shadow-2xl relative z-30 font-pixel shrink-0">
+        <div className="w-64 md:w-80 lg:w-96 cyber-panel border-l border-[#293245] flex flex-col h-full shadow-2xl relative z-30 font-pixel shrink-0 portrait:w-full portrait:h-[45%] portrait:border-l-0 portrait:border-t">
             <div className="flex-1 min-h-0 overflow-y-auto flex flex-col items-center justify-center text-gray-500 p-4 lg:p-8 text-center gap-3">
                 <Info size={44} className="text-sky-400 opacity-40 animate-pulse shrink-0" />
                 <div className="text-lg uppercase tracking-widest font-black text-gray-300">{t('System Idle')}</div>
@@ -245,7 +245,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
       const envInfo = selectedTile.environment !== 'NONE' ? terrainDefs[selectedTile.environment] : null;
 
       return (
-        <div className="w-64 md:w-80 lg:w-96 cyber-panel border-l border-[#293245] flex flex-col h-full shadow-2xl relative z-30 font-pixel shrink-0">
+        <div className="w-64 md:w-80 lg:w-96 cyber-panel border-l border-[#293245] flex flex-col h-full shadow-2xl relative z-30 font-pixel shrink-0 portrait:w-full portrait:h-[45%] portrait:border-l-0 portrait:border-t">
             <div className="bg-[#121622] p-5 border-b border-[#293245] flex items-center gap-4">
                  <div className="w-14 h-14 bg-[#0b0d14] border border-[#293245] rounded-xl flex items-center justify-center shadow-inner">
                      <Mountain size={28} className="text-sky-400" />
@@ -305,7 +305,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
   const canUndo = isPlayer && selectedUnit!.hasMoved && !selectedUnit!.hasAttacked && selectedUnit!.prevPosition !== undefined && interactionMode !== 'MOVING' && interactionMode !== 'EXECUTING';
 
   return (
-    <div className="w-64 md:w-80 lg:w-96 cyber-panel border-l border-[#293245] flex flex-col h-full shadow-2xl relative z-30 font-pixel shrink-0">
+    <div className="w-64 md:w-80 lg:w-96 cyber-panel border-l border-[#293245] flex flex-col h-full shadow-2xl relative z-30 font-pixel shrink-0 portrait:w-full portrait:h-[45%] portrait:border-l-0 portrait:border-t">
       
       {/* A. HEADER: PORTRAIT & BASIC INFO */}
       <div className={`p-3 lg:p-5 border-b border-[#293245] ${isPlayer ? 'bg-gradient-to-r from-emerald-950/60 to-slate-900/80' : 'bg-gradient-to-r from-red-950/60 to-slate-900/80'} flex gap-3 lg:gap-4 relative`}>

@@ -34,7 +34,7 @@ export const SquadSidebar = ({ units, selectedUnitId, onSelectUnit }: SquadSideb
     // a mobile-landscape screen with no way to scroll. As a flex child the board simply
     // gets measured around it, and the column itself scrolls when it is taller than the
     // fight area.
-    <div className="shrink-0 flex flex-col gap-2 lg:gap-3 py-2 px-1.5 lg:px-2 overflow-y-auto overflow-x-hidden font-pixel select-none">
+    <div className="shrink-0 flex flex-col portrait:flex-row gap-2 lg:gap-3 py-2 px-1.5 lg:px-2 overflow-y-auto overflow-x-hidden portrait:overflow-y-hidden portrait:overflow-x-auto font-pixel select-none">
         {squad.map(unit => {
             const isSelected = selectedUnitId === unit.id;
             const isActed = unit.hasAttacked;
@@ -57,7 +57,7 @@ export const SquadSidebar = ({ units, selectedUnitId, onSelectUnit }: SquadSideb
                     aria-pressed={isSelected}
                     data-tut={unit.heroId ? `hero-${unit.heroId}` : unit.materialId ? `unit-${unit.materialId}` : `unit-${unit.id}`}
                     className={`
-                        relative group cursor-pointer transition-all duration-200 text-left
+                        relative group cursor-pointer transition-all duration-200 text-left shrink-0
                         ${isSelected ? '' : 'hover:brightness-110'}
                         ${isActed ? 'opacity-50 grayscale' : ''}
                     `}

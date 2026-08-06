@@ -44,7 +44,7 @@ export const TutorialSkipButton: React.FC<TutorialSkipButtonProps> = ({ onSkip }
             // tutorial layer — Spotlight walls (90–95), the pinned legend (80), dialogue
             // scenes (70) — and the solid fill is what reads "on top of the shade";
             // a translucent button over black looked like part of the shade itself.
-            className={`fixed bottom-3 left-3 z-[120] flex items-center gap-2 px-3 py-2 font-pixel text-[10px] uppercase tracking-widest rounded-md border-2 transition-colors shadow-lg
+            className={`fixed bottom-3 left-3 portrait:bottom-[calc(42%+0.5rem)] z-[120] flex items-center gap-2 px-3 py-2 font-pixel text-[10px] uppercase tracking-widest rounded-md border-2 transition-colors shadow-lg
                 ${armed
                     ? 'bg-red-950 border-red-500 text-red-200 hover:bg-red-900 shadow-red-900/50'
                     : 'bg-[#14161b] border-gray-600 text-gray-300 hover:text-white hover:border-gray-400 shadow-black/60'}`}

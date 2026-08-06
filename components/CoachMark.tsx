@@ -36,7 +36,7 @@ export const CoachMark: React.FC<CoachMarkProps> = ({ note, index, total, avoidP
         : 'left-1/2';
 
     return (
-        <div className={`fixed bottom-14 ${centering} -translate-x-1/2 z-50 pointer-events-none font-pixel max-w-[calc(100vw-1rem)]`}>
+        <div className={`fixed bottom-14 ${centering} -translate-x-1/2 z-50 pointer-events-none font-pixel max-w-[calc(100vw-1rem)] portrait:left-1/2 portrait:bottom-[calc(42%+3rem)]`}>
             <div className="flex items-center gap-3 px-5 py-3 bg-[#101a12]/95 border-2 border-emerald-500 rounded-lg shadow-[0_0_28px_rgba(16,185,129,0.28)] backdrop-blur-md animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <Leaf size={20} className="text-emerald-400 shrink-0" />
 

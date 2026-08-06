@@ -48,7 +48,9 @@ export const HUD: React.FC<HUDProps> = ({
       {/* Glow Accent Line */}
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-sky-400 to-amber-400 opacity-80" />
 
-      <div className="h-14 lg:h-16 flex items-center justify-between gap-2 lg:gap-4 px-2 sm:px-3 lg:px-5">
+      {/* Màn dọc hẹp không đủ chỗ cho ba cụm trên một hàng — cho wrap: cụm nút
+          rơi xuống hàng hai thay vì đè lên cụm giữa. h-auto để header nở theo. */}
+      <div className="h-14 lg:h-16 portrait:h-auto portrait:flex-wrap portrait:justify-center portrait:py-1 flex items-center justify-between gap-2 lg:gap-4 px-2 sm:px-3 lg:px-5">
 
       {/* LEFT: Currencies & Item Belt */}
       <div className="flex items-center gap-1.5 lg:gap-3 min-w-0">

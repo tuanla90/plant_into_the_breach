@@ -20,12 +20,24 @@ html {
 @media (max-height: 400px) {
   html { font-size: 13px; }
 }
+/* Điện thoại cầm DỌC: chiều cao lớn nên hai query trên không kích hoạt,
+   nhưng bề ngang 360-430px mới là thứ thiếu — compact theo width. */
+@media (max-width: 480px) {
+  html { font-size: 13px; }
+}
 
 body {
   background-color: #0b0d12;
   font-family: 'Be Vietnam Pro', sans-serif;
   color: #e2e8f0;
   user-select: none;
+  /* Vuốt trên bàn cờ không được kéo trang bật nảy / pull-to-refresh (iOS PWA). */
+  overscroll-behavior: none;
+}
+button, a, [role="button"] {
+  /* Khử độ trễ double-tap-zoom còn sót của iOS và chặn zoom vô tình khi bấm nhanh. */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 img {
   image-rendering: pixelated;
