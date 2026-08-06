@@ -270,7 +270,7 @@ export const GENERATE_MAP = (bossesBeaten = 0, stageOverride?: number, bossId?: 
  * It used to be neither. Picking it generated an ordinary ten-layer stage III run with
  * Blightlord swapped onto the final node: the same branching walk through Neon Rose, the same
  * shops and campfires and random events, and the campaign screen's promise — "every boss
- * again, back to back, with no brain rule, and then him" — delivered as one boss at the end of
+ * again, back to back, with no sprout rule, and then him" — delivered as one boss at the end of
  * a normal Tuesday. The last act in the game was the third act again with different lighting.
  *
  * So it is authored rather than rolled, and it is authored as the opposite of a map:
@@ -300,13 +300,13 @@ export const GENERATE_BREACH_MAP = (): MapNode[] => {
     // Campaign order, and the sector each one is fought in — the same pairing STAGE_SECTORS
     // makes for an ordinary run, so a boss's act (stage 1 act 2) IS its ground (DESERT).
     const run: { boss: BossId; world: WorldType }[] = [
-        { boss: 'GARGANTUAR', world: 'GRASS' },
-        { boss: 'CATAPULT_LORD', world: 'DESERT' },
+        { boss: 'GRAVEHULK', world: 'GRASS' },
+        { boss: 'IRONCART', world: 'DESERT' },
         { boss: 'CINDER_COLOSSUS', world: 'VOLCANO' },
-        { boss: 'BALLOON_ARMADA', world: 'COAST' },
+        { boss: 'ARMADA', world: 'COAST' },
         { boss: 'SANDREAVER', world: 'THORN' },
         { boss: 'YETI', world: 'ICE' },
-        { boss: 'DISCO_ZOMBOSS', world: 'NEON' },
+        { boss: 'HEADLINER', world: 'NEON' },
         { boss: 'CLOCKJAW', world: 'RUIN' },
         { boss: 'VOLTMAW', world: 'GRID' },
     ];
@@ -320,7 +320,7 @@ export const GENERATE_BREACH_MAP = (): MapNode[] => {
 
     // A camp AT THE DOOR as well as after each boss. Gear is only sold at camps here, so
     // without this one the opening purse is money the player cannot spend until the first
-    // Gargantuar is already dead — they would walk into it with a bare bench and no way to
+    // Gravehulk is already dead — they would walk into it with a bare bench and no way to
     // have done anything about it.
     push({ type: 'CAMPFIRE', world: run[0].world, status: 'LOCKED', paidCamp: true });
     run.forEach(step => {
@@ -328,7 +328,7 @@ export const GENERATE_BREACH_MAP = (): MapNode[] => {
         // One camp per boss, in the sector that boss was fought in.
         push({ type: 'CAMPFIRE', world: step.world, status: 'LOCKED', paidCamp: true });
     });
-    // Blightlord fights on the Breach's own board (arena_breach, RUIN, no houses at all), and
+    // Blightlord fights on the Breach's own board (arena_breach, RUIN, no Greenspires at all), and
     // this is the node that ends the run and banks the win.
     push({ type: 'BOSS', world: 'RUIN', status: 'LOCKED', bossId: 'BLIGHTLORD' });
 
@@ -350,10 +350,10 @@ const IMPASSABLE_FOR_CHECK: TerrainType[] = ['WATER', 'MOUNTAIN', 'WALL'];
 
 /**
  * Hand-authored maps must be correct by construction, so this no longer *repairs* anything —
- * it reports. A map where a house is unreachable is an authoring mistake and should be fixed
+ * it reports. A map where a Greenspire is unreachable is an authoring mistake and should be fixed
  * in `data/maps.ts`, not silently patched at runtime.
  *
- * Returns the ids of houses no walker can reach.
+ * Returns the ids of Greenspires no walker can reach.
  */
 export const findUnreachableHouses = (board: TileData[]): string[] => {
     const at = (x: number, y: number) => board[x * GRID_SIZE + y];
@@ -373,7 +373,7 @@ export const findUnreachableHouses = (board: TileData[]): string[] => {
             const key = `${nx},${ny}`;
             if (seen.has(key)) return;
             const next = at(nx, ny);
-            // A house is the goal, so reaching its tile counts even though it is the end of the walk.
+            // A Greenspire is the goal, so reaching its tile counts even though it is the end of the walk.
             if (!walkable(next) && !next.isHouse) return;
             seen.add(key);
             if (!next.isHouse) queue.push(next);
@@ -395,7 +395,7 @@ export const generateBoard = (world: WorldType = 'GRASS', boss?: BossId): TileDa
 
     const unreachable = findUnreachableHouses(board);
     if (unreachable.length > 0) {
-        console.warn(`Map "${template.id}": zombies cannot reach house(s) at ${unreachable.join(' ')}.`);
+        console.warn(`Map "${template.id}": zombies cannot reach Greenspire(s) at ${unreachable.join(' ')}.`);
     }
 
     return board;

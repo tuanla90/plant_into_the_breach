@@ -12,11 +12,11 @@
 >
 > | Icon cần làm | File đích | Entry ITEM_SPRITES | Hiện đang dùng |
 > |---|---|---|---|
-> | Nấm Thôi Miên | `img/item-hypno-shroom.png` | `HYPNO_SHROOM` | placeholder svg |
-> | Nấm Nam Châm | `img/item-magnet-shroom.png` | `MAGNET_SHROOM` | placeholder svg |
-> | Lô Hội | `img/item-aloe.png` | `ALOE` | placeholder svg |
-> | Nấm Nguyên Tử | `img/item-doom-shroom.png` | `DOOM_SHROOM` | placeholder svg |
-> | Cỏ Gai | `img/item-spikeweed.png` | `SPIKEWEED` | mượn texture sàn `terrain/spikes.svg` |
+> | Phi Tiêu Tẩy Não | `img/item-hypno-shroom.png` | `HYPNO_SHROOM` | placeholder svg |
+> | Xung Nam Châm | `img/item-magnet-shroom.png` | `MAGNET_SHROOM` | placeholder svg |
+> | Túi Cứu Thương | `img/item-aloe.png` | `ALOE` | placeholder svg |
+> | Lõi Tàn Rụi | `img/item-doom-shroom.png` | `DOOM_SHROOM` | placeholder svg |
+> | Bẫy Chông | `img/item-spikeweed.png` | `SPIKEWEED` | mượn texture sàn `terrain/spikes.svg` |
 
 ---
 
@@ -34,7 +34,7 @@ NO text, NO letters, NO background, NO ground shadow, NO faces, NO hands.
 
 ---
 
-### `item-hypno-shroom.png` — Nấm Thôi Miên (65 Xu)
+### `item-hypno-shroom.png` — Phi Tiêu Tẩy Não (65 Xu)
 ```
 PROMPT: A sinister mushroom re-engineered as a psychic emitter: a plump mushroom cap painted
 with a glowing hypnotic double-spiral in magenta and deep violet, the spiral faintly pulsing;
@@ -43,7 +43,7 @@ concentric ring-waves radiating outward from the cap to suggest mind control. Si
 mood. Accent color #e879f9.
 ```
 
-### `item-magnet-shroom.png` — Nấm Nam Châm (50 Xu)
+### `item-magnet-shroom.png` — Xung Nam Châm (50 Xu)
 ```
 PROMPT: A mushroom re-engineered as an industrial electromagnet: the cap is a thick horseshoe
 magnet in gunmetal grey with glowing cyan coil windings at both poles, mounted on a squat
@@ -52,7 +52,7 @@ metal bucket, a bolt, a shard of helmet — levitate toward the poles along fain
 field arcs. Accent color #38bdf8.
 ```
 
-### `item-aloe.png` — Lô Hội (50 Xu)
+### `item-aloe.png` — Túi Cứu Thương (50 Xu)
 ```
 PROMPT: An aloe vera plant re-engineered as a battlefield medic kit: a cluster of thick spiky
 aloe leaves rising from a riveted gunmetal canister pot with a carry handle, one leaf sliced
@@ -61,7 +61,7 @@ glow around the drop, tiny steel clamps holding the cut leaf. Calm, clean, reass
 weapons. Accent color #4ade80.
 ```
 
-### `item-doom-shroom.png` — Nấm Nguyên Tử (125 Xu)
+### `item-doom-shroom.png` — Lõi Tàn Rụi (125 Xu)
 ```
 PROMPT: A doom mushroom re-engineered as a nuclear warhead: a bulbous deep-purple mushroom cap
 shaped like a bomb dome, wrapped in a hazard-striped steel band (yellow-black chevrons, no
@@ -70,7 +70,7 @@ cracks in the cap, faint radiation shimmer and tiny floating spores around it. H
 menacing — visibly the most dangerous item in the set. Accent color #a855f7.
 ```
 
-### `item-spikeweed.png` — Cỏ Gai (35 Xu)
+### `item-spikeweed.png` — Bẫy Chông (35 Xu)
 ```
 PROMPT: A spikeweed re-engineered as a deployable caltrop trap: a compact coiled bundle of
 organic thorned vines reinforced with steel barbs and riveted joints, folded like a throwable

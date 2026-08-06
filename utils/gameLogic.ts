@@ -1,6 +1,6 @@
 
 import { Unit, Position, Skill, TileData, TerrainDefinition, UnitType, UnitClass, EffectType } from '../types';
-import { getFusionEffectValue, hasFusionEffect } from './fusion';
+import { DIGEST_CLAW_SKILL_ID, getFusionEffectValue, hasFusionEffect } from './fusion';
 
 // Helper to get unit at position
 export const getUnitAt = (pos: Position, units: Unit[]) => units.find(u => u.position.x === pos.x && u.position.y === pos.y);
@@ -30,7 +30,7 @@ export const formatGridPosition = (x: number | undefined, y: number | undefined)
 };
 
 /**
- * Which way a Blover gust blows: toward whichever board edge the targeted tile sits closest
+ * Which way a Storm Fan gust blows: toward whichever board edge the targeted tile sits closest
  * to. One function so the hover arrow and the actual shove can never disagree — the same
  * discipline the event rolls use.
  *
@@ -81,14 +81,14 @@ export interface PushPlan {
     /** Units that slammed into something. One point each, per the collision rule. */
     collided: string[];
     /**
-     * Enemies shoved into a house that still held a brain. They take it and leave, exactly as
+     * Enemies shoved into a Greenspire that still held a sprout. They take it and leave, exactly as
      * if they had walked in — so a careless shove toward your own side feeds them. This is
      * what stops PUSH from being a free "get it away from me" button.
      */
-    tookBrain: Array<{ unitId: string; house: Position }>;
+    tookBrain: Array<{ unitId: string; Greenspire: Position }>;
     /**
-     * Houses whose SHELL LAYER (TileData.shielded — Gourdward's Reinforce) ate a shove this
-     * plan aimed at their doorway. The layer breaks, the brain stays, the shover is billed a
+     * Greenspires whose SHELL LAYER (TileData.shielded — Gourdward's Reinforce) ate a shove this
+     * plan aimed at their doorway. The layer breaks, the sprout stays, the shover is billed a
      * collision like any wall. The caller owns the MODIFY_TERRAIN that clears the flag.
      */
     wardedHouses: Position[];
@@ -135,7 +135,7 @@ interface PushStep {
     drowned: string[];
     /** Bosses that landed in water and survived it. See PushPlan.doused. */
     doused: string[];
-    tookBrain: Array<{ unitId: string; house: Position }>;
+    tookBrain: Array<{ unitId: string; Greenspire: Position }>;
     wardedHouses: Position[];
     /**
      * Did anything actually move? False means the shove met something it cannot shift, and
@@ -182,8 +182,8 @@ const planPushStep = (
     const inBounds = dest.x >= 0 && dest.x < 8 && dest.y >= 0 && dest.y < 8;
     const destTile = inBounds ? getTileAt(dest, board) : undefined;
 
-    // A house with a brain still in it is not a wall to a zombie — it is the thing it wants.
-    // Shoving one in hands over the brain, which makes pushing toward your own side a real
+    // A Greenspire with a sprout still in it is not a wall to a zombie — it is the thing it wants.
+    // Shoving one in hands over the sprout, which makes pushing toward your own side a real
     // mistake rather than a free repositioning tool.
     const houseWithBrain = !!destTile
         && !!destTile.isHouse
@@ -192,7 +192,7 @@ const planPushStep = (
         && mover.isEnemy;
 
     if (!inBounds || !destTile || destTile.terrain === 'WALL' || (destTile.isHouse && !houseWithBrain)) {
-        // Board edge, barrier, or a house with nothing left to steal — a genuine wall. Only
+        // Board edge, barrier, or a Greenspire with nothing left to steal — a genuine wall. Only
         // one body is involved now, so only one takes the hit.
         bumped.add(mover.id);
         return step;
@@ -200,18 +200,18 @@ const planPushStep = (
 
     if (houseWithBrain) {
         /**
-         * A SHIELDED house (Gourdward's Reinforce, TileData.shielded) answers the shove the
+         * A SHIELDED Greenspire (Gourdward's Reinforce, TileData.shielded) answers the shove the
          * way a wall does — the zombie slams into the shell instead of the doorway, the
-         * layer breaks, the brain stays. The careless-push tax survives in a smaller coin:
+         * layer breaks, the sprout stays. The careless-push tax survives in a smaller coin:
          * the collision point still lands, the layer the player spent an action raising is
-         * gone, but the brain is not.
+         * gone, but the sprout is not.
          */
         if (destTile.shielded) {
             step.wardedHouses.push({ ...dest });
             bumped.add(mover.id);
             return step;
         }
-        step.tookBrain.push({ unitId: mover.id, house: { ...dest } });
+        step.tookBrain.push({ unitId: mover.id, Greenspire: { ...dest } });
         step.moves.push({ unitId: mover.id, to: { ...dest } });
         step.advanced = true;
         return step;
@@ -249,18 +249,18 @@ export const planPush = (
     /** How many bodies a single shove can drive. Bounded so a packed lane cannot loop. */
     maxChain: number = 3,
     /**
-     * Houses whose brain has already been taken earlier in the same turn, keyed "x,y". The
+     * Greenspires whose sprout has already been taken earlier in the same turn, keyed "x,y". The
      * board itself is only updated by the reducer, so a caller resolving several shoves in one
-     * pass has to tell us, or two zombies could claim the same brain.
+     * pass has to tell us, or two zombies could claim the same sprout.
      */
     brainlessHouses: Set<string> = new Set(),
     /**
-     * How many TILES the shove drives the mover. Chardwall throws 2, and PUSH_DISTANCE buys
+     * How many TILES the shove drives the mover. Chardslam throws 2, and PUSH_DISTANCE buys
      * more on top; everything else still shoves the 1 tile this defaults to.
      *
      * Resolved one tile at a time on purpose. A long shove is NOT a teleport: each tile is its
-     * own chance to jam on a body, hit the map edge, drop into water, or hand a live house its
-     * brain, so a 2-tile throw that meets a mountain on the first tile stops there and still
+     * own chance to jam on a body, hit the map edge, drop into water, or hand a live Greenspire its
+     * sprout, so a 2-tile throw that meets a mountain on the first tile stops there and still
      * pays the collision. Sliding the target `distance` tiles in one calculation would let it
      * skip over exactly the obstacles this hero exists to slam things into.
      */
@@ -290,7 +290,7 @@ export const planPush = (
     const tiles = Math.max(1, Math.floor(distance));
     for (let i = 0; i < tiles; i++) {
         const current = working.get(mover.id);
-        // The mover drowned, or walked off with a brain. There is nothing left to shove.
+        // The mover drowned, or walked off with a sprout. There is nothing left to shove.
         if (!current) break;
 
         const step = planPushStep(
@@ -316,12 +316,12 @@ export const planPush = (
             const u = working.get(m.unitId);
             if (u) u.position = { ...m.to };
         });
-        // A body that drowned or took a brain is off the board: it must stop blocking the
+        // A body that drowned or took a sprout is off the board: it must stop blocking the
         // tiles still to come, and must never be moved a second time.
         step.drowned.forEach(id => working.delete(id));
-        step.tookBrain.forEach(({ unitId, house }) => {
+        step.tookBrain.forEach(({ unitId, Greenspire }) => {
             working.delete(unitId);
-            claimedHouses.add(`${house.x},${house.y}`);
+            claimedHouses.add(`${Greenspire.x},${Greenspire.y}`);
         });
     }
 
@@ -344,7 +344,26 @@ export interface DamageResult {
      * UPDATE_UNIT_STATE for the hit should include them so the board icon clears with it.
      */
     bleedConsumed?: boolean;
+    /**
+     * This instance was eaten by the LAST_STAND_SHIELD layer. The target object's
+     * `lastStandUsed` has been set in place — sites that emit UPDATE_UNIT_STATE for the hit
+     * must carry it, or the once-per-battle promise resets on the next write-back.
+     */
+    lastStandSpent?: boolean;
 }
+
+/**
+ * The state write-back for a hit that met a shell: the layer, and the last stand if this was
+ * the blow that spent it.
+ *
+ * One helper rather than a literal at each site because `lastStandUsed` is a ONCE-PER-BATTLE
+ * promise — a site that forgets it does not crash, it quietly hands the player a second free
+ * death save, which is the kind of bug that never gets reported.
+ */
+export const shieldUpdatesFor = (r: DamageResult): Partial<Unit> =>
+    r.lastStandSpent
+        ? { shield: r.remainingShield, lastStandUsed: true }
+        : { shield: r.remainingShield };
 
 export const calculateDamage = (
     target: Unit,
@@ -370,22 +389,26 @@ export const calculateDamage = (
         };
     }
 
-    // Shelled Chomper used to early-return here — total immunity for the whole digest
-    // window, which deleted Maw's one drawback and contradicted its own card ("gains 3
+    // Armored Jaws used to early-return here — total immunity for the whole digest
+    // window, which deleted Snapmaw's one drawback and contradicted its own card ("gains 3
     // shield"). The fusion now grants real shield when digestion begins (skillResolution),
     // and the shield arithmetic below handles the rest with no special case.
 
     // Flat reduction from an armour fusion. Applied here rather than at each damage site so
     // every source — melee, projectiles, lava, hazards, push collisions — respects it.
     // Never reduces a hit below 1, or armour would make a unit untouchable.
+    //
+    // Armored Jaws joins the same sum, fenced inside the window it is sold for: the hide
+    // thickens for the two turns Snapmaw cannot act and is worth nothing the rest of the fight.
     const reduction = getFusionEffectValue(target, 'DAMAGE_REDUCTION')
-        + getFusionEffectValue(target, 'STEADFAST');
+        + getFusionEffectValue(target, 'STEADFAST')
+        + ((target.digestingTurns ?? 0) > 0 ? getFusionEffectValue(target, 'ARMOR_WHILE_DIGESTING') : 0);
     let damageToDeal = reduction > 0 && amount > 0 ? Math.max(1, amount - reduction) : amount;
 
     /**
      * HELMET ARMOUR (Unit.armor) — innate, and deliberately under the OPPOSITE floor rule to
      * the fusion reduction above. Fusion armour never drops a hit below 1 because a hero built
-     * untouchable breaks the game. A Buckethead that shrugs a pea to ZERO is the point: the
+     * untouchable breaks the game. A Pothelm that shrugs a pea to ZERO is the point: the
      * player is being told "bring a bigger answer" — push it, burn it, spike its path — which
      * is exactly the triage this game is made of. Environment damage bypasses via the
      * `ignoresArmor` flag, so armour can never make a body unkillable, only pea-proof.
@@ -401,7 +424,7 @@ export const calculateDamage = (
     /**
      * THE SHIELD IS A LAYER, NOT A NUMBER (PLAN-hero-zephyr §6.0) — ItB's shield: one layer
      * blocks ONE damage instance IN FULL, whatever its size, then breaks. Blocking the
-     * Gargantuar's 5-damage fist and blocking an imp's 1-damage bite cost the same layer,
+     * Gravehulk's 5-damage fist and blocking an imp's 1-damage bite cost the same layer,
      * which is the whole design: the skill is in reading WHICH telegraphed blow to spend it
      * on, not in stacking a number tall enough to stop caring.
      *
@@ -425,7 +448,7 @@ export const calculateDamage = (
     /**
      * BLEEDING — the open wound spends itself on the next damage instance (PLAN-hero-zephyr
      * §8). Three orderings are load-bearing:
-     *  - AFTER helmet armour, or a Buckethead would eat the whole gear: the +1 lands even on
+     *  - AFTER helmet armour, or a Pothelm would eat the whole gear: the +1 lands even on
      *    a hit the helmet clanged to zero — the wound is under the armour.
      *  - AFTER the layer check: a blocked instance carries nothing in and spends nothing
      *    (decision 16 — riders die with the blow the layer ate).
@@ -446,6 +469,39 @@ export const calculateDamage = (
     // 3. Apply to HP
     let currentHp = target.hp - damageToDeal;
 
+    /**
+     * THE LAST STAND (Bunker Plating) — the layer that is not there until it is needed.
+     *
+     * Checked LAST, after armour, the layer and the wound, because the promise is about the
+     * OUTCOME rather than about the blow: whatever finally gets through and would end her
+     * raises a shell instead, and the shell eats that instance whole — the same thing an
+     * ordinary layer does, on the same terms.
+     *
+     * It can only fire on a bare body: a standing layer would have absorbed the hit twenty
+     * lines up and `currentHp` would never have gone under. So there is no double-block to
+     * guard against, and the bleed above cannot be spent by a blow this refuses either — it
+     * already ran on the same "no layer between the blow and the wound" test.
+     *
+     * Reported AND mutated in place, exactly like `bleedConsumed`: the simulation copies stay
+     * coherent inside one resolution, and the flag reaches the board through the caller.
+     */
+    let lastStandSpent = false;
+    if (currentHp <= 0 && damageToDeal > 0
+        && !target.lastStandUsed
+        && hasFusionEffect(target, 'LAST_STAND_SHIELD')) {
+        shieldDmg = damageToDeal;
+        damageToDeal = 0;
+        currentHp = target.hp;
+        target.lastStandUsed = true;
+        lastStandSpent = true;
+        // Decision 16 restated: riders die with the blow a layer ate. The wound was spent a
+        // few lines up on a hit that is now blocked, so it is put back.
+        if (bleedConsumed && target.statusEffects) {
+            target.statusEffects = [...target.statusEffects, 'BLEEDING'];
+            bleedConsumed = false;
+        }
+    }
+
     return {
         finalDamage: damageToDeal,
         shieldDamage: shieldDmg,
@@ -454,6 +510,7 @@ export const calculateDamage = (
         isFatal: currentHp <= 0,
         absorbedByArmor,
         bleedConsumed,
+        lastStandSpent,
     };
 };
 
@@ -503,7 +560,7 @@ const isTilePassable = (x: number, y: number, unit: Unit, units: Unit[], board: 
 /**
  * May this unit move THROUGH a tile another unit is standing on?
  *
- * Only two movement types may: a Balloon Zombie drifts over bodies and a Digger tunnels
+ * Only two movement types may: a Floater drifts over bodies and a Digger tunnels
  * under them, and bypassing a held line is the entire reason both units exist. For anything
  * that walks, a plant's body is a wall — that is what makes a defensive line a line at all.
  * Getting this wrong makes ground zombies stroll straight through the squad, and because
@@ -516,7 +573,7 @@ export const canCrossBodies = (unit: Unit): boolean =>
 /**
  * May this unit END its move on this tile? Crossing and stopping are separate questions.
  *
- * A Balloon Zombie drifts over a mountain and a Digger tunnels under a lake, and both of
+ * A Floater drifts over a mountain and a Digger tunnels under a lake, and both of
  * those are the point of the unit. Parking there is a different matter: a mountain blocks
  * projectiles as well as bodies, and nothing that walks can step beside open water — so a
  * unit that stops on either is a threat with no counterplay at all. That is not difficulty,
@@ -604,7 +661,7 @@ export const findPath = (
 
 // --- MOVEMENT VALIDITY (Uses BFS) ---
 /**
- * True for any skill whose payout is Sun — Harvest, the Sun-shroom charges, and anything
+ * True for any skill whose payout is Sol — Harvest, the Sol Cap charges, and anything
  * added later. Moving forfeits these for the turn: a sun producer may reposition OR bank
  * light, never both. Keyed on the effect rather than the unit class so a new producer
  * inherits the rule for free.
@@ -619,8 +676,8 @@ export const getValidMoves = (
     board: TileData[], 
     terrainDefs: Record<string, TerrainDefinition>
 ): Position[] => {
-    // Sun producers used to be rooted to the spot. They can walk now — the cost is that
-    // moving forfeits this turn's Sun (see isSunProducingSkill), which is a choice the
+    // Sol producers used to be rooted to the spot. They can walk now — the cost is that
+    // moving forfeits this turn's Sol (see isSunProducingSkill), which is a choice the
     // player makes rather than a restriction the board imposes.
     if (unit.isEnemy || unit.hasMoved || unit.hasAttacked || (unit.digestingTurns && unit.digestingTurns > 0) || unit.statusEffects?.includes('STUN') || unit.statusEffects?.includes('DORMANT')) {
         return [];
@@ -655,7 +712,7 @@ export const getValidMoves = (
             const key = `${n.x},${n.y}`;
             if (visited.has(key)) continue;
 
-            // Houses belong to the zombies — a plant may never stand in one, nor walk through it.
+            // Greenspires belong to the zombies — a plant may never stand in one, nor walk through it.
             // Pathfinding is untouched: zombies still need the tile to be reachable.
             if (getTileAt(n, board)?.isHouse) continue;
 
@@ -670,7 +727,7 @@ export const getValidMoves = (
 };
 
 /**
- * WING_PAIR (Zephyr's Wing Guns): the eight knight's-move cells, read as four DIRECTED pairs
+ * WING_PAIR (Reedwing's Wing Guns): the eight knight's-move cells, read as four DIRECTED pairs
  * — nose the drone one way, both wing rockets drop two tiles ahead, one to each side.
  *
  *      . X . X .        UP    = (x-2, y-1) + (x-2, y+1)
@@ -681,7 +738,7 @@ export const getValidMoves = (
  *
  * One table and one twin function, exported so the targeting overlay, the resolver and the
  * path preview can never disagree about which two cells a direction means — the same
- * discipline gustDirection keeps for the Blover.
+ * discipline gustDirection keeps for the Storm Fan.
  */
 export const WING_OFFSETS: ReadonlyArray<{ x: number; y: number }> = [
     { x: -2, y: -1 }, { x: -2, y: 1 }, { x: 2, y: -1 }, { x: 2, y: 1 },
@@ -697,6 +754,20 @@ export const wingTwin = (origin: Position, cell: Position): Position => {
         ? { x: cell.x, y: origin.y - dy }
         : { x: origin.x - dx, y: cell.y };
 };
+
+/**
+ * The tile BETWEEN a direction's two cells — the hole in the middle of the wing pattern, which
+ * only Cluster Load (WING_MIDSHOT) ever fills. Always an exact integer: the pair shares one
+ * coordinate and its other legs are ±1 off the same line, so the midpoint lands on a square.
+ * UP's pair (x-2, y∓1) has (x-2, y) between it; LEFT's (x∓1, y-2) has (x, y-2).
+ */
+export const wingMid = (origin: Position, cell: Position): Position => {
+    const tw = wingTwin(origin, cell);
+    return { x: (cell.x + tw.x) / 2, y: (cell.y + tw.y) / 2 };
+};
+
+/** On the 8x8 board. */
+const onBoard = (p: Position): boolean => p.x >= 0 && p.x < 8 && p.y >= 0 && p.y < 8;
 
 // --- SKILL GEOMETRY ---
 export const getSkillGeometry = (
@@ -745,10 +816,16 @@ export const getSkillGeometry = (
         tiles.push(unit.position);
     }
     else if (skill.rangeType === 'WING_PAIR') {
+        const midshot = hasFusionEffect(unit, 'WING_MIDSHOT');
         WING_OFFSETS.forEach(o => {
-            const tx = unit.position.x + o.x;
-            const ty = unit.position.y + o.y;
-            if (tx >= 0 && tx < 8 && ty >= 0 && ty < 8) tiles.push({ x: tx, y: ty });
+            const cell = { x: unit.position.x + o.x, y: unit.position.y + o.y };
+            if (onBoard(cell)) tiles.push(cell);
+            // Cluster Load's belly rocket. Shown in the overlay too, or the fusion would be
+            // invisible until the moment it resolved.
+            if (midshot) {
+                const mid = wingMid(unit.position, cell);
+                if (onBoard(mid) && !tiles.some(t => t.x === mid.x && t.y === mid.y)) tiles.push(mid);
+            }
         });
     }
 
@@ -763,7 +840,18 @@ export const getValidSkillTargets = (
     board: TileData[],
     terrainDefs: Record<string, TerrainDefinition>
 ): Position[] => {
-    if (unit.hasAttacked || (unit.digestingTurns && unit.digestingTurns > 0) || unit.statusEffects?.includes('STUN') || unit.statusEffects?.includes('DORMANT')) return [];
+    /**
+     * THE DIGEST GATE, with exactly one door in it.
+     *
+     * Everything a digesting hero owns is refused here — which is the drawback, and is also
+     * why Spitter's card ("a spit she can still use while digesting") was a lie for as long as
+     * it existed: the gate never looked at which skill was being asked about. Rending Claws is
+     * the honest version, so the gate now names the one id that is allowed through and nothing
+     * else changes. `hasAttacked` still applies: the claw is her action, not a free extra.
+     */
+    const digesting = !!unit.digestingTurns && unit.digestingTurns > 0;
+    if (digesting && skill.id !== DIGEST_CLAW_SKILL_ID) return [];
+    if (unit.hasAttacked || unit.statusEffects?.includes('STUN') || unit.statusEffects?.includes('DORMANT')) return [];
 
     /**
      * DUST VEIL, the player's half. A hero standing in the dust cannot aim either.
@@ -775,26 +863,15 @@ export const getValidSkillTargets = (
      *
      * Only offensive skills are stopped — "blinds units, cancels attacks" (data/terrain.ts).
      * A shield, a taunt or a harvest needs no line of sight and is left alone, which is also
-     * what keeps Gourdward and Thornhide from being switched off by weather.
+     * what keeps Gourdward and Thornshell from being switched off by weather.
      */
     if (skill.effects.some(e => e.type === 'DAMAGE')) {
         const here = getTileAt(unit.position, board);
         if (here?.smoke && here.smoke.turns > 0) return [];
     }
 
-    if (unit.class === UnitClass.SCAREDY_SHROOM) {
-        const adjacentOffsets = [{x:1,y:0}, {x:-1,y:0}, {x:0,y:1}, {x:0,y:-1}];
-        let isScared = false;
-        for (const o of adjacentOffsets) {
-            const adjPos = { x: unit.position.x + o.x, y: unit.position.y + o.y };
-            const u = getUnitAt(adjPos, units);
-            if (u && u.isEnemy) {
-                isScared = true;
-                break;
-            }
-        }
-        if (isScared) return [];
-    }
+    // Luật "sợ khi có địch đứng cạnh" của Shy Cap đã đi cùng cái cây — nó là cây duy nhất
+    // trong game có luật này, và cây đã bị bỏ khỏi data/plants.ts.
 
     const targets: Position[] = [];
     const hasSpawn = skill.effects.some(e => e.type === 'SPAWN');
@@ -825,7 +902,7 @@ export const getValidSkillTargets = (
         if (skill.effects.some(e => e.type === 'DAMAGE')) {
             return u.id !== unit.id;
         }
-        // A skill with NO damage at all is still an attack. Chardwall's free swing carries
+        // A skill with NO damage at all is still an attack. Chardslam's free swing carries
         // only PUSH — where the target lands is its whole payload — so it has to reach this
         // branch and come back valid against anything hostile. It deliberately stops short of
         // the friendly-fire rule above: shoving is not an accident you can make with an ally
@@ -908,7 +985,7 @@ export const getValidSkillTargets = (
                 if (tile && terrainDefs[tile.terrain]?.type === 'MOUNTAIN') break;
 
                 // Reinforce aims at a HOUSE the same way it aims at an ally: the layer goes
-                // on the tile. Only an unshielded, brain-holding house is worth the action.
+                // on the tile. Only an unshielded, sprout-holding Greenspire is worth the action.
                 if (hasShieldEffect && tile?.isHouse && tile.hasBrain && !tile.shielded) {
                     targets.push({ x: tx, y: ty });
                     break;
@@ -921,7 +998,7 @@ export const getValidSkillTargets = (
                          * TOSS aims are only legal when the throw can LAND: the mirrored
                          * tile (2·C − T) must be on the board, free of solid bodies, and
                          * somewhere a body can exist — not a wall, not a mountain, not a
-                         * house. Water is fine: drowning them is the point. The ItB rule,
+                         * Greenspire. Water is fine: drowning them is the point. The ItB rule,
                          * enforced at aim time so the overlay never offers a broken throw.
                          */
                         if (hasToss) {
@@ -950,16 +1027,21 @@ export const getValidSkillTargets = (
         // Either cell of a direction is aimable when EITHER cell of that direction holds a
         // valid target — the player picks a heading, not a tile, and the twin fires with it.
         // No line of sight and no mountain check, like LOB: the rockets drop in from above.
+        const midshot = hasFusionEffect(unit, 'WING_MIDSHOT');
         WING_OFFSETS.forEach(o => {
             const t = { x: unit.position.x + o.x, y: unit.position.y + o.y };
-            if (t.x < 0 || t.x >= 8 || t.y < 0 || t.y >= 8) return;
-            const here = getSolidUnitAt(t, units);
-            const hereValid = !!here && isValidTargetUnit(here);
-            const tw = wingTwin(unit.position, t);
-            const twinUnit = (tw.x >= 0 && tw.x < 8 && tw.y >= 0 && tw.y < 8)
-                ? getSolidUnitAt(tw, units) : undefined;
-            const twinValid = !!twinUnit && isValidTargetUnit(twinUnit);
-            if (hereValid || twinValid) targets.push(t);
+            if (!onBoard(t)) return;
+            const holdsTarget = (p: Position) => {
+                if (!onBoard(p)) return false;
+                const u = getSolidUnitAt(p, units);
+                return !!u && isValidTargetUnit(u);
+            };
+            // With Cluster Load the belly tile counts as well: a lone zombie standing in the
+            // gap is a legal heading, or the third rocket could never be the reason to fire.
+            const anyValid = holdsTarget(t)
+                || holdsTarget(wingTwin(unit.position, t))
+                || (midshot && holdsTarget(wingMid(unit.position, t)));
+            if (anyValid) targets.push(t);
         });
     }
 

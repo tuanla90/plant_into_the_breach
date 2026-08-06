@@ -1,3 +1,4 @@
+import { aliasBalancePath } from './idAliases';
 import { HERO_DEFINITIONS } from '../data/heroes';
 import { MATERIAL_DEFINITIONS } from '../data/materials';
 import { DEFAULT_UNIT_DEFINITIONS, UNIT_ROLE_MAP } from '../data/gameData';
@@ -25,7 +26,7 @@ const STORAGE_KEY = 'pitb_balance_v1';
 
 /** One tunable number, described once so the editor UI can be generated rather than written. */
 export interface BalanceField {
-    /** Stable id, also the storage key. `hero.GREEN_SHADOW.maxHp`. */
+    /** Stable id, also the storage key. `hero.PEABURST.maxHp`. */
     path: string;
     /** Section heading in the editor. */
     group: string;
@@ -65,13 +66,13 @@ const heroFields = (): BalanceField[] =>
             if (sun) {
                 out.push({
                     path: `skill.${skill.id}.sunGain`, group: g,
-                    label: `${skill.name} — Sun Gained`, def: sun.value ?? 0, min: 0, max: 200,
+                    label: `${skill.name} — Sol Gained`, def: sun.value ?? 0, min: 0, max: 200,
                 });
             }
             if (skill.sunCost) {
                 out.push({
                     path: `skill.${skill.id}.sunCost`, group: g,
-                    label: `${skill.name} — Sun Cost`, def: skill.sunCost, min: 0, max: 300,
+                    label: `${skill.name} — Sol Cost`, def: skill.sunCost, min: 0, max: 300,
                 });
             }
             if (skill.rangeValue !== undefined) {
@@ -107,8 +108,8 @@ const materialFields = (): BalanceField[] =>
     });
 
 const globalFields = (): BalanceField[] => [
-    { path: 'global.SUN_ON_LEVEL_START', group: 'Sun Economy', label: 'Sun at level start', def: SUN_ON_LEVEL_START, min: 0, max: 500 },
-    { path: 'global.SUN_PER_TURN_INCOME', group: 'Sun Economy', label: 'Sun per turn', def: SUN_PER_TURN_INCOME, min: 0, max: 200 },
+    { path: 'global.SUN_ON_LEVEL_START', group: 'Sol Economy', label: 'Sol at level start', def: SUN_ON_LEVEL_START, min: 0, max: 500 },
+    { path: 'global.SUN_PER_TURN_INCOME', group: 'Sol Economy', label: 'Sol per turn', def: SUN_PER_TURN_INCOME, min: 0, max: 200 },
     { path: 'global.COIN_ON_RUN_START', group: 'Coin Economy', label: 'Coin at run start', def: COIN_ON_RUN_START, min: 0, max: 2000 },
 ];
 
@@ -138,7 +139,10 @@ export const loadBalance = (): BalanceConfig => {
         if (!raw) return {};
         const saved = JSON.parse(raw) ?? {};
         const out: BalanceConfig = {};
-        Object.entries(saved).forEach(([path, value]) => {
+        Object.entries(saved).forEach(([rawPath, value]) => {
+            // ID MIGRATION (NAMING.md Phase 2): path cũ "hero.GREEN_SHADOW.maxHp" dịch
+            // sang id mới trước khi validate — không dịch là mọi số đã tune tự trở về default.
+            const path = aliasBalancePath(rawPath);
             const field = fieldByPath(path);
             const n = typeof value === 'number' ? value : Number(value);
             if (field && Number.isFinite(n)) out[path] = clamp(n, field.min, field.max);
@@ -166,7 +170,7 @@ export const saveBalance = (config: BalanceConfig) => {
 /**
  * The tuning as text, for pasting into a chat, a commit, or another machine.
  *
- * Only the changed values go in. A balance pass is a short list of decisions — "Shadeleaf
+ * Only the changed values go in. A balance pass is a short list of decisions — "Peaburst
  * hits for 3 now, zombies move one further" — and a dump of all 189 numbers would bury that
  * under noise, as well as pinning the reader to today's defaults.
  */
@@ -230,7 +234,7 @@ export const changedFields = (config: BalanceConfig): BalanceField[] =>
 export const applyBalance = (config: BalanceConfig) => {
     // Globals are not mutated (they are exported primitives) — they are read back through
     // `balancedGlobal`, so this is what makes the editor's Save also move them. Without it,
-    // Sun and Coin would save correctly and change nothing until the page was reloaded.
+    // Sol and Coin would save correctly and change nothing until the page was reloaded.
     loadedConfig = config;
 
     const num = (path: string): number | undefined => config[path];

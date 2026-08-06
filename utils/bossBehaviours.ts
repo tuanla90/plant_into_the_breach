@@ -6,20 +6,20 @@ import { DEFAULT_TERRAIN_DEFS } from '../data/terrain';
 /**
  * ONE TABLE, NOT NINE `if` BLOCKS.
  *
- * The Gargantuar's special case used to live inline in `planEnemyIntent`, ahead of the
+ * The Gravehulk's special case used to live inline in `planEnemyIntent`, ahead of the
  * standard ladder. That was fine for one boss. Nine of them written the same way is an
  * 800-line function where the ordinary zombie AI — the thing that runs for every unit in
  * every fight — is buried in the middle of nine exceptions that never apply to it.
  *
- * So: `planEnemyIntent` computes the shared facts once (where the brain is, what is blocking,
+ * So: `planEnemyIntent` computes the shared facts once (where the sprout is, what is blocking,
  * what the damage number is) and hands them to a behaviour looked up by boss id. A behaviour
  * returns an Intent to override the standard plan, or `null` to say "nothing special this
  * turn, walk and bite like anything else". Returning null is the common case and it should
  * be: a boss that ignores the base rules every single turn is not a boss, it is a cutscene.
  *
- * Keyed by `Unit.bossId`, not by unit class. Two bosses may share a class (a Gargantuar and a
- * bigger Gargantuar), and a class used by a boss may also turn up as an ordinary add — the
- * Headliner's dance floor is full of Disco Zombies. Identity has to be on the unit.
+ * Keyed by `Unit.bossId`, not by unit class. Two bosses may share a class (a Gravehulk and a
+ * bigger Gravehulk), and a class used by a boss may also turn up as an ordinary add — the
+ * Headliner's dance floor is full of Dancers. Identity has to be on the unit.
  */
 
 export interface BossContext {
@@ -29,7 +29,7 @@ export interface BossContext {
     playerUnits: Unit[];
     board: TileData[];
     terrainDefs: Record<string, TerrainDefinition>;
-    /** The tile this unit is walking toward — the nearest house that still holds a brain. */
+    /** The tile this unit is walking toward — the nearest Greenspire that still holds a sprout. */
     goal: Position;
     /** Damage this unit would deal right now, aura included. */
     damage: number;
@@ -68,8 +68,8 @@ export interface BossHooks {
      *
      * The hooks around it are about what a boss DOES. This one is about where it ENDS UP, and
      * it exists because the standard ladder answers one question — which tile gets me closest
-     * to a brain — and two bosses are not asking it. The Yeti grips a hero and would otherwise
-     * stroll past to the houses, so the smash it spent a turn setting up never lands. Ironcart
+     * to a sprout — and two bosses are not asking it. The Yeti grips a hero and would otherwise
+     * stroll past to the Greenspires, so the smash it spent a turn setting up never lands. Ironcart
      * wants the exact opposite of closest: the furthest tile that still has somebody in its arc.
      */
     move?: (ctx: {
@@ -106,7 +106,7 @@ const nearest = (from: Position, units: Unit[]): Unit | null => {
  *
  * GROUND IS CHECKED. It was not, and that was a real bug rather than an omission: every caller
  * here feeds the result straight into a SPAWN intent, and PHASE 3 only tests the tile for
- * OCCUPANCY before dropping a unit on it. So a wall counted as "open", and the Gargantuar could
+ * OCCUPANCY before dropping a unit on it. So a wall counted as "open", and the Gravehulk could
  * throw an imp into one. It went unnoticed for as long as it did because the boards in play had
  * walls at the edges and the summons happened in the middle; the Breach arena is a wall RING,
  * which put one directly in reach and made it show up in the first test.
@@ -143,7 +143,7 @@ const ring = (pos: Position): Position[] =>
 const wounded = (enemy: Unit) => enemy.hp <= Math.floor(enemy.maxHp / 2);
 
 // ---------------------------------------------------------------------------------------
-// I-1 · GARGANTUAR — the first thing too big to push
+// I-1 · GRAVEHULK — the first thing too big to push
 // ---------------------------------------------------------------------------------------
 
 /**
@@ -173,9 +173,9 @@ const gargantuar: BossBehaviour = ({ enemy, playerUnits, board, blocker }) => {
     return {
         type: 'SPAWN',
         target: landing,
-        spawnClass: UnitClass.IMP,
+        spawnClass: UnitClass.RUNT,
         spawnTiles: [landing],
-        description: 'Throwing Imp!',
+        description: 'Throwing Runt!',
     };
 };
 
@@ -186,14 +186,14 @@ const gargantuar: BossBehaviour = ({ enemy, playerUnits, board, blocker }) => {
 /**
  * It deals 1 damage and it is the most dangerous thing on the board, because everything else
  * on the board is +1 damage while it is alive (the ENRAGED aura, turnManager PHASE 1.5 — the
- * same aura the Flag Zombie carries, which is why this boss needed no new status).
+ * same aura the Bannerman carries, which is why this boss needed no new status).
  *
  * The assumption it breaks is "shoot the biggest thing". Here the biggest thing is nearly
  * harmless and the correct target is the one multiplying everyone else.
  *
  * CALL THE DANCERS every other turn, four bodies at once. Every other, not every turn: four a
  * turn outruns any squad's ability to clear them, and the fight stops being a decision about
- * targeting and becomes a losing race. On the off-turn it walks at a brain like anything else,
+ * targeting and becomes a losing race. On the off-turn it walks at a sprout like anything else,
  * which is what gives the player the window the whole fight is built around.
  */
 const headliner: BossBehaviour = ({ enemy, playerUnits, board, blocker, damage }) => {
@@ -207,7 +207,7 @@ const headliner: BossBehaviour = ({ enemy, playerUnits, board, blocker, damage }
             return {
                 type: 'SPAWN',
                 target: landings[0],
-                spawnClass: UnitClass.BASIC_ZOMBIE,
+                spawnClass: UnitClass.WALKER,
                 spawnTiles: landings,
                 description: 'Calling the dancers!',
             };
@@ -243,7 +243,7 @@ const cinderTrail: BossHooks['onMoved'] = ({ enemy, path, board }) => {
     // The final tile is where it now stands — everything before it is trail.
     walked.slice(0, -1).forEach(pos => {
         const tile = board.find(t => t.x === pos.x && t.y === pos.y);
-        // Never a house, never water: it scorches ground, it does not redraw the map.
+        // Never a Greenspire, never water: it scorches ground, it does not redraw the map.
         if (!tile || tile.isHouse || tile.terrain === 'LAVA'
             || tile.terrain === 'WATER' || tile.terrain === 'WALL' || tile.terrain === 'MOUNTAIN') return;
         actions.push({ type: 'MODIFY_TERRAIN', pos, terrain: 'LAVA' });
@@ -338,7 +338,7 @@ const conducted = (playerUnits: Unit[], board: TileData[]): Unit | null => {
  * The two rings behind the primary hit.
  *
  * Falloff is `damage - ring`, floored at 1, so 3/2/1 is DERIVED from the stat rather than
- * typed out three times. A Flag Zombie's ENRAGED aura is already folded into `damage`, so an
+ * typed out three times. A Bannerman's ENRAGED aura is already folded into `damage`, so an
  * escorted Voltmaw arcs 4/3/2 with no code — and one balance change retunes all three rings.
  */
 const arcLash = (origin: Position, damage: number, playerUnits: Unit[]): AreaHit[] => {
@@ -446,7 +446,7 @@ const yeti: BossBehaviour = ({ enemy, playerUnits, blocker, damage }) => {
         return {
             type: 'ATTACK',
             target: { ...held.position },
-            // Doubled off `damage`, not off the literal 3, so a Flag Zombie's aura rides the
+            // Doubled off `damage`, not off the literal 3, so a Bannerman's aura rides the
             // smash exactly the way it rides every other bite on the board.
             damage: damage * 2,
             description: 'Ice Smash!',
@@ -490,7 +490,7 @@ const yeti: BossBehaviour = ({ enemy, playerUnits, blocker, damage }) => {
  * It does not walk away from something it has already frozen.
  *
  * Without this the bear grips a hero, then the standard ladder walks it three tiles toward the
- * nearest brain, and next turn the victim it spent an action setting up is out of reach. The
+ * nearest sprout, and next turn the victim it spent an action setting up is out of reach. The
  * hero is stunned and cannot follow — so the combo the whole encounter is built on would break
  * on the one turn it is supposed to be unavoidable.
  *
@@ -540,7 +540,7 @@ const IRONCART_SPLASH = 1;
  *
  * 3 is picked to be survivable by every body in the roster and by none of them twice: the
  * thinnest hero is 6, or 4 once an element has been bought. So one shell is a decision and two
- * on one hero is a death — the Gargantuar's swing, moved from one tile to five.
+ * on one hero is a death — the Gravehulk's swing, moved from one tile to five.
  *
  * The splash is 1 rather than 2 from the other direction: it has to be worth stepping out of,
  * and it must never be the thing that loses the fight. A hero clipped for 1 has had a turn's
@@ -553,8 +553,8 @@ const IRONCART_SPLASH = 1;
  * retunes the aim with them. Fixed scan order and a strictly-greater test: a boss that rolls
  * dice cannot be telegraphed honestly, and the scripted replays could not tolerate it.
  *
- * Houses are excluded outright — `computeBrainThreats` reads an ATTACK aimed at a house as
- * "the brain goes next turn", so aiming there would print a brain-theft warning for a shell.
+ * Greenspires are excluded outright — `computeBrainThreats` reads an ATTACK aimed at a Greenspire as
+ * "the sprout goes next turn", so aiming there would print a sprout-theft warning for a shell.
  */
 const aimShell = (from: Position, range: number, targets: Unit[], board: TileData[]): Position | null => {
     let best: Position | null = null;
@@ -607,7 +607,7 @@ const railReach = (from: Position, board: TileData[], range: number): Array<{ po
  *
  * Both halves are load-bearing. Retreating out of range entirely would make it harmless and the
  * fight would stall against the clock; holding station — which is what the standard ladder makes
- * every other ranged unit do — would make it a Catapult Zombie with a bigger health bar. Maximum
+ * every other ranged unit do — would make it a Lobber with a bigger health bar. Maximum
  * standoff WITH a shot is the pressure: the tile you spent your turn walking to is empty, and
  * the shell arrives anyway.
  *
@@ -659,7 +659,7 @@ const ironcart: BossBehaviour = ({ enemy, playerUnits, board, terrainDefs, damag
     return {
         type: 'ATTACK',
         target: centre,
-        // ctx.damage, not enemy.damage: a Flag Zombie in the escort buys the cart its +1 like
+        // ctx.damage, not enemy.damage: a Bannerman in the escort buys the cart its +1 like
         // anything else, and the telegraph has to say so.
         damage,
         blast: ring(centre)
@@ -688,7 +688,7 @@ const ironcartMove: BossHooks['move'] = ({ enemy, playerUnits, board, range }) =
  *
  * TWO FULL BLOWS a turn, three below half. Deliberately `strikes` and not `blast`: each is a
  * complete attack running the whole PHASE 3 path, because a hand coming down twice is two hits,
- * not one hit with a footprint. That has a consequence worth saying out loud — THORNHIDE
+ * not one hit with a footprint. That has a consequence worth saying out loud — THORNSHELL
  * ANSWERS EVERY BEAT. His 2 spines are 4 a turn here and 6 once it winds down, which is the
  * whole 22 HP bar in four turns from a hero standing still. The boss whose gimmick is "more
  * actions" is undone by the one hero paid per action taken against him, and he is the reward
@@ -706,13 +706,13 @@ const ironcartMove: BossHooks['move'] = ({ enemy, playerUnits, board, range }) =
  *     knowing the hazard exists.
  *
  * It bites in ANY direction, unlike an ordinary melee zombie. The forward-only rule in aiLogic
- * exists so a zombie never detours from the brain it is walking to; a boss is struck off the
- * brain-grab path entirely (turnManager PHASE 4), so it has no errand to detour from and no
+ * exists so a zombie never detours from the sprout it is walking to; a boss is struck off the
+ * sprout-grab path entirely (turnManager PHASE 4), so it has no errand to detour from and no
  * reason to ignore what is standing behind it.
  *
  * WINDING BACKWARDS (half health): three blows instead of two, each worth one less. 2x3 and 3x2
  * are the same six damage ON PURPOSE — phase two is not more damage, it is one more decision
- * per turn on a board with one fewer lane. Both numbers derive from `damage`, so a Flag Zombie's
+ * per turn on a board with one fewer lane. Both numbers derive from `damage`, so a Bannerman's
  * aura rides them and one balance change retunes both phases.
  *
  * The plan's WIND UP — skip a turn to act three times on the next — is deliberately absent. It
@@ -768,8 +768,8 @@ const clockjaw: BossBehaviour = ({ enemy, playerUnits, damage }) => {
  * Three gas cells, and the number is a CLOCK rather than a health bar.
  *
  * It loses ONE per turn it is hit, however many times it is hit, and that ceiling is the whole
- * mechanic. Count hits instead and any multi-hit action — Shadeleaf's three-pea volley, both
- * of Zephyr's wing cells, once Thornquill's free row-pierce — pops all three in a single
+ * mechanic. Count hits instead and any multi-hit action — Peaburst's three-pea volley, both
+ * of Reedwing's wing cells, once Thornquill's free row-pierce — pops all three in a single
  * action, and the two-problem fight this boss exists to teach (ground it, THEN drown it)
  * collapses back into "shoot the big thing".
  *
@@ -810,9 +810,9 @@ const armadaWrecked = (enemy: Unit) =>
 /**
  * Where a landing party goes: one step from a hero TOWARD THE BRAIN IT IS GUARDING.
  *
- * Derived from `goal` — the nearest house that still holds a brain — rather than from an
- * assumption about which end of the board the houses sit on. The boards are hand-authored and
- * one of them will eventually put a house somewhere else.
+ * Derived from `goal` — the nearest Greenspire that still holds a sprout — rather than from an
+ * assumption about which end of the board the Greenspires sit on. The boards are hand-authored and
+ * one of them will eventually put a Greenspire somewhere else.
  *
  * This is the lesson as a targeting rule: a line has a behind, and the answer to a flier is not
  * a thicker wall. Deepest tile first, so the tighter the formation the worse the drop.
@@ -836,7 +836,7 @@ const armadaLandingSites = (alive: Unit[], goal: Position, board: TileData[]): P
         const k = `${p.x},${p.y}`;
         if (seen.has(k) || taken.has(k)) continue;
         const tile = getTileAt(p, board);
-        // Never a house — a body dropped on a doorstep is telegraphed as a brain theft by
+        // Never a Greenspire — a body dropped on a doorstep is telegraphed as a sprout theft by
         // computeBrainThreats. WALL stops even a balloon.
         if (!tile || tile.isHouse || tile.terrain === 'WALL') continue;
         seen.add(k);
@@ -855,8 +855,8 @@ const armadaLandingSites = (alive: Unit[], goal: Position, board: TileData[]): P
  * beats one dead centre. Sharing the function would have handed the bomb a centre bias its own
  * damage numbers contradict.
  *
- * The ship's own tile scores nothing — the bombs fell from there. Houses are excluded, or a
- * bomb run would print a brain warning.
+ * The ship's own tile scores nothing — the bombs fell from there. Greenspires are excluded, or a
+ * bomb run would print a sprout warning.
  */
 const aimBombRun = (from: Position, range: number, targets: Unit[], board: TileData[]): Position | null => {
     let best: Position | null = null;
@@ -920,18 +920,18 @@ const armada: BossBehaviour = ({ enemy, playerUnits, board, goal, damage }) => {
             return {
                 type: 'SPAWN',
                 target: sites[0],
-                spawnClass: UnitClass.BALLOON_ZOMBIE,
+                spawnClass: UnitClass.FLOATER,
                 spawnTiles: sites,
                 description: 'Landing party!',
             };
         }
-        // Nowhere to put them — the squad is already backed onto the houses. Bomb instead
+        // Nowhere to put them — the squad is already backed onto the Greenspires. Bomb instead
         // rather than spending the turn on nothing.
     }
 
     // --- BOMB RUN ---
     // `damage` for the centre AND every wing: the plus IS the stat, not a multiple of it. One
-    // number retunes all five tiles, and a Flag Zombie's aura raises the whole pattern.
+    // number retunes all five tiles, and a Bannerman's aura raises the whole pattern.
     const centre = aimBombRun(enemy.position, reach, alive, board);
     if (!centre) return null;
 
@@ -1026,7 +1026,7 @@ const armadaCells: BossHooks['onTurnEnd'] = ({ enemy, board }) => {
 /**
  * 4 where it comes up, 5 once it is hurt. Read off their own constants rather than `damage`,
  * deliberately: `damage` is what the ordinary ladder bites for on its above-ground turn, and the
- * eruption is a different blow that happens to be thrown by the same body. A Flag Zombie's aura
+ * eruption is a different blow that happens to be thrown by the same body. A Bannerman's aura
  * rides the bite and NOT this — the escort is not helping it dig.
  */
 const SANDREAVER_ERUPTION = 4;
@@ -1061,8 +1061,8 @@ const diving = (enemy: Unit) => (enemy.bossClock ?? 0) % 2 === 1;
  * them and three heroes, and that subtraction needed no new terrain code.
  *
  * NEVER A HOUSE, and this one is not cosmetic: the eruption aims at the tile the boss is standing
- * on, and PHASE 3 reads an attack on your own tile that is a brain-holding house as a theft.
- * Surface on a doorstep and it would rob the house instead of erupting.
+ * on, and PHASE 3 reads an attack on your own tile that is a sprout-holding Greenspire as a theft.
+ * Surface on a doorstep and it would rob the Greenspire instead of erupting.
  */
 const pickHole = (
     from: Position,
@@ -1085,7 +1085,7 @@ const pickHole = (
             if (!tile || tile.isHouse) continue;
             if (!canStopOn({ movementType: 'TELEPORT' } as Unit, tile, terrainDefs)) continue;
             /**
-             * IT WILL NOT COME UP INSIDE DUST — and this is the one line that makes Zephyr,
+             * IT WILL NOT COME UP INSIDE DUST — and this is the one line that makes Reedwing,
              * the reward of the act before this one, the answer to this one.
              *
              * The rest of the counterplay against a burrower is reactive: the hole is
@@ -1121,7 +1121,7 @@ const pickHole = (
  * THE ERUPTION — four full swings, and the reason `strikes` had to exist beside `blast`.
  *
  * `blast` is right there and it is the WRONG field: a blast is ground being hurt, so it provokes
- * nothing. This is a body coming up out of the sand and hitting four people, and Thornhide — the
+ * nothing. This is a body coming up out of the sand and hitting four people, and Thornshell — the
  * hero THIS act pays out — answers something that comes and stands in front of him. Routed
  * through `blast` the boss would walk through a wall of spines untouched, and the reward for
  * beating it would be useless against it.
@@ -1219,7 +1219,7 @@ const sandreaver: BossBehaviour = ({ enemy, playerUnits, board, blocker, damage,
  * honest spelling of "it tunnels" than any flag would be.
  *
  * Returns null when TAUNTED, and that is not an oversight, it is the fight: with no opinion here
- * the standard taunt walk takes over and drags it at Thornhide, and `planEnemyIntent`'s taunt
+ * the standard taunt walk takes over and drags it at Thornshell, and `planEnemyIntent`'s taunt
  * branch — which runs AHEAD of every boss behaviour — makes it bite him instead of erupting where
  * it chose. Provoke is the only tool in the game that does not care where this thing is, and this
  * null is where that becomes true in code.
@@ -1230,13 +1230,13 @@ const sandreaverMove: BossHooks['move'] = ({ enemy, playerUnits, board, range })
     if (enemy.burrowTarget) return [enemy.burrowTarget];   // a hole already promised, and kept
 
     const hole = pickHole(enemy.position, range, playerUnits, board, playerUnits, DEFAULT_TERRAIN_DEFS);
-    // Nowhere legal in reach — every tile is rock, house or occupied. It stays and erupts from
+    // Nowhere legal in reach — every tile is rock, Greenspire or occupied. It stays and erupts from
     // where it is, which is a worse hole and entirely the player's doing.
     return hole ? [hole] : [];
 };
 
 /**
- * THE FLAG ITSELF — written here and nowhere else, because a state machine spread across three
+ * THE BANNERMAN ITSELF — written here and nowhere else, because a state machine spread across three
  * hooks that each guess at it is a state machine with three answers.
  *
  * TWO GUARDS, both of which are bugs when missing:
@@ -1278,9 +1278,9 @@ const sandreaverTurnEnd: BossHooks['onTurnEnd'] = ({ enemy }) => {
 
 /** The nine acts, in campaign order. Phase one walks back through them one per turn. */
 const FALLEN: UnitClass[] = [
-    UnitClass.GARGANTUAR, UnitClass.IRONCART, UnitClass.CINDER_COLOSSUS,
+    UnitClass.GRAVEHULK, UnitClass.IRONCART, UnitClass.CINDER_COLOSSUS,
     UnitClass.ARMADA, UnitClass.SANDREAVER, UnitClass.YETI,
-    UnitClass.DISCO_ZOMBOSS, UnitClass.CLOCKJAW, UnitClass.VOLTMAW,
+    UnitClass.HEADLINER, UnitClass.CLOCKJAW, UnitClass.VOLTMAW,
 ];
 
 /** 36 HP in three equal bands. Read off live hp, so it is always the truth. */
@@ -1325,7 +1325,7 @@ const blightlord: BossBehaviour = ({ enemy, playerUnits, board, blocker }) => {
     if (phase === 1) {
         // One echo a turn, walked back through the campaign in order. The summon is the class
         // and nothing else: no bossId, so no BOSS_HOOKS entry fires for it and it does not get
-        // that boss's brain — it gets its BODY. An Ironcart echo still rides rail and lobs from
+        // that boss's sprout — it gets its BODY. An Ironcart echo still rides rail and lobs from
         // four, an Armada echo still flies over the wall. That is the honest engine reading of
         // "carrying exactly one of its skills", and it is also the only one that cannot
         // accidentally spawn a second final boss.
@@ -1521,16 +1521,16 @@ const blightlordTurnEnd: BossHooks['onTurnEnd'] = ({ enemy }) => {
 };
 
 export const BOSS_HOOKS: Partial<Record<BossId, BossHooks>> = {
-    GARGANTUAR: { plan: gargantuar },
-    DISCO_ZOMBOSS: { plan: headliner },
+    GRAVEHULK: { plan: gargantuar },
+    HEADLINER: { plan: headliner },
     CINDER_COLOSSUS: { onMoved: cinderTrail, onTurnEnd: cinderTurnEnd },
     VOLTMAW: { plan: voltmaw },
     YETI: { plan: yeti, move: yetiHold, onTurnEnd: yetiChill },
-    CATAPULT_LORD: { plan: ironcart, move: ironcartMove },
+    IRONCART: { plan: ironcart, move: ironcartMove },
     // One hook only. It walks like anything else, and phase two announces itself through
     // the telegraph — the turn it drops to 11 the board prints a third red tile.
     CLOCKJAW: { plan: clockjaw },
-    BALLOON_ARMADA: { plan: armada, move: armadaFall, onTurnEnd: armadaCells },
+    ARMADA: { plan: armada, move: armadaFall, onTurnEnd: armadaCells },
     SANDREAVER: { plan: sandreaver, move: sandreaverMove, onTurnEnd: sandreaverTurnEnd },
     // Two hooks, three bosses. Everything phase-specific is read off live hp inside them
     // rather than stored, so a rewind that puts 5 HP back also puts the previous phase's

@@ -11,7 +11,7 @@ import { useI18n } from '../i18n';
  *
  * It is GENERATED from `balanceFields()` rather than hand-written, which is the fix for what
  * killed the screen it replaces: that one listed its fields by hand and had drifted far
- * behind the data it claimed to edit — heroes, materials and half the Sun economy were
+ * behind the data it claimed to edit — heroes, materials and half the Sol economy were
  * simply unreachable from it, while several fields it did show were silently discarded on
  * reload. Here a hero added tomorrow appears with no edit to this file.
  *

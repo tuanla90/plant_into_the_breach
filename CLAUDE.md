@@ -35,7 +35,7 @@ React 19 + Vite + TypeScript, không dùng thư viện state/router nào. Alias 
 
 **Trùm — mọi thứ riêng của trùm nằm trong `utils/bossBehaviours.ts`.** Bảng `BOSS_HOOKS` khoá theo `Unit.bossId` (KHÔNG theo unit class — hai trùm có thể dùng chung class, và class của trùm cũng có thể là lính thường). Ba móc: `plan` quyết định intent, `onMoved` là hệ quả của việc đã đi, `onTurnEnd` là trạng thái bàn cờ. Móc trả `null` = "lượt này không có gì đặc biệt", rơi xuống AI thường. `turnManager` gọi bảng ở đúng bốn điểm và không biết ai nằm trong đó — **đừng thêm `if (unit.bossId === …)` vào engine**, đó chính là thứ bảng này sinh ra để chặn. Thân + cờ luật của trùm nằm trong `data/bosses.ts`.
 
-> **Ba luật dễ phá khi đụng tới trùm.** (1) Chỉ 3/9 trùm miễn `PUSH`; `isMassive` KHÁC miễn `PUSH` — nó còn chặn bị ăn và bị đóng băng, tức xoá hai hero đẩy khỏi trận đó. (2) Vì trùm thường không massive, mọi hiệu ứng xoá-sổ-tức-thì phải kiểm `bossId` chứ không kiểm `isMassive`. (3) Trùm không cướp não: unit cướp não bị xoá khỏi bàn, mà `SLAY_BOSS` đọc "không còn trùm sống".
+> **Ba luật dễ phá khi đụng tới trùm.** (1) Chỉ 3/9 trùm miễn `PUSH`; `isMassive` KHÁC miễn `PUSH` — nó còn chặn bị ăn và bị đóng băng, tức xoá hai hero đẩy khỏi trận đó. (2) Vì trùm thường không massive, mọi hiệu ứng xoá-sổ-tức-thì phải kiểm `bossId` chứ không kiểm `isMassive`. (3) Trùm không cướp mầm: unit cướp mầm bị xoá khỏi bàn, mà `SLAY_BOSS` đọc "không còn trùm sống".
 
 **Tia lan điện chỉ có MỘT bản: `chainStep` trong `utils/elements.ts`.** Nó trả về **thân thể, không trả số** — mỗi nơi gọi tự khai hop của mình đáng bao nhiêu. Đó là hàng rào chống bug đã từng xảy ra: một lần phân giải thứ hai *kế thừa* con số của lần đầu (`DAMAGE 999` của Nuốt Chửng lan tiếp thành 499). Vòng lan từng bị viết hai lần trước khi được viết một lần; đừng viết bản thứ ba.
 
@@ -48,7 +48,7 @@ React 19 + Vite + TypeScript, không dùng thư viện state/router nào. Alias 
 
 ## Tài liệu thiết kế
 
-- `DESIGN.md` — thiết kế lõi (brain, hai loại tiền Sun/Coin, fusion, unlock). Đọc phần liên quan trước khi đổi luật chơi hay số cân bằng.
+- `DESIGN.md` — thiết kế lõi (sprout, hai loại tiền Sol/Coin, fusion, unlock). Đọc phần liên quan trước khi đổi luật chơi hay số cân bằng.
 - `PLAN-pack-N-*.md` — mỗi gói mở khóa một file kế hoạch; file ghi rõ đã triển khai tới đâu và khác kế hoạch chỗ nào.
 - `art-src/ART-TODO.md` — quy trình thay placeholder art (512×512, nền trong suốt, dark tactical chibi). **Art PvZ gốc trong `art-src/removed-pvz-art/` chỉ để tham khảo, tuyệt đối không đưa lại vào `public/`.**
 - `CREDITS.md` — icon từ game-icons.net (CC BY 3.0): dùng icon mới thì thêm attribution vào đây.

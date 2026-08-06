@@ -9,7 +9,7 @@ import { HERO_ACCENTS } from '../utils/icons';
 import { useI18n } from '../i18n';
 import {
     X, Lock, Heart, HandFist, Footprints,
-    Sun, Swords, Sparkles, Check,
+    Sun as Sol, Swords, Sparkles, Check,
 } from 'lucide-react';
 
 /**
@@ -76,7 +76,7 @@ const SkillLine: React.FC<{ skill: Skill; isSkill?: boolean }> = ({ skill, isSki
                     )}
                     {cost > 0 ? (
                         <span className="flex items-center gap-1 text-[11px] font-black text-yellow-400">
-                            <Sun size={10} fill="currentColor" /> {cost}
+                            <Sol size={10} fill="currentColor" /> {cost}
                         </span>
                     ) : (
                         <span className="text-[10px] font-bold uppercase text-green-400">{t('Free')}</span>

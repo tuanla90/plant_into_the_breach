@@ -9,11 +9,11 @@ import { BossId, TileData, TerrainType, WorldType } from '../types';
  * never in the terrain itself.
  *
  * The previous generator rolled random water and mountains and then needed a repair pass
- * to fix the boards it had just broken — and it produced the unwinnable 8-house front.
+ * to fix the boards it had just broken — and it produced the unwinnable 8-Greenspire front.
  * Geometry is a design decision, so it is written down here.
  *
  * LEGEND (one character per tile, 8 rows of 8):
- *   H  house holding a brain — what the zombies are walking toward
+ *   H  Greenspire holding a sprout — what the zombies are walking toward
  *   #  wall, impassable, used to carve choke points
  *   .  grass
  *   ~  water (blocks walkers, passable for AMPHIBIOUS/FLYING)
@@ -49,12 +49,12 @@ export interface MapTemplate {
      */
     arenaFor?: BossId;
     /**
-     * This board has no houses, and that is on purpose rather than an authoring slip.
+     * This board has no Greenspires, and that is on purpose rather than an authoring slip.
      *
      * Exactly one map wants it: the Breach. There is nothing left to defend by then, and the
      * horde's fallback target — the nearest plant — is already in turnManager for the case
-     * where every brain has been taken. So a house-less board costs the engine nothing and
-     * changes the fight completely: no doorstep to hold, no brain to trade, nowhere to be
+     * where every sprout has been taken. So a Greenspire-less board costs the engine nothing and
+     * changes the fight completely: no doorstep to hold, no sprout to trade, nowhere to be
      * except in front of the thing.
      */
     noHouses?: boolean;
@@ -81,7 +81,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'front_lawn',
         name: 'Front Lawn',
         world: 'GRASS',
-        concept: 'Teaching map. No terrain at all — just an uneven row of houses to learn the march on.',
+        concept: 'Teaching map. No terrain at all — just an uneven row of Greenspires to learn the march on.',
         rows: [
             'H.DD....',
             'H.DD...S',
@@ -161,7 +161,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'cul_de_sac',
         name: 'Cul-de-sac',
         world: 'GRASS',
-        concept: 'Three houses crammed in one corner and one stranded far away — attention has to split.',
+        concept: 'Three Greenspires crammed in one corner and one stranded far away — attention has to split.',
         rows: [
             'HHHDD..S',
             '..DD...S',
@@ -193,7 +193,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'sunken_road',
         name: 'Sunken Road',
         world: 'GRASS',
-        concept: 'Water swallows both corners. Only two houses, and one dry road between them.',
+        concept: 'Water swallows both corners. Only two Greenspires, and one dry road between them.',
         rows: [
             '~~DD...S',
             '~.DD..SS',
@@ -321,7 +321,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'lee_shore',
         name: 'Lee Shore',
         world: 'COAST',
-        concept: 'The sea sits behind the houses. The only drowning shove is the one that sends them the way they wanted to go.',
+        concept: 'The sea sits behind the Greenspires. The only drowning shove is the one that sends them the way they wanted to go.',
         rows: [
             '~.DD...S',
             '~.DD..SS',
@@ -401,7 +401,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'leeward_shelf',
         name: 'Leeward Shelf',
         world: 'THORN',
-        concept: 'The only rock sits a step from the spawn line — stand safe, or stand between the zombies and the brains.',
+        concept: 'The only rock sits a step from the spawn line — stand safe, or stand between the zombies and the sprouts.',
         rows: [
             '.HDD...S',
             '..DD..^S',
@@ -417,7 +417,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'lone_shade',
         name: 'Lone Shade',
         world: 'THORN',
-        concept: 'One nook of rock in the whole waste, and it shades the top house only.',
+        concept: 'One nook of rock in the whole waste, and it shades the top Greenspire only.',
         rows: [
             'H.DD.^.S',
             '..DD..^S',
@@ -609,7 +609,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'collapsed_row',
         name: 'Collapsed Row',
         world: 'RUIN',
-        concept: 'What is left of a terrace: every second house is rubble, and the gaps do not line up.',
+        concept: 'What is left of a terrace: every second Greenspire is rubble, and the gaps do not line up.',
         rows: [
             'H.DD#c.S',
             '..DDc.SS',
@@ -673,7 +673,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'last_tenement',
         name: 'Last Tenement',
         world: 'RUIN',
-        concept: 'One house still standing out in the debris field, rubble on its shoulder — the first thing the march walks into.',
+        concept: 'One Greenspire still standing out in the debris field, rubble on its shoulder — the first thing the march walks into.',
         rows: [
             '..DDc.SS',
             '.HDD.#.S',
@@ -770,7 +770,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'garden_maze',
         name: 'Garden Maze',
         world: 'GRASS',
-        concept: 'Zigzag wall hedges with houses tucked deep inside protective inner pockets.',
+        concept: 'Zigzag wall hedges with Greenspires tucked deep inside protective inner pockets.',
         rows: [
             '..DD...S',
             '.HD###.S',
@@ -786,7 +786,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'lawn_divide',
         name: 'Lawn Divide',
         world: 'GRASS',
-        concept: 'Houses are split across both sides of a central brook; one house sits on a forward river island.',
+        concept: 'Greenspires are split across both sides of a central brook; one Greenspire sits on a forward river island.',
         rows: [
             'H.DD~..S',
             'H.DD=..S',
@@ -802,7 +802,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'junction_box',
         name: 'Junction Box',
         world: 'DESERT',
-        concept: 'A forward telegraph house sits right between two cart tracks, requiring active protection.',
+        concept: 'A forward telegraph Greenspire sits right between two cart tracks, requiring active protection.',
         rows: [
             'H.DDTTTS',
             '...D.T.S',
@@ -818,7 +818,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'canyon_rails',
         name: 'Canyon Rails',
         world: 'DESERT',
-        concept: 'Houses are staggered diagonally behind mountain ridges and cart funnel lanes.',
+        concept: 'Greenspires are staggered diagonally behind mountain ridges and cart funnel lanes.',
         rows: [
             '^^DD...S',
             'H.DDTTTS',
@@ -834,7 +834,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'magma_chasm',
         name: 'Magma Chasm',
         world: 'VOLCANO',
-        concept: 'One house is an isolated lava research outpost sitting in the middle of the magma chasm.',
+        concept: 'One Greenspire is an isolated lava research outpost sitting in the middle of the magma chasm.',
         rows: [
             'H.DDL..S',
             'H.DD=..S',
@@ -850,7 +850,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'basalt_peaks',
         name: 'Basalt Peaks',
         world: 'VOLCANO',
-        concept: 'Houses cluster behind basalt peak barriers, with one forward house on a power tile lane.',
+        concept: 'Greenspires cluster behind basalt peak barriers, with one forward Greenspire on a power tile lane.',
         rows: [
             '^.DD...S',
             'H.DD^^.S',
@@ -866,7 +866,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'tidal_spit',
         name: 'Tidal Spit',
         world: 'COAST',
-        concept: 'Houses are arrayed along a narrow coastal ridge; high tide threatens the outer flank.',
+        concept: 'Greenspires are arrayed along a narrow coastal ridge; high tide threatens the outer flank.',
         rows: [
             '~~DD~~~S',
             'H.DD...S',
@@ -882,7 +882,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'broken_dike',
         name: 'Broken Dike',
         world: 'COAST',
-        concept: 'Houses sit behind concrete seawalls with a forward lighthouse house on the pier.',
+        concept: 'Greenspires sit behind concrete seawalls with a forward lighthouse Greenspire on the pier.',
         rows: [
             'c.DDcc.S',
             'H.DD~~.S',
@@ -898,7 +898,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'bramble_maze',
         name: 'Bramble Maze',
         world: 'THORN',
-        concept: 'Houses are scattered deep in thorny mountain alcoves.',
+        concept: 'Greenspires are scattered deep in thorny mountain alcoves.',
         rows: [
             'H.DD^..S',
             '..DD..SS',
@@ -930,7 +930,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'frost_bridge',
         name: 'Frost Bridge',
         world: 'ICE',
-        concept: 'Houses sit on opposite sides of a frozen river channel.',
+        concept: 'Greenspires sit on opposite sides of a frozen river channel.',
         rows: [
             '~~DD~~~S',
             'H.DD:::S',
@@ -946,7 +946,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'neon_alley',
         name: 'Neon Alley',
         world: 'NEON',
-        concept: 'Stores and apartments (houses) are staggered along both sides of a narrow neon street.',
+        concept: 'Stores and apartments (Greenspires) are staggered along both sides of a narrow neon street.',
         rows: [
             'c.DD...S',
             'H.DD#..S',
@@ -962,7 +962,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'collapsed_tunnel',
         name: 'Collapsed Tunnel',
         world: 'RUIN',
-        concept: 'One house is trapped inside a collapsed rubble pocket.',
+        concept: 'One Greenspire is trapped inside a collapsed rubble pocket.',
         rows: [
             '#.DD...S',
             'H.DD###S',
@@ -978,7 +978,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'capacitor_row',
         name: 'Capacitor Row',
         world: 'GRID',
-        concept: 'Houses sit staggered between high-voltage power lines.',
+        concept: 'Greenspires sit staggered between high-voltage power lines.',
         rows: [
             'H.DD***S',
             '..DD...S',
@@ -994,7 +994,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'arena_gargantuar',
         name: 'Verdant Reach',
         world: 'GRASS',
-        arenaFor: 'GARGANTUAR',
+        arenaFor: 'GRAVEHULK',
         concept: 'Bare ground. Nothing to hide behind and nothing to hide it behind — only the damage.',
         rows: [
             'H.DD...S',
@@ -1011,13 +1011,13 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'arena_ironcart',
         name: 'Goldacre Yard',
         world: 'DESERT',
-        arenaFor: 'CATAPULT_LORD',
+        arenaFor: 'IRONCART',
         concept: 'Three rail runs cross the whole board: it can be anywhere it likes, and you cannot.',
         // The runs reach back to the deploy columns on purpose. As three-tile stubs out in the
         // spawn half they were unreachable scenery: a cart with move 3 never spent a full turn
         // on them, "reverse down the line" had nowhere to reverse to, and cutting the track
         // cost the player nothing because they could not stand on it. Now blocking a rail is a
-        // real decision about position. The runs still stop short of the house column, so the
+        // real decision about position. The runs still stop short of the Greenspire column, so the
         // cart can never ride up to a doorstep.
         rows: [
             'H.TTTTTS',
@@ -1051,7 +1051,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'arena_armada',
         name: 'Windward Sound',
         world: 'COAST',
-        arenaFor: 'BALLOON_ARMADA',
+        arenaFor: 'ARMADA',
         concept: 'Sea down both flanks — where the wreck goes once you have shot it down.',
         rows: [
             'H.DD~~.S',
@@ -1102,7 +1102,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
         id: 'arena_headliner',
         name: 'Neon Rose',
         world: 'NEON',
-        arenaFor: 'DISCO_ZOMBOSS',
+        arenaFor: 'HEADLINER',
         concept: 'A boulevard with two solid columns of spawn either side — the crowd is the boss.',
         rows: [
             'H.DDc.SS',
@@ -1163,7 +1163,7 @@ export const MAP_TEMPLATES: MapTemplate[] = [
          * simply not playable. Every rule that reads the board (pathing, pushes, hazards,
          * spawn holes) already refuses a WALL tile, so nothing had to learn a second size.
          *
-         * No houses. Two rubble pillars in the middle so the pit is not a bare square, and
+         * No Greenspires. Two rubble pillars in the middle so the pit is not a bare square, and
          * they are the only cover in the last fight in the game.
          */
         rows: [
@@ -1189,23 +1189,23 @@ const assertTemplate = (t: MapTemplate) => {
         });
     });
     const flat = t.rows.join('');
-    if (!flat.includes('H') && !t.noHouses) throw new Error(`Map ${t.id}: no houses`);
+    if (!flat.includes('H') && !t.noHouses) throw new Error(`Map ${t.id}: no Greenspires`);
     if (t.noHouses && flat.includes('H')) throw new Error(`Map ${t.id}: noHouses is set but the rows draw one`);
     if (!flat.includes('D')) throw new Error(`Map ${t.id}: no deploy zone`);
     if (!flat.includes('S')) throw new Error(`Map ${t.id}: no spawn zone`);
 
     // Into the Breach's authoring rule: two buildings placed diagonally form a nook that a
     // unit can sit in and attack from, with almost no way to answer it. Orthogonally adjacent
-    // houses are fine — it is specifically the diagonal that is unplayable.
-    const houses: Array<[number, number]> = [];
-    t.rows.forEach((row, x) => [...row].forEach((ch, y) => { if (ch === 'H') houses.push([x, y]); }));
-    for (let i = 0; i < houses.length; i++) {
-        for (let j = i + 1; j < houses.length; j++) {
-            const [ax, ay] = houses[i];
-            const [bx, by] = houses[j];
+    // Greenspires are fine — it is specifically the diagonal that is unplayable.
+    const Greenspires: Array<[number, number]> = [];
+    t.rows.forEach((row, x) => [...row].forEach((ch, y) => { if (ch === 'H') Greenspires.push([x, y]); }));
+    for (let i = 0; i < Greenspires.length; i++) {
+        for (let j = i + 1; j < Greenspires.length; j++) {
+            const [ax, ay] = Greenspires[i];
+            const [bx, by] = Greenspires[j];
             if (Math.abs(ax - bx) === 1 && Math.abs(ay - by) === 1) {
                 throw new Error(
-                    `Map ${t.id}: houses at ${ax},${ay} and ${bx},${by} sit diagonally — that nook is indefensible.`
+                    `Map ${t.id}: Greenspires at ${ax},${ay} and ${bx},${by} sit diagonally — that nook is indefensible.`
                 );
             }
         }

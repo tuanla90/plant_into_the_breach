@@ -71,7 +71,7 @@ const worstCaseDamage = (
     wave: TutorialSpawn[],
 ): { tile: Position; damage: number } => {
     const mkHero = (pos: Position): Unit => ({
-        id: '_h', type: UnitType.PLANT, class: UnitClass.PEASHOOTER, role: 'SHOOTER',
+        id: '_h', type: UnitType.PLANT, class: UnitClass.SEED_GUN, role: 'SHOOTER',
         hp: hero.maxHp, maxHp: hero.maxHp, damage: hero.damage, moveRange: hero.moveRange,
         level: 1, position: pos, isEnemy: false, hasMoved: false, hasAttacked: false,
         statusEffects: [], movementType: 'WALKING', immunities: [], imgUrl: '',
@@ -125,7 +125,7 @@ export const assertTutorial = () => {
             if (r.length !== 8) throw new Error(`${node.id} row ${x}: expected 8 chars, got ${r.length}`);
         });
         const flat = b.rows.join('');
-        if (!flat.includes('H')) throw new Error(`${node.id}: no house`);
+        if (!flat.includes('H')) throw new Error(`${node.id}: no Greenspire`);
         if (!flat.includes('S')) throw new Error(`${node.id}: no spawn zone`);
         if (!flat.includes('D')) throw new Error(`${node.id}: no deploy zone`);
 
@@ -341,12 +341,12 @@ export const assertTutorial = () => {
                     }
                 });
 
-                // Only the posts BETWEEN her and the brain actually bite — the AI never
+                // Only the posts BETWEEN her and the sprout actually bite — the AI never
                 // turns around to eat something behind it (aiLogic's forward-only rule).
                 // Posts behind her count as walls: they seal a tile, they add no damage.
-                const houses = board.filter(t => t.isHouse && t.hasBrain);
+                const Greenspires = board.filter(t => t.isHouse && t.hasBrain);
                 const distToBrain = (x: number, y: number) =>
-                    Math.min(...houses.map(hh => Math.abs(hh.x - x) + Math.abs(hh.y - y)));
+                    Math.min(...Greenspires.map(hh => Math.abs(hh.x - x) + Math.abs(hh.y - y)));
                 const heroDist = distToBrain(start.x, start.y);
 
                 let bite = 0;
@@ -411,14 +411,14 @@ export const assertTutorial = () => {
             }
 
             // Claim 2: the BOSS survives even the strongest possible burst — checked by
-            // exhausting every way the Sun economy can be spent, not by eyeballing.
+            // exhausting every way the Sol economy can be spent, not by eyeballing.
             //
             // The whole claim hangs on two facts that are easy to break by accident:
             //   - the +25/turn stipend does NOT reach scripted battles (turnManager's
             //     scripted branch returns before the stipend block), so the entire budget
-            //     is startingSun + 25 per Harvest, and Harvest costs Sunspot her turn;
+            //     is startingSun + 25 per Harvest, and Harvest costs Sunbloom her turn;
             //   - the heroes' kits are what the data tables say TODAY. A double-shot pea,
-            //     a cheaper Sun Burn, a Sun stipend leak — any of these silently turns the
+            //     a cheaper Sol Burn, a Sol stipend leak — any of these silently turns the
             //     "unwinnable" boss into a 3-turn kill, and this is where that fails loudly.
             const spawnHp = (sp: TutorialSpawn) => (ZOMBIE_DEFINITIONS[sp.cls]?.maxHp ?? 0) + (sp.hpBonus ?? 0);
             const boss = [...allSpawns].sort((a, z) => spawnHp(z) - spawnHp(a))[0];
@@ -427,7 +427,7 @@ export const assertTutorial = () => {
             // nothing else, and the eaters end the board on the last scripted turn.
             // Turns on which the script actually hands the player an attack. The overlay only
             // accepts the focused element, so a turn whose only step is `end-turn` — board 7's
-            // last one, where the squad is out of Sun and watching the brain go — cannot
+            // last one, where the squad is out of Sol and watching the sprout go — cannot
             // contribute damage and must not be counted against the boss's HP budget.
             const T = new Set(
                 b.steps.filter(st => (st.phase ?? 'COMBAT') === 'COMBAT' && st.act === 'ATTACK')
@@ -448,7 +448,7 @@ export const assertTutorial = () => {
                 const shots = sk?.effects.find(e => e.type === 'VOLLEY')?.value ?? 1;
                 return dmg * Math.max(1, shots);
             };
-            const gs = HERO_DEFINITIONS.GREEN_SHADOW, sf = HERO_DEFINITIONS.SOLAR_FLARE, wk = HERO_DEFINITIONS.WALL_KNIGHT;
+            const gs = HERO_DEFINITIONS.PEABURST, sf = HERO_DEFINITIONS.SUNBLOOM, wk = HERO_DEFINITIONS.IRONHUSK;
             let pea = dmgOf(gs.basicAttack), blast = dmgOf(gs.heroSkill), blastCost = gs.heroSkill.sunCost ?? 0;
             let burn = dmgOf(sf.heroSkill), burnCost = sf.heroSkill.sunCost ?? 0;
             const bash = dmgOf(wk.basicAttack);
@@ -471,17 +471,17 @@ export const assertTutorial = () => {
                 if (!effect) return;
                 // Adds the second shot's damage, it does not double. The second pea is
                 // deliberately weaker than the first — see the Repeater recipe.
-                if (effect.type === 'DOUBLE_ATTACK' && heroId === 'GREEN_SHADOW') pea += (effect.value ?? 0);
+                if (effect.type === 'DOUBLE_ATTACK' && heroId === 'PEABURST') pea += (effect.value ?? 0);
                 if (effect.type === 'SKILL_DISCOUNT') {
-                    if (heroId === 'GREEN_SHADOW') blastCost = Math.max(0, blastCost - (effect.value ?? 0));
-                    if (heroId === 'SOLAR_FLARE') burnCost = Math.max(0, burnCost - (effect.value ?? 0));
+                    if (heroId === 'PEABURST') blastCost = Math.max(0, blastCost - (effect.value ?? 0));
+                    if (heroId === 'SUNBLOOM') burnCost = Math.max(0, burnCost - (effect.value ?? 0));
                 }
                 if (effect.type === 'SUN_PER_TURN') sunPerTurn += effect.value ?? 0;
             });
 
             let best = 0;
-            // Sunspot splits her T actions between h harvests and s burns; Shadeleaf spends
-            // whatever Sun is left on blasts, peas otherwise; Ironhusk bashes every turn.
+            // Sunbloom splits her T actions between h harvests and s burns; Peaburst spends
+            // whatever Sol is left on blasts, peas otherwise; Ironhusk bashes every turn.
             // Adjacency and rows are assumed perfect — a deliberate overestimate, so a pass
             // here is a guarantee, not a hope.
             for (let h = 0; h <= T; h++) {
@@ -499,7 +499,7 @@ export const assertTutorial = () => {
                     `${node.id}: the boss (${bossHp} HP) dies to a max burst of ${best} across ` +
                     `${T} scripted turns (pea ${pea}/blast ${blast}@${blastCost}☀/burn ${burn}@${burnCost}☀/` +
                     `bash ${bash}, start ${start}☀ + ${harvestGain}/harvest). The defeat is no longer real — ` +
-                    `raise the boss's HP or tighten the Sun economy.`
+                    `raise the boss's HP or tighten the Sol economy.`
                 );
             }
         }
@@ -539,14 +539,14 @@ export const assertTutorial = () => {
 
         // The budget has to survive the WORST shopping trip the shop allows, not the one the
         // script recommends. It used to check only the plants, while the item shelf silently
-        // offered the entire 350-Coin catalogue — buy a Coffee Bean and a Cherry Bomb and the
+        // offered the entire 350-Coin catalogue — buy a Stim Shot and a Fire Grenade and the
         // 75 for the revive two nodes later is simply gone, taking the hero the boss board
         // and the whole four-board arc are built around with it.
         const itemIds = shop.itemOffers ?? DEFAULT_ITEM_DEFINITIONS.map(i => i.id);
         const itemCost = itemIds.reduce(
             (n, id) => n + (DEFAULT_ITEM_DEFINITIONS.find(i => i.id === id)?.coinCost ?? 0), 0);
         // No service costs on the SHOP screen: Squad Repair was removed from it entirely, and
-        // the brain buy-back cannot fire here (it needs a lost brain, and the tutorial's first
+        // the sprout buy-back cannot fire here (it needs a lost sprout, and the tutorial's first
         // one happens after this shop).
         const worstCase = stockCost + itemCost;
 
@@ -570,15 +570,15 @@ export const assertTutorial = () => {
     // AN UNSAVABLE BRAIN HAS TO BE GENUINELY UNSAVABLE.
     //
     // Give every plant its full movement AND its longest, hardest-hitting skill, point all of
-    // it at the doomed doorstep on turn 1, and the total must still fall short. Blockers, Sun
-    // costs and the fact that spending the whole squad there loses the other house are all
+    // it at the doomed doorstep on turn 1, and the total must still fall short. Blockers, Sol
+    // costs and the fact that spending the whole squad there loses the other Greenspire are all
     // ignored on purpose — this is an upper bound, so passing it is a guarantee.
     //
     // The sum is over the WHOLE GROUP, not each body alone, because the guarantee changed
     // shape. It used to be one inflated health bar nobody could chew through; it is now two
     // zombies walking the same lane, and the honest claim is not "you cannot kill it" but
     // "you cannot kill BOTH — whichever one you drop, the other one walks in". A group whose
-    // combined health fits inside one turn of squad damage is a brain the player can save.
+    // combined health fits inside one turn of squad damage is a sprout the player can save.
     TUTORIAL_CHAIN.forEach(node => {
         const b = node.battle;
         if (!b) return;
@@ -625,9 +625,9 @@ export const assertTutorial = () => {
         if (reach >= groupHp) {
             const roster = group.map(sp => `${sp.cls} ${(ZOMBIE_DEFINITIONS[sp.cls]?.maxHp ?? 0) + (sp.hpBonus ?? 0)}hp`).join(' + ');
             throw new Error(
-                `${node.id}: the doomed house is guarded by ${roster} = ${groupHp} HP, and the ` +
+                `${node.id}: the doomed Greenspire is guarded by ${roster} = ${groupHp} HP, and the ` +
                 `squad can put ${reach} damage into that lane in one turn (${parts.join(' + ')}). ` +
-                `The player clears the whole group and keeps the brain, so the lesson collapses. ` +
+                `The player clears the whole group and keeps the sprout, so the lesson collapses. ` +
                 `Add a body, or raise hpBonus until the group is worth more than ${reach}.`
             );
         }
@@ -636,13 +636,13 @@ export const assertTutorial = () => {
     // NOBODY STANDS AROUND.
     //
     // The complaint that produced this check: on board 4 two plants had a free action, a
-    // zombie walked into a house in plain view, and the script never gave them anything
+    // zombie walked into a Greenspire in plain view, and the script never gave them anything
     // to do. A plant with an unused action while the board is being lost does not read as
     // a hard choice — it reads as a bug.
     //
     // The rule: whoever the script ever puts to work on a board must be put to work on
     // EVERY turn of that board that has any actor at all. A turn with no actors at all is
-    // fine (board 7's last turn: no Sun left, Shadeleaf dead, the run ending on purpose).
+    // fine (board 7's last turn: no Sol left, Peaburst dead, the run ending on purpose).
     TUTORIAL_CHAIN.forEach(node => {
         if (!node.battle?.steps) return;
         const combat = node.battle.steps.filter(st => (st.phase ?? 'COMBAT') === 'COMBAT');
@@ -651,10 +651,10 @@ export const assertTutorial = () => {
         const everyone = new Set(combat.map(actorOf).filter(Boolean) as string[]);
         // Turns where a subset is deliberate, with the reason it is deliberate.
         const exempt: Record<string, number[]> = {
-            // The scripted death: Sunspot is explicitly left to the player, because
+            // The scripted death: Sunbloom is explicitly left to the player, because
             // nothing she can do changes the outcome and pretending otherwise would lie.
             tut_2: [4],
-            // The mop-up turn: one 2 HP riser is left and a single Sun Burn kills it outright.
+            // The mop-up turn: one 2 HP riser is left and a single Sol Burn kills it outright.
             // Inventing work for the other two would mean inventing a zombie, and a board that
             // spawns a body so nobody looks idle is the worse lie.
             tut_4: [5],
@@ -754,7 +754,7 @@ export const assertTutorial = () => {
             // chain to have bought one more X than the number of battles that auto-deploy a
             // bench plant before it — otherwise the only copies left are worn and the step
             // waits on a button that is permanently disabled. (The tutorial buys two
-            // Peashooters for exactly this reason: board 4 spends one, board 6 grafts the
+            // Seed Guns for exactly this reason: board 4 spends one, board 6 grafts the
             // other.) An intervening HEAL_SQUAD_FULL would also do it, but the tutorial's
             // campfire spends its visit on the fusion itself, so it cannot rest first.
             const fusePlant = /^fusion-plant-(.+)$/.exec(st.focus ?? '');
@@ -839,14 +839,14 @@ assertTutorial();
 //
 // So the last assertion is the whole script, click for click, against processTurn and a
 // faithful copy of the click handlers (utils/scriptedReplay). Chain state — who is dead,
-// what is on the bench, what got fused, how many brains remain — is threaded from node to
+// what is on the bench, what got fused, how many sprouts remain — is threaded from node to
 // node the same way a real run threads it.
 // ---------------------------------------------------------------------------------------
 const replayWholeChain = () => {
     let dead: string[] = [];
     const bench: string[] = [];
     const fusions: Record<string, string[]> = {};
-    let brains = BRAINS_MAX;
+    let sprouts = BRAINS_MAX;
 
     TUTORIAL_CHAIN.forEach(node => {
         (node.steps ?? []).forEach(st => {
@@ -871,7 +871,7 @@ const replayWholeChain = () => {
             return;
         }
         const res = replayScriptedBattle(node.id, b, tutorialBoard(b), {
-            deadHeroes: [...dead], benchMaterials: [...bench], fusions, brainsRemaining: brains,
+            deadHeroes: [...dead], benchMaterials: [...bench], fusions, brainsRemaining: sprouts,
         });
         const tail = res.log.slice(-18).join(String.fromCharCode(10) + '    ');
         const expected = b.scriptedDefeat ? 'GAME_OVER' : 'VICTORY';
@@ -879,19 +879,19 @@ const replayWholeChain = () => {
             throw new Error(
                 `${node.id}: the replayed script ends in ${res.screen}, but it promises ${expected}. ` + tail);
         }
-        // Declared, not counted. It used to be "one brain per unsavable spawn", which was
-        // only ever true while each doomed house had exactly one eater — the moment a house
-        // was guarded by a PAIR, that arithmetic said two brains and the board loses one.
+        // Declared, not counted. It used to be "one sprout per unsavable spawn", which was
+        // only ever true while each doomed Greenspire had exactly one eater — the moment a Greenspire
+        // was guarded by a PAIR, that arithmetic said two sprouts and the board loses one.
         const expectedBrains = b.scriptedBrainLoss ?? 0;
         if (!b.scriptedDefeat && res.brainsLost !== expectedBrains) {
             throw new Error(
-                `${node.id}: the replay loses ${res.brainsLost} brain(s); the board declares scriptedBrainLoss: ${expectedBrains}. ` + tail);
+                `${node.id}: the replay loses ${res.brainsLost} sprout(s); the board declares scriptedBrainLoss: ${expectedBrains}. ` + tail);
         }
         if (b.scriptedLoss && res.survivors.includes(b.scriptedLoss)) {
             throw new Error(
                 `${node.id}: ${b.scriptedLoss} is scripted to die here and survives the replay. ` + tail);
         }
-        brains -= res.brainsLost;
+        sprouts -= res.brainsLost;
         if (b.scriptedLoss) dead.push(b.scriptedLoss);
     });
 };

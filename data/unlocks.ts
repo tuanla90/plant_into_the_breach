@@ -90,13 +90,13 @@ export const actsOfStage = (stage: 1 | 2 | 3): BossEntry[] =>
 export const BOSSES: BossEntry[] = [
     // ---- STAGE I — The Green Belt -------------------------------------------------------
     {
-        id: 'GARGANTUAR', stage: 1, act: 1, name: 'Gargantuar',
-        hero: 'CHOMPZILLA', city: 'Verdant Reach',
-        hint: 'The first thing too big to push. Verdant Reach answers it with a mouth to match — beat the Gargantuar and its devourer joins.',
+        id: 'GRAVEHULK', stage: 1, act: 1, name: 'Gravehulk',
+        hero: 'SNAPMAW', city: 'Verdant Reach',
+        hint: 'The first thing too big to push. Verdant Reach answers it with a mouth to match — beat the Gravehulk and its devourer joins.',
     },
     {
-        id: 'CATAPULT_LORD', stage: 1, act: 2, name: 'Ironcart',
-        hero: 'KERNEL_PULT', city: 'Goldacre',
+        id: 'IRONCART', stage: 1, act: 2, name: 'Ironcart',
+        hero: 'CORNOVA', city: 'Goldacre',
         hint: 'It shells you from three tiles away all chapter, and a wall is no answer to an arc. Break the siege and the gun changes hands.',
     },
     {
@@ -107,13 +107,13 @@ export const BOSSES: BossEntry[] = [
 
     // ---- STAGE II — The Far Shore -------------------------------------------------------
     {
-        id: 'BALLOON_ARMADA', stage: 2, act: 1, name: 'The Armada',
-        hero: 'ZEPHYR', city: 'Windward',
+        id: 'ARMADA', stage: 2, act: 1, name: 'The Armada',
+        hero: 'REEDWING', city: 'Windward',
         hint: 'It owns the sky over Windward, and nothing that walks can answer it. Shoot the Armada down and the sky changes hands — the drone pilot who takes it joins you.',
     },
     {
         id: 'SANDREAVER', stage: 2, act: 2, name: 'Sandreaver',
-        hero: 'THORNHIDE', city: 'Thornwaste',
+        hero: 'THORNSHELL', city: 'Thornwaste',
         hint: 'It burrows and surfaces behind your line, where nothing you built is facing. Thornwaste answers with the one thing it cannot tunnel around — a taunt it has to walk into.',
     },
     {
@@ -124,8 +124,8 @@ export const BOSSES: BossEntry[] = [
 
     // ---- STAGE III — The City -----------------------------------------------------------
     {
-        id: 'DISCO_ZOMBOSS', stage: 3, act: 1, name: 'The Headliner',
-        hero: 'CHARDWALL', city: 'Neon Rose',
+        id: 'HEADLINER', stage: 3, act: 1, name: 'The Headliner',
+        hero: 'CHARDSLAM', city: 'Neon Rose',
         hint: 'It never lays a hand on you — it turns the whole crowd into the threat. Neon Rose answers a crowd the only way that scales: one sweep that throws all of them somewhere else at once.',
     },
     {
@@ -143,7 +143,7 @@ export const BOSSES: BossEntry[] = [
     {
         id: 'BLIGHTLORD', stage: 0, act: 1, name: 'Blightlord',
         city: 'The Breach',
-        hint: 'The one who walked backwards through time. Every boss again, back to back, with no brain rule — and then him.',
+        hint: 'The one who walked backwards through time. Every boss again, back to back, with no sprout rule — and then him.',
     },
 ];
 
@@ -238,7 +238,7 @@ export const xpForNextLevel = (_level: number): number => XP_PER_LEVEL;
  * `heroes × plants`. Every plant ships unlocked (data/materials.ts), so in practice the only
  * moving part is the roster: a new save is 3 heroes against the 10-plant pool, cap 30, and each
  * boss that frees a hero adds another ten. At the full roster it is 9 × 10 = 90 — nine heroes
- * now that Frostpod is retired into the ICE element, against ten plants, because her Snow Pea
+ * now that Frostpod is retired into the ICE element, against ten plants, because her Ice Grenade
  * stays in the pool as gear even though nobody is grown from it any more.
  *
  * This is the version of the cap that explains itself. Tying it to bosses worked, but "level 5
@@ -321,16 +321,16 @@ export const recipeKey = (hero: HeroId, material: MaterialId): string => `${hero
  * portrait you cannot use yet.
  */
 export const SIGNATURE_MATERIAL: Record<HeroId, MaterialId> = {
-    GREEN_SHADOW: 'MAT_PEASHOOTER',
-    WALL_KNIGHT: 'MAT_WALLNUT',
-    SOLAR_FLARE: 'MAT_SUNFLOWER',
-    CHOMPZILLA: 'MAT_CHOMPER',
-    KERNEL_PULT: 'MAT_CORN',
+    PEABURST: 'MAT_PEASHOOTER',
+    IRONHUSK: 'MAT_WALLNUT',
+    SUNBLOOM: 'MAT_SUNFLOWER',
+    SNAPMAW: 'MAT_CHOMPER',
+    CORNOVA: 'MAT_CORN_MORTAR',
     // Nine heroes, nine gears: the plant each of the four newest heroes is grown from is also
     // the material that fuses into them, so the pairing below writes itself.
-    ZEPHYR: 'MAT_CATTAIL',
-    THORNHIDE: 'MAT_ENDURIAN',
-    CHARDWALL: 'MAT_CHARD',
+    REEDWING: 'MAT_CATTAIL',
+    THORNSHELL: 'MAT_ENDURIAN',
+    CHARDSLAM: 'MAT_SPRING_ARM',
     GOURDWARD: 'MAT_PUMPKIN',
 };
 
@@ -359,14 +359,14 @@ export const BONUS_OBJECTIVES_PER_RECIPE = 3;
  * earned by bonus objectives; the tutorial's job is to show what a fusion IS.
  */
 export const TUTORIAL_RECIPES: string[] = [
-    // The chain fuses exactly one pairing (tut_6: Shadeleaf + Peashooter = Repeater), and
+    // The chain fuses exactly one pairing (tut_6: Peaburst + Seed Gun = Repeater), and
     // it leads this list because withNextRecipe hands these out first — the first recipe a
-    // bonus objective buys should be the one the player watched work. SOLAR_FLARE +
-    // WALLNUT is kept: an earlier draft of board 6 fused it, and a lent recipe that is no
+    // bonus objective buys should be the one the player watched work. SUNBLOOM +
+    // ARMOR_PLATE is kept: an earlier draft of board 6 fused it, and a lent recipe that is no
     // longer demonstrated is harmless, while removing it would silently change what the
     // first two bonus payouts award.
-    'GREEN_SHADOW:MAT_PEASHOOTER',
-    'SOLAR_FLARE:MAT_WALLNUT',
+    'PEABURST:MAT_PEASHOOTER',
+    'SUNBLOOM:MAT_WALLNUT',
 ];
 
 // ---------------------------------------------------------------------------

@@ -12,14 +12,14 @@ import { useI18n } from '../i18n';
  * "Support" on one screen and "Tactical" on the other, with nothing to catch it.
  *
  * Note this is NOT `UNIT_ROLE_MAP[baseClass]`. That map answers "what does this plant do on
- * the field" and disagrees on two heroes, calling Cobb and Chardwall TACTICAL. The roster
+ * the field" and disagrees on two heroes, calling Cornova and Chardslam TACTICAL. The roster
  * reads them as the arcing artillery piece and the support that repositions — see the
  * `role` field on HeroDefinition.
  */
 export const ROLE_META: Record<HeroRole, { label: string; blurb: string; icon: React.ReactNode; color: string }> = {
     RANGED:  { label: 'Ranged',  blurb: 'Damage from a distance.',      icon: <Crosshair size={13} />, color: '#7dd3fc' },
     MELEE:   { label: 'Melee',   blurb: 'Holds the line up close.',     icon: <Shield size={13} />,    color: '#fca5a5' },
-    SUPPORT: { label: 'Support', blurb: 'Sun, shields, repositioning.', icon: <Crown size={13} />,     color: '#fcd34d' },
+    SUPPORT: { label: 'Support', blurb: 'Sol, shields, repositioning.', icon: <Crown size={13} />,     color: '#fcd34d' },
 };
 
 /** Group render order. roster.assert.ts fails the build on any role outside this list. */

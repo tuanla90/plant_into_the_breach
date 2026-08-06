@@ -15,13 +15,13 @@ import { FusionEffect, HeroId } from '../types';
  *
  * WHY IT RIDES THE FUSION PIPELINE. `EDGE` upgrades are expressed as ordinary `FusionEffect`s
  * and read back through `getFusionEffects`, which means every consumer already handles them:
- * damage, reach, shove distance, retaliation and Sun income are all summed in one place, and —
+ * damage, reach, shove distance, retaliation and Sol income are all summed in one place, and —
  * the part that matters — `applyFusionToSkill` feeds both the resolution AND the targeting
  * overlay. An upgrade wired anywhere else would be a buff the player cannot see until after
  * they have committed the click, in a game whose whole promise is that they can.
  *
  * THE RULE THE ATTACK UPGRADES FOLLOW: a free upgrade must never eat the identity of a skill
- * somebody pays Sun for, nor duplicate a generic pick already on the card (that is why no
+ * somebody pays Sol for, nor duplicate a generic pick already on the card (that is why no
  * EDGE is ever +move — STRIDE is +move, and an EDGE that repeats it is not "the hero's own
  * thing").
  */
@@ -54,34 +54,34 @@ export const upgradeId = (hero: HeroId, kind: UpgradeKind) => `${hero}:${kind}`;
  * The nine EDGE upgrades, one per hero, each aimed at what that hero is FOR.
  *
  * Ironhusk gets shove distance rather than damage because her 1 damage is not the point and
- * never was; Chardwall gets reach on a swing that deals nothing at all, so he can throw a body
- * without standing next to it; Thornhide gets retaliation, which is the only stat on the sheet
- * that is his alone. Sunspot's is Sun, because Sun is her whole contribution — passive income
+ * never was; Chardslam gets reach on a swing that deals nothing at all, so he can throw a body
+ * without standing next to it; Thornshell gets retaliation, which is the only stat on the sheet
+ * that is his alone. Sunbloom's is Sol, because Sol is her whole contribution — passive income
  * rather than a bigger Harvest, since that is the shape the engine already resolves and it
  * pays her on the turns she spends doing something else.
  */
 const EDGE: Record<HeroId, { name: string; description: string; effect: FusionEffect }> = {
-    GREEN_SHADOW: {
+    PEABURST: {
         name: 'Heavier Peas',
         description: 'Every attack hits one harder.',
         effect: { type: 'BONUS_DAMAGE', value: 1 },
     },
-    WALL_KNIGHT: {
+    IRONHUSK: {
         name: 'Full Weight',
         description: 'Her shove drives one tile further.',
         effect: { type: 'PUSH_DISTANCE', value: 1 },
     },
-    SOLAR_FLARE: {
-        name: 'Second Sun',
-        description: 'She banks Sun every turn, even on the turns she spends elsewhere.',
+    SUNBLOOM: {
+        name: 'Second Sol',
+        description: 'She banks Sol every turn, even on the turns she spends elsewhere.',
         effect: { type: 'SUN_PER_TURN', value: 10 },
     },
-    CHOMPZILLA: {
+    SNAPMAW: {
         name: 'Deeper Bite',
         description: 'Every attack hits one harder.',
         effect: { type: 'BONUS_DAMAGE', value: 1 },
     },
-    KERNEL_PULT: {
+    CORNOVA: {
         name: 'Longer Arc',
         description: 'The lob reaches one tile further.',
         effect: { type: 'ATTACK_RANGE_BONUS', value: 1 },
@@ -89,18 +89,18 @@ const EDGE: Record<HeroId, { name: string; description: string; effect: FusionEf
     // NOT the plan's first suggestion (MOVE_BONUS): +1 move already exists as STRIDE on every
     // hero's card, and an EDGE that duplicates a generic pick is not "the hero's own thing".
     // Damage is honest here: WING_PAIR fires two cells, so +1 lands on both — the same rule
-    // that makes Shadeleaf's identical upgrade lift her whole volley.
-    ZEPHYR: {
+    // that makes Peaburst's identical upgrade lift her whole volley.
+    REEDWING: {
         name: 'Heavier Payload',
         description: 'Every attack hits one harder — both wings at once.',
         effect: { type: 'BONUS_DAMAGE', value: 1 },
     },
-    THORNHIDE: {
+    THORNSHELL: {
         name: 'Longer Thorns',
         description: 'Anything that hits him bleeds one more for it.',
         effect: { type: 'RETALIATE_DAMAGE', value: 1 },
     },
-    CHARDWALL: {
+    CHARDSLAM: {
         name: 'Long Handle',
         description: 'He throws bodies from a tile away instead of arm\'s length.',
         effect: { type: 'ATTACK_RANGE_BONUS', value: 1 },

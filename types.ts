@@ -5,37 +5,24 @@ export enum UnitType {
 }
 
 export enum UnitClass {
-  PEASHOOTER = 'PEASHOOTER',
-  SNOW_PEA = 'SNOW_PEA', 
-  REPEATER = 'REPEATER', 
-  BLOOMERANG = 'BLOOMERANG',
-  CACTUS = 'CACTUS',
-  CATTAIL = 'CATTAIL',
-  MELON_PULT = 'MELON_PULT', 
-  CABBAGE_PULT = 'CABBAGE_PULT', 
-  KERNEL_PULT = 'KERNEL_PULT', 
-  MAGNET_SHROOM = 'MAGNET_SHROOM',
-  SUN_SHROOM = 'SUN_SHROOM', 
-  SCAREDY_SHROOM = 'SCAREDY_SHROOM',
-  WALLNUT = 'WALLNUT',
-  TALL_NUT = 'TALL_NUT', 
-  ENDURIAN = 'ENDURIAN', 
-  SWEET_POTATO = 'SWEET_POTATO', 
-  IRON_NUT = 'IRON_NUT',
-  PUMPKIN = 'PUMPKIN',
-  /** Chard Guard. The only plant whose whole job is moving somebody else. */
-  CHARD_GUARD = 'CHARD_GUARD',
-  CHOMPER = 'CHOMPER',
-  BONK_CHOY = 'BONK_CHOY',
-  SUNFLOWER = 'SUNFLOWER',
-  TWIN_SUNFLOWER = 'TWIN_SUNFLOWER',
-  // NEW UNITS
-  COFFEE_BEAN = 'COFFEE_BEAN',
-  HYPNO_SHROOM = 'HYPNO_SHROOM',
-  BLOVER = 'BLOVER',
-  UMBRELLA_LEAF = 'UMBRELLA_LEAF',
-  TORCHWOOD = 'TORCHWOOD',
-  
+  /* --- CÂY ---
+     Chỉ còn chín cây thật sự ra được sân: đúng chín cây gốc của hero, mỗi cây vừa là
+     `baseClass` của một hero vừa là `benchClass` của nguyên liệu cùng tên. Mười chín cây PvZ
+     còn lại đã bỏ — xem chú thích đầu data/plants.ts. */
+  SEED_GUN = 'SEED_GUN',
+  ROTOR_WING = 'ROTOR_WING',
+  // Tên CÂY, không phải tên hero: 'CORNOVA' là HeroId của Hoàng Kim Pháo Thủ, còn thân cây
+  // cô ấy mọc lên từ tên là Corn Mortar (heroes.ts: `baseClass`, materials.ts: `benchClass`,
+  // ICONS.CORN_MORTAR — tất cả đều gọi thế).
+  CORN_MORTAR = 'CORN_MORTAR',
+  ARMOR_PLATE = 'ARMOR_PLATE',
+  SPIKE_ARMOR = 'SPIKE_ARMOR',
+  BUNKER_SHELL = 'BUNKER_SHELL',
+  /** Spring Arm. The only plant whose whole job is moving somebody else. */
+  SPRING_ARM = 'SPRING_ARM',
+  STEEL_JAWS = 'STEEL_JAWS',
+  SOL_BATTERY = 'SOL_BATTERY',
+
   /**
     * A crate of gear left on the board. Not a plant and not a zombie: it cannot move, cannot
     * act, and has no skills — it is a body with hit points and a thing inside it.
@@ -46,20 +33,20 @@ export enum UnitClass {
     */
   GEAR_CRATE = 'GEAR_CRATE',
 
-  BASIC_ZOMBIE = 'BASIC_ZOMBIE',
-  CONEHEAD = 'CONEHEAD',
-  BUCKETHEAD = 'BUCKETHEAD',
-  NEWSPAPER_ZOMBIE = 'NEWSPAPER_ZOMBIE', 
-  SCREEN_DOOR_ZOMBIE = 'SCREEN_DOOR_ZOMBIE', 
-  DIGGER_ZOMBIE = 'DIGGER_ZOMBIE', 
-  FOOTBALL_ZOMBIE = 'FOOTBALL_ZOMBIE',
-  POLE_VAULTER = 'POLE_VAULTER', 
-  DISCO_ZOMBIE = 'DISCO_ZOMBIE',
-  BALLOON_ZOMBIE = 'BALLOON_ZOMBIE',
-  CATAPULT_ZOMBIE = 'CATAPULT_ZOMBIE',
-  FLAG_ZOMBIE = 'FLAG_ZOMBIE', 
-  /** The Headliner. A Disco Zombie with a stage, an aura, and twenty times the health. */
-  DISCO_ZOMBOSS = 'DISCO_ZOMBOSS',
+  WALKER = 'WALKER',
+  SCRAPCAP = 'SCRAPCAP',
+  POTHELM = 'POTHELM',
+  TATTERGUARD = 'TATTERGUARD', 
+  DOORBEARER = 'DOORBEARER', 
+  MINER = 'MINER', 
+  LINEBREAKER = 'LINEBREAKER',
+  LEAPER = 'LEAPER', 
+  DANCER = 'DANCER',
+  FLOATER = 'FLOATER',
+  LOBBER = 'LOBBER',
+  BANNERMAN = 'BANNERMAN', 
+  /** The Headliner. A Dancer with a stage, an aura, and twenty times the health. */
+  HEADLINER = 'HEADLINER',
   /** Cinder Colossus. Leaves the ground burning behind it. */
   CINDER_COLOSSUS = 'CINDER_COLOSSUS',
   /** Voltmaw. The board is its circuit — a tile that pays you is a tile it can reach. */
@@ -76,8 +63,8 @@ export enum UnitClass {
   SANDREAVER = 'SANDREAVER',
   /** Blightlord. The one who walked backwards through time, and the last thing standing. */
   BLIGHTLORD = 'BLIGHTLORD',
-  GARGANTUAR = 'GARGANTUAR',
-  IMP = 'IMP',
+  GRAVEHULK = 'GRAVEHULK',
+  RUNT = 'RUNT',
   ROCK = 'ROCK',
   GRAVE = 'GRAVE',
 }
@@ -103,7 +90,7 @@ export type StatusEffectType = 'BURN' | 'FREEZE' | 'STUN' | 'HYPNOTIZED' | 'ENRA
     /** Halves movement for a turn. Weaker than STUN, which removes the turn entirely. */
     | 'SLOW'
     /**
-     * Forced to come at whoever taunted it, ignoring the brain it actually wants.
+     * Forced to come at whoever taunted it, ignoring the sprout it actually wants.
      *
      * This is the only status that redirects an enemy rather than delaying it, and it exists
      * because three unit types are built specifically to walk AROUND a blocker: the Balloon
@@ -136,7 +123,7 @@ export type StatusEffectType = 'BURN' | 'FREEZE' | 'STUN' | 'HYPNOTIZED' | 'ENRA
      * spent. Consumed by being hit, never by the clock, and it does not stack — bitten twice
      * is still one wound. Deliberately applied outside the STATUS immunity gate (bosses bleed
      * too): it is flesh, not mind control. The +1 is added after helmet armour in
-     * calculateDamage, or a Buckethead would eat the entire gear.
+     * calculateDamage, or a Pothelm would eat the entire gear.
      */
     | 'BLEEDING'
     /**
@@ -151,7 +138,7 @@ export type MovementType = 'WALKING' | 'FLYING' | 'AMPHIBIOUS' | 'TELEPORT'
     /**
      * Rides a rail line and nothing else: it may only ever ENTER a `TerrainType.RAIL` tile.
      *
-     * Not a movement upgrade — a leash. Ironcart moves 3 where a Gargantuar moves 2, along
+     * Not a movement upgrade — a leash. Ironcart moves 3 where a Gravehulk moves 2, along
      * exactly one line, and a body parked on that line is a wall it cannot go round.
      *
      * The rule only arms once the unit is STANDING on rail (`isRailBound`, utils/gameLogic.ts).
@@ -163,7 +150,7 @@ export type MovementType = 'WALKING' | 'FLYING' | 'AMPHIBIOUS' | 'TELEPORT'
 /**
  * NOTE: 'FREEZE' covers STUN/FREEZE only — it does NOT stop SLOW. Something too heavy to
  * freeze solid can still be chilled into moving slower, and having one immunity blank both
- * meant the Gargantuar (PUSH + FREEZE immune, Massive) shut off every control tool in the
+ * meant the Gravehulk (PUSH + FREEZE immune, Massive) shut off every control tool in the
  * game at once. 'STATUS' is the one that stops everything — that is what it is for.
  */
 export type UnitImmunity = 'BURN' | 'FREEZE' | 'DROWN' | 'PUSH' | 'STATUS'
@@ -184,7 +171,7 @@ export type UnitImmunity = 'BURN' | 'FREEZE' | 'DROWN' | 'PUSH' | 'STATUS'
  * free, and "an all-ice squad" becomes a strategy rather than a colour scheme.
  *
  * The price is MAX HEALTH, and it is deliberately not damage. Damage runs 0..2 across this
- * roster, so a flat deduction would be -100% for Ironhusk and -0% for Sunspot — not a price, a
+ * roster, so a flat deduction would be -100% for Ironhusk and -0% for Sunbloom — not a price, a
  * lottery. Everyone has health, everyone has several, and health persists between battles.
  *
  * The amount lives in ONE place, `ELEMENT_HP_COST` in utils/elements.ts, and is quoted nowhere
@@ -213,9 +200,9 @@ export interface TileData {
     y: number;
     terrain: TerrainType;
     environment: EnvironmentType;
-    /** House tiles occupy column y === HOUSE_COLUMN. Zombies path toward them. */
+    /** Greenspire tiles occupy column y === HOUSE_COLUMN. Zombies path toward them. */
     isHouse?: boolean;
-    /** A house still holding its brain. Cleared when a zombie reaches it. */
+    /** A Greenspire still holding its sprout. Cleared when a zombie reaches it. */
     hasBrain?: boolean;
     /**
      * Deploy and spawn zones come from the hand-authored map, not from column constants.
@@ -224,13 +211,13 @@ export interface TileData {
     isDeployZone?: boolean;
     isSpawnZone?: boolean;
     /**
-     * An armed trap waiting on this tile (Potato Mine). Placed by an item, consumed by the
+     * An armed trap waiting on this tile (Seed Mine). Placed by an item, consumed by the
      * first grounded enemy that steps here — walking, being pushed, or being spawned onto
      * it all count, because they all move through the same UNIT_MOVE/spawn paths.
      */
     trap?: { damage: number; imgUrl: string };
     /**
-     * Spines left across a tile (the Spikeweed item; formerly Thornquill's trail). Unlike
+     * Spines left across a tile (the Spike Trap item; formerly Thornquill's trail). Unlike
      * `trap` this is NOT consumed by the first
      * body through it — it hurts everything that enters while it lasts, and expires on its own.
      * That difference is the whole point: a trap is one answer to one zombie, spikes are a
@@ -252,12 +239,12 @@ export interface TileData {
      */
     flood?: { turns: number; was: TerrainType };
     /**
-     * A shell LAYER on a HOUSE (Gourdward's Reinforce). Houses are tiles, not units, and a
-     * brain is taken by ARRIVAL/BITE rather than through calculateDamage — so the house's
-     * layer lives here and is consumed at the two doors a brain leaves through: the adjacent
-     * bite (turnManager, BRAIN BITE) and the shove-into-house (gameLogic, planPush). One
+     * A shell LAYER on a HOUSE (Gourdward's Reinforce). Greenspires are tiles, not units, and a
+     * sprout is taken by ARRIVAL/BITE rather than through calculateDamage — so the Greenspire's
+     * layer lives here and is consumed at the two doors a sprout leaves through: the adjacent
+     * bite (turnManager, BRAIN BITE) and the shove-into-Greenspire (gameLogic, planPush). One
      * layer eats one bite in full, then breaks — the same §6.0 contract units have, which is
-     * what makes "a house is a 1-hp unit wearing one layer" the correct mental model without
+     * what makes "a Greenspire is a 1-hp unit wearing one layer" the correct mental model without
      * the ~40-call-site refactor of making it a real unit.
      */
     shielded?: boolean;
@@ -298,16 +285,6 @@ export interface Unit {
   rewindMark?: { hp: number; position: Position };
   /** Which phase this boss was in last turn, so a crossing can be noticed exactly once. */
   bossPhase?: number;
-  /**
-   * A plant that was already on the board when the fight started and does not belong to the
-   * squad — a survivor rooted where it grew. It begins DORMANT and wakes when one of your
-   * heroes ends a turn beside it, after which it fights on your side for the rest of the
-   * battle and is gone when the battle is.
-   *
-   * It is NOT a bench plant and never becomes one: nothing about it is spent, carried or
-   * healed between fights, so it can be generous without touching the run's economy.
-   */
-  isWild?: boolean;
   /** What this crate is carrying, paid into the bench if it is still standing at the end. */
   gearMaterial?: MaterialId;
   /** Turns of `invulnerable` still owed. Counted down by the boss's own end-of-turn hook. */
@@ -383,7 +360,7 @@ export interface Unit {
    * and utils/bossBehaviours.ts asks "which behaviour do you run".
    *
    * Identity lives here rather than on the unit class because a class can serve both roles:
-   * the Headliner's own dance floor is full of ordinary Disco Zombies.
+   * the Headliner's own dance floor is full of ordinary Dancers.
    */
   bossId?: BossId;
   /**
@@ -412,14 +389,14 @@ export interface Unit {
   materialId?: MaterialId;
   /**
    * Id of the unit that taunted this one. Read together with the TAUNTED status: the status
-   * says "you are not walking to a brain this turn", this says who to go at instead. Ignored
+   * says "you are not walking to a sprout this turn", this says who to go at instead. Ignored
    * the moment the taunter is dead — otherwise a corpse would keep steering the enemy line.
    */
   tauntedBy?: string;
   /**
    * Damage dealt back to anything that hits this unit in melee, WITHOUT a fusion.
    *
-   * RETALIATE_DAMAGE already exists as a fusion effect, but Thornhide retaliates because it is
+   * RETALIATE_DAMAGE already exists as a fusion effect, but Thornshell retaliates because it is
    * a durian — the thorns are the hero, not an upgrade bought for it. Fusion retaliation adds
    * to this rather than replacing it.
    */
@@ -432,11 +409,31 @@ export interface Unit {
    */
   blessedElement?: ElementId;
   /**
+   * What the BLESSED status on this body is WORTH in damage, set by the blesser at cast time.
+   * Undefined means the authored 1. Solar Blessing's Fanged Blessing gear raises it — the
+   * bonus belongs to the blesser's gear, but it has to be READ off the blessed body, which is
+   * the same reason `blessedElement` lives here rather than on the caster.
+   */
+  blessPower?: number;
+  /**
+   * The LAYER currently worn is spiked (Gourdward's Glass Rind): whatever breaks it starts
+   * bleeding. Written at every grant site alongside `shield`, so it can never outlive the
+   * layer it describes — a body re-shelled by somebody else is re-flagged false.
+   */
+  shieldBarbed?: boolean;
+  /**
+   * The LAST_STAND_SHIELD layer has already been spent this battle. Reset by unitFactory when
+   * the body is built for a fight, which is also where the flag is cleared between battles —
+   * a once-per-fight promise stored on a snapshot that persists between fights would be a
+   * once-per-RUN promise instead.
+   */
+  lastStandUsed?: boolean;
+  /**
    * Helmet armour: every WEAPON hit is reduced by this much, and unlike fusion armour it may
    * reduce a hit to ZERO — a pea plinking off a bucket is the whole identity (brainstorm_balance
    * § 2, the one idea from that document worth keeping). Environment ignores it on purpose:
    * burn, lava and ground spikes cook or stab the body inside the helmet, which keeps FIRE and
-   * the Spikeweed item's fields as the honest answers to an armoured lane.
+   * the Spike Trap item's fields as the honest answers to an armoured lane.
    */
   armor?: number;
   /**
@@ -444,7 +441,7 @@ export interface Unit {
    *
    * Lives on the UNIT rather than on the skill because that is exactly what the rules say: an
    * element is a property of the hero, so it reaches every source of damage they have —
-   * including Thornhide's retaliation, which no skill object is involved in at all (rule L4).
+   * including Thornshell's retaliation, which no skill object is involved in at all (rule L4).
    */
   element?: ElementId;
 }
@@ -483,7 +480,7 @@ export interface Intent {
     moveTo?: Position;
     /** Path it will take to `moveTo`, for drawing the route. */
     movePath?: Position[];
-    /** SPAWN: what arrives. Defaults to IMP, which is what the Gargantuar throws. */
+    /** SPAWN: what arrives. Defaults to RUNT, which is what the Gravehulk throws. */
     spawnClass?: UnitClass;
     /**
      * SPAWN: every tile a body lands on. `target` stays the first of them so the existing
@@ -537,7 +534,7 @@ export interface Intent {
      * ATTACK: tiles this blow shoves whatever it lands on, away from the attacker.
      *
      * Applies to `target` and to every entry in `strikes`. Routed through planPush/applyPushPlan
-     * like every other shove in the game, so it drowns, chains and hands over brains by identical
+     * like every other shove in the game, so it drowns, chains and hands over sprouts by identical
      * rules — the same reason RETALIATE_PUSH is not hand-rolled either.
      */
     pushOnHit?: number;
@@ -595,7 +592,7 @@ export interface Projectile {
     currentX: number;
     currentY: number;
     rotation: number;
-    type: 'PEA' | 'FROZEN_PEA' | 'CORN' | 'CABBAGE' | 'MELON';
+    type: 'PEA' | 'CORN';
     isLobbed?: boolean;
     duration?: number;
 }
@@ -633,10 +630,10 @@ export interface GameState {
     inventory: string[];
     currentEventId?: string;
     // --- Run-scoped progress (see DESIGN.md sections 1 and 2) ---
-    /** Brains left for the whole run. Reaching 0 ends the run. */
+    /** Sprouts left for the whole run. Reaching 0 ends the run. */
     brainsRemaining: number;
     brainsMax: number;
-    /** Brains bought back this run. Drives the escalating buy-back price. */
+    /** Sprouts bought back this run. Drives the escalating buy-back price. */
     brainsBought: number;
     /** Heroes knocked out, waiting to be revived at a Campfire or chapter end. */
     fallenHeroes: HeroId[];
@@ -729,9 +726,9 @@ export interface GameState {
 
 export interface TurnAction {
     type: 'WAIT' | 'UNIT_MOVE' | 'UNIT_ATTACK' | 'APPLY_DAMAGE' | 'UNIT_DIE' | 'SPAWN_UNIT' | 'UPDATE_INTENT' | 'UPDATE_UNIT_STATE' | 'NEW_TURN_RESET' | 'MODIFY_TERRAIN' | 'RESOURCE_GAIN'
-        /** A zombie reached a house: clear that house's brain and remove the zombie. */
+        /** A zombie reached a Greenspire: clear that Greenspire's sprout and remove the zombie. */
         | 'BRAIN_LOST'
-        /** In-combat Sun income (zombie kills, passive generators). */
+        /** In-combat Sol income (zombie kills, passive generators). */
         | 'GAIN_SUN'
         /**
          * A line in a hero's battle ledger (`GameState.battleStats`). Emitted AT THE SOURCE —
@@ -765,7 +762,7 @@ export interface TurnAction {
     spikes?: { damage: number; turns: number };
     /** Dust laid (or expiring) on `pos`. `turns: 0` is how the expiry writes "this is over". */
     smoke?: { turns: number };
-    /** A house layer raised (true) or spent by a bite (false) on `pos`. */
+    /** A Greenspire layer raised (true) or spent by a bite (false) on `pos`. */
     shielded?: boolean;
     /** Sea laid (or receding) on `pos`. `turns: 0` recedes, and `terrain` carries it back. */
     flood?: { turns: number; was: TerrainType };
@@ -791,7 +788,7 @@ export interface TurnAction {
 /**
  * One hero's ledger for the current battle. The four counted things are chosen so every ROLE
  * shows up in at least one column: damage flatters the shooters, kills flatter the finishers,
- * pushes and cancelled intents are the only place Chardwall's 0-damage turns become visible —
+ * pushes and cancelled intents are the only place Chardslam's 0-damage turns become visible —
  * which is the reason the screen exists (a support's value is real but never printed anywhere).
  *
  * `damageTaken` is counted by the engine off plain APPLY_DAMAGE (the victim needs no
@@ -817,31 +814,31 @@ export type BattleStatKey = keyof BattleHeroStats;
 
 /** The 5 heroes shipped in the first build. More unlock later — DESIGN.md section 7. */
 export type HeroId =
-    | 'GREEN_SHADOW'
-    | 'WALL_KNIGHT'
-    | 'SOLAR_FLARE'
-    | 'CHOMPZILLA'
+    | 'PEABURST'
+    | 'IRONHUSK'
+    | 'SUNBLOOM'
+    | 'SNAPMAW'
     /**
-     * Cobb, the Kernel-pult. The only hero whose attacks ARC: every other attack in the game
+     * Cornova, the Corn Mortar. The only hero whose attacks ARC: every other attack in the game
      * is a straight line that stops at the first body in the way, including your own wall
      * (see getValidTargets' LINE branch). Unlocked from the third boss.
      */
-    | 'KERNEL_PULT'
+    | 'CORNOVA'
     /**
      * The four heroes that complete the roster of nine (PLAN-heroes-9.md): three ranged,
      * three melee, three support. Each one occupies an axis nothing else in the cast touches.
      */
     /**
-     * Zephyr, the Cattail drone pilot. The roster's only FLYING body, and the only knight's-
+     * Reedwing, the Rotor Wing drone pilot. The roster's only FLYING body, and the only knight's-
      * move attack (WING_PAIR): two shots per turn, four tiles of reach, four hp. Replaced
      * Thornquill — the row-pierce identity retired with her.
      */
-    | 'ZEPHYR'
-    /** Thornhide, the Endurian. Retaliates innately, and can force enemies to come to it. */
-    | 'THORNHIDE'
-    /** Chardwall, the Chard Guard. 0 damage: it kills with terrain, by shoving 2 tiles. */
-    | 'CHARDWALL'
-    /** Gourdward, the Pumpkin. The only source of shields — nothing else protects an ally. */
+    | 'REEDWING'
+    /** Thornshell, the Spike Armor. Retaliates innately, and can force enemies to come to it. */
+    | 'THORNSHELL'
+    /** Chardslam, the Spring Arm. 0 damage: it kills with terrain, by shoving 2 tiles. */
+    | 'CHARDSLAM'
+    /** Gourdward, the Bunker Shell. The only source of shields — nothing else protects an ally. */
     | 'GOURDWARD';
 
 /** The 5 fusion materials shipped in the first build. */
@@ -855,8 +852,8 @@ export type HeroId =
  * be a cycle. The table itself (which hero each one frees) stays in data/unlocks.ts.
  */
 export type BossId =
-    | 'GARGANTUAR' | 'CATAPULT_LORD' | 'CINDER_COLOSSUS'
-    | 'YETI' | 'DISCO_ZOMBOSS' | 'BALLOON_ARMADA'
+    | 'GRAVEHULK' | 'IRONCART' | 'CINDER_COLOSSUS'
+    | 'YETI' | 'HEADLINER' | 'ARMADA'
     /** Burrows and surfaces BEHIND your line. A taunt is the only thing it cannot walk around. */
     | 'SANDREAVER'
     /** Acts twice a turn: its damage cannot be prevented in time, only absorbed. */
@@ -878,46 +875,49 @@ export type MaterialId =
     // MAT_SNOW_PEA is retired: it was Frostpod's plant, Frostpod is retired, and the cold
     // belongs to the ICE element now. Nine heroes, nine gears, no orphan — persistence.ts
     // filters the id out of old saves so a dead gear can never reach the shop shelf.
-    /** Cobb's own plant. Grafts the arc onto somebody else's straight shot. */
-    | 'MAT_CORN'
+    /** Cornova's own plant. Grafts the arc onto somebody else's straight shot. */
+    | 'MAT_CORN_MORTAR'
     /**
      * The four gears belonging to the four newest heroes. Every hero's base plant is also a
      * material: bring it to the field as a bench body, or burn it into a hero. One or the
      * other, never both.
      */
-    /** Cattail. Rotors: speed for the body, and dust that takes the swing out of a zombie. */
+    /** Rotor Wing. Rotors: speed for the body, and dust that takes the swing out of a zombie. */
     | 'MAT_CATTAIL'
-    /** Endurian. Thorns worn outward — being hit becomes a way of dealing damage. */
+    /** Spike Armor. Thorns worn outward — being hit becomes a way of dealing damage. */
     | 'MAT_ENDURIAN'
-    /** Chard Guard. Leverage: whatever it touches ends up somewhere else. */
-    | 'MAT_CHARD'
-    /** Pumpkin. A shell that goes around somebody other than the wearer. */
+    /** Spring Arm. Leverage: whatever it touches ends up somewhere else. */
+    | 'MAT_SPRING_ARM'
+    /** Bunker Shell. A shell that goes around somebody other than the wearer. */
     | 'MAT_PUMPKIN';
 
 export type FusionEffectType =
     | 'BONUS_HP'                // +maxHp
-    | 'SUN_PER_TURN'            // passive Sun income each turn
-    | 'SUN_ON_KILL'             // Sun when this unit finishes something off
+    | 'SUN_PER_TURN'            // passive Sol income each turn
+    | 'SUN_ON_KILL'             // Sol when this unit finishes something off
     | 'DAMAGE_REDUCTION'        // flat reduction on incoming damage
     | 'ON_HIT_PUSH'             // attacks push the target 1 tile
     | 'ON_HIT_FREEZE'           // attacks apply STUN
     | 'ON_HIT_BURN'             // attacks apply BURN
     /**
      * The basic attack resolves a SECOND time, for `value` damage rather than for its full
-     * amount. It began as a plain flag meaning "resolves twice", which on Shadeleaf doubled
+     * amount. It began as a plain flag meaning "resolves twice", which on Peaburst doubled
      * a free, full-lane attack from 2 to 4 with no cost and no drawback — strictly better
      * than every other fusion in her row, and the first one every player owned.
      */
     | 'DOUBLE_ATTACK'
     | 'GRANT_ATTACK'            // gives a ranged basic attack to a hero that had none
-    | 'SKILL_DISCOUNT'          // hero skill costs less Sun
-    | 'DIGEST_REDUCTION'        // Maw digests for fewer turns
+    | 'SKILL_DISCOUNT'          // hero skill costs less Sol
+    | 'DIGEST_REDUCTION'        // Snapmaw digests for fewer turns
     /**
-     * Grants `value` shield the moment digestion begins. This USED to be total immunity for
-     * the whole digest window, checked inside calculateDamage — which deleted Maw's one
-     * drawback outright and made the card ("gains 3 shield while digesting") a lie in the
-     * player's favour. Shield is the honest version: it absorbs, it runs out, and the window
-     * stays a window.
+     * -`value` incoming damage, but ONLY on the turns Snapmaw is digesting.
+     *
+     * Three shapes have worn this name. It began as total immunity for the whole window
+     * (checked inside calculateDamage), which deleted Snapmaw's one drawback outright; then a
+     * numbered shield; then a LAYER. The layer was honest but it duplicated her Gourd Gut
+     * cell, and a wall-nut grafted onto a melee body should read as a THICKER HIDE — so it
+     * is a flat reduction again, still fenced inside the helpless window it exists to guard.
+     * Same door as DAMAGE_REDUCTION in calculateDamage, gated on `digestingTurns`.
      */
     | 'ARMOR_WHILE_DIGESTING'
     | 'RETALIATE_BURN'          // melee attackers catch fire
@@ -929,17 +929,9 @@ export type FusionEffectType =
      * who has learned one has learned both.
      */
     | 'RETALIATE_FREEZE'
-    /**
-     * Maw only: while DIGESTING, the first enemy to bite her each turn is buttered stiff
-     * (STUN). Its own type rather than RETALIATE_FREEZE because the two promise different
-     * sentences: butter is a pin that lands first try but only guards the helpless window,
-     * the chill is unconditional but needs the two-step. One type serving both cards is how
-     * the descriptions drifted from the engine in the first place.
-     */
-    | 'BUTTER_RETALIATE'
     | 'ATTACK_RANGE_BONUS'      // extends the reach of this hero's attacks
     | 'BONUS_DAMAGE'            // flat damage added to this hero's attacks
-    | 'SUN_ON_BLOCK_SPAWN'      // Sun for standing on a spawn hole and plugging it
+    | 'SUN_ON_BLOCK_SPAWN'      // Sol for standing on a spawn hole and plugging it
     | 'UPGRADE_SLOW_TO_FREEZE'  // this hero's SLOW becomes a full STUN
     | 'RETALIATE_DAMAGE'        // melee attackers take damage back
     | 'SWALLOW_EXPLODE'         // devouring detonates, burning neighbours
@@ -948,10 +940,10 @@ export type FusionEffectType =
     /**
      * A straight shot becomes a lobbed one: it arcs over everything in between, at half the
      * reach. Both halves matter. A LINE attack stops at the first unit in the way — including
-     * a friendly wall — which is the friction the brain rule creates every fight: you park
+     * a friendly wall — which is the friction the sprout rule creates every fight: you park
      * Ironhusk in the corridor and she blindfolds whoever is standing behind her. LOB ignores
      * what is in between entirely, but its range is Manhattan distance in every direction, so
-     * keeping the number would turn Shadeleaf's LINE 8 into most of the board.
+     * keeping the number would turn Peaburst's LINE 8 into most of the board.
      * Piercing skills are left alone — see applyFusionToSkill.
      */
     | 'ARC_ATTACK'
@@ -966,14 +958,14 @@ export type FusionEffectType =
     /**
      * Every tile this hero's attack passes through is left spiked for a turn.
      * NOTE: data-orphaned since the Cactus gear retired with Thornquill (PLAN-hero-zephyr) —
-     * the engine still resolves it (the Spikeweed ITEM keeps spike fields alive), so a future
+     * the engine still resolves it (the Spike Trap ITEM keeps spike fields alive), so a future
      * recipe can pick it back up, but no recipe grants it today.
      */
     | 'SPIKE_TRAIL'
-    /** Adds tiles to every push this hero causes. The Chard Guard axis. */
+    /** Adds tiles to every push this hero causes. The Spring Arm axis. */
     | 'PUSH_DISTANCE'
-    // --- The Cattail axes (PLAN-hero-zephyr §4: each gear = two traits of its owner). ---
-    /** +`value` movement. Zephyr's wings, grafted on: the one axis no fusion touched before. */
+    // --- The Rotor Wing axes (PLAN-hero-zephyr §4: each gear = two traits of its owner). ---
+    /** +`value` movement. Reedwing's wings, grafted on: the one axis no fusion touched before. */
     | 'MOVE_BONUS'
     /**
      * This hero's PAID skill also drops dust on the tiles it covered — Smoke Pod's veil,
@@ -981,7 +973,7 @@ export type FusionEffectType =
      * every turn would be the exact shape the STUN RULE exists to ban.
      */
     | 'SKILL_DISARM'
-    /** Attacks leave the target BLEEDING: the next hit against it lands +1. The Chomper axis. */
+    /** Attacks leave the target BLEEDING: the next hit against it lands +1. The Steel Jaws axis. */
     | 'BLEED_ON_HIT'
     /**
      * Shields this hero hands out spill over to whoever stands beside the recipient.
@@ -998,8 +990,101 @@ export type FusionEffectType =
     | 'TAUNT_RADIUS'
     /** Bodies slammed by this hero's pushes take `value` extra collision damage. */
     | 'COLLISION_BONUS'
-    /** The melee basic attack lands on EVERY adjacent enemy, not just the one aimed at. */
-    | 'ADJACENT_STRIKE';
+    /**
+     * The melee basic attack lands on EVERY adjacent enemy, not just the one aimed at.
+     * NOTE: data-orphaned by the remap pass — no recipe grants it today. Kept for the same
+     * reason SPIKE_TRAIL is: the engine resolves it, so a future cell can pick it back up.
+     */
+    | 'ADJACENT_STRIKE'
+    // --- The remap pass (DESIGN-fusion-matrix.md §6). One type per cell that could not be
+    //     written with the vocabulary that already existed. ---
+    /**
+     * Solar Blessing is worth `value` MORE damage than its authored +1. The bonus belongs to
+     * the BLESSER's gear but has to be read off the blessed body at swing time, so the cast
+     * stamps it onto `Unit.blessPower` exactly as it stamps `blessedElement`.
+     */
+    | 'BLESS_POWER'
+    /**
+     * The hero's PAID ally-buff lands on every ally within 2 tiles of where it was aimed,
+     * not just the one body. The "move range 2" diamond — the same Manhattan reach every
+     * other range in the game is measured in. Gated on the skill having no DAMAGE, so it can
+     * never turn an attack into an area attack; that is SKILL_SPLASH's job and its price.
+     */
+    | 'SKILL_AURA'
+    /**
+     * SUPPORT SHOT. When one of the SQUAD'S attacks shoves an enemy, this hero puts a pea
+     * into it for 1 — if she can see it down a clear row from where she stands. Her own
+     * turn is not spent: it is the shove that pays. Once per body per cast.
+     */
+    | 'OVERWATCH_SHOT'
+    /** Anything this hero's shots HURT turns on her: TAUNTED, pointed at her. */
+    | 'TAUNT_ON_HIT'
+    /** Sol income, but only on the turns the wearer is DIGESTING. Snapmaw's window, monetised. */
+    | 'SUN_WHILE_DIGESTING'
+    /**
+     * A free melee claw for 1 damage that works ONLY while digesting — the one action allowed
+     * through the helpless window. Outside it she has a better bite, so the fence costs
+     * nothing and keeps the card honest.
+     */
+    | 'DIGEST_CLAW'
+    /**
+     * A hit landing on a body at FULL health pins it (STUN).
+     *
+     * The STUN RULE's one written exception, and the condition is what earns it: it fires
+     * once per body, ever — the second bite meets a wounded target and does nothing — and
+     * only for a melee hero who had to walk into contact to try. That is the opposite shape
+     * to the ban's target (a free stun EVERY turn, forever).
+     */
+    | 'STUN_ON_FULL_HP'
+    /**
+     * The hero's PAID damaging skill also stuns what it hits. Skill-only by construction, the
+     * SKILL_SPLASH precedent: one pin per cast, bought with Sol.
+     */
+    | 'SKILL_STUN'
+    /** Wing Guns add the cell BETWEEN the pair — a third rocket, down the middle. */
+    | 'WING_MIDSHOT'
+    /** Melee attackers are left BLEEDING: the next hit against them lands +1. */
+    | 'RETALIATE_BLEED'
+    /** The paid SHIELD skill also blows every enemy beside the caster a tile back. */
+    | 'SKILL_REPEL'
+    /**
+     * Layers this hero hands out are spiked glass: whoever BREAKS one is left bleeding.
+     * Marked on the shielded body (`Unit.shieldBarbed`) at grant time, spent when the layer
+     * goes — so it belongs to the layer, not to whoever happens to be standing nearby.
+     */
+    | 'BARBED_SHIELD'
+    /**
+     * This body walks onto the board already wearing a layer. Applied in `utils/unitFactory`,
+     * the one place every unit the game puts on a board is built — so it lands on the scripted
+     * tutorial squad and the rolled one through the same door, once per battle.
+     */
+    | 'START_SHIELDED'
+    /**
+     * The blessing's ring: everything standing beside the BLESSED body is shoved a tile away
+     * from it — ally, enemy and the blesser herself. Spacing is the payload, not damage, which
+     * is what makes it the answer to a chain-lightning boss.
+     */
+    | 'BLESS_SHOCKWAVE'
+    /**
+     * ONCE PER BATTLE: the blow that would kill this body raises a layer instead, and the
+     * layer eats it whole. Deliberately not `SHIELD_ON_KILL` — a tank that finishes things
+     * would re-shell every other turn, and a shield you always have is armour with extra
+     * steps. This one fires when it matters and then never again this fight.
+     */
+    | 'LAST_STAND_SHIELD'
+    /**
+     * A body this hero HURTS is left standing in dust for one turn: it cannot line up a swing
+     * next turn unless it walks out of the cloud first.
+     *
+     * The Rotor Wing gear's item B, cut down to fit a FREE attack. `SKILL_DISARM` is banned
+     * from free attacks and this is not a hole in that ban, it is the other side of it: the
+     * skill version dusts an AREA (every tile the cast covered, three turns), which on a free
+     * action would be a wall raised every turn. This dusts ONE tile, for ONE turn, under a body
+     * the hero already had to hit — and dust cancels a SWING, never a turn: the zombie still
+     * walks, still telegraphs, and can simply step out of the cloud. That puts it level with
+     * `ON_HIT_PUSH`, which denies an attack by moving the body instead of blinding it.
+     */
+    | 'SMOKE_ON_HIT';
 
 export interface FusionEffect {
     type: FusionEffectType;
@@ -1012,7 +1097,7 @@ export interface FusionEffect {
  * The three columns of PLAN-heroes-9.md's final table: three ranged, three melee, three
  * support. This is the hero's COMBAT role and is authored per hero, NOT derived from
  * `UNIT_ROLE_MAP[baseClass]` — that map answers a different question (what a plant does on
- * the field) and disagrees on two of them: it calls Cobb and Chardwall TACTICAL, where the
+ * the field) and disagrees on two of them: it calls Cornova and Chardslam TACTICAL, where the
  * roster reads them as the arcing artillery piece and the support that repositions. A
  * player choosing a squad needs the roster's answer.
  */
@@ -1033,21 +1118,12 @@ export interface HeroDefinition {
     boardImgUrl?: string;
     movementType: MovementType;
     immunities: UnitImmunity[];
-    /** Melee attackers take this back, with no fusion involved. Thornhide only, so far. */
+    /** Melee attackers take this back, with no fusion involved. Thornshell only, so far. */
     retaliateDamage?: number;
-    /** Always free — guarantees a hero can act with 0 Sun. */
+    /** Always free — guarantees a hero can act with 0 Sol. */
     basicAttack: Skill;
-    /** Costs Sun via Skill.sunCost. */
+    /** Costs Sol via Skill.sunCost. */
     heroSkill: Skill;
-    /**
-     * 'NONE' hides the element picker for this hero at squad select. An element costs 2 max
-     * HP and rides ATTACKS (rule L1) — a hero whose whole kit targets allies (Gourdward:
-     * Reinforce + Encase) would pay the toll for literally nothing, and his ward passive
-     * already grants all three elemental immunities besides. Sunspot stays element-capable
-     * on purpose: her Blessing LENDS the element (Unit.blessedElement), which is her whole
-     * battery identity.
-     */
-    elementSlot?: 'NONE';
 }
 
 export interface MaterialDefinition {
@@ -1092,15 +1168,15 @@ export type ObjectiveType =
     | 'SURVIVE_TURNS'
     /**
      * A crate of gear sits in the middle of the board and the horde walks at it exactly as it
-     * walks at a house. Keep it standing to the end and its contents go to your bench.
+     * walks at a Greenspire. Keep it standing to the end and its contents go to your bench.
      *
      * The one objective that moves the FIGHT rather than adding a condition to it: every other
-     * entry in this list leaves the horde marching at your houses and asks you to do something
+     * entry in this list leaves the horde marching at your Greenspires and asks you to do something
      * on the side. This one re-aims the horde, so the line you would normally hold is in the
      * wrong place — which is the whole reason it is worth having.
      */
     | 'ESCORT_GEAR'
-    /** One specific house is marked; losing its brain fails the mission outright. */
+    /** One specific Greenspire is marked; losing its sprout fails the mission outright. */
     | 'PROTECT_HOUSE'
     /** Clear every zombie off the board. Ends the moment the board is empty. */
     | 'KILL_ALL'
@@ -1282,16 +1358,16 @@ export interface UnitDefinition {
     cost: number; // For Squad Selection
     maxStats: { hp: number; dmg: number; move: number; cdr: number };
     upgradeCosts: { hp: number; dmg: number; move: number; cdr: number };
-    evolvesTo?: UnitClass[];
-    evolutionCost?: number;
+    // `evolvesTo`/`evolutionCost` đã bỏ cùng đợt dọn cây: cả ba đích tiến hoá đều là cây bị
+    // xoá, và cơ chế này đổi thẳng `class` của unit — nghĩa là biến một hero thành cây thường.
 }
 
 export type SkillRangeType = 'LINE' | 'LOB' | 'MELEE' | 'ADJACENT' | 'SELF' | 'DASH' | 'RADIUS'
     /**
-     * Zephyr's Wing Guns: the eight knight's-move tiles, read as FOUR DIRECTED PAIRS — pick a
+     * Reedwing's Wing Guns: the eight knight's-move tiles, read as FOUR DIRECTED PAIRS — pick a
      * direction, both wing tiles of that direction fire at once (2 ahead, ±1 to each side).
      * Aiming either tile of a pair selects the pair; resolution strikes both. The only
-     * non-orthogonal reach in the game, which is also why the "diagonal house nook" map rule
+     * non-orthogonal reach in the game, which is also why the "diagonal Greenspire nook" map rule
      * (data/maps.ts) is untouched: adjacent diagonals are NOT knight moves.
      */
     | 'WING_PAIR';
@@ -1303,7 +1379,7 @@ export type EffectType = 'DAMAGE' | 'HEAL' | 'SHIELD' | 'STUN' | 'PUSH' | 'PULL'
                           * NOT the same thing as PIERCE_ATTACK and deliberately so. Pierce hits every
                           * body in the lane for full damage: its output scales with how many enemies
                           * happen to be lined up, which is why it belongs to a 1-damage free attack and
-                          * not to a 50-Sun one. A volley is a FIXED budget of shots that is never wasted
+                          * not to a 50-Sol one. A volley is a FIXED budget of shots that is never wasted
                           * — kill a 2 HP body with one pea and the other two fly past it — so it is
                           * strong into a single fat target and merely efficient into a crowd.
                           *
@@ -1340,7 +1416,7 @@ export type EffectType = 'DAMAGE' | 'HEAL' | 'SHIELD' | 'STUN' | 'PUSH' | 'PULL'
                           */
                          'APPLY_BLEED' |
                          /**
-                          * Chardwall's Vault Toss (ItB's judo throw): grab the adjacent body
+                          * Chardslam's Vault Toss (ItB's judo throw): grab the adjacent body
                           * and hurl it to the MIRRORED tile (2·caster − target). The landing
                           * is a fall — COLLISION damage, not a DAMAGE effect, which is what
                           * keeps "0 damage is the hero" true while Grand Chard's
@@ -1359,10 +1435,10 @@ export type EffectType = 'DAMAGE' | 'HEAL' | 'SHIELD' | 'STUN' | 'PUSH' | 'PULL'
                          'BLESS' |
                          // EVENT EFFECTS
                          // NOTE: GAIN_SUN / HEAL_SQUAD / HEAL_ONE_FULL / LOSE_HP_RANDOM / GAIN_STATS are
-                         // retired. Sun still resets to SUN_ON_LEVEL_START every battle. Hero hp used to
+                         // retired. Sol still resets to SUN_ON_LEVEL_START every battle. Hero hp used to
                          // reset the same way, but now PERSISTS between battles (buildHeroFromSnapshot
                          // keeps the snapshot's hp) — which is why HEAL_SQUAD_FULL below is back.
-                         // Events trade in things that survive: Coin, brains, bench plants, items,
+                         // Events trade in things that survive: Coin, sprouts, bench plants, items,
                          // heroes, hp, next-battle terms.
                          'GAIN_ITEM' | 'NOTHING' |
                          'GAIN_COIN' | 'LOSE_COIN' |
@@ -1394,8 +1470,8 @@ export interface Skill {
     effects: SkillEffectDefinition[];
     requiresSunCharge?: boolean;
     /**
-     * Sun spent to activate. Omitted or 0 means free — every hero's basic attack is free,
-     * so a turn is never wasted for lack of Sun. See DESIGN.md section 4.
+     * Sol spent to activate. Omitted or 0 means free — every hero's basic attack is free,
+     * so a turn is never wasted for lack of Sol. See DESIGN.md section 4.
      */
     sunCost?: number;
 }
@@ -1414,7 +1490,7 @@ export interface ItemDefinition {
     id: string;
     name: string;
     /**
-     * Paid in Coin, not Sun. Items are bought between levels, and Sun never leaves the
+     * Paid in Coin, not Sol. Items are bought between levels, and Sol never leaves the
      * battlefield (DESIGN.md section 3). Renamed from `sunCost` so the currency is
      * unambiguous at every call site.
      */
@@ -1426,8 +1502,8 @@ export interface ItemDefinition {
         | 'GUST'
         /**
          * Armed on an EMPTY tile and left there. The first grounded zombie to step on the
-         * tile takes `damage` on the spot. This is what makes the Potato Mine a mine —
-         * it used to be an instant 5-damage click, i.e. a cheaper Cherry Bomb.
+         * tile takes `damage` on the spot. This is what makes the Seed Mine a mine —
+         * it used to be an instant 5-damage click, i.e. a cheaper Fire Grenade.
          */
         | 'TRAP'
         /** Hands one spent hero its action back. Needs a valid friendly target to be spent. */
@@ -1438,7 +1514,7 @@ export interface ItemDefinition {
         /** Restores `damage` health to one wounded ally. The roster's only sustain. */
         | 'HEAL'
         /**
-         * The Doom-shroom. `damage` piercing to EVERYTHING in the square — allies included,
+         * The Blight Core. `damage` piercing to EVERYTHING in the square — allies included,
          * bosses capped hard (utils/itemResolution.ts) — and the inner 3x3 becomes lava.
          */
         | 'NUKE';
@@ -1500,7 +1576,7 @@ export interface NextBattleMods {
     turns?: number;
     /** Added to the opening wave. Negative thins it. */
     enemies?: number;
-    /** Houses that start with their brain already gone. */
+    /** Greenspires that start with their sprout already gone. */
     brainlessHouses?: number;
     /** Extra Coin paid out only if that battle is won. */
     coinOnWin?: number;
@@ -1561,7 +1637,7 @@ export interface GameEvent {
      * How deep into a run this encounter belongs, by the size of what it puts on the table.
      *   1 — small trades, tens of Coin
      *   2 — gambles and three-figure payouts
-     *   3 — run-defining: a brain, a lost house, a wager on the next fight
+     *   3 — run-defining: a sprout, a lost Greenspire, a wager on the next fight
      * Omitted behaves as tier 1. Every event in the table is a random-pool event now — the
      * one that was not, `rest_site`, became the camp screen.
      */

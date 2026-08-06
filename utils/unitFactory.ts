@@ -4,6 +4,7 @@ import { UNIT_ROLE_MAP } from '../constants';
 import { HERO_DEFINITIONS } from '../data/heroes';
 import { getMaterial } from '../data/materials';
 import { ELEMENT_HP_COST, ELEMENT_IMMUNITY } from './elements';
+import { hasFusionEffect } from './fusion';
 
 /**
  * The element's second gift, beside the damage rider: matched immunity (ELEMENT_IMMUNITY —
@@ -64,18 +65,33 @@ const pricedMaxHp = (baseMaxHp: number, element?: ElementId): number =>
 /**
  * A body that belongs to THIS BATTLE and to nothing else.
  *
- * Two things qualify and they arrived together: the ESCORT_GEAR crate (an objective wearing a
- * unit, because the horde has to be able to walk at it and break it) and the wild plant found
- * growing on the board. Both are `UnitType.PLANT` and both are on the player's side, which is
- * exactly what every "is this part of my squad" filter in the run has always tested for — so
- * without a name for them they were quietly adopted: saved into the run on the next map screen,
- * and handed back as roster members in the next fight.
+ * One thing qualifies today: the ESCORT_GEAR crate (an objective wearing a unit, because the
+ * horde has to be able to walk at it and break it). It is `UnitType.PLANT` and it is on the
+ * player's side, which is exactly what every "is this part of my squad" filter in the run has
+ * always tested for — so without a name for it it was quietly adopted: saved into the run on
+ * the next map screen, and handed back as a roster member in the next fight.
  *
- * Named here rather than tested inline at each site, because there are three sites and they
- * would drift. The rule is one sentence: the run never owns these.
+ * The wild plant was the second case and is gone (utils/encounterBuilder). The helper stays
+ * because the rule is not about crates: the run never owns a body the board handed out.
  */
 export const isBattleOnlyUnit = (u: Unit): boolean =>
-    u.class === UnitClass.GEAR_CRATE || !!u.isWild;
+    u.class === UnitClass.GEAR_CRATE;
+
+/**
+ * TÊN HIỂN THỊ CỦA MỘT UNIT — hero đọc theo hero, còn lại đọc theo thân cây.
+ *
+ * Tồn tại vì hai màn hình từng tự trả lời câu này và cùng trả lời sai: bảng Đội Hình tra
+ * `unitDefs[unit.class].name`, danh sách triển khai in thẳng `unit.class`. Cả hai đều cho
+ * ra TÊN CÂY, nên Peaburst hiện là "Seed Gun" và Ironhusk là "Armor Plate" — hero mang
+ * `class` bằng đúng cây gốc của mình, nên hai lối đó không bao giờ phân biệt được.
+ *
+ * Chuỗi trả về là khoá i18n tiếng Anh, giống mọi chuỗi khác trong code; nơi gọi tự bọc t().
+ */
+export const unitDisplayName = (u: Unit, plantName?: string): string => {
+    if (u.isHero && u.heroId && HERO_DEFINITIONS[u.heroId]) return HERO_DEFINITIONS[u.heroId].name;
+    if (plantName) return plantName;
+    return String(u.class).replace(/_/g, ' ');
+};
 
 export const freshHero = (heroId: HeroId, id = `revived-${heroId}`, element?: ElementId): Unit => {
     const def = HERO_DEFINITIONS[heroId];
@@ -159,7 +175,19 @@ export const buildHeroFromSnapshot = (snapshot: Unit, fullHeal = false, element?
         prevPosition: undefined,
         statusEffects: [],
         intent: undefined,
-        shield: 0,
+        /**
+         * BUNKER SHELL (`START_SHIELDED`): the one fusion that is spent before a turn is
+         * taken. It lives here rather than at battle setup because this file is where EVERY
+         * unit the game puts on a board is built — the scripted tutorial squad and the rolled
+         * one both come through, so one line covers both and neither can drift.
+         *
+         * `lastStandUsed` is cleared on the same line of reasoning and it is the load-bearing
+         * half: the flag rides the snapshot between battles, so without the reset "once a
+         * battle" would quietly become "once a run".
+         */
+        shield: hasFusionEffect(snapshot, 'START_SHIELDED') ? 1 : 0,
+        shieldBarbed: false,
+        lastStandUsed: false,
         digestingTurns: 0,
         isDying: false,
         isAttacking: false,
@@ -198,7 +226,7 @@ export interface EnemyOptions {
     hpBonus?: number;
     /** Flat damage on top (elite waves). */
     dmgAdd?: number;
-    /** Gargantuar-class: too big to be eaten, frozen or shoved. */
+    /** Gravehulk-class: too big to be eaten, frozen or shoved. */
     isMassive?: boolean;
     /** The encounter's named boss — what SLAY_BOSS and the behaviour table ask about. */
     bossId?: BossId;

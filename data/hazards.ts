@@ -51,7 +51,7 @@ const pickN = <T,>(items: T[], n: number): T[] => {
 const IMPASSABLE: TerrainType[] = ['WATER', 'MOUNTAIN', 'WALL'];
 
 /**
- * Would sealing these tiles leave a house no walker can reach?
+ * Would sealing these tiles leave a Greenspire no walker can reach?
  *
  * Only COLLAPSE needs this, and it needs it absolutely: every other hazard is temporary or
  * walkable, so the worst it can do is hurt. Rubble is permanent, and two pieces of it in the
@@ -83,7 +83,7 @@ const wouldSeverBoard = (board: TileData[], sealed: Position[]): boolean => {
             if (seen.has(key)) return;
             const next = at.get(key);
             if (!next) return;
-            // A house is the goal, so reaching its tile counts even though the walk stops there.
+            // A Greenspire is the goal, so reaching its tile counts even though the walk stops there.
             if (!next.isHouse && !walkable(next)) return;
             seen.add(key);
             if (!next.isHouse) queue.push(next);
@@ -109,7 +109,7 @@ export const planHazard = (
 
     switch (type) {
         case 'WIND_GUST': {
-            // Blows along the battle axis. Toward the houses is the cruel direction, so it
+            // Blows along the battle axis. Toward the Greenspires is the cruel direction, so it
             // alternates — the player has to read which way before committing a position.
             const towardHouses = Math.random() < 0.5;
             const dy = towardHouses ? -1 : 1;
@@ -119,13 +119,13 @@ export const planHazard = (
                 dy,
                 tiles: board.filter(t => !t.isHouse).map(t => ({ x: t.x, y: t.y })),
                 description: towardHouses
-                    ? 'Wind Gust: everything is blown one tile toward the houses.'
-                    : 'Wind Gust: everything is blown one tile away from the houses.',
+                    ? 'Wind Gust: everything is blown one tile toward the Greenspires.'
+                    : 'Wind Gust: everything is blown one tile away from the Greenspires.',
             };
         }
 
         case 'LAVA_FLOW': {
-            // Only ordinary ground cracks — never a house, never an existing hazard tile.
+            // Only ordinary ground cracks — never a Greenspire, never an existing hazard tile.
             const candidates = board
                 .filter(t => !t.isHouse && (t.terrain === 'GRASS' || t.terrain === 'SAND'))
                 .map(t => ({ x: t.x, y: t.y }));
@@ -238,9 +238,9 @@ export const planHazard = (
              * Scattered tiles would read as noise, and the whole value of this hazard is that
              * it is a shape you can push a boss into.
              *
-             * Houses are excluded from the seed only. A veil that laps onto a doorstep is
+             * Greenspires are excluded from the seed only. A veil that laps onto a doorstep is
              * fine and often the point — it is the one hazard a defender WANTS on their own
-             * ground, because a zombie standing on the step cannot take the brain either.
+             * ground, because a zombie standing on the step cannot take the sprout either.
              */
             const seeds = board.filter(t =>
                 !t.isHouse && t.terrain !== 'WALL' && t.terrain !== 'MOUNTAIN');
@@ -259,11 +259,11 @@ export const planHazard = (
 
         case 'COLLAPSE': {
             /**
-             * Not on a board with no houses.
+             * Not on a board with no Greenspires.
              *
              * `wouldSeverBoard` below is the only thing standing between this hazard and an
-             * unwinnable position, and its whole test is "can a walker still reach a house" —
-             * on a house-less board that question is vacuously true and the veto silently
+             * unwinnable position, and its whole test is "can a walker still reach a Greenspire" —
+             * on a Greenspire-less board that question is vacuously true and the veto silently
              * stops working. The one such board is the Breach arena, whose plan gives it no
              * weather anyway (PLAN-boards-bosses.md section 1), so refusing here satisfies
              * the design and closes the hole in the same line.
@@ -274,7 +274,7 @@ export const planHazard = (
             // a tile, it does not delete it. Rubble is a wall, and three walls a turn closes a
             // board faster than seven turns can absorb.
             //
-            // Houses and existing walls are excluded for the obvious reason; so is any tile
+            // Greenspires and existing walls are excluded for the obvious reason; so is any tile
             // that is the ONLY link between two halves of the board, because a hazard that can
             // seal the last corridor can author an unwinnable position on its own. That check
             // lives in `wouldSeverBoard` below and is the reason this case is longer than the
@@ -315,7 +315,7 @@ export const planHazard = (
                 dx: 0,
                 dy: -1,
                 tiles,
-                description: 'Runaway Cart: anything on the track is dragged one tile toward the houses.',
+                description: 'Runaway Cart: anything on the track is dragged one tile toward the Greenspires.',
             };
         }
 

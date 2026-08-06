@@ -3,10 +3,10 @@ import { calculateDamage, getTileAt, getUnitAt, gustDirection, planPush, getSoli
 import { applyPushPlan, pushKill, type ResolveContext } from './actionBuilders';
 
 /**
- * What the Magnet-shroom can rip off a body: the plating itself, and the immunities that live
- * in the GEAR rather than the flesh. PUSH is a Catapult's chassis; STATUS is the Screen Door
+ * What the Magnet Pulse can rip off a body: the plating itself, and the immunities that live
+ * in the GEAR rather than the flesh. PUSH is a Catapult's chassis; STATUS is the Doorbearer
  * held between the zombie and the world. BURN/FREEZE/DROWN stay — they describe what a body
- * is made of, and a magnet has no opinion about meat. (The Football's metal is plain `armor`
+ * is made of, and a magnet has no opinion about meat. (The Linebreaker's metal is plain `armor`
  * since it lost its PUSH immunity — the armour strip below already covers it.)
  */
 const METAL_IMMUNITIES: ReadonlyArray<UnitImmunity> = ['PUSH', 'STATUS'];
@@ -14,7 +14,7 @@ const METAL_IMMUNITIES: ReadonlyArray<UnitImmunity> = ['PUSH', 'STATUS'];
 /**
  * Gear immunities come off the REGULAR horde only. A boss's immunity is its design — one
  * each, load-bearing (data/zombies.ts) — and a 50-Coin click that makes a boss shovable or
- * freezable is the "consumable deletes a boss" line the Jalapeno note in data/items.ts
+ * freezable is the "consumable deletes a boss" line the Flame Strike note in data/items.ts
  * already refuses to cross. Obstacles keep theirs too: a rock's PUSH is physics, not a helmet.
  * Armor and shield still come off ANYONE — losing plating speeds a fight up, it does not
  * skip one.
@@ -42,7 +42,7 @@ const magnetHasWork = (u: Unit): boolean =>
 export const itemTargetInvalid = (item: ItemDefinition, pos: Position, ctx: ResolveContext): boolean => {
     const { units, board, terrainDefs } = ctx;
 
-    // Coffee Bean: needs an ally who has actually spent something to give back.
+    // Stim Shot: needs an ally who has actually spent something to give back.
     if (item.effect === 'REFRESH') {
         const t = getUnitAt(pos, units);
         return !t
@@ -77,7 +77,7 @@ export const itemTargetInvalid = (item: ItemDefinition, pos: Position, ctx: Reso
             || (!!tile.spikes && tile.spikes.turns > 0);
     }
 
-    // Aloe: needs a wounded ally. Full-health targets are refused for the same reason an
+    // Heal Kit: needs a wounded ally. Full-health targets are refused for the same reason an
     // empty magnet zone is — the item is spent unconditionally once resolution starts.
     if (item.effect === 'HEAL') {
         const t = getUnitAt(pos, units);
@@ -156,7 +156,7 @@ export const planItemActions = (
     }
 
     /**
-     * The Doom-shroom. Everything in the square eats the blast — the horde, the squad,
+     * The Blight Core. Everything in the square eats the blast — the horde, the squad,
      * whoever parked badly — EXCEPT bosses, who take a hard-capped bite instead: this
      * file's oldest law is that a consumable must never assassinate a boss, and a nuke
      * is exactly the item that law was written for. Armour means nothing to it (nuclear
@@ -179,7 +179,7 @@ export const planItemActions = (
                 } else {
                     actions.push({ type: 'APPLY_DAMAGE', targetId: 'tile', amount: 0, eventType: 'BURN', pos: t });
                 }
-                // The crater: only the inner ring melts. Houses are spared — losing a brain
+                // The crater: only the inner ring melts. Greenspires are spared — losing a sprout
                 // to your own bomb is a story, losing the HOUSE TILE to it is a softlock.
                 if (Math.abs(x - pos.x) <= 1 && Math.abs(y - pos.y) <= 1) {
                     const tile = getTileAt(t, board);
@@ -220,7 +220,7 @@ export const planItemActions = (
         return actions;
     }
 
-    // GUST ignores the tile you clicked: it is a board-wide effect, like Blover in
+    // GUST ignores the tile you clicked: it is a board-wide effect, like Storm Fan in
     // PvZ. Fliers are removed outright; everything else on the ground is shoved one
     // tile back toward the spawn edge (+y — zombies march in from high y).
     if (item.effect === 'GUST') {
@@ -275,8 +275,8 @@ export const planItemActions = (
     targets.forEach(t => {
         const u = getSolidUnitAt(t, units);
 
-        // Jalapeno burns its whole column rather than a blast radius.
-        if (item.effect === 'TERRAIN_MOD' && item.id === 'jalapeno') {
+        // Flame Strike burns its whole column rather than a blast radius.
+        if (item.effect === 'TERRAIN_MOD' && item.id === 'flame_strike') {
             for (let col = 0; col < 8; col++) {
                 actions.push({ type: 'APPLY_DAMAGE', targetId: 'tile', amount: 0, eventType: 'BURN', pos: { x: t.x, y: col } });
                 const target = getSolidUnitAt({ x: t.x, y: col }, units);

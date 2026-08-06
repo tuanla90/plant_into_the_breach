@@ -14,8 +14,8 @@ import { HERO_ICONS, HERO_SPRITES } from '../utils/icons';
  * to spend it.
  *
  * Every hero has exactly two actions:
- *   - `basicAttack` — always free, so a hero is never stranded with 0 Sun
- *   - `heroSkill`   — costs Sun; this is where the per-turn decision lives
+ *   - `basicAttack` — always free, so a hero is never stranded with 0 Sol
+ *   - `heroSkill`   — costs Sol; this is where the per-turn decision lives
  *
  * Two hero skills deliberately reuse skill ids that already have special handling
  * in the resolution code: 'burrow_strike' (blunted against bosses, and digesting) and
@@ -26,7 +26,7 @@ import { HERO_ICONS, HERO_SPRITES } from '../utils/icons';
  * Two rules that were settled elsewhere collided here. Hero health PERSISTS between battles
  * (utils/unitFactory.ts: "carried health, not a fresh body") and a campfire can be four layers
  * away; and carrying an element costs max HP (PLAN-progression.md section 3). On the old scale
- * that made a 3 HP hero with an element a 2 HP hero — killed outright by ONE ordinary Conehead.
+ * that made a 3 HP hero with an element a 2 HP hero — killed outright by ONE ordinary Scrapcap.
  * An element was not a priced choice at that point, it was a trap.
  *
  * Doubling the floor is not a power increase: enemy health and hero damage are untouched, so
@@ -35,13 +35,13 @@ import { HERO_ICONS, HERO_SPRITES } from '../utils/icons';
  * keeps the cost at the same -20%/-25%/-33% the original argument was built on.
  */
 export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
-    GREEN_SHADOW: {
-        id: 'GREEN_SHADOW',
-        name: 'Shadeleaf',
+    PEABURST: {
+        id: 'PEABURST',
+        name: 'Peaburst',
         role: 'RANGED',
-        baseClass: UnitClass.PEASHOOTER,
+        baseClass: UnitClass.SEED_GUN,
         maxHp: 6, damage: 2, moveRange: 3,
-        imgUrl: HERO_ICONS.GREEN_SHADOW, boardImgUrl: HERO_SPRITES.GREEN_SHADOW,
+        imgUrl: HERO_ICONS.PEABURST, boardImgUrl: HERO_SPRITES.PEABURST,
         movementType: 'WALKING', immunities: [],
         basicAttack: {
             id: 'gs_pea', name: 'Pea Shot',
@@ -59,8 +59,8 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
              * volley IS the identity, not a consolation: pierce is worth whatever the lane
              * happens to contain; three shots are worth the same every time and never waste
              * a pea — anything they overkill, they fly past (utils/skillResolution, VOLLEY).
-             * Shadeleaf is the one who deletes a single dangerous body. Nobody taxes a whole
-             * row any more, and that gap is deliberate: Zephyr answers crowds with position
+             * Peaburst is the one who deletes a single dangerous body. Nobody taxes a whole
+             * row any more, and that gap is deliberate: Reedwing answers crowds with position
              * (two knight-cells a turn), not with a lane sweep.
              *
              * The volley is also the plant side's LAYER-BREAKER (§6.0, decision 15): each pea
@@ -69,7 +69,7 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
              * 2 a shot rather than 3: the same number as her free Pea Shot, so the skill reads
              * as "the same pea, three times" — and her act upgrade lifts all three at once
              * (BONUS_DAMAGE is folded in before the volley resolves), which takes it to 9.
-             * Four shots at 3 was 12 off one click for 50 Sun, against bosses that hold 16.
+             * Four shots at 3 was 12 off one click for 50 Sol, against bosses that hold 16.
              */
             description: 'Three peas down the row. Anything they overkill, the rest fly past.',
             rangeType: 'LINE', rangeValue: 4, sunCost: 50,
@@ -77,13 +77,13 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
         },
     },
 
-    WALL_KNIGHT: {
-        id: 'WALL_KNIGHT',
+    IRONHUSK: {
+        id: 'IRONHUSK',
         name: 'Ironhusk',
         role: 'MELEE',
-        baseClass: UnitClass.WALLNUT,
+        baseClass: UnitClass.ARMOR_PLATE,
         maxHp: 10, damage: 1, moveRange: 2,
-        imgUrl: HERO_ICONS.WALL_KNIGHT, boardImgUrl: HERO_SPRITES.WALL_KNIGHT,
+        imgUrl: HERO_ICONS.IRONHUSK, boardImgUrl: HERO_SPRITES.IRONHUSK,
         movementType: 'WALKING', immunities: [],
         basicAttack: {
             id: 'wk_bash', name: 'Shield Bash',
@@ -96,13 +96,13 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
          *
          * This was the best buy in the game by a wide margin: 2 damage plus a push plus three
          * tiles of movement, on the 10 HP body, for HALF what every other hero pays. Spend a
-         * whole battle's Sun on nothing else and Ironhusk alone lands 14 damage and 7 shoves
+         * whole battle's Sol on nothing else and Ironhusk alone lands 14 damage and 7 shoves
          * while the rest of the squad never presses a button.
          *
          * 35 rather than 50 because the thing that already holds it back is real: the dash
          * LEAVES THE CORRIDOR she is being paid to block. Her whole job is standing in the
          * way, so every cast is a small betrayal of the position — that is a cost the other
-         * two 50-Sun skills do not carry, and it is worth 15 Sun of the difference.
+         * two 50-Sol skills do not carry, and it is worth 15 Sol of the difference.
          */
         heroSkill: {
             id: 'wk_roll', name: 'Rolling Charge',
@@ -112,40 +112,40 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
         },
     },
 
-    SOLAR_FLARE: {
-        id: 'SOLAR_FLARE',
-        name: 'Sunspot',
+    SUNBLOOM: {
+        id: 'SUNBLOOM',
+        name: 'Sunbloom',
         role: 'SUPPORT',
-        baseClass: UnitClass.SUNFLOWER,
+        baseClass: UnitClass.SOL_BATTERY,
         maxHp: 6, damage: 0, moveRange: 2,
-        imgUrl: HERO_ICONS.SOLAR_FLARE, boardImgUrl: HERO_SPRITES.SOLAR_FLARE,
+        imgUrl: HERO_ICONS.SUNBLOOM, boardImgUrl: HERO_SPRITES.SUNBLOOM,
         movementType: 'WALKING', immunities: ['BURN'],
         // Harvest is free but consumes her action — that is the whole cost.
         // She cannot attack at all, which is what makes her an escort problem.
         basicAttack: {
             id: 'sf_harvest', name: 'Harvest',
-            description: 'Spend the turn gathering light. Gain 50 Sun. Free.',
+            description: 'Spend the turn gathering light. Gain 50 Sol. Free.',
             rangeType: 'SELF', rangeValue: 0,
             // 50, not 25. At 25 she handed the squad exactly what SUN_PER_TURN_INCOME
             // already pays it for free, so spending her whole turn bought nothing — the one
             // hero who cannot attack was also the one whose action was worth nothing. At 50
             // a Harvest DOUBLES the turn's income, which is the multiplier her drawback is
-            // priced for, and it matches the plain Sunflower's own Harvest (data/skills.ts).
+            // priced for, and it matches the plain Sol Battery's own Harvest (data/skills.ts).
             effects: [{ type: 'RESOURCE_GAIN', value: 50, resource: 'SUN' }],
         },
         /**
-         * PURE BUFF, and the sequencing IS the skill (PLAN-hero-zephyr §6.1). Sun Burn — her
+         * PURE BUFF, and the sequencing IS the skill (PLAN-hero-zephyr §6.1). Sol Burn — her
          * old 4-damage lob and only offence — is retired: the support branch deals no direct
          * damage at all now, and what she sells instead is TEMPO. The +1 lasts only until
          * this player turn ends (BLESSED, cleared before the enemy phase), so blessing a
-         * hero who has already swung is 50 Sun thrown away — bless first, then attack.
+         * hero who has already swung is 50 Sol thrown away — bless first, then attack.
          *
          * The layer is the "máu" half (§6.0: no number, no stacking, no cap needed), and it
          * is deliberately a LAYER rather than a heal: hp debt is the run's campfire economy,
          * and an in-battle heal would leak straight into it.
          *
          * THE BATTERY: if she carries an element and the ally does not, the ally's attacks
-         * borrow it for the same one-turn window (blessedElement). Fire-Sunspot blesses Maw
+         * borrow it for the same one-turn window (blessedElement). Fire-Sunbloom blesses Snapmaw
          * → this turn the Bite burns. Own element always wins; the loan carries no immunity
          * and no resonance weight.
          */
@@ -157,13 +157,13 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
         },
     },
 
-    CHOMPZILLA: {
-        id: 'CHOMPZILLA',
-        name: 'Maw',
+    SNAPMAW: {
+        id: 'SNAPMAW',
+        name: 'Snapmaw',
         role: 'MELEE',
-        baseClass: UnitClass.CHOMPER,
+        baseClass: UnitClass.STEEL_JAWS,
         maxHp: 8, damage: 2, moveRange: 3,
-        imgUrl: HERO_ICONS.CHOMPZILLA, boardImgUrl: HERO_SPRITES.CHOMPZILLA,
+        imgUrl: HERO_ICONS.SNAPMAW, boardImgUrl: HERO_SPRITES.SNAPMAW,
         movementType: 'WALKING', immunities: [],
         basicAttack: {
             id: 'cz_bite', name: 'Bite',
@@ -180,17 +180,17 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
          * number needs a magic exception, and the exception is the part that rots.
          *
          * 7 is chosen, not rounded to: it is exactly what the toughest non-boss body in the
-         * game costs to erase — an ELITE Football Zombie, floor(4 x 1.5) = 6 HP behind
-         * armour 1, and 7 arrives through that armour as 6. So Maw still swallows ANYTHING
+         * game costs to erase — an ELITE Linebreaker, floor(4 x 1.5) = 6 HP behind
+         * armour 1, and 7 arrives through that armour as 6. So Snapmaw still swallows ANYTHING
          * short of a boss in one bite, the identity is untouched, and it is now a number that
          * meets shields, armour and damage reduction like every other number.
          *
-         * Against a boss it is deliberately near-nothing (utils/skillResolution.ts). Maw's
-         * reward for beating the Gargantuar is an executioner for thick regular units; it was
+         * Against a boss it is deliberately near-nothing (utils/skillResolution.ts). Snapmaw's
+         * reward for beating the Gravehulk is an executioner for thick regular units; it was
          * never meant to be a key that skips the eight fights after it.
          *
          * Price 100 -> 75, which PLAN-heroes-9.md prescribed and nobody applied. At 100 this
-         * skill was underwater against the rest of the game: the same Sun buys TWO Sun Burns
+         * skill was underwater against the rest of the game: the same Sol buys TWO Sol Burns
          * (8 damage, range 3, no drawback) while this costs melee range plus two turns of
          * standing still. The digest is only payable because the payoff is a body erased —
          * and note it only fires ON A KILL (skillResolution), so a bite that fails to finish
@@ -205,39 +205,39 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
     },
 
     /**
-     * Cobb — the artillery. She is NOT a mid-point between the two peas, even though her
+     * Cornova — the artillery. She is NOT a mid-point between the two peas, even though her
      * numbers sit between theirs: her identity is the trajectory.
      *
      * Every other attack in the game is a LINE, and a LINE stops at the first unit it meets,
-     * friend or foe (utils/gameLogic.ts, getValidTargets). The brain rule makes you park
+     * friend or foe (utils/gameLogic.ts, getValidTargets). The sprout rule makes you park
      * Ironhusk in a corridor, and Ironhusk then blindfolds whoever stands behind her. The
-     * Catapult Zombie has had the answer to that since day one (`basketball_lob`); the plants
-     * have not. Cobb is that answer.
+     * Lobber has had the answer to that since day one (`boulder_lob`); the plants
+     * have not. Cornova is that answer.
      *
      * Range 2 and move 2 are what the arc costs, and the free shot is the half that had to
-     * pay. Damage is not where she was strong — 2 is what Shadeleaf does. TARGET AVAILABILITY
+     * pay. Damage is not where she was strong — 2 is what Peaburst does. TARGET AVAILABILITY
      * was: a LINE reaches only the first unit in four directions and dies on a friendly body,
-     * so Shadeleaf routinely has one legal target or none, while a LOB 3 covered 24 tiles
+     * so Peaburst routinely has one legal target or none, while a LOB 3 covered 24 tiles
      * regardless of what stood in between and essentially always had one. In a game where
      * roughly four fifths of all hero actions are basic attacks, that gap outweighed any
      * damage number. At LOB 2 she has to stand just behind the line she is shooting over,
      * on 4 HP — which is also what finally makes Cob Bunker worth a slot.
      *
-     * Butter Splat keeps the full reach: the paid skill is allowed to be the long one.
+     * Nova Shell keeps the full reach: the paid skill is allowed to be the long one.
      *
-     * Butter is single-target and paid, and that is load-bearing. The free-and-forever
+     * The stun is single-target and paid, and that is load-bearing. The free-and-forever
      * version of it is `UPGRADE_SLOW_TO_FREEZE` (Blizzard) — every attack becoming a stun at
      * no cost. It belonged to Frostpod, who is retired, and is now reserved for the ICE
-     * element; one 50-Sun pin per turn is the paid, honest shape of the same idea. Cobb must
+     * element; one 50-Sol pin per turn is the paid, honest shape of the same idea. Cornova must
      * never be handed ON_HIT_FREEZE by any fusion — see data/fusionRecipes.ts.
      */
-    KERNEL_PULT: {
-        id: 'KERNEL_PULT',
-        name: 'Cobb',
+    CORNOVA: {
+        id: 'CORNOVA',
+        name: 'Cornova',
         role: 'RANGED',
-        baseClass: UnitClass.KERNEL_PULT,
+        baseClass: UnitClass.CORN_MORTAR,
         maxHp: 8, damage: 2, moveRange: 2,
-        imgUrl: HERO_ICONS.KERNEL_PULT, boardImgUrl: HERO_SPRITES.KERNEL_PULT,
+        imgUrl: HERO_ICONS.CORNOVA, boardImgUrl: HERO_SPRITES.CORNOVA,
         movementType: 'WALKING', immunities: [],
         basicAttack: {
             id: 'kp_corn_toss', name: 'Corn Kernel',
@@ -246,16 +246,16 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
             effects: [{ type: 'DAMAGE', value: 2 }],
         },
         heroSkill: {
-            id: 'kp_butter_splat', name: 'Butter Splat',
-            description: 'Butters one target: it loses its entire next turn.',
+            id: 'kp_butter_splat', name: 'Nova Shell',
+            description: 'Concusses one target: it loses its entire next turn.',
             rangeType: 'LOB', rangeValue: 3, sunCost: 50,
             effects: [{ type: 'DAMAGE', value: 1 }, { type: 'STUN' }],
         },
     },
 
     /**
-     * Zephyr — the drone pilot (PLAN-hero-zephyr §5). The differentiation is MOVEMENT, not
-     * the bullet: Shadeleaf owns LINE+VOLLEY and Cobb owns LOB, so Zephyr's shot is the
+     * Reedwing — the drone pilot (PLAN-hero-zephyr §5). The differentiation is MOVEMENT, not
+     * the bullet: Peaburst owns LINE+VOLLEY and Cornova owns LOB, so Reedwing's shot is the
      * knight's move — and she FLIES, the only body on the plant side that does.
      *
      * The stat line is one trade written three ways: move 4 (highest) and FLYING buy her any
@@ -265,20 +265,25 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
      * None of the eight knight cells is adjacent to her, so she always fires from just past
      * arm's reach — but anything that does close the gap kills her fast, flying or not.
      */
-    ZEPHYR: {
-        id: 'ZEPHYR',
-        name: 'Zephyr',
+    REEDWING: {
+        id: 'REEDWING',
+        name: 'Reedwing',
         role: 'RANGED',
-        baseClass: UnitClass.CATTAIL,
-        maxHp: 4, damage: 2, moveRange: 4,
-        imgUrl: HERO_ICONS.ZEPHYR, boardImgUrl: HERO_SPRITES.ZEPHYR,
+        baseClass: UnitClass.ROTOR_WING,
+        // damage 1, not 2. Two barrels firing for 2 each was 4 free damage a turn — double
+        // every other basic attack in the game — for the cost of standing where both cells
+        // happen to hold a body. At 1 each her free turn is worth 2, the same as a Pea Shot,
+        // and what she is actually paying 4 HP for is the SHAPE: two bodies at once, chosen
+        // from anywhere on the board. The formation puzzle is the product, not the number.
+        maxHp: 4, damage: 1, moveRange: 4,
+        imgUrl: HERO_ICONS.REEDWING, boardImgUrl: HERO_SPRITES.REEDWING,
         movementType: 'FLYING', immunities: [],
         basicAttack: {
             id: 'zp_wing_guns', name: 'Wing Guns',
-            description: 'Pick a direction: both wing rockets fire at once, two knight\'s-move tiles ahead. Free.',
+            description: 'Pick a direction: both wing rockets fire at once for 1 each, two knight\'s-move tiles ahead. Free.',
             // rangeValue is nominal — WING_PAIR's geometry is fixed (the 8 knight cells).
             rangeType: 'WING_PAIR', rangeValue: 2,
-            effects: [{ type: 'DAMAGE', value: 2 }],
+            effects: [{ type: 'DAMAGE', value: 1 }],
         },
         heroSkill: {
             id: 'zp_smoke_pod', name: 'Smoke Pod',
@@ -306,7 +311,7 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
     },
 
     /**
-     * Thornhide — the hero who picks where the fight happens.
+     * Thornshell — the hero who picks where the fight happens.
      *
      * Provoke fills a real hole, not "one more tank". Three zombies are built specifically to
      * go around a wall, and data/zombies.ts says so in its own comments: the Balloon flies
@@ -324,13 +329,13 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
      * He is terrible on offence by design: 2 damage and move 2 catches nobody. He is only
      * strong when the enemy comes to him.
      */
-    THORNHIDE: {
-        id: 'THORNHIDE',
-        name: 'Thornhide',
+    THORNSHELL: {
+        id: 'THORNSHELL',
+        name: 'Thornshell',
         role: 'MELEE',
-        baseClass: UnitClass.ENDURIAN,
+        baseClass: UnitClass.SPIKE_ARMOR,
         maxHp: 10, damage: 2, moveRange: 2,
-        imgUrl: HERO_ICONS.THORNHIDE, boardImgUrl: HERO_SPRITES.THORNHIDE,
+        imgUrl: HERO_ICONS.THORNSHELL, boardImgUrl: HERO_SPRITES.THORNSHELL,
         movementType: 'WALKING', immunities: [],
         // No fusion needed: the retaliation IS the baseline, and fusions raise it from there.
         retaliateDamage: 2,
@@ -349,13 +354,13 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
     },
 
     /**
-     * Chardwall — 0 damage is not a weakness to be fixed later, it IS the hero.
+     * Chardslam — 0 damage is not a weakness to be fixed later, it IS the hero.
      *
      * He does not kill with damage, he kills with TERRAIN. A 2-tile shove reads off the
      * existing rules: into another body, a mountain or the map edge and BOTH sides take 1
      * collision damage; into water it is an instant DROWN; into lava it is damage plus BURN;
      * and into empty ground it simply buys a turn, because that zombie no longer reaches a
-     * house this turn.
+     * Greenspire this turn.
      *
      * The flip side is the honest weakness: on a bare board with no water and no mountains he
      * is close to harmless. His fusion row has to hand him a damage source of his own, or
@@ -364,13 +369,13 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
      * Against Ironhusk he is the opposite reading of the same corridor problem: she holds
      * position and shoves 1, he walks in and throws 2.
      */
-    CHARDWALL: {
-        id: 'CHARDWALL',
-        name: 'Chardwall',
+    CHARDSLAM: {
+        id: 'CHARDSLAM',
+        name: 'Chardslam',
         role: 'SUPPORT',
-        baseClass: UnitClass.CHARD_GUARD,
+        baseClass: UnitClass.SPRING_ARM,
         maxHp: 8, damage: 0, moveRange: 3,
-        imgUrl: HERO_ICONS.CHARDWALL, boardImgUrl: HERO_SPRITES.CHARDWALL,
+        imgUrl: HERO_ICONS.CHARDSLAM, boardImgUrl: HERO_SPRITES.CHARDSLAM,
         movementType: 'WALKING', immunities: [],
         /**
          * VAULT TOSS — ItB's judo throw, as the FREE basic (PLAN-hero-zephyr §6.2). Grab the
@@ -404,43 +409,54 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
      * Nothing in data/ uses `type: 'HEAL'`; healing exists only at the campfire, between
      * battles. And hero hp now PERSISTS between battles, so every point lost in this fight is
      * a debt carried into the next one. That makes protecting the squad ECONOMY, not a dull
-     * support role — a different economy from the one Sunspot runs.
+     * support role — a different economy from the one Sunbloom runs.
      *
      * Shield rather than heal because this game is built on telegraphs: every enemy attack is
      * announced a turn ahead. Blocking a blow the board already showed you is a READ; healing
      * afterwards is just cleanup. Shields reward looking forward.
      *
      * Alone he wins nothing — no attack at all since the rework. He is worth exactly as much
-     * as whoever (and whatever: the houses are his too now) he is covering.
+     * as whoever (and whatever: the Greenspires are his too now) he is covering.
      */
     GOURDWARD: {
         id: 'GOURDWARD',
         name: 'Gourdward',
         role: 'SUPPORT',
-        baseClass: UnitClass.PUMPKIN,
+        baseClass: UnitClass.BUNKER_SHELL,
         // damage 0: Rind Bash retired with the rework (PLAN-hero-zephyr §6.3) — he has no
-        // attack at all now, which is why `elementSlot: 'NONE'` below is not a nerf but the
-        // removal of a trap (an element would cost 2 max HP and ride nothing).
+        // attack of his own. He still takes an ELEMENT (see the ward note below).
         maxHp: 8, damage: 0, moveRange: 3,
         imgUrl: HERO_ICONS.GOURDWARD, boardImgUrl: HERO_SPRITES.GOURDWARD,
         /**
-         * THE WARD, unconditional (decision 9): fire could not cook him at Kiln Row, ice
-         * could not set at Frostgate, and by Old Quarter — one act before Voltmaw — the shell
-         * has learned all three lessons. Static entries in `immunities`, exactly like
-         * Sunspot's BURN: every read site already honours them, including the lightning
-         * arc's hop-selection (bossBehaviours/turnManager read SHOCK), at zero engine cost.
+         * THE WARD, and it is ONE element, not three.
+         *
+         * It shipped as a static `immunities: ['BURN','FREEZE','SHOCK']` — every element in
+         * the game, unconditionally. That read well against the lightning boss and quietly
+         * deleted his element slot: a hero who is already immune to all three has nothing
+         * left to buy, so `elementSlot: 'NONE'` had to be invented to hide a picker that
+         * would have been a shop selling a trap.
+         *
+         * Now the immunity IS the element. Pick FIRE and he cannot be cooked; pick ICE and he
+         * cannot be set; pick LIGHTNING and the arc will not conduct through him — and
+         * `elementalImmunities` in utils/unitFactory has done exactly that for every hero
+         * since elements existed, so the ward costs zero engine code and the slot becomes a
+         * real decision priced at the standard 2 max HP. It is one act of the campaign's
+         * worth of protection instead of three, which is the trade.
+         *
+         * His element rides ENCASE (rule L2, utils/elements `elementCarrier`): neither of his
+         * actions can touch an enemy, so it lands on the paid one — where Shockrind's shove
+         * gives it something to ride.
          */
-        movementType: 'WALKING', immunities: ['BURN', 'FREEZE', 'SHOCK'],
-        elementSlot: 'NONE',
+        movementType: 'WALKING', immunities: [],
         /**
          * Reinforce replaces Rind Bash: the free action is now a LAYER handed to anything
-         * allied standing beside him — hero, seedling, and the NHÀ itself (a house takes the
-         * layer as `TileData.shielded`; the brain bite breaks the layer instead of the
-         * brain, and the tug-of-war with the zombie on the doorstep is the fantasy).
+         * allied standing beside him — hero, seedling, and the NHÀ itself (a Greenspire takes the
+         * layer as `TileData.shielded`; the sprout bite breaks the layer instead of the
+         * sprout, and the tug-of-war with the zombie on the doorstep is the fantasy).
          */
         basicAttack: {
             id: 'gw_reinforce', name: 'Reinforce',
-            description: 'Shells an adjacent ally — or a house — in a layer: the next hit against it is blocked in full. Free.',
+            description: 'Shells an adjacent ally — or a Greenspire — in a layer: the next hit against it is blocked in full. Free.',
             rangeType: 'MELEE', rangeValue: 1,
             effects: [{ type: 'SHIELD', value: 1 }],
         },
@@ -449,13 +465,23 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
          * value of a shield skill is BREADTH, not size: one layer eats ANY single blow (boss
          * fist included), what it cannot do is eat two — Clockjaw's double swing takes one
          * on the shell and lands the second, which is exactly the texture that boss is for.
-         * SELF + SHIELD + a Sun cost is the radial-shield case in skillResolution; the free
+         * SELF + SHIELD + a Sol cost is the radial-shield case in skillResolution; the free
          * bench self-shields (Harden, Iron Stance) stay single-target through the same gate.
          */
         heroSkill: {
+            /**
+             * 60, not 50 — the one skill in the roster priced above the standard.
+             *
+             * Encase is the widest paid effect in the game (self plus the whole plus, every
+             * time), and with Stun Shell fused it also pins everything that ring touches. At
+             * 50 with his own 15 discount it landed for 35, which bought FIVE casts out of a
+             * six-turn fight's 200 Sol — a full squad shield and a mass pin, every turn but
+             * one. At 60 with a 10 discount it lands for 50 and buys four; bare, it buys three.
+             * The breadth is the identity, so the cost is where the brake goes.
+             */
             id: 'gw_encase', name: 'Encase',
             description: 'Shells himself and every ally beside him in a layer, all at once.',
-            rangeType: 'SELF', rangeValue: 0, sunCost: 50,
+            rangeType: 'SELF', rangeValue: 0, sunCost: 60,
             effects: [{ type: 'SHIELD', value: 1 }],
         },
     },
@@ -470,7 +496,7 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
  * dead code. They are now boss rewards — see `data/unlocks.ts`.
  */
 export const STARTING_HEROES: HeroId[] = [
-    'GREEN_SHADOW',
-    'WALL_KNIGHT',
-    'SOLAR_FLARE',
+    'PEABURST',
+    'IRONHUSK',
+    'SUNBLOOM',
 ];

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { GameState, ItemDefinition } from '../types';
-import { Sun, Coins, Brain, Users, Settings, Flag, FastForward, SkipForward, Target, Zap } from 'lucide-react';
+import { Sun as Sol, Coins, Sprout, Users, Settings, Flag, FastForward, SkipForward, Target, Zap } from 'lucide-react';
 import { useI18n } from '../i18n';
 import { mobileSprite } from '../utils/platform';
 
@@ -46,7 +46,7 @@ export const HUD: React.FC<HUDProps> = ({
     // on top of one another. The mission objective drops to its own strip below lg.
     // pt-[env(safe-area-inset-top)] chỉ có tác dụng khi chạy PWA toàn màn hình trên
     // iPhone cầm dọc: ở đó trang vẽ tràn lên dưới tai thỏ (viewport-fit=cover), và
-    // hàng Mặt Trời / Xu nằm khuất một nửa sau thanh trạng thái. Mọi nơi khác env()
+    // hàng Sol / Xu nằm khuất một nửa sau thanh trạng thái. Mọi nơi khác env()
     // trả 0 nên dòng này không đổi gì.
     <header className="w-full bg-[#0b0d14]/90 border-b border-[#293245] z-50 shadow-2xl shrink-0 relative backdrop-blur-md font-pixel select-none portrait:pt-[env(safe-area-inset-top,0px)]">
       {/* Glow Accent Line */}
@@ -62,13 +62,13 @@ export const HUD: React.FC<HUDProps> = ({
         {/* SUN ECONOMY */}
         <div
             className="h-10 flex items-center gap-1.5 lg:gap-2.5 px-2 lg:px-3 bg-gradient-to-r from-amber-950/60 to-yellow-950/40 border border-yellow-500/50 rounded-lg shadow-[0_0_12px_rgba(245,158,11,0.2)]"
-            title={t('Sun — spent on hero skills. Resets every level.')}
+            title={t('Sol — spent on hero skills. Resets every level.')}
         >
              <div className="bg-yellow-900/60 p-1.5 rounded-full border border-yellow-400/60 shadow-inner">
-                 <Sun size={18} className="text-yellow-300 fill-yellow-400 animate-spin-slow" />
+                 <Sol size={18} className="text-yellow-300 fill-yellow-400 animate-spin-slow" />
              </div>
              <div className="flex flex-col leading-none">
-                 <span className="hidden md:block text-[9px] uppercase tracking-widest text-amber-400 font-bold">{t('Sun')}</span>
+                 <span className="hidden md:block text-[9px] uppercase tracking-widest text-amber-400 font-bold">{t('Sol')}</span>
                  <span className="text-lg lg:text-xl font-black text-yellow-300 tabular-nums drop-shadow">{gameState.sun}</span>
              </div>
         </div>
@@ -123,13 +123,13 @@ export const HUD: React.FC<HUDProps> = ({
                       : 'bg-[#221028]/80 border-pink-500/50 shadow-[0_0_15px_rgba(236,72,153,0.2)]'}
               `}
           >
-              <Brain
+              <Sprout
                   size={26}
                   className={brainsCritical ? 'text-red-400 fill-red-900 animate-bounce' : 'text-pink-300 fill-pink-900/60'}
               />
               <div className="flex flex-col leading-none">
                   <span className={`text-[9px] uppercase tracking-[0.2em] font-extrabold ${brainsCritical ? 'text-red-300' : 'text-pink-400'}`}>
-                      {t('Brains')}
+                      {t('Sprouts')}
                   </span>
                   <div className="flex items-baseline gap-1">
                       <span className={`text-xl lg:text-2xl font-black tabular-nums leading-none ${brainsCritical ? 'text-red-400' : 'text-white'}`}>
@@ -155,7 +155,7 @@ export const HUD: React.FC<HUDProps> = ({
 
           {brainsCritical && (
               <div className="hidden xl:block text-[11px] uppercase tracking-widest text-red-400 font-black max-w-[8rem] leading-tight animate-pulse">
-                  {brainsLeft === 0 ? t('No brains left') : t('CRITICAL! Hold the line')}
+                  {brainsLeft === 0 ? t('No sprouts left') : t('CRITICAL! Hold the line')}
               </div>
           )}
 

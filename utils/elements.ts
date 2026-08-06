@@ -20,16 +20,16 @@ import {
  * What carrying an element costs, in MAX health.
  *
  * Not damage. Damage across this roster runs 0, 1 or 2, so a flat -1 would be -100% for
- * Ironhusk, -50% for Shadeleaf and -0% for Sunspot — that is not a price, it is a lottery.
- * (The first draft's "-1 range" for FIRE had the same disease: Ironhusk and Maw are range 1.)
+ * Ironhusk, -50% for Peaburst and -0% for Sunbloom — that is not a price, it is a lottery.
+ * (The first draft's "-1 range" for FIRE had the same disease: Ironhusk and Snapmaw are range 1.)
  * Health is the one stat everybody has several of, and it PERSISTS between battles, so a point
  * of it is a real bill rather than a number that resets at the next fight.
  *
  * TWO, not one, because max HP was later doubled to the 6/8/10 scale (see the header of
  * data/heroes.ts). A price charged in a stat has to move with that stat or it silently halves:
  * a flat 1 on the doubled scale is -10%/-12.5%/-16.7%, against the -20%/-25%/-33% the argument
- * above was built on. At 2 the proportion is exactly preserved — Ironhusk 10 -> 8, Maw 8 -> 6,
- * Shadeleaf 6 -> 4.
+ * above was built on. At 2 the proportion is exactly preserved — Ironhusk 10 -> 8, Snapmaw 8 -> 6,
+ * Peaburst 6 -> 4.
  *
  * So this is a RATIO wearing the costume of a constant. Anyone retuning hero health has to
  * retune this in the same breath, or the element stops being a decision.
@@ -102,9 +102,9 @@ export const ELEMENTS: ElementId[] = ['ICE', 'FIRE', 'LIGHTNING'];
 /**
  * RULE L1 — the element attaches to the ATTACK, not to the DAMAGE.
  *
- * Two heroes deal zero damage (Sunspot, Chardwall). Phrased as "adds an effect to the damage"
+ * Two heroes deal zero damage (Sunbloom, Chardslam). Phrased as "adds an effect to the damage"
  * both of them fall outside the whole system; phrased as "adds an effect to the attack" a
- * Chardwall shove now lands a target that is both thrown and slowed, and the cell works.
+ * Chardslam shove now lands a target that is both thrown and slowed, and the cell works.
  *
  * LIGHTNING returns nothing here on purpose: an arc is not a status, it is a second resolution
  * against a different tile, and only skillResolution can do that (see `chainDamageFor`).
@@ -116,18 +116,33 @@ export const elementRider = (element: ElementId | undefined): SkillEffectDefinit
 };
 
 /**
+ * Can this skill reach an ENEMY at all? An element rides attacks, so this is the test for
+ * whether a skill is somewhere an element can live.
+ *
+ * "Deals damage" would be the obvious version and it is wrong twice over: Chardslam's Vault
+ * Toss is 0 damage and pure displacement, and it very much lands on a zombie (rule L1); while
+ * Gourdward's Reinforce is a MELEE-ranged SHIELD that only ever touches allies and Greenspires.
+ * What separates them is whether anything hostile can be on the receiving end.
+ */
+const touchesEnemies = (skill: Skill): boolean =>
+    skill.rangeType !== 'SELF'
+    && skill.effects.some(e => e.type === 'DAMAGE' || e.type === 'PUSH' || e.type === 'PULL'
+        || e.type === 'GLOBAL_PUSH' || e.type === 'TOSS');
+
+/**
  * RULE L2 — a hero whose free attack cannot touch an enemy carries the element on the PAID one.
  *
- * Sunspot's basic attack is `SELF` (+25 Sun); it has no target to put an element on, so hers
- * rides Sun Burn instead. She is the only hero in the roster who lands here today, but the test
- * is written against the SHAPE of the skill rather than against her id, so a future support
- * hero built the same way is handled without touching this file.
+ * Sunbloom's basic attack is `SELF` (+50 Sol); it has no target to put an element on, so hers
+ * rides Solar Blessing instead. Gourdward is the second case and the reason the test grew past
+ * "is it SELF": Reinforce has a range and a target, they are just never hostile — so his
+ * element rides Encase, where Shockrind's shove can carry it. Written against the SHAPE of the
+ * skill rather than against hero ids, so a future support built the same way needs no edit here.
  */
 export const elementCarrier = (heroId: HeroId | undefined): 'BASIC' | 'SKILL' => {
     if (!heroId) return 'BASIC';
     const def = HERO_DEFINITIONS[heroId];
     if (!def) return 'BASIC';
-    return def.basicAttack.rangeType === 'SELF' ? 'SKILL' : 'BASIC';
+    return touchesEnemies(def.basicAttack) ? 'BASIC' : 'SKILL';
 };
 
 /** Does THIS skill carry the hero's element? Answers L2 for a single skill object. */
@@ -149,12 +164,12 @@ export const skillCarriesElement = (skill: Skill, unit: Unit): boolean => {
  * RULE L3 — how hard the lightning arc hits: HALF THE HERO'S DAMAGE STAT, rounded down.
  *
  * Anchoring to the hero and not to the skill is the whole rule, and it defuses three traps at
- * once. Maw's Devour is `DAMAGE 999`; read off the skill, the arc would carry 499 into the next
- * tile — which is the Melon-splash bug wearing a different hat. Read off the hero, Maw is
+ * once. Snapmaw's Devour is `DAMAGE 999`; read off the skill, the arc would carry 499 into the next
+ * tile — which is the Melon-splash bug wearing a different hat. Read off the hero, Snapmaw is
  * damage 2 and the arc carries 1.
  *
  * There is NO minimum. A 0- or 1-damage hero arcs for nothing, and that is deliberate: a floor
- * of 1 would quietly hand Chardwall damage and break the one thing that makes him himself. His
+ * of 1 would quietly hand Chardslam damage and break the one thing that makes him himself. His
  * arc still carries the SHOVE (L1), so his cell is a shove that hits two bodies — which turns
  * out to be the best cell he has.
  */
@@ -313,7 +328,7 @@ export const ENEMY_ELEMENT_CHANCE = 0.35;
  * Roll an element for a freshly built zombie, or undefined for none.
  *
  * LIGHTNING is only dealt to bodies whose arc is worth something: `chainDamageFor` has no
- * minimum (that rule protects Chardwall and must not grow one), so on a damage-1 zombie the
+ * minimum (that rule protects Chardslam and must not grow one), so on a damage-1 zombie the
  * arc carries 0 and the element would be a badge that does nothing — worse than absent,
  * because the player would read it and brace for a rule that never fires.
  *

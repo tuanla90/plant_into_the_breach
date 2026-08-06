@@ -1,20 +1,25 @@
 
 import React, { useState } from 'react';
 import {
-    ArrowLeft, Move, Shield, Sun, Coins, Zap, AlertTriangle, CornerDownRight, Crosshair,
+    ArrowLeft, Move, Shield, Sun as Sol, Coins, Zap, AlertTriangle, CornerDownRight, Crosshair,
+    // `Brain` là TÊN ICON của lucide, không phải tên tài nguyên trong game — đợt đổi
+    // Brain→Sprout quét trúng cả nó và đâm vào icon Sprout vốn đã có ở đây (khai hai lần
+    // cùng một tên = lỗi biên dịch). Icon giữ tên gốc; chữ hiển thị mới là thứ đã đổi.
     ChevronsRight, Brain, FlaskConical, Sprout, Package, BookOpen, Users, X, Star,
-    Atom, Snowflake, Flame,
+    Atom, Snowflake, Flame, Clapperboard,
 } from 'lucide-react';
 import { ElementId, UnlockState } from '../types';
 import { SQUAD_SIZE } from '../constants';
 import { ELEMENTS, ELEMENT_DEFINITIONS, ELEMENT_HP_COST, RESONANCE_DESCRIPTIONS } from '../utils/elements';
 import { HeroGrid, RecipeMatrix, codexCounts } from './CodexScreen';
+import { SceneGallery } from './SceneGallery';
+import { CutsceneDef } from '../data/cutscenes';
 import { levelOf, levelCapFor } from '../data/unlocks';
 import { STARTING_MATERIALS } from '../data/materials';
 import { useI18n } from '../i18n';
 
-/** The three books this screen absorbed. */
-type Section = 'MANUAL' | 'HEROES' | 'FUSIONS';
+/** The books this screen absorbed. */
+type Section = 'MANUAL' | 'HEROES' | 'FUSIONS' | 'SCENES';
 
 interface TutorialScreenProps {
     onBack: () => void;
@@ -28,12 +33,22 @@ interface TutorialScreenProps {
     initialSection?: Section;
     /** Float above the running game instead of replacing the screen (opened mid-run). */
     overlay?: boolean;
+    /**
+     * Story playback, and the gate on the whole SCENES tab.
+     *
+     * Absent from the mid-run overlay on purpose: a comic dropped over a live board is a
+     * modal on top of a modal, and the run is still waiting underneath it. The tab simply
+     * does not exist there.
+     */
+    onReplayIntro?: () => void;
+    onReplayOutro?: () => void;
+    onPlayCutscene?: (scene: CutsceneDef) => void;
 }
 
 /**
  * The manual. Everything on this screen is a claim about the rules, so it is only worth
- * having if it matches them — the previous version still described a Sun economy that buys
- * items and stat upgrades, which stopped being true when Sun became a per-battle resource
+ * having if it matches them — the previous version still described a Sol economy that buys
+ * items and stat upgrades, which stopped being true when Sol became a per-battle resource
  * spent on hero skills alone and Coin took over everything between battles.
  *
  * It was also built at roughly twice the size it needed: 56px demo tiles, text-4xl headings
@@ -109,7 +124,7 @@ const BasicsContent: React.FC = () => {
                 {t('Attacking ENDS that unit\'s turn. Move first and then attack — never the other way round.')}
             </Note>
             <Note tone="green" title={t('Basic attacks are free')}>
-                {t('Every hero\'s basic attack costs no Sun, so a hero is never left with nothing to do.')}
+                {t('Every hero\'s basic attack costs no Sol, so a hero is never left with nothing to do.')}
             </Note>
             <div className="text-center">
                 <MiniBoard>
@@ -157,7 +172,7 @@ const PushContent: React.FC = () => {
                 {t('Shoved into a unit, a mountain or the edge of the map, BOTH take 1 damage.')}
             </Note>
             <Note tone="green" title={t('Ground is worth more than damage')}>
-                {t('A zombie pushed back is a zombie that does not reach a house this turn. Buying a turn often beats dealing 2.')}
+                {t('A zombie pushed back is a zombie that does not reach a Greenspire this turn. Buying a turn often beats dealing 2.')}
             </Note>
             <div className="text-center">
                 <MiniBoard>
@@ -175,11 +190,11 @@ const BrainContent: React.FC = () => {
     const { t } = useI18n();
     return (
         <div className="space-y-3">
-            <p className="text-[13px] leading-5 text-gray-300">{t('Brains are what the run is actually made of. Each house on the board holds one.')}</p>
+            <p className="text-[13px] leading-5 text-gray-300">{t('Sprouts are what the run is actually made of. Each Greenspire on the board holds one.')}</p>
             <Facts items={[
-                <>{t('A zombie that reaches a house eats its brain. Lose EVERY brain on one board and the run ends there.')}</>,
-                <>{t('The budget is 5 brains for the WHOLE run, not per battle. A campfire can buy one back with Coin, and the price climbs each time.')}</>,
-                <>{t('Most missions are won by surviving to the end of the turn counter. Some ask for something else — protect one marked house, clear the board, hold a tile. The objective panel always says which.')}</>,
+                <>{t('A zombie that reaches a Greenspire eats its sprout. Lose EVERY sprout on one board and the run ends there.')}</>,
+                <>{t('The budget is 5 sprouts for the WHOLE run, not per battle. A campfire can buy one back with Coin, and the price climbs each time.')}</>,
+                <>{t('Most missions are won by surviving to the end of the turn counter. Some ask for something else — protect one marked Greenspire, clear the board, hold a tile. The objective panel always says which.')}</>,
                 <>{t('Bonus objectives are optional and pay extra Coin. They ask you to take a risk you are allowed to refuse.')}</>,
             ]} />
             <Note tone="red" title={t('A fallen hero is not a dead hero')}>
@@ -200,13 +215,13 @@ const EconomyContent: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="bg-[#15171c] border border-yellow-700/40 p-3">
                     <strong className="text-yellow-400 flex items-center gap-1.5 mb-2 text-[11px] uppercase tracking-widest">
-                        <Sun size={14} /> {t('Sun — inside one battle')}
+                        <Sol size={14} /> {t('Sol — inside one battle')}
                     </strong>
                     <Facts items={[
                         <>{t('Every fight starts at 50 and pays 25 at the end of each turn.')}</>,
                         <>{t('It resets when the battle does. Nothing carries out.')}</>,
                         <><strong className="text-white">{t('It buys exactly one thing: hero skills.')}</strong></>,
-                        <>{t('Sunspot\'s Harvest adds 25 more, but spends her whole action.')}</>,
+                        <>{t('Sunbloom\'s Harvest adds 25 more, but spends her whole action.')}</>,
                         <>{t('Kills pay nothing. Some fusions add income.')}</>,
                     ]} />
                 </div>
@@ -218,12 +233,12 @@ const EconomyContent: React.FC = () => {
                         <>{t('Earned by clearing nodes, bonus objectives and events. Carries across the whole run.')}</>,
                         <>{t('Shop: base plants for the bench, and combat items.')}</>,
                         <>{t('Campfire: reviving a fallen hero.')}</>,
-                        <>{t('Buying a lost brain back.')}</>,
+                        <>{t('Buying a lost sprout back.')}</>,
                     ]} />
                 </div>
             </div>
-            <Note tone="red" title={t('Sun does NOT buy')}>
-                {t('Items, plants, revives or brains. Those are all Coin, and they are all spent on the map — never on the battlefield.')}
+            <Note tone="red" title={t('Sol does NOT buy')}>
+                {t('Items, plants, revives or sprouts. Those are all Coin, and they are all spent on the map — never on the battlefield.')}
             </Note>
         </div>
     );
@@ -291,13 +306,13 @@ const ElementContent: React.FC = () => {
                 {t('Carrying an element costs {n} MAX health, and hero health persists between battles — so it is a bill you keep paying. Base form is free.', { n: ELEMENT_HP_COST })}
             </Note>
             <Facts items={[
-                <><strong className="text-white">{t('It rides the ATTACK, not the damage.')}</strong> {t('A hero who deals 0 still carries one: Chardwall\'s shove throws its target AND slows it.')}</>,
+                <><strong className="text-white">{t('It rides the ATTACK, not the damage.')}</strong> {t('A hero who deals 0 still carries one: Chardslam\'s shove throws its target AND slows it.')}</>,
                 <>{t('Lightning arcs ONCE, from the main target only, to one enemy beside it — for half the hero\'s damage stat, rounded down, with no minimum. A hero on 0 or 1 damage arcs for the effect alone.')}</>,
-                <>{t('A hero whose free attack cannot reach an enemy carries the element on her paid skill instead. Sunspot\'s basic action is +25 Sun, so hers rides Sun Burn.')}</>,
+                <>{t('A hero whose free attack cannot reach an enemy carries the element on her paid skill instead. Sunbloom\'s basic action is +25 Sol, so hers rides Sol Burn.')}</>,
                 <>{t('It applies to EVERY source of damage that hero has — retaliation included.')}</>,
             ]} />
             <Note tone="blue" title={t('It changes most where damage was never the point')}>
-                {t('Thornhide + Ice taunts the horde onto himself and everything that bites him walks away slowed. Chardwall + Lightning is one swing that throws two bodies.')}
+                {t('Thornshell + Ice taunts the horde onto himself and everything that bites him walks away slowed. Chardslam + Lightning is one swing that throws two bodies.')}
             </Note>
 
             {/* RESONANCE. It lives at the bottom of THIS page rather than in a topic of its
@@ -340,7 +355,7 @@ const FusionContent: React.FC = () => {
             <p className="text-[13px] leading-5 text-gray-300">{t('Fusion is how a squad actually grows. You are not buying a number — you are buying a trait.')}</p>
             <Facts items={[
                 <>{t('At a campfire, graft one bench plant into one hero. It is permanent and the plant is consumed.')}</>,
-                <><strong className="text-white">{t('The effect comes from the PAIR, not the plant.')}</strong> {t('A Peashooter makes Shadeleaf fire twice, but hands Sunspot the ranged shot she never had.')}</>,
+                <><strong className="text-white">{t('The effect comes from the PAIR, not the plant.')}</strong> {t('A Seed Gun makes Peaburst fire twice, but hands Sunbloom the ranged shot she never had.')}</>,
                 <>{t('Two slots per hero. The same plant never stacks into the same hero twice.')}</>,
                 <>{t('The graft heals that hero to full.')}</>,
                 <>{t('You must know the recipe. Each hero starts knowing the plant it grew from; the rest open one per commander level.')}</>,
@@ -374,12 +389,12 @@ const BenchContent: React.FC = () => {
 const ItemContent: React.FC = () => {
     const { t } = useI18n();
     const items: Array<[string, string, string]> = [
-        ['Potato Mine', '25', 'Armed on an empty tile. The first zombie to step there takes 5.'],
-        ['Snow Pea', '40', 'Freezes a 3x3. Frozen units lose their turn until something hits them.'],
-        ['Jalapeno', '50', 'Burns a whole row for 5 and turns it to lava.'],
-        ['Blover', '60', 'A gust across the board: fliers are blown away, everything else is shoved a tile back.'],
-        ['Cherry Bomb', '75', '6 damage in a 3x3, and survivors catch fire.'],
-        ['Coffee Bean', '100', 'One hero that has already acted may move and act again this turn.'],
+        ['Seed Mine', '25', 'Armed on an empty tile. The first zombie to step there takes 5.'],
+        ['Ice Grenade', '40', 'Freezes a 3x3. Frozen units lose their turn until something hits them.'],
+        ['Flame Strike', '50', 'Burns a whole row for 5 and turns it to lava.'],
+        ['Storm Fan', '60', 'A gust across the board: fliers are blown away, everything else is shoved a tile back.'],
+        ['Fire Grenade', '75', '6 damage in a 3x3, and survivors catch fire.'],
+        ['Stim Shot', '100', 'One hero that has already acted may move and act again this turn.'],
     ];
     return (
         <div className="space-y-3">
@@ -397,7 +412,7 @@ const ItemContent: React.FC = () => {
                 ))}
             </div>
             <Note tone="red" title={t('Blast items do not pick sides')}>
-                {t('Cherry Bomb, Jalapeno and Snow Pea hit whatever is standing on the tile — your own plants included.')}
+                {t('Fire Grenade, Flame Strike and Ice Grenade hit whatever is standing on the tile — your own plants included.')}
             </Note>
         </div>
     );
@@ -436,8 +451,8 @@ const TUTORIAL_TOPICS: Topic[] = [
     { id: 'BASICS', title: 'Movement & Attack', icon: <Move className="text-sky-400" />, desc: 'One move, one action, and the order you spend them in.', content: <BasicsContent /> },
     { id: 'INTENT', title: 'Enemy Intent', icon: <AlertTriangle className="text-red-400" />, desc: 'Every attack is announced a turn before it lands.', content: <IntentContent /> },
     { id: 'PUSH', title: 'Push & Collision', icon: <ChevronsRight className="text-orange-400" />, desc: 'Taking ground away is often worth more than damage.', content: <PushContent /> },
-    { id: 'BRAINS', title: 'Brains & Defeat', icon: <Brain className="text-fuchsia-400" />, desc: 'What you are defending, and what happens when you lose it.', content: <BrainContent /> },
-    { id: 'ECONOMY', title: 'Sun & Coin', icon: <Sun className="text-yellow-400" />, desc: 'Two currencies that never touch each other.', content: <EconomyContent /> },
+    { id: 'BRAINS', title: 'Sprouts & Defeat', icon: <Brain className="text-fuchsia-400" />, desc: 'What you are defending, and what happens when you lose it.', content: <BrainContent /> },
+    { id: 'ECONOMY', title: 'Sol & Coin', icon: <Sol className="text-yellow-400" />, desc: 'Two currencies that never touch each other.', content: <EconomyContent /> },
     // Ahead of FUSION because it is decided first — the element is picked before the run
     // starts, the graft happens at a campfire inside it.
     { id: 'ELEMENTS', title: 'Elements', icon: <Atom className="text-cyan-400" />, desc: 'One rule laid over a whole hero, paid for in max health.', content: <ElementContent /> },
@@ -449,6 +464,7 @@ const TUTORIAL_TOPICS: Topic[] = [
 
 export const TutorialScreen: React.FC<TutorialScreenProps> = ({
     onBack, unlocks, initialSection = 'MANUAL', overlay = false,
+    onReplayIntro, onReplayOutro, onPlayCutscene,
 }) => {
     const { t } = useI18n();
     const [selectedTopicId, setSelectedTopicId] = useState<TopicId | null>(null);
@@ -477,7 +493,9 @@ export const TutorialScreen: React.FC<TutorialScreenProps> = ({
             <div className="absolute inset-0 bg-[linear-gradient(rgba(16,185,129,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(16,185,129,0.03)_1px,transparent_1px)] bg-[length:40px_40px] opacity-20 pointer-events-none"></div>
 
             {/* Header */}
-            <div className="bg-[#1a1c21] border-b border-gray-700 px-4 py-3 flex items-center gap-3 z-10 shrink-0">
+            {/* flex-wrap: bốn tab + ô cấp độ vượt quá bề ngang điện thoại cầm dọc; không cho
+                xuống dòng thì tab cuối bị đẩy ra ngoài mép và không bấm được. */}
+            <div className="bg-[#1a1c21] border-b border-gray-700 px-4 py-3 flex flex-wrap items-center gap-3 z-10 shrink-0">
                 <button
                     onClick={() => selectedTopicId ? setSelectedTopicId(null) : onBack()}
                     className="p-2 hover:bg-gray-700 transition-colors text-gray-400 hover:text-white group border border-gray-700 hover:border-white"
@@ -488,7 +506,7 @@ export const TutorialScreen: React.FC<TutorialScreenProps> = ({
                         : <ArrowLeft size={18} className="group-hover:-translate-x-0.5 transition-transform" />}
                 </button>
                 <div>
-                    <h1 className="text-base uppercase font-bold tracking-[0.15em] text-green-400">{t('Tactical Archive')}</h1>
+                    <h1 className="text-base uppercase font-bold tracking-[0.15em] text-green-400">{t('Collection')}</h1>
                     <span className="text-[10px] text-gray-500 uppercase tracking-wider">
                         {selectedTopicId ? t('Database // {topic}', { topic: t(activeTopic?.title || '') }) : t('Database // Root Index')}
                     </span>
@@ -498,7 +516,7 @@ export const TutorialScreen: React.FC<TutorialScreenProps> = ({
                     behind its own menu button; a manual and a roster are the same act — reading
                     up between runs — so they are tabs of one thing now. */}
                 {counts && (
-                    <div className="ml-auto flex items-center gap-2">
+                    <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
                         {/* The level is the thing everything else is paid out of, so it is
                             stated once, plainly, at the top of the book that lists them. */}
                         <div className="flex items-center gap-1.5 px-3 py-1.5 border border-amber-700/60 bg-amber-950/25">
@@ -514,6 +532,9 @@ export const TutorialScreen: React.FC<TutorialScreenProps> = ({
                                     count={`${counts.heroesOwned}/${counts.heroesTotal}`} />
                         <SectionTab id="FUSIONS" icon={<FlaskConical size={13} />} label={t('Fusions')}
                                     count={`${counts.recipesKnown}/${counts.recipesTotal}`} />
+                        {onReplayIntro && (
+                            <SectionTab id="SCENES" icon={<Clapperboard size={13} />} label={t('Scenes')} />
+                        )}
                     </div>
                 )}
             </div>
@@ -523,6 +544,14 @@ export const TutorialScreen: React.FC<TutorialScreenProps> = ({
             )}
             {section === 'FUSIONS' && unlocks && (
                 <div className="flex-1 min-h-0"><RecipeMatrix unlocks={unlocks} /></div>
+            )}
+            {section === 'SCENES' && (
+                <SceneGallery
+                    unlocks={unlocks}
+                    onReplayIntro={onReplayIntro}
+                    onReplayOutro={onReplayOutro}
+                    onPlayCutscene={onPlayCutscene}
+                />
             )}
 
             {/* Content Area */}

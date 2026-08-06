@@ -49,12 +49,12 @@ NO speech bubbles, NO text baked into the art. High detail, solemn military tone
 
 # 1 · CẢNH CÁC HERO GẶP NHAU (HERO ENCOUNTERS & REUNION)
 
-### 1.1 Shadeleaf Cứu Sunspot (`cutscene-hero-meet-sunspot.jpg`)
-* **Thời điểm**: Màn 1 Tutorial — Shadeleaf tìm thấy Sunspot kiệt sức giữa Quảng trường đổ nát.
+### 1.1 Peaburst Cứu Sunbloom (`cutscene-hero-meet-sunspot.jpg`)
+* **Thời điểm**: Màn 1 Tutorial — Peaburst tìm thấy Sunbloom kiệt sức giữa Quảng trường đổ nát.
 ```
 STYLE: painted cinematic story-comic panel, 4:3 ratio, dark tactical game cutscene illustration. Moody dramatic lighting, strong silhouettes, painterly yet crisp cel-shaded vector feel. The plant heroes are CHIBI DEFENDERS wearing full tactical gear and helmets with glowing visor slots — faces and mouth NEVER visible. Ruined post-apocalyptic neon city atmosphere, cold blue-grey shadows contrasted with warm fiery/magma/glow accents. NO speech bubbles, NO text baked into the art. High detail, solemn military tone, epic scope.
 
-PROMPT: Low-angle dramatic scene in a dark ruined street. A small wounded solar-flower chibi soldier (Sunspot) in scorched yellow tactical armor lies weakly against a pile of concrete rubble, her visor light flickering dimly. Standing over her defensively is a pea-shooter sniper soldier (Shadeleaf) in an olive-green tactical poncho and helmet, aiming a glowing green assault rifle into the surrounding dark fog where vague red zombie eyes glow. Warm amber sunlight rays break through the smoke, touching Sunspot's hand.
+PROMPT: Low-angle dramatic scene in a dark ruined street. A small wounded solar-flower chibi soldier (Sunbloom) in scorched yellow tactical armor lies weakly against a pile of concrete rubble, her visor light flickering dimly. Standing over her defensively is a pea-shooter sniper soldier (Peaburst) in an olive-green tactical poncho and helmet, aiming a glowing green assault rifle into the surrounding dark fog where vague red zombie eyes glow. Warm amber sunlight rays break through the smoke, touching Sunbloom's hand.
 ```
 
 ---
@@ -64,7 +64,7 @@ PROMPT: Low-angle dramatic scene in a dark ruined street. A small wounded solar-
 ```
 STYLE: painted cinematic story-comic panel, 4:3 ratio, dark tactical game cutscene illustration. Moody dramatic lighting, strong silhouettes, painterly yet crisp cel-shaded vector feel. The plant heroes are CHIBI DEFENDERS wearing full tactical gear and helmets with glowing visor slots — faces and mouth NEVER visible. Ruined post-apocalyptic neon city atmosphere, cold blue-grey shadows contrasted with warm fiery/magma/glow accents. NO speech bubbles, NO text baked into the art. High detail, solemn military tone, epic scope.
 
-PROMPT: Heroic arrival scene at a narrow ravine in a ruined concrete highway. A heavy juggernaut walnut defender (Ironhusk) in massive cracked brown shell armor slams a giant metal riot shield deep into the fractured asphalt. Behind him stand the smaller Sunspot and Shadeleaf looking up in awe. Dust and sparks fly from the shield's impact. The background shows a dark foggy city chasm. Rim lighting highlights Ironhusk's glowing blue visor and massive silhouette.
+PROMPT: Heroic arrival scene at a narrow ravine in a ruined concrete highway. A heavy juggernaut walnut defender (Ironhusk) in massive cracked brown shell armor slams a giant metal riot shield deep into the fractured asphalt. Behind him stand the smaller Sunbloom and Peaburst looking up in awe. Dust and sparks fly from the shield's impact. The background shows a dark foggy city chasm. Rim lighting highlights Ironhusk's glowing blue visor and massive silhouette.
 ```
 
 ---
@@ -74,7 +74,7 @@ PROMPT: Heroic arrival scene at a narrow ravine in a ruined concrete highway. A 
 ```
 STYLE: painted cinematic story-comic panel, 4:3 ratio, dark tactical game cutscene illustration. Moody dramatic lighting, strong silhouettes, painterly yet crisp cel-shaded vector feel. The plant heroes are CHIBI DEFENDERS wearing full tactical gear and helmets with glowing visor slots — faces and mouth NEVER visible. Ruined post-apocalyptic neon city atmosphere, cold blue-grey shadows contrasted with warm fiery/magma/glow accents. NO speech bubbles, NO text baked into the art. High detail, solemn military tone, epic scope.
 
-PROMPT: Interior of a fortified, heavily armored supply truck wagon illuminated by warm hanging lantern light and neon glow. Old Mulch, a gnarled old veteran plant merchant wearing a leather apron and goggles, leans over a counter showing crates of glowing seed ammo, potato mines, and gear parts. Sunspot and Shadeleaf stand in the foreground inspecting the tactical gear. Thick cigar smoke drifts across the scene. Rich details of weapons, gears, and gold coins on the counter.
+PROMPT: Interior of a fortified, heavily armored supply truck wagon illuminated by warm hanging lantern light and neon glow. Old Mulch, a gnarled old veteran plant merchant wearing a leather apron and goggles, leans over a counter showing crates of glowing seed ammo, potato mines, and gear parts. Sunbloom and Peaburst stand in the foreground inspecting the tactical gear. Thick cigar smoke drifts across the scene. Rich details of weapons, gears, and gold coins on the counter.
 ```
 
 ---
@@ -84,7 +84,7 @@ PROMPT: Interior of a fortified, heavily armored supply truck wagon illuminated 
 ```
 STYLE: painted cinematic story-comic panel, 4:3 ratio, dark tactical game cutscene illustration. Moody dramatic lighting, strong silhouettes, painterly yet crisp cel-shaded vector feel. The plant heroes are CHIBI DEFENDERS wearing full tactical gear and helmets with glowing visor slots — faces and mouth NEVER visible. Ruined post-apocalyptic neon city atmosphere, cold blue-grey shadows contrasted with warm fiery/magma/glow accents. NO speech bubbles, NO text baked into the art. High detail, solemn military tone, epic scope.
 
-PROMPT: Mysterious clockwork workshop scene inside a dark underground vault. Chrona, a small dented chrome robot with a single bright cyan headlamp eye, floats above a glowing cyan holographic clockwork timeline map. The timeline projects floating golden gears and ticking temporal runes into the air. Shadeleaf and Ironhusk stand in shadow, watching the magical time projection with intense focus. Blue and teal ambient lighting with ticking gear aesthetics.
+PROMPT: Mysterious clockwork workshop scene inside a dark underground vault. Chrona, a small dented chrome robot with a single bright cyan headlamp eye, floats above a glowing cyan holographic clockwork timeline map. The timeline projects floating golden gears and ticking temporal runes into the air. Peaburst and Ironhusk stand in shadow, watching the magical time projection with intense focus. Blue and teal ambient lighting with ticking gear aesthetics.
 ```
 
 ---
@@ -94,7 +94,7 @@ PROMPT: Mysterious clockwork workshop scene inside a dark underground vault. Chr
 ```
 STYLE: painted cinematic story-comic panel, 4:3 ratio, dark tactical game cutscene illustration. Moody dramatic lighting, strong silhouettes, painterly yet crisp cel-shaded vector feel. The plant heroes are CHIBI DEFENDERS wearing full tactical gear and helmets with glowing visor slots — faces and mouth NEVER visible. Ruined post-apocalyptic neon city atmosphere, cold blue-grey shadows contrasted with warm fiery/magma/glow accents. NO speech bubbles, NO text baked into the art. High detail, solemn military tone, epic scope.
 
-PROMPT: Emotional campfire night scene in the courtyard of a ruined fortress. A bright crackling bonfire sits in the center, casting warm orange firelight on the three plant heroes (Shadeleaf, Sunspot, Ironhusk) who sit around it on stone blocks resting and cleaning their weapons. Small green seedlings sprout out of the warm ash around the fire. Deep indigo night sky above with glowing embers drifting up into the dark. Cozy, quiet camaraderie amidst war.
+PROMPT: Emotional campfire night scene in the courtyard of a ruined fortress. A bright crackling bonfire sits in the center, casting warm orange firelight on the three plant heroes (Peaburst, Sunbloom, Ironhusk) who sit around it on stone blocks resting and cleaning their weapons. Small green seedlings sprout out of the warm ash around the fire. Deep indigo night sky above with glowing embers drifting up into the dark. Cozy, quiet camaraderie amidst war.
 ```
 
 ---
@@ -107,20 +107,20 @@ STYLE: painted cinematic story-comic panel, 4:3 ratio, dark tactical game cutsce
 
 COMPOSITION NOTE: wide establishing shot, keep the CENTRE and LOWER THIRD visually calm and uncluttered — dialogue UI is overlaid there.
 
-PROMPT: Wide establishing shot from a high rooftop at dusk, seen from behind. The pea-shooter sniper (Shadeleaf) stands at the roof edge in silhouette, one arm raised pointing outward across a vast ruined cityscape. Below and ahead stretches a broken causeway of rubble islands linked by a single winding road, with tiny scattered campfires and faint amber signal lights marking waypoints along it. Far on the horizon a single ominous red glow marks something enormous waiting. Deep indigo sky, drifting ash, cold blue-grey ruins with warm pinpoint lights.
+PROMPT: Wide establishing shot from a high rooftop at dusk, seen from behind. The pea-shooter sniper (Peaburst) stands at the roof edge in silhouette, one arm raised pointing outward across a vast ruined cityscape. Below and ahead stretches a broken causeway of rubble islands linked by a single winding road, with tiny scattered campfires and faint amber signal lights marking waypoints along it. Far on the horizon a single ominous red glow marks something enormous waiting. Deep indigo sky, drifting ash, cold blue-grey ruins with warm pinpoint lights.
 ```
 
 ---
 
 ### 1.7 Những Hố Mộ Nứt Toác (`cutscene-tut-graves.jpg`)
-* **Thời điểm**: Màn 2 Tutorial — Sunspot hồi phục, mặt đất bắt đầu đẻ ra quái vật.
+* **Thời điểm**: Màn 2 Tutorial — Sunbloom hồi phục, mặt đất bắt đầu đẻ ra quái vật.
 * ⚠️ Nền hội thoại: chừa khoảng trống ở giữa và dưới.
 ```
 STYLE: painted cinematic story-comic panel, 4:3 ratio, dark tactical game cutscene illustration. Moody dramatic lighting, strong silhouettes, painterly yet crisp cel-shaded vector feel. The plant heroes are CHIBI DEFENDERS wearing full tactical gear and helmets with glowing visor slots — faces and mouth NEVER visible. Ruined post-apocalyptic neon city atmosphere, cold blue-grey shadows contrasted with warm fiery/magma/glow accents. NO speech bubbles, NO text baked into the art. High detail, solemn military tone, epic scope.
 
 COMPOSITION NOTE: wide establishing shot, keep the CENTRE and LOWER THIRD visually calm and uncluttered — dialogue UI is overlaid there.
 
-PROMPT: A ruined suburban street at night where the asphalt has split open into several jagged black grave-pits, each exhaling a thin sickly green mist. Between the pits stand two small intact houses with warm yellow light still glowing in their windows — the only warmth in the frame. The restored solar-flower soldier (Sunspot) stands at the left edge, her golden aura reignited and casting long shadows across the broken road. Faint clawed hands begin to emerge from the nearest pit rim. Cold blue-green palette pierced by warm window light.
+PROMPT: A ruined suburban street at night where the asphalt has split open into several jagged black grave-pits, each exhaling a thin sickly green mist. Between the pits stand two small intact Greenspires with warm yellow light still glowing in their windows — the only warmth in the frame. The restored solar-flower soldier (Sunbloom) stands at the left edge, her golden aura reignited and casting long shadows across the broken road. Faint clawed hands begin to emerge from the nearest pit rim. Cold blue-green palette pierced by warm window light.
 ```
 
 ---
@@ -133,7 +133,7 @@ STYLE: painted cinematic story-comic panel, 4:3 ratio, dark tactical game cutsce
 
 COMPOSITION NOTE: wide establishing shot, keep the CENTRE and LOWER THIRD visually calm and uncluttered — dialogue UI is overlaid there.
 
-PROMPT: Extreme low-angle shot of a colossal Gargantuar zombie silhouette filling the upper half of the frame, backlit by a sickly green sky so it reads almost entirely as a black shape. It drags an enormous uprooted lamp-post like a club. At the very bottom of the frame, dwarfed to near-insignificance, the three tiny plant heroes stand in a defensive line, their visor lights pinpricks against the mass above. Dust shakes off cracked pavement; debris hangs mid-air from the tremor. Overwhelming scale, hopeless odds, solemn.
+PROMPT: Extreme low-angle shot of a colossal Gravehulk zombie silhouette filling the upper half of the frame, backlit by a sickly green sky so it reads almost entirely as a black shape. It drags an enormous uprooted lamp-post like a club. At the very bottom of the frame, dwarfed to near-insignificance, the three tiny plant heroes stand in a defensive line, their visor lights pinpricks against the mass above. Dust shakes off cracked pavement; debris hangs mid-air from the tremor. Overwhelming scale, hopeless odds, solemn.
 ```
 
 ---
@@ -155,7 +155,7 @@ PROMPT: Victory scene after a fierce boss fight. The colossal armored war-train 
 ```
 STYLE: painted cinematic story-comic panel, 4:3 ratio, dark tactical game cutscene illustration. Moody dramatic lighting, strong silhouettes, painterly yet crisp cel-shaded vector feel. The plant heroes are CHIBI DEFENDERS wearing full tactical gear and helmets with glowing visor slots — faces and mouth NEVER visible. Ruined post-apocalyptic neon city atmosphere, cold blue-grey shadows contrasted with warm fiery/magma/glow accents. NO speech bubbles, NO text baked into the art. High detail, solemn military tone, epic scope.
 
-PROMPT: Dramatic elemental reward scene. The gigantic lava monster (Cinder Colossus) crumbles into harmless grey ash and cooling magma rocks. Hovering above the ash pile is a radiant, flaming crimson-orange FIRE CORE crystal. Shadeleaf reaches out a gloved hand toward the floating fiery crystal, as bright orange flames envelop their rifle barrel, imbuing it with fire power. Intensely warm magma lighting and flying ember sparks.
+PROMPT: Dramatic elemental reward scene. The gigantic lava monster (Cinder Colossus) crumbles into harmless grey ash and cooling magma rocks. Hovering above the ash pile is a radiant, flaming crimson-orange FIRE CORE crystal. Peaburst reaches out a gloved hand toward the floating fiery crystal, as bright orange flames envelop their rifle barrel, imbuing it with fire power. Intensely warm magma lighting and flying ember sparks.
 ```
 
 ---
@@ -195,7 +195,7 @@ PROMPT: Frozen victory scene in a snowy fortress gateway (Frostgate). The massiv
 ```
 STYLE: painted cinematic story-comic panel, 4:3 ratio, dark tactical game cutscene illustration. Moody dramatic lighting, strong silhouettes, painterly yet crisp cel-shaded vector feel. The plant heroes are CHIBI DEFENDERS wearing full tactical gear and helmets with glowing visor slots — faces and mouth NEVER visible. Ruined post-apocalyptic neon city atmosphere, cold blue-grey shadows contrasted with warm fiery/magma/glow accents. NO speech bubbles, NO text baked into the art. High detail, solemn military tone, epic scope.
 
-PROMPT: High-tech power grid victory scene. The giant electric mechanical monster (Voltmaw) sparks violently and short-circuits in a pool of blue electricity. A pulsing yellow-white LIGHTNING CORE sphere hovers above the wreckage, crackling with arcs of lightning. Sunspot absorbs the electrical core into her solar hands, causing electric lightning arcs to swirl around her body and crown. High voltage blue and yellow lighting.
+PROMPT: High-tech power grid victory scene. The giant electric mechanical monster (Voltmaw) sparks violently and short-circuits in a pool of blue electricity. A pulsing yellow-white LIGHTNING CORE sphere hovers above the wreckage, crackling with arcs of lightning. Sunbloom absorbs the electrical core into her solar hands, causing electric lightning arcs to swirl around her body and crown. High voltage blue and yellow lighting.
 ```
 
 ---
@@ -214,22 +214,22 @@ PROMPT: Climax ultimate victory scene at the dark portal crater (The Breach). Th
 
 ---
 
-### 2.8 Hạ Gargantuar — Verdant Reach (`cutscene-boss-clear-gargantuar.jpg`)
-* **Thời điểm**: Sau khi hạ trùm Màn I-1 (Gargantuar) — Mở khóa hero **Chompzilla**.
+### 2.8 Hạ Gravehulk — Verdant Reach (`cutscene-boss-clear-gargantuar.jpg`)
+* **Thời điểm**: Sau khi hạ trùm Màn I-1 (Gravehulk) — Mở khóa hero **Chompzilla**.
 ```
 STYLE: painted cinematic story-comic panel, 4:3 ratio, dark tactical game cutscene illustration. Moody dramatic lighting, strong silhouettes, painterly yet crisp cel-shaded vector feel. The plant heroes are CHIBI DEFENDERS wearing full tactical gear and helmets with glowing visor slots — faces and mouth NEVER visible. Ruined post-apocalyptic neon city atmosphere, cold blue-grey shadows contrasted with warm fiery/magma/glow accents. NO speech bubbles, NO text baked into the art. High detail, solemn military tone, epic scope.
 
-PROMPT: Victory scene in an overgrown forest clearing (Verdant Reach). The colossal Gargantuar lies face down and motionless across a crushed roadway, its uprooted lamp-post club broken in two beside it, one enormous fist still embedded in a fresh crater in the asphalt. Standing on its back is a hulking plant-devourer defender (Chompzilla) — a huge armoured green maw creature — rising into frame for the first time, backlit by shafts of morning sun through the canopy. The smaller heroes look up at it from the ground. Green-gold forest light, drifting spores, the sense of an ally almost too big to be safe.
+PROMPT: Victory scene in an overgrown forest clearing (Verdant Reach). The colossal Gravehulk lies face down and motionless across a crushed roadway, its uprooted lamp-post club broken in two beside it, one enormous fist still embedded in a fresh crater in the asphalt. Standing on its back is a hulking plant-devourer defender (Chompzilla) — a huge armoured green maw creature — rising into frame for the first time, backlit by shafts of morning sun through the canopy. The smaller heroes look up at it from the ground. Green-gold forest light, drifting spores, the sense of an ally almost too big to be safe.
 ```
 
 ---
 
 ### 2.9 Hạ The Headliner — Neon Rose (`cutscene-boss-clear-headliner.jpg`)
-* **Thời điểm**: Sau khi hạ trùm Màn III-1 (The Headliner) — Mở khóa hero **Chardwall**.
+* **Thời điểm**: Sau khi hạ trùm Màn III-1 (The Headliner) — Mở khóa hero **Chardslam**.
 ```
 STYLE: painted cinematic story-comic panel, 4:3 ratio, dark tactical game cutscene illustration. Moody dramatic lighting, strong silhouettes, painterly yet crisp cel-shaded vector feel. The plant heroes are CHIBI DEFENDERS wearing full tactical gear and helmets with glowing visor slots — faces and mouth NEVER visible. Ruined post-apocalyptic neon city atmosphere, cold blue-grey shadows contrasted with warm fiery/magma/glow accents. NO speech bubbles, NO text baked into the art. High detail, solemn military tone, epic scope.
 
-PROMPT: Victory scene on a shattered nightclub dance floor (Neon Rose). The flamboyant disco zombie boss (The Headliner) lies collapsed under a fallen mirror-ball, its shards scattered across the floor still throwing fractured pink and magenta light. The mind-controlled crowd of zombies has been HURLED outward in every direction — bodies mid-tumble against the walls and bar, flung away from the centre of the floor. At that centre stands a stout leaf-bladed guardian (Chardwall) in red-stemmed tactical armor, finishing an enormous two-armed sweeping throw, leaf-blades still extended. Dying neon signage, drifting smoke, sudden silence after noise.
+PROMPT: Victory scene on a shattered nightclub dance floor (Neon Rose). The flamboyant disco zombie boss (The Headliner) lies collapsed under a fallen mirror-ball, its shards scattered across the floor still throwing fractured pink and magenta light. The mind-controlled crowd of zombies has been HURLED outward in every direction — bodies mid-tumble against the walls and bar, flung away from the centre of the floor. At that centre stands a stout leaf-bladed guardian (Chardslam) in red-stemmed tactical armor, finishing an enormous two-armed sweeping throw, leaf-blades still extended. Dying neon signage, drifting smoke, sudden silence after noise.
 ```
 
 ---
@@ -305,7 +305,7 @@ STYLE: painted cinematic establishing shot, 16:9 ratio, dark tactical game illus
 COMPOSITION NOTE: this is a DARKENED BACKDROP behind UI text. Keep the CENTRE of the frame open and low-contrast; put all detail in the outer thirds and along the horizon.
 ```
 
-* **4.1 Verdant Reach** — `PROMPT: Wide shot of an overgrown suburban valley swallowed by enormous mutated forest growth. Vines strangle collapsed houses, giant fern canopies block out the sky, shafts of green-gold light break through the mist. Empty, ancient, oppressive scale.`
+* **4.1 Verdant Reach** — `PROMPT: Wide shot of an overgrown suburban valley swallowed by enormous mutated forest growth. Vines strangle collapsed Greenspires, giant fern canopies block out the sky, shafts of green-gold light break through the mist. Empty, ancient, oppressive scale.`
 * **4.2 Goldacre** — `PROMPT: Wide shot of vast golden wheat farmland at dusk, cut through by a cratered highway. Broken grain silos and a toppled water tower on the horizon, scorch marks and shell holes across the fields. Warm amber sky, long shadows, ruined abundance.`
 * **4.3 Kiln Row** — `PROMPT: Wide shot of an industrial brick-kiln and foundry district at night, rivers of glowing orange magma running through cracked ground between the furnace stacks. Heat haze, ember showers, heavy black smoke against a red-lit sky.`
 * **4.4 Windward** — `PROMPT: Wide shot of a storm-battered coastal harbour, shattered piers and half-sunken cargo ships listing in grey water. Torn cargo balloons and airship rigging tangled in the dockside cranes. Cold slate-blue sea, driving wind, no birds.`

@@ -1,7 +1,7 @@
 {
-  "name": "Plant Heroes: Blightfall",
+  "name": "Blightfall: The Last Garden",
   "short_name": "Blightfall",
-  "description": "Chiến thuật theo lượt 2.5D trên lưới ô vuông: dẫn dắt biệt đội Plant Heroes chặn đứng Đạo Quân Xác Sống.",
+  "description": "Chiến thuật theo lượt 2.5D trên lưới ô vuông: dẫn dắt biệt đội thực vật chặn đứng Đạo Quân Xác Sống, bảo vệ những mầm sống cuối cùng.",
   "id": "./",
   "start_url": "./",
   "scope": "./",

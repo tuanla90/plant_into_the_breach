@@ -24,7 +24,7 @@ export type SfxName =
     /** The nine-hero mechanics: shove, taunt, spike field, shield grant, lightning arc. */
     | 'push' | 'taunt' | 'spikes' | 'shield' | 'arc'
     | 'die-enemy' | 'die-plant'
-    | 'spawn' | 'turn-start' | 'gain-sun' | 'brain-lost'
+    | 'spawn' | 'turn-start' | 'gain-sun' | 'sprout-lost'
     | 'victory' | 'defeat' | 'fusion';
 
 export type MusicTrack = 'menu' | 'intro' | 'map' | 'combat' | 'boss';
@@ -76,8 +76,8 @@ const SFX: Record<SfxName, { files: string[]; gain: number }> = {
     'spawn':        { files: ['spawn.wav'],       gain: 0.55 },
     'turn-start':   { files: ['turn-start.wav'],  gain: 0.45 },
     'gain-sun':     { files: ['gain-sun.wav'],    gain: 0.45 },
-    // Losing a brain is the worst thing that can happen in a run. It gets to be loud.
-    'brain-lost':   { files: ['brain-lost.wav'],  gain: 1.00 },
+    // Losing a sprout is the worst thing that can happen in a run. It gets to be loud.
+    'sprout-lost':   { files: ['sprout-lost.wav'],  gain: 1.00 },
 
     'victory':      { files: ['victory.mp3'],     gain: 0.80 },
     'defeat':       { files: ['defeat.wav'],      gain: 0.70 },

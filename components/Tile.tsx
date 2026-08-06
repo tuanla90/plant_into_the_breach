@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { TileData, TerrainDefinition } from '../types';
-import { TriangleAlert, Zap, CloudFog, Flame, Droplets, Snowflake, Crosshair, ChevronsRight, ArrowBigRight, Plus, Brain, Shield } from 'lucide-react';
+import { TriangleAlert, Zap, CloudFog, Flame, Droplets, Snowflake, Crosshair, ChevronsRight, ArrowBigRight, Plus, Sprout, Shield } from 'lucide-react';
 import { DEFAULT_TERRAIN_DEFS } from '../constants';
 import { formatGridPosition } from '../utils/gameLogic';
 
@@ -83,11 +83,11 @@ const TileBase: React.FC<TileProps> = ({
   const hasBrain = isHouse && data.hasBrain !== false;
   if (isHouse) {
       // These are the neighbourhoods the squad is defending, so they read as a city block
-      // rather than as coloured ground. Both textures are rooftops ONLY: the brain is drawn
-      // once, by the overlay below. The old house-brain.svg had a brain baked into it and the
+      // rather than as coloured ground. Both textures are rooftops ONLY: the sprout is drawn
+      // once, by the overlay below. The old Greenspire-sprout.svg had a sprout baked into it and the
       // overlay drew another on top of it, which is how a 48px tile ended up carrying two
-      // brains, two houses and two labels.
-      bgStyle.backgroundImage = `url(/img/terrain/${hasBrain ? 'city-block' : 'house-empty'}.svg)`;
+      // sprouts, two Greenspires and two labels.
+      bgStyle.backgroundImage = `url(/img/terrain/${hasBrain ? 'city-block' : 'Greenspire-empty'}.svg)`;
       bgStyle.backgroundColor = hasBrain ? '#2c1b3d' : '#1c1b1e';
       // No CSS filter here on purpose: it would desaturate the threat overlay drawn on top.
       bgStyle.filter = 'none';
@@ -150,10 +150,10 @@ const TileBase: React.FC<TileProps> = ({
       {specialEffect}
 
       {/* 0.2 HOUSE / BRAIN — the objective. ONE glyph, one frame, one glow.
-             This used to stack a baked-in texture, a filled house icon, a brain icon, a
+             This used to stack a baked-in texture, a filled Greenspire icon, a sprout icon, a
              pulsing glow and a text label on a tile barely wider than a thumbnail, with the
              threat stripes and the grid label drawn over all of it. The state that has to
-             survive a glance is binary — brain still here, or gone — so everything that was
+             survive a glance is binary — sprout still here, or gone — so everything that was
              not carrying that distinction is gone. Colour does the loud half of the work
              (fuchsia = alive, dead grey = lost) and a single glyph does the rest. */}
       {isHouse && (
@@ -164,13 +164,13 @@ const TileBase: React.FC<TileProps> = ({
                       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_58%,rgba(217,70,239,0.30)_0%,transparent_72%)] animate-[pulse_3s_infinite]"></div>
                       <div className="absolute inset-0 border border-fuchsia-500/45"></div>
                       <div className="absolute inset-0 flex items-center justify-center">
-                          <Brain
+                          <Sprout
                               size={26}
                               strokeWidth={1.75}
                               className="text-pink-200 drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]"
                           />
                       </div>
-                      {/* Gourdward's layer on the house (TileData.shielded): the same sky-blue
+                      {/* Gourdward's layer on the Greenspire (TileData.shielded): the same sky-blue
                           shell language units wear, so "this bite will break, not take" reads
                           at a glance. */}
                       {data.shielded && (
@@ -262,7 +262,7 @@ const TileBase: React.FC<TileProps> = ({
           </div>
       )}
 
-      {/* 2.35 SPINE FIELD — the Spikeweed item's ground (formerly Thornquill's Spine Wall).
+      {/* 2.35 SPINE FIELD — the Spike Trap item's ground (formerly Thornquill's Spine Wall).
               It hurt everything that walked in from the day it was built and was drawn NOWHERE,
               which in a game that promises perfect information is worse than the damage being
               wrong: a zombie bled crossing an empty-looking square and read as a bug.
@@ -284,7 +284,7 @@ const TileBase: React.FC<TileProps> = ({
           </div>
       )}
 
-      {/* 2.4 ARMED TRAP — a Potato Mine waiting for a footstep. Sits at unit z-level so it
+      {/* 2.4 ARMED TRAP — a Seed Mine waiting for a footstep. Sits at unit z-level so it
               reads as a thing ON the board, not a tile decal; slight bob sells "armed". */}
       {data.trap && (
           <div className="absolute inset-0 flex items-end justify-center z-20 pointer-events-none">

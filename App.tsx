@@ -12,11 +12,11 @@ import {
 } from './constants';
 import { HERO_DEFINITIONS } from './data/heroes';
 import { bossById, elementsUnlocked, STAGES } from './data/unlocks';
-import { BOSS_CUTSCENES, STAGE_CUTSCENES } from './data/cutscenes';
+import { BOSS_CUTSCENES, STAGE_CUTSCENES, type CutsceneDef } from './data/cutscenes';
 import { ELEMENT_DEFINITIONS } from './utils/elements';
 import { HERO_SPRITES, HERO_ACCENTS } from './utils/icons';
 import { MATERIAL_DEFINITIONS, STARTING_MATERIALS } from './data/materials';
-import { applyFusion, applyFusionToSkill, applyUpgrade, hasFusionEffect, getFusionEffectValue, canFuse } from './utils/fusion';
+import { applyFusion, applyFusionToSkill, applyUpgrade, hasFusionEffect, getFusionEffectValue, canFuse, DIGEST_CLAW_SKILL } from './utils/fusion';
 import { computeThreatenedTiles, computeThreatDetail } from './utils/threat';
 import { missionMarkers } from './data/missions';
 import { useGameEngine, FAST_SPEED } from './hooks/useGameEngine';
@@ -226,7 +226,7 @@ const App: React.FC = () => {
 
   /**
    * Coin changed hands. Watched centrally for the same reason the click is: Coin moves through
-   * level rewards, shop purchases, rerolls, revives, brain buy-backs and half the event
+   * level rewards, shop purchases, rerolls, revives, sprout buy-backs and half the event
    * outcomes, and `ui-coin` had a file and a mix level but no call site because no single one
    * of those places felt like the obvious owner. The BALANCE is the event.
    *
@@ -253,31 +253,42 @@ const App: React.FC = () => {
 
   /**
    * Skills available to one specific unit. A GRANT_ATTACK fusion hands a hero an attack it
-   * did not have (Sun Shooter, Battlement, Spitter), so the skill list can no longer be
-   * keyed by class alone. `effect.value` carries the Sun price of the granted shot.
+   * did not have (Sol Shooter, Battlement, Spitter), so the skill list can no longer be
+   * keyed by class alone. `effect.value` carries the Sol price of the granted shot.
    */
   const skillsFor = React.useCallback((unit: Unit | null): Skill[] => {
       if (!unit) return [];
       // heroSkillDefs overrides a CLASS entry with that hero's kit — but the override must
-      // only apply to the hero. A bench Peashooter shares the class, and through this table
-      // it was quietly carrying Shadeleaf's basic AND her 50-Sun Precision Blast: a 100-Coin
+      // only apply to the hero. A bench Seed Gun shares the class, and through this table
+      // it was quietly carrying Peaburst's basic AND her 50-Sol Precision Blast: a 100-Coin
       // shop plant with a hero's signature move. Base plants read the plain class table.
       const base = (unit.isHero ? heroSkillDefs[unit.class] : skillDefs[unit.class]) || [];
-      if (!hasFusionEffect(unit, 'GRANT_ATTACK')) return base;
+
+      // Rending Claws: the one action allowed through the digest window. Built from the shared
+      // constant (utils/fusion) because getValidSkillTargets holds the gate open by its ID.
+      const withClaw = hasFusionEffect(unit, 'DIGEST_CLAW')
+          && !base.some(sk => sk.id === DIGEST_CLAW_SKILL.id)
+          ? [...base, {
+              ...DIGEST_CLAW_SKILL,
+              name: t(DIGEST_CLAW_SKILL.name),
+              description: t(DIGEST_CLAW_SKILL.description),
+          }]
+          : base;
+      if (!hasFusionEffect(unit, 'GRANT_ATTACK')) return withClaw;
 
       const cost = getFusionEffectValue(unit, 'GRANT_ATTACK');
       const granted: Skill = {
           id: 'fusion_granted_shot',
           name: t('Fused Shot'),
           description: cost > 0
-              ? t('A ranged shot granted by fusion. Costs {cost} Sun.', { cost })
+              ? t('A ranged shot granted by fusion. Costs {cost} Sol.', { cost })
               : t('A ranged shot granted by fusion. Free.'),
           rangeType: 'LINE',
           rangeValue: 6,
           sunCost: cost,
           effects: [{ type: 'DAMAGE', value: 2 }],
       };
-      return base.some(sk => sk.id === granted.id) ? base : [...base, granted];
+      return withClaw.some(sk => sk.id === granted.id) ? withClaw : [...withClaw, granted];
   }, [heroSkillDefs, skillDefs, t]);
 
   const [showSquadViewer, setShowSquadViewer] = useState(false);
@@ -362,6 +373,15 @@ const App: React.FC = () => {
    * through to `handleLevelComplete`.
    */
   const [cutscenes, setCutscenes] = useState<QueuedCutscene[]>([]);
+
+  /**
+   * A scene replayed from the Collection's gallery — SEPARATE state from `cutscenes` above,
+   * and that separation is the whole point: draining that queue is what calls
+   * `handleLevelComplete`, so re-using it from a menu would end a level that is not being
+   * played. This one only ever closes itself. `'OUTRO'` is the epilogue comic, which is a
+   * page rather than a single panel and so has its own component.
+   */
+  const [replayScene, setReplayScene] = useState<CutsceneDef | 'OUTRO' | null>(null);
 
   /**
    * The tutorial is OFFERED, never forced. It used to be the only road into a first run —
@@ -468,7 +488,7 @@ const App: React.FC = () => {
   const [pendingDialogueNode, setPendingDialogueNode] = useState<MapNode | null>(null);
   const seenDialogues = React.useRef<Set<string>>(new Set());
 
-  // Shadeleaf's map briefing: plays over the FIRST look at the tutorial map, bridging the
+  // Peaburst's map briefing: plays over the FIRST look at the tutorial map, bridging the
   // intro comic's rooftop ending into the run (what the symbols mean, find the others).
   /** Node types the current map-intro line is describing, lit up in the legend. */
   const [mapIntroHighlight, setMapIntroHighlight] = useState<string[] | undefined>(undefined);
@@ -571,19 +591,19 @@ const App: React.FC = () => {
       if (gameState.interactionMode !== 'TARGETING' || !selectedUnit || !gameState.selectedSkillId) return [];
       const baseSkill = skillsFor(selectedUnit).find(s => s.id === gameState.selectedSkillId);
       if (!baseSkill) return [];
-      // Fusions can change a skill's reach (Pea Lance, Wall-nut Bowling) — targeting
+      // Fusions can change a skill's reach (Pea Lance, Armor Plate Bowling) — targeting
       // must see the same skill the cast will resolve with.
       const skill = applyFusionToSkill(baseSkill, selectedUnit);
       
       if (skill.requiresSunCharge && (!selectedUnit.sunCharge || selectedUnit.sunCharge <= 0)) {
           return [];
       }
-      // Sun producers may walk now, but a turn spent walking is a turn without light.
+      // Sol producers may walk now, but a turn spent walking is a turn without light.
       // Enforced here as well as on the button so the rule holds however the cast is reached.
       if (selectedUnit.hasMoved && isSunProducingSkill(skill)) {
           return [];
       }
-      // Can't afford it — offer no targets so the player can't spend Sun they don't have.
+      // Can't afford it — offer no targets so the player can't spend Sol they don't have.
       // Must use the same discounted price the click handler charges, or the UI would offer
       // a move the game then refuses.
       const netCost = Math.max(0, (skill.sunCost || 0) - getFusionEffectValue(selectedUnit, 'SKILL_DISCOUNT'));
@@ -617,7 +637,7 @@ const App: React.FC = () => {
   }, [gameState.interactionMode, selectedUnit, gameState.selectedSkillId, hoveredTile, validSkillTargetTiles, skillDefs, board]);
 
   const previewPushDirection = useMemo(() => {
-      // Blover: show which way the wind will blow before the player commits.
+      // Storm Fan: show which way the wind will blow before the player commits.
       if (gameState.interactionMode === 'ITEM_TARGETING' && gameState.selectedItemId && hoveredTile) {
           const item = itemDefs.find(i => i.id === gameState.selectedItemId);
           if (item?.effect === 'GUST') {
@@ -672,7 +692,7 @@ const App: React.FC = () => {
    * HOW FAR the shove goes, not just which way.
    *
    * The arrow above only ever showed a direction, which was true while every PUSH in the game
-   * moved exactly one tile. Chardwall shoves TWO, and a fusion can add more — and this game
+   * moved exactly one tile. Chardslam shoves TWO, and a fusion can add more — and this game
    * promises the player perfect information, so an arrow that says "that way" about a two-tile
    * throw is the telegraph lying. Read off the FUSED skill for the same reason the direction is:
    * what is drawn has to be what resolves.
@@ -692,12 +712,12 @@ const App: React.FC = () => {
       const item = itemDefs.find(i => i.id === gameState.selectedItemId);
       if (!item) return [];
 
-      // Jalapeno burns the whole row it lands on.
-      if (item.id === 'jalapeno') {
+      // Flame Strike burns the whole row it lands on.
+      if (item.id === 'flame_strike') {
           return Array.from({ length: 8 }, (_, col) => ({ x: hoveredTile.x, y: col }));
       }
 
-      // Blover is board-wide. Highlighting only the hovered tile would imply it is a point
+      // Storm Fan is board-wide. Highlighting only the hovered tile would imply it is a point
       // effect and hide the fact that the click only chooses a direction.
       if (item.effect === 'GUST') {
           const all: Position[] = [];
@@ -751,7 +771,7 @@ const App: React.FC = () => {
               target && target.stage > 0 ? target.stage - 1 : undefined,
               target?.id,
           ));
-      // Coin is the cross-level currency now; Sun is granted per level by setupCombat.
+      // Coin is the cross-level currency now; Sol is granted per level by setupCombat.
       // The purse is sized to the act being attempted: a stage III run is the same ten layers
       // against harder boards, and the Breach is ten bosses with no shop in it at all.
       setGameState(prev => ({
@@ -769,16 +789,16 @@ const App: React.FC = () => {
        * The player chooses, but the shelf is capped by how deep the fallen run got —
        * an act-I wipe offers the cheap tier, a deep run earns the expensive one. The cap
        * is what keeps the gift proportionate to the squad the player is fielding now:
-       * Coffee Bean (100) never appears, because "stronger than anything you could have
+       * Stim Shot (100) never appears, because "stronger than anything you could have
        * bought yet" stops being consolation and starts being strategy.
        */
-      // The Breach's door is a ground of its own: first entry unlocks the Doom-shroom and
+      // The Breach's door is a ground of its own: first entry unlocks the Blight Core and
       // hands one over ('BREACH' is a run mode, not a WorldType, so no map node carries it).
       if (target?.stage === 0) visitSector('BREACH');
 
       const echo = loadChronoEcho();
       if (echo) {
-          // The tutorial's graduation gift is the starter tier alone (25 = the Potato Mine);
+          // The tutorial's graduation gift is the starter tier alone (25 = the Seed Mine);
           // real defeats scale with how deep the fallen run got. The pool is also capped by
           // what is UNLOCKED — the echo consoles with tools the player has earned, it never
           // previews locked ones (design call, 2026-08-06).
@@ -817,7 +837,7 @@ const App: React.FC = () => {
    *
    * This used to re-fire whenever the shelf hit zero, which was invisible until a purchase
    * started removing cards: buying the last plant instantly conjured a fresh random shelf.
-   * In the tutorial that blew the pinned stock apart (a random Snow Pea for 175 where the
+   * In the tutorial that blew the pinned stock apart (a random Ice Grenade for 175 where the
    * budget expects nothing), and in a real run it meant infinite stock for anyone with Coin
    * — the shop could never actually sell out. Keyed on the VISIT, not on the shelf being
    * empty, so an emptied shelf stays empty until the next shop.
@@ -843,7 +863,7 @@ const App: React.FC = () => {
 
   const handleReroll = () => {
       // A pinned shop cannot be rerolled. rollShopOffers() would replace the two plants the
-      // tutorial's budget is built around with a random pair — a 175-Coin Snow Pea here and
+      // tutorial's budget is built around with a random pair — a 175-Coin Ice Grenade here and
       // the revive on board 5 is unaffordable, which is the exact failure pinning prevents.
       if (tutorialNode(gameState.currentLevelId ?? '')?.shopOffers) return;
 
@@ -1091,7 +1111,7 @@ const App: React.FC = () => {
       // unchanged — push, freeze and the rest already know how to run.
       const skill = withFusionEffects(baseSkill, selectedUnit);
 
-      // Ultimates are the ones that burn a Sun charge, so that flag is also the
+      // Ultimates are the ones that burn a Sol charge, so that flag is also the
       // line between "a move" and "a moment" as far as the mix is concerned.
       sfx(skill.requiresSunCharge ? 'skill-ult' : 'skill-cast');
 
@@ -1186,7 +1206,7 @@ const App: React.FC = () => {
 
   /**
    * Applies one option's effects in order. Every branch here changes something that survives
-   * into the next battle — see the header of data/events.ts for why the old Sun/heal/stat
+   * into the next battle — see the header of data/events.ts for why the old Sol/heal/stat
    * effects were removed rather than fixed.
    */
   const handleEventResolve = (effects: EventEffect[]) => {
@@ -1229,7 +1249,7 @@ const App: React.FC = () => {
 
               case 'GAIN_BENCH_PLANT': {
                   const pool = unlocks?.materials?.length ? unlocks.materials : STARTING_MATERIALS;
-                  // Some events promise a named plant ("you win the Wall-nut"); the rest roll.
+                  // Some events promise a named plant ("you win the Armor Plate"); the rest roll.
                   const pick = effect.materialId ?? pool[Math.floor(Math.random() * pool.length)];
                   // addBenchPlant returns false when the bench is full; refund so the choice
                   // is never a dead click.
@@ -1305,11 +1325,11 @@ const App: React.FC = () => {
   // testing anything past the first node painfully slow.
   const toggleDebugMode = () => setGameState(prev => ({ ...prev, debugMode: !prev.debugMode }));
 
-  /** Enough Coin to actually exercise the shop. Brains are deliberately NOT topped up —
+  /** Enough Coin to actually exercise the shop. Sprouts are deliberately NOT topped up —
    *  handing them out free would make the buy-back untestable. */
   const debugGrant = () => setGameState(prev => ({ ...prev, coins: prev.coins + 500 }));
 
-  /** Burn a brain so the buy-back panel becomes reachable without losing a real map. */
+  /** Burn a sprout so the buy-back panel becomes reachable without losing a real map. */
   const debugLoseBrain = () => setGameState(prev => ({
       ...prev,
       brainsRemaining: Math.max(0, prev.brainsRemaining - 1),
@@ -1333,7 +1353,7 @@ const App: React.FC = () => {
    * It goes through the ORDINARY path — build a squad the way handleStartGame does, lay a
    * throwaway map of the requested depth, then `selectNode` — instead of assembling an
    * encounter directly. Depth is read off the map graph (layerOfNode counts node rows), and
-   * mission, hazard, Sun and reward all hang off the node, so a shortcut around the map
+   * mission, hazard, Sol and reward all hang off the node, so a shortcut around the map
    * would be a second, quietly different game to test against.
    */
   const debugJumpToFight = (jump: DebugJump) => {
@@ -1721,7 +1741,6 @@ const App: React.FC = () => {
             onTutorial={() => setGameState(prev => ({ ...prev, screen: 'TUTORIAL' }))}
             onOpenSettings={() => setShowSettingsModal(true)}
             onReplayTutorial={replayTutorial}
-            onReplayIntro={() => { introWasReplay.current = true; setShowIntro(true); }}
           />
       )}
 
@@ -1729,12 +1748,18 @@ const App: React.FC = () => {
           <TutorialScreen
             unlocks={unlocks}
             onBack={() => setGameState(prev => ({ ...prev, screen: 'START_MENU' }))}
+            /* The story's only door. It used to be one link on the menu that opened the
+               intro and nothing else; the thirteen cutscenes played once, mid-run, and were
+               then unreachable forever. */
+            onReplayIntro={() => { introWasReplay.current = true; setShowIntro(true); }}
+            onReplayOutro={outroReady ? () => setReplayScene('OUTRO') : undefined}
+            onPlayCutscene={scene => setReplayScene(scene)}
           />
       )}
 
       {/*
         The prop was never passed, so the picker fell back to its STARTING_HEROES default
-        and every unlocked hero stayed behind a padlock — Maw and Frostpod included, on a
+        and every unlocked hero stayed behind a padlock — Snapmaw and Frostpod included, on a
         save that already owned them. The unlock table, the boss rewards and the victory
         announcement were all working; the one screen that hands the hero to the player
         was reading a constant.
@@ -1805,29 +1830,6 @@ const App: React.FC = () => {
                     addDamageEvent(0, 0, cost, 'SUN'); 
                 }
             }}
-            onEvolveUnit={(id, targetClass) => {
-                const u = units.find(unit => unit.id === id);
-                if (!u) return;
-                const def = unitDefs[u.class];
-                const cost = def.evolutionCost || 999;
-                
-                if (gameState.sun >= cost) {
-                    const newDef = unitDefs[targetClass];
-                    setGameState(prev => ({ ...prev, sun: prev.sun - cost }));
-                    setUnits(prev => prev.map(unit => unit.id === id ? { 
-                        ...unit, 
-                        class: targetClass,
-                        name: newDef.name,
-                        maxHp: newDef.maxHp,
-                        hp: newDef.maxHp, 
-                        damage: newDef.damage,
-                        moveRange: newDef.moveRange,
-                        imgUrl: newDef.imgUrl,
-                        immunities: newDef.immunities,
-                        movementType: newDef.movementType
-                    } : unit));
-                }
-            }}
           />
       )}
 
@@ -1850,11 +1852,11 @@ const App: React.FC = () => {
              brainCost={brainCost()}
              onBuyBrain={buyBrain}
              onBuyItem={(item) => {
-                 // Items are bought with Coin now — Sun never leaves the battlefield.
+                 // Items are bought with Coin now — Sol never leaves the battlefield.
                  // One card, one sale, exactly like the plants: an item that stayed on the
                  // shelf could be bought until the purse ran dry, which made the "worst
                  // shopping trip" the budget assertion checks a fiction — a player could
-                 // spend the revive fund on eight Potato Mines.
+                 // spend the revive fund on eight Seed Mines.
                  setGameState(prev => ({
                      ...prev,
                      coins: prev.coins - item.coinCost,
@@ -2001,7 +2003,7 @@ const App: React.FC = () => {
             <div className="min-h-full flex flex-col items-center justify-center text-center px-6 py-8">
               <p className="text-cyan-400 mb-3 uppercase tracking-widest animate-pulse">{t('TICK... TICK...')}</p>
               <h1 className="text-3xl sm:text-5xl text-cyan-300 mb-4 font-bold uppercase tracking-widest drop-shadow-[0_0_12px_rgba(34,211,238,0.6)]">{t('Timeline Lost')}</h1>
-              <p className="text-gray-400 mb-2 uppercase tracking-widest">{t('The Zombies ate your brains...')}</p>
+              <p className="text-gray-400 mb-2 uppercase tracking-widest">{t('The Zombies ate your sprouts...')}</p>
               <p className="text-gray-300 mb-6 tracking-widest">{t('Chrona: "I still hold a copy of this timeline. Jump with me."')}</p>
 
               {/* Losing pays too, and this is the only place that can prove it. Without a
@@ -2129,6 +2131,18 @@ const App: React.FC = () => {
 
       {showIntro && <IntroComic onDone={closeIntro} />}
       {showOutro && <OutroComic onDone={() => { setShowOutro(false); handleLevelComplete(); }} />}
+
+      {/* GALLERY PLAYBACK — the same two components, wired to close and nothing else. */}
+      {replayScene === 'OUTRO' && <OutroComic onDone={() => setReplayScene(null)} />}
+      {replayScene && replayScene !== 'OUTRO' && (
+          <Cutscene
+            key={replayScene.art}
+            art={replayScene.art}
+            kicker={replayScene.kicker}
+            captions={replayScene.captions}
+            onDone={() => setReplayScene(null)}
+          />
+      )}
 
       {/*
         THE BOSS'S STORY BEATS, played out before the map returns.

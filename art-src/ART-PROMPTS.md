@@ -8,7 +8,7 @@
 ## Hai luật không được phá
 
 **1. Nhắc tới Plants vs. Zombies CHỈ dưới dạng PHỦ ĐỊNH.** Đây là chỗ bản đầu của file này viết
-sai chiều: nó cấm tiệt. Nhưng prompt thật đã sinh ra Sunspot lại ghi *"Must NOT look like the
+sai chiều: nó cấm tiệt. Nhưng prompt thật đã sinh ra Sunbloom lại ghi *"Must NOT look like the
 original Plants vs Zombies character"* — và đó là ràng buộc **tránh xa**, ngược hẳn với sao chép.
 Nói ra để máy biết mà né còn hiệu quả hơn im lặng rồi để nó tự trôi về nguyên mẫu.
 
@@ -24,7 +24,7 @@ trên bàn cờ — lúc đó phải làm lại từ đầu.
 
 ## KHỐI PHONG CÁCH (bắt buộc, dán vào mọi prompt)
 
-Rút ra từ hai prompt thật đã sinh ra Cobb và Sunspot. Hero có khuôn đầy đủ riêng ở mục 1; khối
+Rút ra từ hai prompt thật đã sinh ra Cornova và Sunbloom. Hero có khuôn đầy đủ riêng ở mục 1; khối
 này là bản rút gọn cho **gear** và **boss**.
 
 ```
@@ -80,7 +80,7 @@ Ba bản prompt đầu của file này hỏng theo ba kiểu khác nhau. Ghi l�
 
 # 1 · HERO
 
-Bốn hero còn thiếu art. Mẫu dưới đây **dựng lại từ hai prompt thật đã sinh ra Cobb và Sunspot** —
+Bốn hero còn thiếu art. Mẫu dưới đây **dựng lại từ hai prompt thật đã sinh ra Cornova và Sunbloom** —
 đó là nguồn chuẩn duy nhất, vì kết quả của chúng đang nằm trong `public/img/`.
 
 ### Quy trình: sinh THẺ, ship SPRITE
@@ -161,11 +161,11 @@ PALETTE: cactus green, pale sage, sun-bleached tan, dark gunmetal, acid-green gl
 HUD: "UNIT ID: CTS-7  //  STATUS: OVERWATCH  //  AMMO: SPINE RAILS [06/06]"
 ```
 
-## 1.7 Thornhide — `hero-thornhide.jpg` → `sprite-thornhide.png`
+## 1.7 Thornshell — `hero-thornhide.jpg` → `sprite-thornhide.png`
 
 | | |
 |---|---|
-| **Cây** Endurian (sầu riêng) · **Vai** cận chiến · **Accent** `#b45309` |
+| **Cây** Spike Armor (sầu riêng) · **Vai** cận chiến · **Accent** `#b45309` |
 | **Máu / Sát thương / Di chuyển** 10 · 2 · 2 |
 | **Đánh thường** *Quật Gai* — **phản 2 sát thương** lên ai đánh cận chiến |
 | **Kỹ năng** *Khiêu Khích* — mọi địch trong 3 ô buộc phải nhắm vào anh ta |
@@ -187,11 +187,11 @@ PALETTE: burnt husk brown, ochre, moss green, dark iron, amber glow.
 HUD: "UNIT ID: EDR-8  //  STATUS: TAUNTING  //  ARMOR: THORN PLATE [100%]"
 ```
 
-## 1.8 Chardwall — `hero-chardwall.jpg` → `sprite-chardwall.png`
+## 1.8 Chardslam — `hero-chardwall.jpg` → `sprite-chardwall.png`
 
 | | |
 |---|---|
-| **Cây** Chard Guard (cải cầu vồng) · **Vai** khống chế vị trí · **Accent** `#ef4444` |
+| **Cây** Spring Arm (cải cầu vồng) · **Vai** khống chế vị trí · **Accent** `#ef4444` |
 | **Máu / Sát thương / Di chuyển** 8 · **0** · 3 |
 | **Đánh thường** *Vung Ngược* — **0 sát thương**, hất lùi 2 ô |
 | **Kỹ năng** *Càn Quét* — hất mọi địch kề bên 2 ô cùng lúc |
@@ -217,7 +217,7 @@ HUD: "UNIT ID: CHG-9  //  STATUS: BRACED  //  FORCE: KINETIC RAM [02 TILES]"
 
 | | |
 |---|---|
-| **Cây** Pumpkin · **Vai** hỗ trợ · **Accent** `#f97316` |
+| **Cây** Bunker Shell · **Vai** hỗ trợ · **Accent** `#f97316` |
 | **Máu / Sát thương / Di chuyển** 8 · 1 · 3 |
 | **Đánh thường** *Đập Vỏ Bí* — 1 sát thương |
 | **Kỹ năng** *Bọc Giáp* — cho **đồng đội** 3 khiên, không mất khi hết lượt |
@@ -247,11 +247,11 @@ Chỉ dùng nếu muốn làm lại cả bộ. Chỉ số để đối chiếu.
 
 | Hero | File | Máu/Dmg/Move | Bản sắc | Accent |
 |---|---|---|---|---|
-| Shadeleaf | `sprite-green-shadow.png` | 6 · 2 · 3 | xạ thủ đậu, bắn xa nhất bộ — đạn **dừng ở vật cản đầu tiên, kể cả cây nhà** | `#4ade80` |
+| Peaburst | `sprite-green-shadow.png` | 6 · 2 · 3 | xạ thủ đậu, bắn xa nhất bộ — đạn **dừng ở vật cản đầu tiên, kể cả cây nhà** | `#4ade80` |
 | Ironhusk | `sprite-wall-knight.png` | 10 · 1 · 2 | tường chắn hành lang; cú đập là để **đẩy**, không phải để giết | `#f59e0b` |
-| Sunspot | `sprite-solar-flare.png` | 6 · **0** · 2 | không tự vệ được, phải hộ tống; nuôi kinh tế Mặt Trời | `#fb923c` |
-| Maw | `sprite-chompzilla.png` | 8 · 2 · 3 | nuốt trọn mục tiêu, rồi **đứng không 2 lượt tiêu hoá** | `#d946ef` |
-| Cobb | `sprite-cobb.png` | 8 · 2 · 2 | máy ném ngô — người duy nhất **bắn vòng cầu qua đầu tường nhà mình** | `#eab308` |
+| Sunbloom | `sprite-solar-flare.png` | 6 · **0** · 2 | không tự vệ được, phải hộ tống; nuôi kinh tế Sol | `#fb923c` |
+| Snapmaw | `sprite-chompzilla.png` | 8 · 2 · 3 | nuốt trọn mục tiêu, rồi **đứng không 2 lượt tiêu hoá** | `#d946ef` |
+| Cornova | `sprite-cobb.png` | 8 · 2 · 2 | máy ném ngô — người duy nhất **bắn vòng cầu qua đầu tường nhà mình** | `#eab308` |
 
 ---
 
@@ -301,7 +301,7 @@ it, not itself. Accent #f97316.
 `gear-corn.png` · `gear-snow-pea.png`
 
 > ⚠ **`gear-snow-pea.png` đang treo.** Hero băng (Frostpod) đã bị gỡ khỏi roster để nhập vào
-> **nguyên tố BĂNG**, nên gear Snow Pea giờ dư ra — 10 gear cho 9 hero — và `PLAN-progression.md`
+> **nguyên tố BĂNG**, nên gear Ice Grenade giờ dư ra — 10 gear cho 9 hero — và `PLAN-progression.md`
 > đề nghị bỏ hẳn vì nó trùng trục với nguyên tố băng. **Đừng đặt art mới cho nó trước khi chốt.**
 
 ---
@@ -463,7 +463,7 @@ Accent: sickly blight green.
 ```
 
 ### Boss đã có art
-`sprite-gargantuar.png` — **Gargantuar** *(Verdant Reach)*, thứ đầu tiên to đến mức không đẩy nổi.
+`sprite-gargantuar.png` — **Gravehulk** *(Verdant Reach)*, thứ đầu tiên to đến mức không đẩy nổi.
 
 ---
 
@@ -475,7 +475,7 @@ Accent: sickly blight green.
 | Gear | 10 | **10** | — ✅ |
 | Boss | 9 | **9** | — ✅ |
 | Quân, vật cản, trạng thái phụ | — | **tất cả** | — ✅ |
-| Thùng đồ (`sprite-gear-crate.png`) | 1 | 0 | **1** — đang mượn Wall-nut, prompt ở mục Thùng Đồ |
+| Thùng đồ (`sprite-gear-crate.png`) | 1 | 0 | **1** — đang mượn Armor Plate, prompt ở mục Thùng Đồ |
 | Truyện tranh KẾT (`outro-0*.jpg`) | 8 | 0 | **8** — màn hình đã dựng sẵn, prompt ở mục 4 |
 
 > **Không còn art tạm nào người chơi nhìn thấy nữa** (2026-08-05). Ba mươi placeholder còn lại
@@ -483,8 +483,8 @@ Accent: sickly blight green.
 > giờ được render, vì hero đọc `HERO_SPRITES` còn quân dự bị đọc `MATERIAL_SPRITES`.
 >
 > Blightlord cũng đã nối (2026-08-05): thêm `UnitClass.BLIGHTLORD` cùng định nghĩa thân xác, nên
-> **không còn con trùm nào rơi về thân Gargantuar** nữa — trước đó trùm cuối game bị đánh dưới
-> hình hài và 16 máu của Gargantuar.
+> **không còn con trùm nào rơi về thân Gravehulk** nữa — trước đó trùm cuối game bị đánh dưới
+> hình hài và 16 máu của Gravehulk.
 
 Sau khi có file: lưu vào `public/img/`, rồi trỏ đúng một dòng trong `utils/icons.ts`
 (`HERO_ICONS` / `HERO_SPRITES` / `MATERIAL_SPRITES` / `ICONS`). Không cần đổi gì khác — art thay
@@ -508,9 +508,9 @@ tệ hơn không đổi, vì người chơi sẽ tin nó.
 |---|---|---|
 | **Sandreaver** | `isBurrowed` — đang dưới đất | `sprite-sandreaver-mound.png` |
 | **The Armada** | `movementType !== 'FLYING'` — đã bị bắn rơi, hết là quân bay với mọi luật | `sprite-armada-wreck.png` |
-| **Gargantuar** | `hp <= floor(maxHp / 2)` — mốc pha chung của mọi trùm, đúng lúc tầm ném tụt 4 → 2 | `sprite-gargantuar-wounded.png` |
+| **Gravehulk** | `hp <= floor(maxHp / 2)` — mốc pha chung của mọi trùm, đúng lúc tầm ném tụt 4 → 2 | `sprite-gargantuar-wounded.png` |
 
-> Gargantuar **không** phải "đã ném imp đi" — nó ném imp nhiều lần và không gì đếm cả. Con imp
+> Gravehulk **không** phải "đã ném imp đi" — nó ném imp nhiều lần và không gì đếm cả. Con imp
 > trên lưng là **dấu hiệu của máu**: còn cõng nghĩa là còn khoẻ.
 
 Muốn thêm trạng thái cho con khác: thêm một dòng vào `SPRITE_VARIANTS`. Bảng đó là **tra cứu
@@ -522,7 +522,7 @@ hỏi "lúc này nó trông thế nào" không bao giờ động được vào m
 ## Thùng Đồ — `sprite-gear-crate.png` ⚠ **asset mới (2026-08-05)**
 
 Nhiệm vụ `ESCORT_GEAR`: nó đứng giữa bàn, 8 máu, không đi, không đánh, và **cả bầy zombie đi tới nó đúng
-như đi tới một căn nhà**. Hiện đang mượn tạm sprite Wall-nut.
+như đi tới một căn nhà**. Hiện đang mượn tạm sprite Armor Plate.
 ```
 A battered wooden supply crate for a top-down tactics board. Weathered planks bound with rusted
 iron bands, one corner splintered, a seed-and-leaf stencil stamped on the front in flaking paint.
@@ -657,7 +657,7 @@ If the intro's plaza panel is available, match its camera angle deliberately. No
 
 Dưới đây là 3 mẫu prompt nguyên tố đại diện. Bạn hãy copy toàn bộ (bao gồm cả KHỐI PHONG CÁCH bắt buộc) vào công cụ sinh ảnh:
 
-### `hero-shadeleaf-fire.jpg` (Shadeleaf Lửa)
+### `hero-shadeleaf-fire.jpg` (Peaburst Lửa)
 ```
 STYLE: chibi tactical trading-card illustration, square 1:1, dark military war-room diorama.
 Subject stands on a hexagon-tiled diorama plinth with layered wood-and-steel edges, floating holographic UI panels around it, thin corner brackets framing the card, blurred blue monitor banks in the dark background.
@@ -677,7 +677,7 @@ A SOLDIER FIRST, A PLANT SECOND: the armour plating is MADE OF the plant — its
 PROMPT: A stout chibi heavy-defender soldier built from a WALNUT plant, modified for CRYOGENIC ICE COMBAT. The soldier wears massive, bulky juggernaut armor made of cracked brown walnut-shell plates, heavily coated in thick jagged CYAN ICE crystals and frost. The soldier holds a massive riot shield covered in thick glacial ice spikes. The helmet is a heavy dome with a bright glowing CYAN-BLUE visor slot. Icy mist and frost particles drift off the armor. The accent glow colour is CYAN ICE BLUE.
 ```
 
-### `hero-sunspot-elec.jpg` (Sunspot Điện)
+### `hero-sunspot-elec.jpg` (Sunbloom Điện)
 ```
 STYLE: chibi tactical trading-card illustration, square 1:1, dark military war-room diorama.
 Subject stands on a hexagon-tiled diorama plinth with layered wood-and-steel edges, floating holographic UI panels around it, thin corner brackets framing the card, blurred blue monitor banks in the dark background.

@@ -20,10 +20,10 @@
 |---|---|---|
 | Lượt mỗi trận | **7** | `BASE_MAX_TURNS` |
 | Sát thương cả đội gây ra mỗi lượt | **~5–6** | 3 hero, đa số 2 dmg |
-| Máu Gargantuar hiện tại | **16** | `data/zombies.ts` — kèm chú thích "10 gục sau hai lượt" |
+| Máu Gravehulk hiện tại | **16** | `data/zombies.ts` — kèm chú thích "10 gục sau hai lượt" |
 
 Trong 7 lượt đội bắn ra ~40 sát thương, nhưng **không phải tất cả rơi vào trùm** — quái lính
-vẫn tới, não vẫn phải giữ. Thực tế trùm nhận được **20–25**. Đó là lý do 16 máu của Gargantuar
+vẫn tới, mầm vẫn phải giữ. Thực tế trùm nhận được **20–25**. Đó là lý do 16 máu của Gravehulk
 là con số đúng cho act đầu, và là thang để suy ra tám con còn lại.
 
 > **✅ Đã vá.** Trước đây `objectivesFor('BOSS')` trả `['SURVIVE_TURNS']`, nghĩa là trốn đủ 7
@@ -37,8 +37,8 @@ là con số đúng cho act đầu, và là thang để suy ra tám con còn l�
 > Không có khoá thứ hai thì một bàn thiếu trùm sẽ tự thắng ngay lượt 1.
 >
 > **Ngân sách sát thương đã đo, không phải đoán:** bộ ba khởi đầu có trần lý thuyết **37 sát
-> thương** trong 7 lượt (3/lượt đánh thường + 4 phát Thiêu Nắng từ ngân sách 225 Sun) so với
-> **16 máu** của Gargantuar — dư **2,31 lần**. Kể cả khi chỉ trúng chưa tới một nửa thì trùm
+> thương** trong 7 lượt (3/lượt đánh thường + 4 phát Thiêu Nắng từ ngân sách 225 Sol) so với
+> **16 máu** của Gravehulk — dư **2,31 lần**. Kể cả khi chỉ trúng chưa tới một nửa thì trùm
 > vẫn gục, nên objective này siết chặt chứ không chặn đường.
 
 ---
@@ -47,11 +47,11 @@ là con số đúng cho act đầu, và là thang để suy ra tám con còn l�
 
 | Stage | Act | Vùng | `WorldType` | Hazard | Boss | Trả về |
 |---|---|---|---|---|---|---|
-| **I — Vành Đai Xanh** | 1 | Verdant Reach | `GRASS` | — | **Gargantuar** | Maw |
-| | 2 | Goldacre | `DESERT` | Runaway Cart | **Ironcart** | Cobb |
+| **I — Vành Đai Xanh** | 1 | Verdant Reach | `GRASS` | — | **Gravehulk** | Snapmaw |
+| | 2 | Goldacre | `DESERT` | Runaway Cart | **Ironcart** | Cornova |
 | | 3 | Kiln Row | `VOLCANO` | Lava Flow | **Cinder Colossus** | 🔥 LỬA |
-| **II — Bờ Xa** | 1 | Windward | `COAST` *(mới)* | **Thuỷ Triều** *(mới)* | **The Armada** | Chardwall |
-| | 2 | Thornwaste | `THORN` *(mới)* | **Màn Cát** *(mới)* | **Sandreaver** | Thornhide |
+| **II — Bờ Xa** | 1 | Windward | `COAST` *(mới)* | **Thuỷ Triều** *(mới)* | **The Armada** | Chardslam |
+| | 2 | Thornwaste | `THORN` *(mới)* | **Màn Cát** *(mới)* | **Sandreaver** | Thornshell |
 | | 3 | Frostgate | `ICE` *(có type, chưa có bàn)* | Wind Gust | **Yeti** | ❄️ BĂNG |
 | **III — Thành Phố** | 1 | Neon Rose | `NEON` *(mới)* | **Đèn Quét** *(mới)* | **The Headliner** | Thornquill |
 | | 2 | Old Quarter | `RUIN` *(mới)* | **Sập Nhà** *(mới)* | **Clockjaw** | Gourdward |
@@ -112,7 +112,7 @@ Luật không đổi: **hazard luôn báo trước trọn một lượt** (`plan
 |---|---|---|---|
 | `COAST` | **`TIDE`** — Thuỷ Triều | Các ô bờ đánh dấu **hoá `WATER` một lượt**. Ai đứng đó mà không bay/lội → `DROWN`. Rút xuống thành `GRASS` lại. | `MODIFY_TERRAIN` đã có (`LAVA_FLOW` dùng nó), luật `DROWN` đã có |
 | `THORN` | **`DUST_VEIL`** — Màn Cát | 4–5 ô thành `environment: 'SMOKE'` trong 2 lượt. `SMOKE` đã định nghĩa sẵn: *"Blinds units. Cancels attacks."* | `EnvironmentType.SMOKE` đã có trong `terrain.ts`, chỉ chưa ai đặt nó xuống |
-| `NEON` | **`SPOTLIGHT`** — Đèn Quét | Một **dải ô** bị đèn quét qua. Ai đứng trong dải đó ở lượt sau bị **chỉ mặt**: mọi zombie đổi mục tiêu về đó, và nó **nhận thêm 1 sát thương mỗi đòn**. Không gây sát thương trực tiếp. | Dùng chung `TAUNTED`/`tauntedBy` với Thornhide và với Ánh Đèn của Headliner |
+| `NEON` | **`SPOTLIGHT`** — Đèn Quét | Một **dải ô** bị đèn quét qua. Ai đứng trong dải đó ở lượt sau bị **chỉ mặt**: mọi zombie đổi mục tiêu về đó, và nó **nhận thêm 1 sát thương mỗi đòn**. Không gây sát thương trực tiếp. | Dùng chung `TAUNTED`/`tauntedBy` với Thornshell và với Ánh Đèn của Headliner |
 | `RUIN` | **`COLLAPSE`** — Sập Nhà | 2 ô đánh dấu: lượt sau **3 sát thương** lên thứ đứng đó, rồi ô **hoá `WALL` vĩnh viễn**. Bàn cờ co lại suốt trận | `MODIFY_TERRAIN` + `APPLY_DAMAGE`, cả hai đã có |
 | `GRID` | **`SURGE`** — Quá Tải Lưới | **Mọi ô `POWER_TILE`** phóng điện: 1 sát thương + `STUN` lên thứ đứng trên, và **lan sang đơn vị kề ô đó**. | `POWER_TILE` đã có; phần lan dùng chung code với luật ĐIỆN |
 
@@ -157,7 +157,7 @@ Không cần ký tự nào khác: `COAST` dùng `~`/`=` đã có, `THORN` dùng 
 
 ### COAST — Windward
 
-Nước không còn là chướng ngại ở rìa bàn cờ; **nước là vũ khí**, và đây là vùng thả Chardwall ra.
+Nước không còn là chướng ngại ở rìa bàn cờ; **nước là vũ khí**, và đây là vùng thả Chardslam ra.
 
 ```
 coast_tide_line — "Ngấn Triều"
@@ -390,7 +390,7 @@ cộng các phép đo riêng của từng vùng ghi bên dưới.
 coast_the_causeway — "The Causeway"
 One strip of dry land crosses the bay, two tiles wide — everything on both sides has to walk it.
 
-Mọi thứ dồn vào hai hàng giữa. Chardwall đứng trên đường đắp, hất 2 ô là ra biển — mỗi cú hất
+Mọi thứ dồn vào hai hàng giữa. Chardslam đứng trên đường đắp, hất 2 ô là ra biển — mỗi cú hất
 một mạng trọn vẹn. Thuỷ Triều vặn ngược lại: ô bờ của đường đắp chính là ô bạn đang đứng.
 
     H.DD~~.S
@@ -405,11 +405,11 @@ một mạng trọn vẹn. Thuỷ Triều vặn ngược lại: ô bờ của đ
 
 ```
 coast_lee_shore — "Lee Shore"
-The sea sits behind the houses. The only drowning shove is the one that sends them the way
+The sea sits behind the Greenspires. The only drowning shove is the one that sends them the way
 they wanted to go.
 
 Biển nằm SAU LƯNG nhà, nên cú đẩy giết người là cú đẩy về phía tây — đúng hướng zombie muốn đi.
-Bàn duy nhất trong pool bắt người chơi đẩy địch về phía não của chính mình.
+Bàn duy nhất trong pool bắt người chơi đẩy địch về phía mầm của chính mình.
 
     ~.DD...S
     ~.DD..SS
@@ -464,7 +464,7 @@ không ai bắn đỡ cho ai được. Một đám Màn Cát đặt đúng cửa
 ```
 thorn_leeward_shelf — "Leeward Shelf"              (6 đá — mức vừa)
 The only rock sits a step from the spawn line — stand safe, or stand between the zombies and
-the brains.
+the sprouts.
 
 Đá dồn hết vào cột 5–6, tức sát cột spawn; nửa sân phía nhà trống trơn. Câu hỏi không phải
 "đứng đâu cho an toàn" mà "an toàn đáng bao nhiêu ô đường về".
@@ -481,7 +481,7 @@ the brains.
 
 ```
 thorn_lone_shade — "Lone Shade"                    (3 đá — mức tổng duyệt)
-One nook of rock in the whole waste, and it shades the top house only.
+One nook of rock in the whole waste, and it shades the top Greenspire only.
 
 Đúng một ô Sandreaver không với tới, và nó chỉ che được cái nhà trên cùng. Đây là bản tổng
 duyệt của `arena_sandreaver`: ai được ngồi đá, và hai người kia sống bằng cách không bao giờ
@@ -500,12 +500,12 @@ kết thúc lượt đứng chụm — đòn Trồi Lên nổ ra cả bốn ô k
 ### ICE — Frostgate
 
 Cả ba bàn **cố ý không có nước**: chuỗi *thổi → trượt → chết đuối* đã thuộc về `ice_frozen_lake`,
-nên ở đây rủi ro tự sát dừng ở va chạm và mất não, không ở chết đuối.
+nên ở đây rủi ro tự sát dừng ở va chạm và mất mầm, không ở chết đuối.
 
 > **Ba dữ kiện về `WIND_GUST` mà ba bàn này dựa vào — đã đối chiếu với code:** cú thổi **đẩy dây
 > chuyền tới 3 thân**, mọi thân trong đống va chạm **ăn 1 sát thương**, và **địch bị thổi vào nhà
-> còn não thì lấy não luôn** (`planPush` → `tookBrain`). Cờ `front.isEnemy` ngay cạnh đó là lý do
-> cây bị thổi vào nhà thì KHÔNG ăn não — và đó là bản lề của `ice_the_doorstep`.
+> còn mầm thì lấy mầm luôn** (`planPush` → `tookBrain`). Cờ `front.isEnemy` ngay cạnh đó là lý do
+> cây bị thổi vào nhà thì KHÔNG ăn mầm — và đó là bản lề của `ice_the_doorstep`.
 
 ```
 ice_frost_teeth — "Frost Teeth"
@@ -548,8 +548,8 @@ Open ice runs straight to two doorsteps; the middle door has a rock against it, 
 have only you.
 
 Nhà trên và nhà dưới mở thẳng ra băng: một cú gust thổi về phía nhà là marcher đứng cạnh **lấy
-não mà không cần đánh**. Phản đòn là cắm cây lên thềm bê tông — cú thổi đẩy cây vào nhà, và cây
-không ăn não được.
+mầm mà không cần đánh**. Phản đòn là cắm cây lên thềm bê tông — cú thổi đẩy cây vào nhà, và cây
+không ăn mầm được.
 
     HcDD:::S
     .cDD::SS
@@ -662,7 +662,7 @@ nhau và đám đông tới rời rạc. Bàn hỏi "chốt hoả lực ở đâ
 
 ```
 ruin_last_tenement — "Last Tenement"        ⚠ bàn hung hãn nhất pool — xem cảnh báo dưới
-One house still standing out in the debris field, rubble on its shoulder — the first thing the
+One Greenspire still standing out in the debris field, rubble on its shoulder — the first thing the
 march walks into.
 
 Một căn nhà bị đẩy hẳn ra GIỮA bàn ở (3,4), gạch vụn che một vai nên nó chỉ hở ba mặt. Bàn hỏi
@@ -681,14 +681,14 @@ nghĩa nhất.
 
 > **Hai cảnh báo trên `ruin_last_tenement` — cả hai đo được, không phải cảm giác:**
 >
-> 1. **Nhà (3,4) cách ô spawn đúng 3 ô.** `aiLogic.findGoal` chọn nhà có não GẦN NHẤT theo
+> 1. **Nhà (3,4) cách ô spawn đúng 3 ô.** `aiLogic.findGoal` chọn nhà có mầm GẦN NHẤT theo
 >    Manhattan, nên mọi zombie ở nửa dưới bàn cờ bỏ ba nhà kia mà lao vào đúng nó — nó là cột thu
->    lôi. Một zombie di chuyển 3 đứng kề nó ngay lượt 1, và lấy não ở lượt 2 nếu không ai chắn.
+>    lôi. Một zombie di chuyển 3 đứng kề nó ngay lượt 1, và lấy mầm ở lượt 2 nếu không ai chắn.
 >    Có thể đó chính là ý đồ ("bỏ hay giữ"), nhưng đây là bàn duy nhất trong 30 bàn có thể mất
->    một não ở lượt 2 — **phải chơi thử trước khi ship**.
+>    một mầm ở lượt 2 — **phải chơi thử trước khi ship**.
 > 2. **Sập Nhà bịt ô (6,1) + (7,2) thì nhà (7,1) không còn đường tới.** 1 cặp trong 1.485 cặp
 >    (~0,07%); hai bàn RUIN kia sạch tuyệt đối (0/1.540 mỗi bàn). Hệ quả không phải "ván không
->    thắng nổi" mà ngược lại — cái não đó thành bất khả xâm phạm và đám zombie nhắm vào nó đứng
+>    thắng nổi" mà ngược lại — cái mầm đó thành bất khả xâm phạm và đám zombie nhắm vào nó đứng
 >    dậm chân tại chỗ. Vẫn phải vá, bằng đúng cái chặn đã ghi ở rủi ro số 5: `planHazard` không
 >    được chọn ô là đường nối duy nhất.
 
@@ -709,7 +709,7 @@ One live tile on every doorstep — the best firing line on the board is the one
 never lets go of.
 
 Ba ô điện nằm ngay cạnh ba căn nhà: chỗ bắn dọc hàng ngon nhất bàn cờ, và cũng là chỗ ai cũng
-phải đứng để giữ não. Với Voltmaw thì đó là ba ô nó với tới bất kể khoảng cách — tuyến phòng thủ
+phải đứng để giữ mầm. Với Voltmaw thì đó là ba ô nó với tới bất kể khoảng cách — tuyến phòng thủ
 quen thuộc nhất lại là tuyến nó nhắm đầu tiên.
 
     H*DD...S
@@ -773,7 +773,7 @@ Cần thêm hai trường vào `MapTemplate`:
 ```ts
 /** Bàn này chỉ dùng cho trận trùm — không bao giờ rơi vào node BATTLE/ELITE. */
 arenaFor?: BossId;
-/** Bàn không có ô nhà: luật não tự tắt (turnManager đã chặn bằng `length > 0`). */
+/** Bàn không có ô nhà: luật mầm tự tắt (turnManager đã chặn bằng `length > 0`). */
 noHouses?: boolean;
 ```
 
@@ -783,7 +783,7 @@ màn cuối (`PLAN-progression.md` mục 7).
 
 | Trùm | Sân | Ý đồ địa hình |
 |---|---|---|
-| Gargantuar | `arena_gargantuar` | Trống trơn. Không có gì để né sau — chỉ có việc dồn sát thương |
+| Gravehulk | `arena_gargantuar` | Trống trơn. Không có gì để né sau — chỉ có việc dồn sát thương |
 | Ironcart | `arena_ironcart` | Ba tuyến ray chạy suốt: nó đi đâu cũng được, bạn thì không |
 | Cinder Colossus | `arena_cinder` | Dung nham mồi sẵn — nó sẽ nối chúng lại thành tường lửa |
 | The Armada | `arena_armada` | Biển hai bên sườn: chỗ để **hất xác nó xuống** sau khi bắn rụng |
@@ -857,7 +857,7 @@ lời cho chính nó.** Thêm ba luật tự đặt cho file này:
 
 ---
 
-### I-1 · **Gargantuar** — *Verdant Reach* — `GARGANTUAR` ✅ *(chạy được, cả pha 2)*
+### I-1 · **Gravehulk** — *Verdant Reach* — `GRAVEHULK` ✅ *(chạy được, cả pha 2)*
 
 | Máu | Sát thương | Di chuyển | Tầm | Miễn nhiễm | |
 |---|---|---|---|---|---|
@@ -869,26 +869,26 @@ choáng) đều trượt qua nó. Giả định bị phá: *"chặn được là
 | Kỹ năng | Telegraph | Hiệu ứng |
 |---|---|---|
 | **Nghiền** | ô mục tiêu đỏ, ghi 5 | 5 sát thương cận chiến. Trên nền máu mới (mục 6) nó **để hero mỏng nhất còn đúng 1 máu** — và vẫn giết đứt hero mang element |
-| **Ném Imp** | ô đáp sáng, "Throwing Imp!" | Sinh một Imp (1 máu, di chuyển 4) **sau lưng tuyến**. Chỉ ném khi mục tiêu gần nhất xa hơn 4 ô |
+| **Ném Runt** | ô đáp sáng, "Throwing Runt!" | Sinh một Runt (1 máu, di chuyển 4) **sau lưng tuyến**. Chỉ ném khi mục tiêu gần nhất xa hơn 4 ô |
 
-**Pha 2 (≤8 máu) — Giậm Đất.** Ném **hai** Imp một lượt, ở hai phía đối diện của tuyến.
+**Pha 2 (≤8 máu) — Giậm Đất.** Ném **hai** Runt một lượt, ở hai phía đối diện của tuyến.
 
 **Cách phá:** không có cách nào ngăn cú Nghiền — chỉ có cách **không đứng ở đó**. Đây là con
 trùm dạy người chơi đọc telegraph và bỏ vị trí. Nó là bài kiểm tra đầu tiên, nên nó phạt bằng
 *gần chết* chứ không bằng *chết* — trừ khi bạn đã bán 2 máu tối đa để lấy element.
 
-**Trả về: Maw** — cái mồm nuốt được thứ lớn. *(`Nuốt Chửng` không đụng được `isMassive` — đó là
+**Trả về: Snapmaw** — cái mồm nuốt được thứ lớn. *(`Nuốt Chửng` không đụng được `isMassive` — đó là
 cố ý: phần thưởng không phải là nút xoá con trùm vừa rồi, mà là công cụ xoá mọi thứ dày máu sau nó.)*
 
-**Engine:** đã chạy. AI riêng nằm trong `aiLogic.ts` (`GARGANTUAR SPECIAL AI`). Chỉ cần thêm
+**Engine:** đã chạy. AI riêng nằm trong `aiLogic.ts` (`GRAVEHULK SPECIAL AI`). Chỉ cần thêm
 pha 2 và objective `SLAY_BOSS`.
 
 ---
 
-### I-2 · **Ironcart** — *Goldacre* — `CATAPULT_LORD` ✅ *(chạy được)*
+### I-2 · **Ironcart** — *Goldacre* — `IRONCART` ✅ *(chạy được)*
 
 > Tên hiển thị trong `data/unlocks.ts` đang là *"Catapult Lord"*, `PLAN-progression.md` gọi nó
-> là *Ironcart*. **Giữ id `CATAPULT_LORD`, đổi `name` thành `Ironcart`** — id đã nằm trong save.
+> là *Ironcart*. **Giữ id `IRONCART`, đổi `name` thành `Ironcart`** — id đã nằm trong save.
 
 | Máu | Sát thương | Di chuyển | Tầm | Miễn nhiễm |
 |---|---|---|---|---|
@@ -910,7 +910,7 @@ nhưng mỗi phát hết giết được hero — **đổi từ đe doạ mạng
 không đi qua). Hazard Runaway Cart của chính vùng đó cũng kéo nó — kéo về phía nhà, tức là về
 phía bạn. Con trùm này dạy dùng hazard làm vũ khí.
 
-**Trả về: Cobb** — khẩu cối bắn vòng, `LOB 2`. Cả act bị nã từ xa bằng đạn cong; giờ bạn có cái
+**Trả về: Cornova** — khẩu cối bắn vòng, `LOB 2`. Cả act bị nã từ xa bằng đạn cong; giờ bạn có cái
 duy nhất trong bộ chín người bắn được qua đầu tường nhà mình.
 
 > **Đã dựng tới đâu:** unit (18 máu, 3 sát thương, tầm 4, miễn `PUSH`, `movementType: 'RAIL'`),
@@ -982,7 +982,7 @@ chứ không phải phòng thủ.
 
 ---
 
-### II-1 · **The Armada** — *Windward* — `BALLOON_ARMADA` ✅ *(chạy được)*
+### II-1 · **The Armada** — *Windward* — `ARMADA` ✅ *(chạy được)*
 
 | Máu | Sát thương | Di chuyển | Tầm | Miễn nhiễm |
 |---|---|---|---|---|
@@ -1001,7 +1001,7 @@ nó xuống đất rồi hất nó ra biển**.
 | Kỹ năng | Telegraph | Hiệu ứng |
 |---|---|---|
 | **Thả Bom** | ô mục tiêu + 4 ô kề | 2 sát thương diện. Bay qua đầu mọi thứ nên không có "chỗ trốn phía sau" |
-| **Hạ Cánh Đội Hình** | hai ô đáp sáng | Thả **2 Balloon Zombie** *(đã có sẵn trong `data/zombies.ts`)* ngay sau tuyến của bạn |
+| **Hạ Cánh Đội Hình** | hai ô đáp sáng | Thả **2 Floater** *(đã có sẵn trong `data/zombies.ts`)* ngay sau tuyến của bạn |
 
 **Pha 2 (rơi xuống đất) — Xác Tàu.** Di chuyển còn 1, sát thương lên 4, không thả quân nữa. Nó
 biến từ *thứ không chạm được* thành *thứ chậm chạp và rất đau*. Và giờ nó đẩy được.
@@ -1009,10 +1009,10 @@ biến từ *thứ không chạm được* thành *thứ chậm chạp và rất
 **Cách phá:** cả trận là hai bài toán nối nhau — **bắn rụng** rồi **đẩy xuống nước**. Sân đấu có
 biển ở hai sườn đúng vì thế.
 
-**Trả về: Chardwall** — 0 sát thương, đẩy 2 ô. Bạn vừa tự tay làm điều anh ta làm được mỗi lượt.
+**Trả về: Chardslam** — 0 sát thương, đẩy 2 ô. Bạn vừa tự tay làm điều anh ta làm được mỗi lượt.
 
 > **Đã dựng tới đâu:** unit (22 máu, `FLYING`, miễn `DROWN`+`PUSH` khi còn bay), **ba khoang
-> khí**, **Thả Bom** (`blast` 5 ô), **Đổ Bộ** (2 Balloon Zombie sau lưng tuyến), và **cú rơi**.
+> khí**, **Thả Bom** (`blast` 5 ô), **Đổ Bộ** (2 Floater sau lưng tuyến), và **cú rơi**.
 >
 > **Bộ đếm khoang đo bằng MỐC MÁU, không bằng cờ "đã bị đánh chưa".** Cờ thì phải có ai đó reset
 > ở mọi đường đi mỗi lượt; sót một chỗ là tàu hoặc không bao giờ rơi hoặc rơi ngay. Mốc máu tự
@@ -1057,10 +1057,10 @@ hơn một lượt nhưng **đòn trồi lên tăng lên 5 sát thương**. Nhi�
 trượt là chết.
 
 **Cách phá:** `TAUNT`. Khiêu khích là thứ duy nhất **không phụ thuộc vào việc nó ở đâu** — nó có
-thể trồi lên bất cứ đâu, nhưng không thể chọn đánh ai. Trước khi có Thornhide thì cách duy nhất
+thể trồi lên bất cứ đâu, nhưng không thể chọn đánh ai. Trước khi có Thornshell thì cách duy nhất
 là giành ba ô đá và chấp nhận đội hình dồn cục.
 
-**Trả về: Thornhide** — khiêu khích + phản 2 sát thương.
+**Trả về: Thornshell** — khiêu khích + phản 2 sát thương.
 
 > **Đã dựng tới đâu:** unit (22 máu, `TELEPORT`, **không** miễn nhiễm gì), **Trồi Lên** (4 nhát ×
 > 4 sát thương + đẩy 1, qua `strikes` nên gai phản lại từng nhát), **Kéo Xuống Cát**, và pha 2.
@@ -1068,7 +1068,7 @@ là giành ba ô đá và chấp nhận đội hình dồn cục.
 > **`getValidTargets` không tồn tại** — hàm thật tên `getValidSkillTargets`, và nó **không phải
 > chốt chặn duy nhất**. Có **BẢY cửa**, không phải một:
 > `getValidSkillTargets` · `getTempUnit` trong `planSkillActions` (xuyên hàng, nổ diện, tia lan,
-> phát hai của Repeater, Blover — tất cả đi vòng qua cửa một) · `itemResolution` ×3 · `planPush`
+> phát hai của Repeater, Storm Fan — tất cả đi vòng qua cửa một) · `itemResolution` ×3 · `planPush`
 > ×2 · **`isTilePassable`** · **`selectOrMove` trong `App.tsx`**.
 >
 > Hai cửa cuối là cái bẫy: thiếu `isTilePassable` thì thân đang lặn thành **lỗ đen trong tầm di
@@ -1118,7 +1118,7 @@ một lượt để kéo nạn nhân ra… nhưng nạn nhân đang bị choáng
 **Pha 2 (≤12 máu) — Bão Tuyết.** Mỗi lượt biến 2 ô thành `ICE`, và Hơi Lạnh nới lên bán kính 2.
 
 **Cách phá:** không cho nó chạm ai. Nó **không miễn nhiễm `PUSH`** — đó là lỗ hổng cố ý: Ironhusk
-và Chardwall biến cả trận thành trò đẩy con gấu ra xa. Con trùm duy nhất trong chín con mà đẩy
+và Chardslam biến cả trận thành trò đẩy con gấu ra xa. Con trùm duy nhất trong chín con mà đẩy
 là câu trả lời chính.
 
 **Trả về: ❄️ ELEMENT BĂNG.** Kit của `COLD_SNAP` đã ship chuyển thẳng thành luật này
@@ -1140,7 +1140,7 @@ là câu trả lời chính.
 > 2. **`NEW_TURN_RESET` xoá `STUN`/`SLOW` cho MỌI unit ở cuối lượt địch**, tức trạng thái địch vừa
 >    gán lên hero bị xoá trong cùng loạt action. Nghĩa là **cả bầy zombie chưa từng cướp nổi một
 >    lượt của hero**. Giờ nó chỉ xoá cho phía địch; phía người chơi hết hạn ở đầu `processTurn` kế
->    tiếp — **sau** PHASE 2 (để hero bị choáng vẫn mất thu nhập Sun của lượt đó) và **trước** PHASE 3
+>    tiếp — **sau** PHASE 2 (để hero bị choáng vẫn mất thu nhập Sol của lượt đó) và **trước** PHASE 3
 >    (để địch gắn được đòn mới).
 > 3. **`getValidMoves` không đọc `SLOW`** — `SLOW` lên cây trước giờ hoàn toàn vô nghĩa. Đo lại sau
 >    khi sửa: 22 ô → 4 ô.
@@ -1153,7 +1153,7 @@ là câu trả lời chính.
 
 ---
 
-### III-1 · **The Headliner** — *Neon Rose* — `DISCO_ZOMBOSS` ✅ *(chạy được)*
+### III-1 · **The Headliner** — *Neon Rose* — `HEADLINER` ✅ *(chạy được)*
 
 | Máu | Sát thương | Di chuyển | Tầm | Miễn nhiễm |
 |---|---|---|---|---|
@@ -1177,7 +1177,7 @@ lần** mỗi lượt. Số lượng ngừng tăng, tốc độ thì tăng gấp
 > chung `ENRAGED` với Cờ Xí (`AURA_SOURCES` trong turnManager PHASE 1.5).
 > **Pha 2 (Encore) chưa làm** — nó cần `intents: Intent[]`, việc số 10.
 > Nó **không** `isMassive`: một tay cầm micro thì phải đẩy được, nếu không thì Ironhusk và
-> Chardwall bị xoá khỏi trận này.
+> Chardslam bị xoá khỏi trận này.
 
 **Cách phá:** ưu tiên mục tiêu, và dọn hàng. `arena_headliner` có **hai cột spawn kín** — đám
 đông xếp thành hàng dọc, đúng hình dạng mà một đòn xuyên hàng đọc được.
@@ -1185,8 +1185,8 @@ lần** mỗi lượt. Số lượng ngừng tăng, tốc độ thì tăng gấp
 **Trả về: Thornquill** — `LINE 6` xuyên cả hàng, miễn phí. Bạn vừa bị chôn dưới một đám đông xếp
 hàng; giờ bạn có mũi gai đi hết cả hàng đó.
 
-**Engine cần gì:** `ENRAGED` **đã chạy** (turnManager PHASE 1.5, Flag Zombie). Ánh Đèn dùng chung
-đường ống với `TAUNTED` + `tauntedBy` của Thornhide, chỉ đảo chiều — **làm `TAUNT` một lần, hai
+**Engine cần gì:** `ENRAGED` **đã chạy** (turnManager PHASE 1.5, Bannerman). Ánh Đèn dùng chung
+đường ống với `TAUNTED` + `tauntedBy` của Thornshell, chỉ đảo chiều — **làm `TAUNT` một lần, hai
 nơi dùng.**
 
 ---
@@ -1227,7 +1227,7 @@ trong game chặn được sát thương *trước khi* nó xảy ra.
 >
 > **Ranh giới với `blast` không phải số ô, mà là AI ĐƯỢC ĐÁP TRẢ.** `blast` là mặt đất bị đánh:
 > bom, đạn, tia — không phản đòn. `strikes` là N đòn đầy đủ, mỗi đòn chạy trọn PHASE 3. Hệ quả
-> hay nhất là thứ không ai thiết kế: **Thornhide phản đòn vào từng nhát** — 2 gai thành 4/lượt ở
+> hay nhất là thứ không ai thiết kế: **Thornshell phản đòn vào từng nhát** — 2 gai thành 4/lượt ở
 > đây và 6 khi trùm vặn ngược, tức cả thanh 22 máu trong bốn lượt từ một hero đứng yên. Con trùm
 > mà chiêu bài là "nhiều hành động hơn" bị hoá giải bởi đúng hero được trả công theo số hành động
 > giáng vào mình — **và hero đó là phần thưởng của act ngay trước nó**.
@@ -1264,7 +1264,7 @@ thưởng"*.
 con **tự làm hại chính nó**, và nó biến trận cuối stage III thành cuộc đua xem ai chết trước.
 
 **Cách phá:** **tách ra**. Bảy act vừa rồi dạy người chơi chốt hành lang, đứng sát nhau, che cho
-Sunspot. Con này phạt đúng thói quen đó. Và mọi ô điện `Nạp Lưới` tạo ra là một ô **nó sẽ tự đứng
+Sunbloom. Con này phạt đúng thói quen đó. Và mọi ô điện `Nạp Lưới` tạo ra là một ô **nó sẽ tự đứng
 lên** ở pha hai.
 
 **Trả về: ⚡ ELEMENT ĐIỆN** — lan một lần từ mục tiêu chính, ½ sát thương của hero (luật L3,
@@ -1329,14 +1329,14 @@ Hai luật đã chốt ở nơi khác cộng lại thành một chỗ hỏng:
 
 Đặt cạnh bảng sát thương thật của địch thì ra thế này:
 
-| Hero | Máu | Mang element | Chết sau mấy đòn Conehead *(2 dmg)* | …ở màn ELITE *(3 dmg)* |
+| Hero | Máu | Mang element | Chết sau mấy đòn Scrapcap *(2 dmg)* | …ở màn ELITE *(3 dmg)* |
 |---|---|---|---|---|
-| Shadeleaf · Thornquill · Sunspot | 3 | **2** | **1 đòn** | **1 đòn** |
-| Cobb · Maw · Chardwall · Gourdward | 4 | 3 | 2 | 1 |
-| Ironhusk · Thornhide | 5 | 4 | 2 | 2 |
+| Peaburst · Thornquill · Sunbloom | 3 | **2** | **1 đòn** | **1 đòn** |
+| Cornova · Snapmaw · Chardslam · Gourdward | 4 | 3 | 2 | 1 |
+| Ironhusk · Thornshell | 5 | 4 | 2 | 2 |
 
 **Một hero mang element chết vì một con quái thường.** Không phải vì trùm, không phải vì đọc sai
-telegraph — vì một con Conehead. Và vì máu mang sang trận sau, con số thật trong trận thứ ba của
+telegraph — vì một con Scrapcap. Và vì máu mang sang trận sau, con số thật trong trận thứ ba của
 một chặng còn tệ hơn cột này.
 
 Ở nền máu đó, element không phải là *một lựa chọn có giá*. Nó là **một cái bẫy**.
@@ -1345,15 +1345,15 @@ một chặng còn tệ hơn cột này.
 
 | Hero | Máu cũ | **Máu mới** | Mang element |
 |---|---|---|---|
-| Shadeleaf | 3 | **6** | 4 |
+| Peaburst | 3 | **6** | 4 |
 | Thornquill | 3 | **6** | 4 |
-| Sunspot | 3 | **6** | 4 |
-| Cobb | 4 | **8** | 6 |
-| Maw | 4 | **8** | 6 |
-| Chardwall | 4 | **8** | 6 |
+| Sunbloom | 3 | **6** | 4 |
+| Cornova | 4 | **8** | 6 |
+| Snapmaw | 4 | **8** | 6 |
+| Chardslam | 4 | **8** | 6 |
 | Gourdward | 4 | **8** | 6 |
 | Ironhusk | 5 | **10** | 8 |
-| Thornhide | 5 | **10** | 8 |
+| Thornshell | 5 | **10** | 8 |
 
 **Giá element: −1 → −2 máu tối đa.**
 
@@ -1381,7 +1381,7 @@ biến mất. Nếu giữ −1 thì element thành gần như miễn phí, và c
 |---|---|
 | **Sát thương hero** | Máu zombie không đổi → **thời gian giết mọi thứ không đổi**. Cái tăng lên là vùng đệm, không phải tốc độ |
 | **Máu zombie** | Nâng theo thì hoàn tác đúng thứ vừa sửa |
-| **Phản đòn 2 của Thornhide** | Đo bằng máu zombie, không phải máu hero |
+| **Phản đòn 2 của Thornshell** | Đo bằng máu zombie, không phải máu hero |
 | **`BONUS_HP: 3`** | Trên nền 3 máu nó là **+100%** — món ghép mạnh nhất game một cách vô lý. Trên nền 6–10 nó thành +30…50%, tức là **tự nó được cân lại miễn phí** |
 
 ### Cái gì PHẢI đổi theo
@@ -1394,12 +1394,12 @@ biến mất. Nếu giữ −1 thì element thành gần như miễn phí, và c
 
 ### Nó làm gì với con trùm đầu tiên
 
-Gargantuar gây **5 sát thương** — con số đã qua chơi thử thật:
+Gravehulk gây **5 sát thương** — con số đã qua chơi thử thật:
 
 | | Nền cũ | Nền mới |
 |---|---|---|
-| Shadeleaf trúng một cú Nghiền | **chết** (3 máu) | **còn 1 máu** |
-| Shadeleaf mang element trúng một cú | **chết** (2 máu) | **chết** (4 máu) |
+| Peaburst trúng một cú Nghiền | **chết** (3 máu) | **còn 1 máu** |
+| Peaburst mang element trúng một cú | **chết** (2 máu) | **chết** (4 máu) |
 | Ironhusk trúng một cú | chết ngắc ngoải (5 máu → 0) | còn 5 máu |
 
 Đó chính xác là điều một cú đánh của trùm nên làm: **suýt giết**, chứ không phải giết. Và mang
@@ -1428,11 +1428,11 @@ phải động vào con số duy nhất trong game đã có dữ liệu thật.
 
 | # | Trùm | Vùng | Máu | Dmg | Giả định bị phá | Câu trả lời |
 |---|---|---|---|---|---|---|
-| I-1 | Gargantuar | Verdant Reach | 16 | 5 | chặn được là an toàn | **Maw** |
-| I-2 | Ironcart | Goldacre | 18 | 3 | đứng đúng chỗ là an toàn | **Cobb** |
+| I-1 | Gravehulk | Verdant Reach | 16 | 5 | chặn được là an toàn | **Snapmaw** |
+| I-2 | Ironcart | Goldacre | 18 | 3 | đứng đúng chỗ là an toàn | **Cornova** |
 | I-3 | Cinder Colossus | Kiln Row | 20 | 3 | bàn cờ là hằng số | 🔥 **LỬA** |
-| II-1 | The Armada | Windward | 22 | 2 | xây tường là đủ | **Chardwall** |
-| II-2 | Sandreaver | Thornwaste | 22 | 4 | tuyến phòng thủ có mặt trước | **Thornhide** |
+| II-1 | The Armada | Windward | 22 | 2 | xây tường là đủ | **Chardslam** |
+| II-2 | Sandreaver | Thornwaste | 22 | 4 | tuyến phòng thủ có mặt trước | **Thornshell** |
 | II-3 | Yeti | Frostgate | 24 | 3 | nó chưa đánh thì còn an toàn | ❄️ **BĂNG** |
 | III-1 | The Headliner | Neon Rose | 20 | 1 | nhắm con to nhất | **Thornquill** |
 | III-2 | Clockjaw | Old Quarter | 22 | 3 | telegraph cho tôi đủ thời gian | **Gourdward** |
@@ -1444,28 +1444,28 @@ số lượt cần để hạ trùm phải **giữ nguyên khoảng 4–5**, kh�
 của nó**, không vì thanh máu — đó là bài học của Into the Breach và nó áp thẳng được vào đây.
 
 **Chỉ có ba con miễn nhiễm `PUSH` trong chín con** (Ironcart, Clockjaw, Voltmaw). Cố ý: hai hero
-đẩy (Ironhusk, Chardwall) phải có đất diễn ở 2/3 số trận trùm, nếu không thì cả một class thành
+đẩy (Ironhusk, Chardslam) phải có đất diễn ở 2/3 số trận trùm, nếu không thì cả một class thành
 vô dụng đúng ở chỗ quan trọng nhất.
 
 **Chỉ có một con miễn nhiễm `STATUS` toàn phần** (The Headliner, và Blightlord). `FREEZE`/`STUN`
 mất tác dụng lên nhiều con, nhưng `SLOW` thì hầu như luôn ăn — đúng theo chú thích trong
-`types.ts`: *"having one immunity blank both meant the Gargantuar shut off every control tool in
+`types.ts`: *"having one immunity blank both meant the Gravehulk shut off every control tool in
 the game at once"*.
 
 ---
 
 ## 8. Trận trùm khác trận thường ở đâu
 
-Hiện `buildEncounter` xử node `BOSS` bằng: sinh Gargantuar cứng + đúng 2 quái lính. Cần đổi ba chỗ:
+Hiện `buildEncounter` xử node `BOSS` bằng: sinh Gravehulk cứng + đúng 2 quái lính. Cần đổi ba chỗ:
 
 | # | Việc | Ghi chú |
 |---|---|---|
-| 1 | `bossClassFor(bossId)` thay cho `UnitClass.GARGANTUAR` hardcode | 3 dòng |
-| 2 | Số quái lính theo trùm, không phải hằng số 2 | Headliner cần **0** lính mở màn (nó tự gọi); Clockjaw cần 4 (hẻm phải chật); Gargantuar giữ 2 |
+| 1 | `bossClassFor(bossId)` thay cho `UnitClass.GRAVEHULK` hardcode | 3 dòng |
+| 2 | Số quái lính theo trùm, không phải hằng số 2 | Headliner cần **0** lính mở màn (nó tự gọi); Clockjaw cần 4 (hẻm phải chật); Gravehulk giữ 2 |
 | 3 | `pickArena(bossId)` thay cho `pickTemplate(world)` | mục 4 |
 
 **Quái lính tiếp viện trong trận trùm** nên theo chủ đề của trùm chứ không phải bảng roll chung:
-Frostgate thả Cửa Lưới (miễn `STATUS`, hợp với chủ đề khống chế), The Grid thả Football (miễn
+Frostgate thả Cửa Lưới (miễn `STATUS`, hợp với chủ đề khống chế), The Grid thả Linebreaker (miễn
 `PUSH`). Một bảng `Record<BossId, UnitClass[]>` là đủ, không cần hệ thống.
 
 ---
@@ -1482,12 +1482,12 @@ Frostgate thả Cửa Lưới (miễn `STATUS`, hợp với chủ đề khống 
 | 4 | ✅ `WorldType` 4 → **9** + `STAGE_SECTORS`/`stageForBosses` *(chuỗi sector theo số trùm đã hạ, không theo act)* | nhỏ | mục 1 |
 | 5 | ✅ **Cả 5 hazard xong** *(chạy được)*. `TIDE` và `DUST_VEIL` không cần state mới trong `GameState`: dùng chung vòng đời của gai — bộ đếm nằm trên Ô (`TileData.smoke`, `TileData.flood`), già đi cạnh `simSpikes`, ghi ngược bằng `MODIFY_TERRAIN` | vừa | ~~vùng mới~~ — xong |
 | 6 | ◐ `BossId` đã có **`VOLTMAW`** (đủ 10). `BOSSES` vẫn 7 dòng — chờ có unit trùm | nhỏ | bảng thưởng |
-| 7 | ✅ **Bảng `BOSS_HOOKS`** (`plan`/`onMoved`/`onTurnEnd`) + `Unit.bossId` + `bossClassFor`; **3 trùm chạy được**: Gargantuar (pha 2), The Headliner (aura + gọi quân), Cinder Colossus (vệt lava, hồi máu, nứt vỏ) | vừa | — |
-| 8 | `TAUNT` / `tauntedBy` — **dùng cho cả Thornhide và Ánh Đèn của Headliner** | vừa | Sandreaver, Headliner, Thornhide |
+| 7 | ✅ **Bảng `BOSS_HOOKS`** (`plan`/`onMoved`/`onTurnEnd`) + `Unit.bossId` + `bossClassFor`; **3 trùm chạy được**: Gravehulk (pha 2), The Headliner (aura + gọi quân), Cinder Colossus (vệt lava, hồi máu, nứt vỏ) | vừa | — |
+| 8 | `TAUNT` / `tauntedBy` — **dùng cho cả Thornshell và Ánh Đèn của Headliner** | vừa | Sandreaver, Headliner, Thornshell |
 | 9 | `isBurrowed` thành luật thật (không nhắm được khi lặn) | vừa | Sandreaver |
 | 10 | **`intents: Intent[]`** — nhiều hành động một lượt | **lớn** | Clockjaw, pha 2 của Headliner |
 | 11 | ✅ `chainStep` trong `utils/elements.ts` — cả hai chỗ cũ đã chuyển sang dùng chung, repo còn **đúng một** vòng lan | vừa | Voltmaw, element ĐIỆN |
-| 12 | ✅ Bàn 6×6 không nhà *(chạy được)* — **`GRID_SIZE` vẫn là hằng số**: vành `#` vẽ lòng 6×6 trong khung 8×8, và nhánh "hết não thì đuổi cây gần nhất" đã có sẵn trong `turnManager`. `MapTemplate.noHouses` chỉ để nới một dòng `assertTemplate` | ~~lớn~~ nhỏ | ~~màn cuối~~ — xong |
+| 12 | ✅ Bàn 6×6 không nhà *(chạy được)* — **`GRID_SIZE` vẫn là hằng số**: vành `#` vẽ lòng 6×6 trong khung 8×8, và nhánh "hết mầm thì đuổi cây gần nhất" đã có sẵn trong `turnManager`. `MapTemplate.noHouses` chỉ để nới một dòng `assertTemplate` | ~~lớn~~ nhỏ | ~~màn cuối~~ — xong |
 | 13 | ✅ **Blightlord ba pha** *(chạy được)* — `BOSS_HOOKS.BLIGHTLORD`, `Unit.invulnerable` (đọc ở `calculateDamage`), status `SEVERED` (cắt ở `skillCarriesElement`), `Intent.spawnHp` | vừa | ~~màn cuối~~ — xong |
 | 15 | ✅ **Đồng hồ riêng cho node BOSS** *(chạy được)* — `BOSS_MAX_TURNS = 7`, `BREACH_MAX_TURNS = 9`. Ở 5 lượt cũ, đội **hoàn hảo** (10 dmg/lượt) vẫn thua Blightlord với trùm còn 6/36 máu — hai lượt tái hợp ăn mất 40% đồng hồ | nhỏ | trận cuối thắng được |
 | 14 | ✅ **Objective `ESCORT_GEAR`** + cây hoang `isWild` *(chạy được)* — thùng đồ là mục tiêu NGANG HÀNG với nhà trong vòng chọn mục tiêu của bầy | vừa | — |
@@ -1503,7 +1503,7 @@ Frostgate thả Cửa Lưới (miễn `STATUS`, hợp với chủ đề khống 
 | H5 | Migration `pitb_run_v1`: `maxHp` lệch định nghĩa → hồi đầy | nhỏ | tránh hero tỉnh dậy 3/6 máu |
 | H6 | Cập nhật bảng cuối `PLAN-heroes-9.md` | nhỏ | tài liệu, nhưng nó là bản đặc tả nên phải khớp |
 
-Bốn việc đầu là **một buổi**, và sau chúng thì Gargantuar + Headliner + Ironcart chơi được ngay.
+Bốn việc đầu là **một buổi**, và sau chúng thì Gravehulk + Headliner + Ironcart chơi được ngay.
 Gói H nên làm **trước** khi dựng con trùm thứ hai — mọi con số sát thương ở mục 5 đã tính theo
 nền máu mới, nên dựng trùm trên nền cũ là dựng sai hai lần.
 Việc số 10 và 12 nên để cuối: chúng đụng vào kiểu dữ liệu lõi.
@@ -1518,7 +1518,7 @@ Việc số 10 và 12 nên để cuối: chúng đụng vào kiểu dữ liệu 
    thương) rồi tra bảng theo `Unit.bossId`. Behaviour trả `null` = "lượt này không có gì đặc
    biệt" và rơi xuống thang AI thường — và đó phải là ca phổ biến, vì một con trùm bỏ qua luật
    nền **mọi lượt** thì không phải trùm, nó là đoạn cắt cảnh.
-   Khối `GARGANTUAR SPECIAL AI` cũ đã dời sang đó nguyên vẹn; `aiLogic.ts` giờ không biết khái
+   Khối `GRAVEHULK SPECIAL AI` cũ đã dời sang đó nguyên vẹn; `aiLogic.ts` giờ không biết khái
    niệm trùm tồn tại.
    Bảng sau đó nở thành **`BOSS_HOOKS`** với ba móc — `plan` (quyết định), `onMoved` (hệ quả
    của việc đã đi), `onTurnEnd` (trạng thái bàn cờ). Cần thế vì **không phải nét nào của trùm

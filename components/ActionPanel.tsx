@@ -3,8 +3,9 @@ import React from 'react';
 import { Unit, UnitClass, Skill, TileData, TerrainDefinition, UnitType } from '../types';
 import { SQUAD_SIZE } from '../constants';
 import { UNIT_SKILLS, DEFAULT_TERRAIN_DEFS } from '../constants';
-import { Crosshair, Move, Shield, Zap, XCircle, Hourglass, ChevronsRight, ArrowUpCircle, Utensils, RotateCcw, Sun, Skull, Info, Mountain, Radar, Sword, ArrowRight, Play, UserPlus, MinusCircle, AlertCircle, Plus } from 'lucide-react';
+import { Crosshair, Move, Shield, Zap, XCircle, Hourglass, ChevronsRight, ArrowUpCircle, Utensils, RotateCcw, Sun as Sol, Skull, Info, Mountain, Radar, Sword, ArrowRight, Play, UserPlus, MinusCircle, AlertCircle, Plus } from 'lucide-react';
 import { formatGridPosition, isSunProducingSkill } from '../utils/gameLogic';
+import { unitDisplayName } from '../utils/unitFactory';
 import { mobileSprite } from '../utils/platform';
 import { useI18n } from '../i18n';
 
@@ -31,7 +32,7 @@ interface ActionPanelProps {
   onSelectRosterUnit?: (unitId: string) => void;
   selectedRosterId?: string | null;
   /**
-   * Sun currently banked this level. Gates skills that carry a `sunCost`.
+   * Sol currently banked this level. Gates skills that carry a `sunCost`.
    * Defaults to Infinity so the panel never locks a skill before App.tsx wires
    * the real value in.
    */
@@ -183,7 +184,10 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                         >
                             <img src={mobileSprite(unit.imgUrl)} className="w-10 h-10 object-contain bg-[#0b0d14] rounded-lg border border-[#293245] p-1" alt={t(unit.class.replace(/_/g, ' '))} />
                             <div className="flex-1">
-                                <div className="text-sm font-black text-white uppercase">{t(unit.class.replace(/_/g, ' '))}</div>
+                                {/* Tên HERO, không phải tên class: hero mang class bằng đúng
+                                    cây gốc của mình, nên in class ra là danh sách triển khai
+                                    gọi Peaburst là "Seed Gun". */}
+                                <div className="text-sm font-black text-white uppercase">{t(unitDisplayName(unit))}</div>
                                 <div className="text-[11px] text-gray-400 uppercase font-medium">{t(unit.role)}</div>
                             </div>
                             
@@ -323,7 +327,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
               <img 
                  src={mobileSprite(selectedUnit!.imgUrl)}
                  className={`w-full h-full object-contain ${isDone ? 'grayscale opacity-60' : ''}`}
-                 alt={t(selectedUnit!.class.replace(/_/g, ' '))}
+                 alt={t(unitDisplayName(selectedUnit!))}
               />
               <div className={`absolute -bottom-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center stroke-2 border shadow-md z-10 ${isPlayer ? 'bg-emerald-600 border-emerald-300' : 'bg-red-600 border-red-300'}`}>
                   {isPlayer ? (isDone ? <Hourglass size={13} className="text-white"/> : <Zap size={13} className="text-white"/>) : <Skull size={13} className="text-white"/>}
@@ -331,7 +335,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
           </div>
           <div className="flex-1 flex flex-col justify-center min-w-0">
               <h2 className={`text-xl font-black uppercase leading-tight truncate ${isPlayer ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {t(selectedUnit!.class.replace(/_/g, ' '))}
+                  {t(unitDisplayName(selectedUnit!))}
               </h2>
               <div className="flex justify-between items-center gap-2 mt-1">
                   <span className="text-xs text-gray-400 font-bold uppercase tracking-wider truncate">{t(selectedUnit!.role)}</span>
@@ -451,11 +455,11 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                             const disabledReason = blockedReason
                                 ? blockedReason
                                 : cannotAfford
-                                ? t('Need {cost} Sun (you have {have})', { cost: sunCost, have: Number.isFinite(currentSun) ? currentSun : 0 })
+                                ? t('Need {cost} Sol (you have {have})', { cost: sunCost, have: Number.isFinite(currentSun) ? currentSun : 0 })
                                 : needsCharge
                                     ? t('Needs a charge')
                                     : isMoveLocked
-                                        ? t('Moving forfeits this turn\'s Sun.')
+                                        ? t('Moving forfeits this turn\'s Sol.')
                                         : undefined;
 
                             const damageVal = skill.effects.find(e => e.type === 'DAMAGE')?.value || 0;
@@ -465,7 +469,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                             
                             let badge = null;
                             if (sunVal) {
-                                badge = <span className="text-black bg-amber-400 font-mono font-bold text-[10px] px-1.5 py-0.5 rounded flex items-center gap-0.5 leading-none shadow border border-amber-600">+{sunVal} <Sun size={9} fill="black"/></span>;
+                                badge = <span className="text-black bg-amber-400 font-mono font-bold text-[10px] px-1.5 py-0.5 rounded flex items-center gap-0.5 leading-none shadow border border-amber-600">+{sunVal} <Sol size={9} fill="black"/></span>;
                             } else if (shieldVal) {
                                 // A layer, not an amount (§6.0) — icon only, no number.
                                 badge = <span className="text-white bg-sky-600 font-mono font-bold text-[10px] px-1.5 py-0.5 rounded flex items-center gap-0.5 leading-none shadow border border-sky-700"><Shield size={9} fill="white"/></span>;
@@ -519,9 +523,9 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                                                         ? 'bg-red-950/80 text-red-300 border-red-500'
                                                         : 'bg-black/60 text-amber-300 border-amber-500/50'}
                                                 `}
-                                                title={cannotAfford ? t('Need {cost} Sun', { cost: sunCost }) : t('Costs {cost} Sun', { cost: sunCost })}
+                                                title={cannotAfford ? t('Need {cost} Sol', { cost: sunCost }) : t('Costs {cost} Sol', { cost: sunCost })}
                                             >
-                                                <Sun size={9} className={cannotAfford ? 'text-red-300' : 'text-amber-300'} fill="currentColor" />
+                                                <Sol size={9} className={cannotAfford ? 'text-red-300' : 'text-amber-300'} fill="currentColor" />
                                                 {sunCost}
                                             </span>
                                         )}
@@ -538,7 +542,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                                              )}
                                              {cannotAfford && (
                                                 <span className="text-[8px] text-red-300 uppercase bg-red-950/60 px-1 py-0.5 rounded border border-red-500/60 flex items-center gap-1">
-                                                    <Sun size={8} /> {t('Need {cost} Sun', { cost: sunCost })}
+                                                    <Sol size={8} /> {t('Need {cost} Sol', { cost: sunCost })}
                                                 </span>
                                              )}
                                          </div>

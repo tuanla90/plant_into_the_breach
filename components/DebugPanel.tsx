@@ -4,7 +4,7 @@ import { BOSSES } from '../data/unlocks';
 import { HERO_DEFINITIONS } from '../data/heroes';
 import { SQUAD_SIZE } from '../constants';
 import { ELEMENTS, ELEMENT_DEFINITIONS } from '../utils/elements';
-import { Bug, X, Unlock, RotateCcw, Swords, Skull, Crown, Coins, Heart, Sun, Trophy, Users, Backpack, Ban } from 'lucide-react';
+import { Bug, X, Unlock, RotateCcw, Swords, Skull, Crown, Coins, Heart, Sun as Sol, Trophy, Users, Backpack, Ban } from 'lucide-react';
 import { useI18n } from '../i18n';
 
 /** What "jump into a fight" needs. Mirrors the fields a real MapNode carries. */
@@ -86,7 +86,7 @@ const ELEMENT_SIGNATURE = (map: Partial<Record<HeroId, ElementId>>): string =>
  * The jump builds a SYNTHETIC MAP and then calls the ordinary `selectNode`, rather than
  * assembling a fight of its own. That is deliberate and is the whole reason it can be
  * trusted: depth is read off the map graph (`layerOfNode` counts distinct node rows), so a
- * debug fight that skipped the map would have to re-derive tiers, mission, hazard and Sun
+ * debug fight that skipped the map would have to re-derive tiers, mission, hazard and Sol
  * by hand, and would drift from the real thing exactly when you most need it not to.
  */
 export const DebugPanel: React.FC<DebugPanelProps> = ({
@@ -185,7 +185,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                     <span className="text-[10px] uppercase tracking-widest text-gray-500">{t('This run')}</span>
                     <div className="flex flex-wrap gap-2">
                         <Chip on={false} onClick={onGrantCoin}><Coins size={12} /> +500</Chip>
-                        <Chip on={false} onClick={onGrantSun}><Sun size={12} /> +200</Chip>
+                        <Chip on={false} onClick={onGrantSun}><Sol size={12} /> +200</Chip>
                         <Chip on={false} onClick={onHealSquad}><Heart size={12} /> {t('Heal + revive squad')}</Chip>
                         {/* Chỉ sáng khi đang thực sự đánh nhau: ngoài trận thì không có trận
                             nào để thắng, và một nút bấm-không-làm-gì là nút gây nghi ngờ. */}

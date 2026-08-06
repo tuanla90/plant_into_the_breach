@@ -1,383 +1,566 @@
 # BẢN ĐỒ MA TRẬN FUSION — 9 HERO × 9 GEAR
 
-> Tài liệu đọc, trích từ `data/fusionRecipes.ts` ngày 2026-08-06 (sau 4 đợt triển khai
-> PLAN-hero-zephyr: hệ lớp chắn, Zephyr thay Thornquill, support rework, tutorial mới).
-> Mọi tên ô và hiệu ứng ở đây là **trạng thái thật trong code**, không phải bản nháp.
-> Mục 6 là **7 ô đề xuất map lại — CHƯA TRIỂN KHAI**, chờ chốt.
+> Tài liệu đọc, trích từ `data/fusionRecipes.ts` **sau đợt map lại ngày 2026-08-06**.
+> Mọi tên ô, hiệu ứng và con số ở đây là **trạng thái thật trong code đang chạy** — đã qua
+> `npm run typecheck`, `npm run build`, `roster.assert` và `tutorial.assert`.
+> Đợt map lại chạy **hai vòng** — 27 ô ở vòng một, 8 ô ở vòng hai — và danh sách đầy đủ nằm ở
+> [mục 6](#6--đợt-map-lại-2026-08-06--đã-triển-khai). Không còn mục đề xuất nào chờ chốt.
 
 ---
 
 ## 1 · Đọc ma trận này thế nào
 
-Fusion là **mang đặc điểm của một hero sang hero khác**. Mỗi gear thuộc về đúng một hero, và
+Fusion là **mang đặc điểm của một hero sang hero khác**. Mỗi gear thuộc về đúng một hero và
 mang đúng **hai món** của người đó:
 
 - **Món A** — lấy từ *đòn thường* của chủ nhân. Thường là chỉ số hoặc thụ động: máu, tốc độ,
   thu nắng, phản đòn.
-- **Món B** — lấy từ *kỹ năng trả phí* của chủ nhân. Thường đổi **cách vận hành** kỹ năng hay
-  đòn đánh của người nhận: thêm loạt, để lại bụi, gây chảy máu.
+- **Món B** — lấy từ *kỹ năng trả phí* của chủ nhân. Thường đổi **cách vận hành** kỹ năng hoặc
+  đòn đánh của người nhận: thêm loạt, để lại bụi, gây chảy máu, ghim cứng.
 
-Mỗi ô trong ma trận **chọn một trong hai món**, tuỳ món nào hợp với hero nhận. Ô nào cả hai
-món đều vô nghĩa (arc trên hero cận chiến, chảy máu trên hero không có đòn đánh...) thì thành
-**ngoại lệ** — hợp lệ, nhưng phải có lý do ghi ngay cạnh recipe. Cột nào cũng có 1–3 ngoại lệ;
-đó là điều bình thường, không phải lỗi khung.
-
-Ký hiệu dùng trong tài liệu:
+Mỗi ô chọn một trong hai món, tuỳ món nào hợp với hero nhận. Ô nào cả hai món đều vô nghĩa
+(vòng cung trên hero cận chiến, chảy máu trên hero không có đòn đánh…) thì là **ngoại lệ** —
+hợp lệ, nhưng phải có lý do viết ngay cạnh recipe.
 
 | Ký hiệu | Nghĩa |
 |---|---|
-| ⭑ | Ô **chữ ký chính chủ** — hero fuse chính cây của mình, "chính mình vặn to lên" |
+| ⭑ | Ô **chữ ký chính chủ** — hero fuse chính cây của mình |
 | A | Đúng món A của gear |
 | B | Đúng món B của gear |
-| EX | Ngoại lệ có lý do — giữ nguyên |
-| ❌ | **Lạc trục** — hiệu ứng vay từ cột khác không lý do → có đề xuất ở mục 6 |
+| EX | Ngoại lệ có lý do viết sẵn trong code |
 
 ---
 
-## 2 · Từ vựng hiệu ứng
+## 2 · Bảy luật xuyên suốt
+
+Đây là phần nên đọc trước khi sửa bất kỳ ô nào — chúng ràng buộc cả ma trận, và mỗi luật đều
+sinh ra từ một lần sai đã xảy ra.
+
+**L1 · SOL RULE — và cột Sol Battery bán ĐÚNG MỘT THỨ.** Sol không bao giờ trả cho việc *chỉ
+đánh trúng*. Nhưng thứ cả cột bán thì chỉ có một: **hồi này hero được bấm kỹ năng bao nhiêu
+lần** — và nó bán theo hai đường, đúng khung hai-món:
+
+- **Món A — THÊM SOL**: `SUN_PER_TURN` (Sunbloom) · `SUN_ON_KILL` (Peaburst, Reedwing,
+  Chardslam) · `SUN_WHILE_DIGESTING` (Snapmaw) · `SUN_ON_BLOCK_SPAWN` (Ironhusk). Mỗi cái gắn
+  vào một việc hero đó **vốn đã làm**, nên luật "không trả cho việc vung đòn" vẫn nguyên.
+- **Món B — RẺ KỸ NĂNG**: `SKILL_DISCOUNT` (Cornova, Thornshell, Gourdward). Dành riêng cho ba
+  người mà **kỹ năng CHÍNH LÀ sản lượng**: giảm giá vô dụng với hero có nút phí tình huống, và
+  quyết định với hero muốn bấm nó mọi lượt.
+
+Năm A, ba B, một ô chữ ký. **Không ô nào trong cột này là ngoại lệ nữa** — trước đây bốn ô bị
+gắn EX chỉ vì khung chưa nói ra được điều này.
+
+**L2 · STUN RULE.** Không recipe nào phát stun *miễn phí, mỗi lượt, mãi mãi*. Có **ba ngoại lệ
+có giá**, và cái giá chính là chỗ chúng khác hình dạng bị cấm:
+- `SKILL_STUN` (*Stun Charge*) cưỡi **kỹ năng trả phí** — một cú ghim mỗi lần cast, mua bằng Sol.
+- `SKILL_STUN` (*Stun Shell*) trên Bọc Giáp của Gourdward — ghim cả vành, nhưng là ngoại lệ
+  **đắt nhất**: 0 sát thương, 8 máu, phải đứng giữa đám đông, hết một lượt và 50 Sol.
+- `STUN_ON_FULL_HP` (*Stun Fang*) chỉ nổ trên thân **còn nguyên máu** → đúng **một lần cho
+  mỗi con zombie, vĩnh viễn**; cắn lần hai gặp thân đã thương thì không có gì.
+
+**L3 · RETALIATION RULE.** Sầu riêng ghép lên người khác **phản đúng 1**. Thornshell là ngoại lệ
+duy nhất và là gear của chính anh: nội tại 2, *Bristling Armor* nâng lên 3. Trước đây cả cột
+phản 2 — nghĩa là một cây 150 Coin ra sát thương nhiều hơn đòn đánh thật của phần lớn hero mà
+không tốn lượt nào.
+
+**L4 · PHẢN ĐÒN CHỈ TÍNH CẬN CHIẾN.** Mọi thẻ phản đòn đều viết "hits her **in melee**" và
+engine trước đây **không hề kiểm tra** — Catapult nã từ 3 ô vẫn bị gai đâm. Giờ gai chỉ cắt thứ
+chạm tới nó (`inMelee` trong `turnManager`). Địch tầm xa vẫn bị Khiêu Khích kéo tới, chỉ là
+không chảy máu vì nó.
+
+**L5 · CỘT WALL-NUT ĐỌC THEO TẦM.** Hero **cận chiến** mua `DAMAGE_REDUCTION` (bị tính trên
+từng đòn nhỏ trong rất nhiều đòn); hero **tầm xa** mua `BONUS_HP` (hiếm khi bị đánh, nhưng đánh
+là nặng — cần đệm sống qua một lượt tồi). Sunbloom không có đòn đánh nào nên đọc theo vế cận
+chiến: cô bị *chạm tới*, và `BONUS_HP` thì cô đã có ở cột bí ngô.
+
+**L6 · BỤI RƠI XUỐNG CHỖ THÂN ĐÁP, KHÔNG PHẢI CHỖ ĐẤT ĐI QUA.** Một câu, chữa hai lỗi ngược
+chiều nhau: *Smokeline* từng phủ cả làn viên đạn bay qua (bịt luôn đường bắn của phe mình), còn
+*Veilsweep* từng phủ vành đất mà zombie **vừa bị hất ra khỏi** — tức là màn bụi tin cậy trượt
+đúng thứ nó nhắm. Giờ mây bốc lên nơi thân thể rơi xuống.
+
+**L7 · THẺ KHÔNG ĐƯỢC NÓI DỐI.** `BONUS_DAMAGE` *map chứ không append* (hero 0 sát thương không
+bị gear bơm số từ bên hông); rider nguyên tố **chỉ dán lên kỹ năng chạm được địch** (trước đây
+Ơn Trên Sol và lớp vỏ của Gourdward về kèm `APPLY_BURN` trong danh sách hiệu ứng — không
+bao giờ nổ, nhưng thẻ vẫn hứa đốt cháy chính đồng minh mình).
+
+---
+
+## 3 · Từ vựng hiệu ứng
 
 **Chỉ số & thụ động**
 
-- `BONUS_HP` — cộng thẳng máu tối đa (và máu hiện tại lúc fuse). Sống qua F5 nhờ
-  `migrateHeroHp` tính lại từ effect.
-- `MOVE_BONUS` — cộng ô di chuyển, ghi thẳng vào thân như STRIDE. Trục **duy nhất chưa fusion
-  nào từng đụng** trước Cattail.
-- `DAMAGE_REDUCTION` — mỗi đòn nhận vào trừ 1, **không bao giờ xuống dưới 1** (hero không được
-  phép bất tử; giáp mũ của zombie mới được quyền về 0).
-- `STEADFAST` — gói ba-trong-một của tường: −1 sát thương nhận vào, phớt lờ sát thương va
-  chạm, bịt lỗ trồi không mất máu.
-- `SUN_PER_TURN` / `SUN_ON_KILL` / `SUN_ON_BLOCK_SPAWN` — ba cửa thu nắng. **SUN RULE**: nắng
-  không bao giờ trả cho việc *chỉ đánh trúng* — phải kết liễu, phải đứng bịt lỗ, hoặc phải
-  tiêu cả lượt (Harvest).
-- `SKILL_DISCOUNT` — kỹ năng phí rẻ hơn 15. Xuất hiện ở nhiều cột như "món lấp chỗ" — đó
-  chính là mùi cần rà (mục 6).
+| Hiệu ứng | Nghĩa |
+|---|---|
+| `BONUS_HP` | +máu tối đa (và máu hiện tại lúc fuse); sống qua F5 nhờ `migrateHeroHp` |
+| `MOVE_BONUS` | +ô di chuyển, ghi thẳng vào thân như STRIDE |
+| `DAMAGE_REDUCTION` | mỗi đòn nhận vào −1, **không bao giờ xuống dưới 1** |
+| `STEADFAST` | gói ba-trong-một của tường: −1 sát thương, phớt va chạm, bịt lỗ không mất máu |
+| `ARMOR_WHILE_DIGESTING` | −1 sát thương **chỉ khi đang tiêu hoá** (mọi đòn trong cửa sổ, không phải cú đầu) |
+| `SUN_PER_TURN` · `SUN_ON_KILL` · `SUN_ON_BLOCK_SPAWN` · `SUN_WHILE_DIGESTING` | bốn cửa thu nắng, xem L1 |
+| `SKILL_DISCOUNT` | kỹ năng phí rẻ hơn 15 |
 
-**Rider trên đòn đánh** (chỉ dính khi đòn có DAMAGE — trừ ghi chú riêng)
+**Rider trên đòn đánh** (chỉ dính khi đòn có DAMAGE, trừ ghi chú riêng)
 
-- `ON_HIT_PUSH` / `ON_HIT_SLOW` / `ON_HIT_BURN` / `ON_HIT_FREEZE` — đòn đánh kèm đẩy / chậm /
-  cháy / băng. `ON_HIT_FREEZE` ngày nay chỉ còn nguyên tố BĂNG cấp — **STUN RULE** cấm mọi
-  recipe mới phát stun miễn phí.
-- `BLEED_ON_HIT` — đòn đánh (kể cả cú ném 0 sát thương của Chardwall — dính theo shove) để lại
-  vết thương hở: **đòn kế tiếp vào thân đó +1, rồi vết tiêu**. Cộng **sau** bước trừ giáp mũ —
-  Đội Xô không nuốt được gear này. Xuyên qua miễn nhiễm STATUS: **trùm vẫn chảy máu**. Không
-  cộng dồn.
-- `BONUS_DAMAGE` — +1 vào mọi effect DAMAGE. *Map chứ không append*: hero 0 sát thương
-  (Chardwall) không thể bị gear bơm số damage từ bên hông.
-- `DOUBLE_ATTACK` — đòn thường bắn thêm loạt thứ hai (1 sát thương); loạt overkill tự lăn sang
-  thân kế tiếp trong làn.
-- `ADJACENT_STRIKE` — cú vung miễn phí trúng **mọi** địch đứng kề, không chỉ mục tiêu ngắm.
+| Hiệu ứng | Nghĩa |
+|---|---|
+| `BONUS_DAMAGE` | +1 vào mọi effect DAMAGE — *map*, không append (L7) |
+| `DOUBLE_ATTACK` | đòn thường bắn loạt thứ hai (1 sát thương); loạt overkill lăn sang thân kế |
+| `BLEED_ON_HIT` | để lại vết thương hở: **đòn kế tiếp +1 rồi vết tiêu**. Cộng **sau** giáp mũ (Đội Xô không nuốt được), xuyên miễn nhiễm STATUS (**trùm vẫn chảy máu**), không cộng dồn. Dính cả trên cú ném 0 sát thương của Chardslam |
+| `TAUNT_ON_HIT` | thứ trúng đạn bị TAUNTED, chỉ về phía người bắn — miễn nhiễm STATUS từ chối |
+| `STUN_ON_FULL_HP` | ghim thân **còn nguyên máu** (L2) |
+| `ON_HIT_PUSH` · `ON_HIT_SLOW` · `ON_HIT_BURN` · `ON_HIT_FREEZE` | đòn kèm đẩy / chậm / cháy / băng |
+| `ADJACENT_STRIKE` | *(mồ côi — không ô nào nhận, engine vẫn phân giải)* |
+| `SMOKE_ON_HIT` | thân bị hero này **làm đau** đứng lại trong bụi: lượt sau không vung nổi đòn trừ khi nó bước ra khỏi đám mây. **MỘT ô, MỘT lượt** — đó là toàn bộ lý do một đòn miễn phí được phép mang nó, trong khi `SKILL_DISARM` (cả vùng, 2 lượt) thì không. Bụi huỷ MỘT CÚ VUNG, không huỷ lượt — zombie vẫn đi, vẫn telegraph, vẫn có thể bước ra. Ngang với `ON_HIT_PUSH`, thứ cũng chặn một đòn bằng cách dời thân đi |
 
-**Rider trên kỹ năng trả phí** (không bao giờ dính đòn miễn phí — tiền lệ SKILL_SPLASH)
+**Rider trên kỹ năng trả phí** (không bao giờ dính đòn miễn phí — tiền lệ `SKILL_SPLASH`)
 
-- `SKILL_SPLASH` — kỹ năng phí nổ lan 4 ô quanh mục tiêu, vành ngoài nửa sức (stun mềm thành
-  chậm — đúng STUN RULE).
-- `SKILL_DISARM` — kỹ năng phí để lại **bụi** trên vùng nó phủ: thứ gì kết thúc lượt trong bụi
-  không vung nổi đòn (cùng một cơ chế với hazard DUST_VEIL, một người đọc duy nhất là
-  `blinded()`). Với kỹ năng nhắm đồng minh (Blessing), bụi rơi thành **vành quanh người nhận,
-  không rơi lên chính họ** — kẻo màn che thành còng tay.
+| Hiệu ứng | Nghĩa |
+|---|---|
+| `SKILL_SPLASH` | nổ lan 4 ô quanh mục tiêu, vành ngoài nửa sức (stun mềm thành chậm) |
+| `SKILL_DISARM` | để lại **bụi** nơi thân thể đáp xuống (L6): thứ gì kết thúc lượt trong bụi không vung nổi đòn — cùng cơ chế hazard DUST_VEIL, một người đọc duy nhất là `blinded()` |
+| `SKILL_STUN` | ghim thứ kỹ năng phí đánh trúng (L2). Cửa nhận cả kỹ năng **có DAMAGE** lẫn kỹ năng **lớp chắn** — vế thứ hai chỉ vì đúng một kit: Gourdward không có kỹ năng sát thương nào |
+| `SKILL_AURA` | kỹ năng **buff đồng minh** phủ mọi đồng minh trong bán kính 2 ô (hình thoi "move range 2" = 12 ô). Chặn cứng: chỉ kỹ năng phí, và chỉ kỹ năng **không có DAMAGE** — nếu không thì đây là sát thương diện rộng đi cửa sau |
+| `SKILL_REPEL` | kỹ năng **lớp chắn** trả phí thổi bật mọi địch đứng kề lùi một ô |
+| `BLESS_SHOCKWAVE` | lời ban phước giáng xuống như sóng chấn: **mọi thứ** đứng kề thân được ban bị đẩy ra xa một ô — địch, đồng minh, và cả người ban nếu cô đứng sát. Đẩy người nhà là **tính năng**, không phải rò rỉ: tia sét lan giữa các thân **kề nhau**, nên đây là ô làm cả đội thôi đứng thành hàng. Một lần cast một sóng, tâm đúng ô người chơi ngắm (kể cả khi Vành Nhật Hoa đang ban cho cả tá người) |
 
-**Phản ứng khi bị đánh**
+**Phản ứng khi bị đánh** — tất cả đều chỉ tính cận chiến (L4)
 
-- `RETALIATE_DAMAGE` — kẻ cận chiến đánh vào bị trả đòn (2, riêng Thornhide chính chủ +1 chồng
-  lên nội tại).
-- `RETALIATE_PUSH` — kẻ cận chiến đánh vào bị **hất lùi một ô**. Bản "đường thoát" của phản
-  đòn — hợp hero mỏng.
-- `BUTTER_RETALIATE` — riêng Maw: kẻ đầu tiên cắn cô mỗi lượt tiêu hoá bị **trét bơ đứng
-  hình**. Bơ được phép ghim vì chỉ canh đúng cửa sổ bất lực.
+| Hiệu ứng | Nghĩa |
+|---|---|
+| `RETALIATE_DAMAGE` | kẻ đánh vào ăn lại sát thương (1 với mọi hero, 2→3 với Thornshell — L3) |
+| `RETALIATE_PUSH` | kẻ đánh vào bị **hất lùi một ô** — bản "đường thoát", hợp hero mỏng |
+| `RETALIATE_BLEED` | kẻ đánh vào bị **chảy máu** — đánh dấu cho người khác kết liễu |
+| `BARBED_SHIELD` | **lớp chắn mình trao ra là thuỷ tinh nhọn**: kẻ phá vỡ nó bị chảy máu. Cờ nằm trên *lớp* (`Unit.shieldBarbed`), viết cùng lúc với lớp, chết cùng lớp |
 
-**Kinh tế lớp chắn** (mô hình §6.0: một lớp chặn TRỌN một nguồn rồi vỡ, không số, không dồn)
+**Kinh tế lớp chắn** — mô hình §6.0: một lớp chặn **trọn** một nguồn rồi vỡ; không số, không dồn
 
-- `SHIELD_ON_KILL` — kết liễu là dựng một lớp mới lên bản thân (đã có lớp thì thôi — lớp tự là
-  trần của nó).
-- `SHIELD_SPREAD` — lớp mình trao ra **tràn sang những ai đứng kề người nhận**. Thay chỗ
-  `SHIELD_BONUS` cũ ("+2 cỡ giáp") vì lớp không còn cỡ để cộng.
-- `ARMOR_WHILE_DIGESTING` — bắt đầu tiêu hoá là có lớp: cú đầu tiên trong cửa sổ bất lực bị
-  chặn trọn, cửa sổ vẫn là cửa sổ.
+| Hiệu ứng | Nghĩa |
+|---|---|
+| `SHIELD_ON_KILL` | kết liễu là dựng một lớp mới lên bản thân (đã có lớp thì thôi) |
+| `SHIELD_SPREAD` | lớp mình trao ra **tràn sang những ai đứng kề người nhận** |
+| `START_SHIELDED` | **bước vào trận đã có sẵn một lớp**. Áp trong `utils/unitFactory` — nơi mọi thân thể lên bàn cờ đều đi qua — nên đội tutorial kịch bản và đội roll thật dùng chung một cửa |
+| `LAST_STAND_SHIELD` | **mỗi trận một lần**: cú đánh đáng lẽ kết liễu lại dựng lên một lớp, và lớp đó nuốt trọn cú đó. Cố ý KHÔNG phải `SHIELD_ON_KILL` — với một tanker thì lớp sẽ bật lại liên tục, tức là giáp đội lốt lớp chắn. Cờ `Unit.lastStandUsed` reset trong `unitFactory` mỗi trận, nếu không "mỗi trận một lần" âm thầm thành "mỗi run một lần" |
+| `BLESS_POWER` | Ơn Trên Sol đáng thêm +1 sát thương nữa. Con số đóng dấu lên **thân được ban** (`Unit.blessPower`) vì lúc người đó vung đòn thì người ban đã ngoài tầm — cùng lý do với `blessedElement` |
 
 **Đổi hình đòn đánh**
 
-- `ARC_ATTACK` — đòn thẳng thành đòn cầu vồng (bay qua vật cản, tầm giảm nửa). Không áp lên
-  skill xuyên (pierce cần đường đi).
-- `ATTACK_RANGE_BONUS` — vươn xa thêm. Dùng ở 5 cột như "món lấp chỗ" thứ hai — đa số có lý
-  do riêng tốt, xem từng ô.
-- `PUSH_DISTANCE` — mọi cú đẩy/kéo đi xa thêm 1 ô (không kéo giãn Vault Toss — điểm rơi cú
-  ném là hình học cố định).
-- `COLLISION_BONUS` — thân bị mình dúi vào vật cản chịu thêm 2 (và cộng thẳng vào sát thương
-  ngã của Vault Toss).
-- `GRANT_ATTACK` — trao đòn bắn miễn phí 1 sát thương cho hero không có (hoặc mất) đòn đánh.
-- `DIGEST_REDUCTION` — riêng Maw: tiêu hoá 1 lượt thay vì 2.
-- `TAUNT_RADIUS` — tiếng khiêu khích vươn xa thêm 1 ô (chỉ nghĩa với ai có taunt).
+| Hiệu ứng | Nghĩa |
+|---|---|
+| `ARC_ATTACK` | đòn thẳng thành cầu vồng (bay qua vật cản, tầm giảm nửa); không áp lên skill xuyên |
+| `ATTACK_RANGE_BONUS` | vươn xa thêm |
+| `PUSH_DISTANCE` | mọi cú đẩy/kéo đi xa thêm 1 ô (không kéo giãn Vault Toss — điểm rơi là hình học cố định) |
+| `COLLISION_BONUS` | thân bị mình dúi vào vật cản chịu thêm 2 (cộng cả vào sát thương ngã của Vault Toss) |
+| `GRANT_ATTACK` | trao đòn bắn miễn phí cho hero không có đòn đánh |
+| `DIGEST_CLAW` | trao **móng vuốt cận chiến 1 sát thương dùng được trong lúc tiêu hoá** — cửa duy nhất mở qua cửa sổ bất lực |
+| `DIGEST_REDUCTION` | riêng Snapmaw: tiêu hoá 1 lượt thay vì 2 |
+| `WING_MIDSHOT` | Song Pháo Cánh bắn thêm **ô nằm giữa cặp** — cả 4 hướng, một tên lửa thứ ba |
+| `TAUNT_RADIUS` | tiếng khiêu khích vươn xa thêm |
+| `OVERWATCH_SHOT` | **ô duy nhất trong ma trận nổ theo hành động của người khác**: địch nào bị *cả đội* đẩy đi mà nằm trong tầm bắn đều ăn một viên 1 sát thương, không tốn lượt của xạ thủ. Bắn bằng **đúng khẩu súng người đó đang cầm** — nên Peaburst cần hàng thông thoáng (LINE 8), còn Cornova thì **bay vòng cung** qua vật cản ở tầm 2 ô của cô. Chỉ nổ trong lượt của phe mình |
 
 ---
 
-## 3 · Chín gear — chủ nhân và hai món
+## 4 · Chín gear — chủ nhân và hai món
 
-| Gear | Chủ nhân | Món A (đòn thường) | Món B (kỹ năng) |
+| Gear | Chủ nhân | Món A (đòn thường) | Món B (kỹ năng phí) |
 |---|---|---|---|
-| Sunflower | Sunspot — *Harvest / Solar Blessing* | thu nắng (`SUN_*`) | ~~`SKILL_BLESS`~~ **chưa ô nào nhận** |
-| Peashooter | Shadeleaf — *Pea Shot / Precision Blast* | `GRANT_ATTACK` | `DOUBLE_ATTACK` |
-| Chomper | Maw — *Bite / Devour* | `BONUS_DAMAGE` | `BLEED_ON_HIT` |
-| Wall-nut | Ironhusk — *Shield Bash / Rolling Charge* | `BONUS_HP` | `DAMAGE_REDUCTION` |
-| Corn | Cobb — *Corn Kernel / Butter Splat* | `ARC_ATTACK` | `SKILL_STUN` *(sẽ thêm nếu chốt mục 6)* |
-| Cattail | Zephyr — *Wing Guns / Smoke Pod* | `MOVE_BONUS` | `SKILL_DISARM` |
-| Endurian | Thornhide — *Thorn Swipe / Provoke* | `RETALIATE_*` (họ phản đòn) | `TAUNT_RADIUS` |
-| Chard | Chardwall — *Vault Toss / Sweep* | `PUSH_DISTANCE` | ~~`SKILL_DISPLACE`~~ **chưa ô nào nhận** |
-| Pumpkin | Gourdward — *Reinforce / Encase* | `SHIELD_ON_KILL` | `ELEMENT_WARD` *(sẽ thêm nếu chốt mục 6)* |
+| Sol Battery | Sunbloom — *Harvest / Solar Blessing* | thu nắng (`SUN_*`) | `BLESS_POWER` · `SKILL_AURA` |
+| Seed Gun | Peaburst — *Pea Shot / Precision Blast* | bắn thẳng (`GRANT_ATTACK`, tầm) | `DOUBLE_ATTACK` |
+| Steel Jaws | Snapmaw — *Bite / Devour* | `BONUS_DAMAGE` | `BLEED_ON_HIT` (và các biến thể phản đòn/lớp chắn) |
+| Armor Plate | Ironhusk — *Shield Bash / Rolling Charge* | `BONUS_HP` (tầm xa) | `DAMAGE_REDUCTION` (cận chiến) — L5 |
+| Corn Mortar | Cornova — *Corn Kernel / Nova Shell* | `ARC_ATTACK` · hình học · tầm | bơ: `SKILL_STUN` · `STUN_ON_FULL_HP` |
+| Rotor Wing | Reedwing — *Wing Guns / Smoke Pod* | `MOVE_BONUS` | `SKILL_DISARM` |
+| Spike Armor | Thornshell — *Thorn Swipe / Provoke* | `RETALIATE_*` | tiếng gọi: `TAUNT_RADIUS` · `TAUNT_ON_HIT` (cả ba hero tầm xa) |
+| Spring Arm | Chardslam — *Vault Toss / Sweep* | `PUSH_DISTANCE` · `COLLISION_BONUS` · `ON_HIT_PUSH` | đòn bẩy: `SKILL_REPEL` · `BLESS_SHOCKWAVE` · `OVERWATCH_SHOT` |
+| Bunker Shell | Gourdward — *Reinforce / Encase* | `SHIELD_ON_KILL` · `START_SHIELDED` · `LAST_STAND_SHIELD` | `SHIELD_SPREAD` |
 
-Hai món B gạch ngang là món khung kẻ ra nhưng khi rà từng ô, **mọi ô của cột đó đều có chỗ
-đứng tốt hơn**. Theo bài học `RADIUS` (một `SkillRangeType` từng được khai rồi bỏ mặc, không
-ai phân giải), **không thêm type khi chưa có ô dùng** — khung ghi lại là đủ, ô tương lai muốn
-nhận thì thêm lúc đó.
+Đợt map lại đã **lấp hai món B từng bỏ trống** (`SKILL_BLESS` và `SKILL_DISPLACE` trong bản
+trước): cột nắng giờ có `BLESS_POWER` + `SKILL_AURA`, cột Spring Arm có `SKILL_REPEL` +
+`BLESS_SHOCKWAVE` + `OVERWATCH_SHOT`. Không type nào được khai mà không có ô dùng — đó là bài
+học `RADIUS`.
 
 ---
 
-## 4 · Chín hàng hero — từng ô một
+## 5 · Tám mươi mốt ô
 
-### 4.1 SUNSPOT (Solar Flare) — cục pin
+### 5.1 SUNBLOOM — Sunbloom (Pin Sol)
 
-Không có đòn đánh nào. Đòn thường là Harvest (+50 nắng, tốn cả lượt); kỹ năng là Solar
-Blessing (lớp chắn + "+1 sát thương *trong lượt này*" + **cho mượn nguyên tố** của cô vào tay
-trống). Điểm yếu lõi: *phải được hộ tống, và mọi thứ cô làm đều tiêu cả lượt*. Hàng của cô vì
-thế mua **vũ khí, giáp, và đường thoát**.
+*Harvest (50 nắng, tiêu cả lượt) + Solar Blessing (lớp chắn + 1 sát thương **chỉ trong lượt
+này** + cho mượn nguyên tố).* Không đánh được ai. Điểm yếu lõi: **phải có người hộ tống**.
 
-| Gear | Ô | Hiệu ứng | Phân loại |
+| Gear | Ô | Hiệu ứng | Loại |
 |---|---|---|---|
-| Sunflower | **Twin Sunflower** — Harvest cho gấp đôi: +25 mỗi lần gom | `SUN_PER_TURN 25` | ⭑ chính chủ |
-| Peashooter | **Solar Pea** — có đòn bắn miễn phí 1 sát thương, +10 nắng khi trúng | `GRANT_ATTACK` | A — đúng nghĩa "trao súng cho người tay không" |
-| Chomper | **Hungry Bloom** — kỹ năng rẻ hơn 15 | `SKILL_DISCOUNT 15` | EX — cô không có đòn đánh nên cả A (damage) lẫn B (bleed) đều chết; hàm răng đọc thành "cơn đói → phép rẻ hơn" |
-| Wall-nut | **Armored Bloom** — mỗi đòn nhận trừ 1 | `DAMAGE_REDUCTION 1` | B của Wall-nut — đúng khung |
-| Corn | **Mortar Bloom** — Blessing vươn xa thêm 2 | `ATTACK_RANGE_BONUS 2` | EX — arc vô nghĩa trên skill nhắm bạn, stun càng không; "súng cối" đọc thành tầm ban phước |
-| Cattail | **Ashveil** — Blessing phủ bụi VÀNH QUANH người được ban phước | `SKILL_DISARM` | B — món B của Cattail, và là ô hưởng luật "bụi né người nhận" |
-| Endurian | **Thorned Bloom** — kẻ đánh cận chiến bị đâm 2 | `RETALIATE_DAMAGE 2` | A của Endurian |
-| Chard | **Guarded Bloom** — kẻ đánh cận chiến bị hất lùi 1 ô | `RETALIATE_PUSH` | EX — đòn bẩy của Chard đọc thành *đường thoát* cho cục pin; thay ô Shoving Bloom chết theo Sun Burn |
-| Pumpkin | **Gourd Bloom** — +3 máu tối đa | `BONUS_HP 3` | ❌ → mục 6.5 |
+| Sol Battery | **Twin Sol Battery** — Harvest ra hai mặt trời, +25/lượt | `SUN_PER_TURN 25` | ⭑ |
+| Seed Gun | **Gunbloom** — có đòn bắn 1 sát thương, +10 nắng mỗi đòn trúng | `GRANT_ATTACK 0` | A |
+| Steel Jaws | **Fanged Blessing** — Ơn Trên đáng +2 thay vì +1 | `BLESS_POWER 1` | B — nanh hướng vào *lời ban phước*, không vào kẻ địch: đầu ra duy nhất của cô là việc người được ban làm tiếp |
+| Armor Plate | **Armored Bloom** — mỗi đòn −1 | `DAMAGE_REDUCTION 1` | B (L5) |
+| Corn Mortar | **Solar Corona** — Ơn Trên phủ mọi đồng minh trong 2 ô | `SKILL_AURA` | B — tầm xa hơn trên buff đơn mục tiêu chỉ đổi *ai* nhận; cánh tay ném giờ rải luôn cả túi |
+| Rotor Wing | **Sunchaser** — +1 di chuyển | `MOVE_BONUS 1` | A — bài toán hộ tống một nửa là bài toán bước chân; move 2 là thân chậm nhất bàn cờ |
+| Spike Armor | **Thorned Bloom** — phản 1 | `RETALIATE_DAMAGE 1` | A (L3) |
+| Spring Arm | **Kinetic Bloom** — lời ban phước thành sóng chấn: mọi thứ kề thân được ban bị đẩy ra một ô, kể cả chính cô | `BLESS_SHOCKWAVE` | B — đòn bẩy đọc thành **giãn đội hình**. Bản cũ (`RETALIATE_PUSH`) chỉ trả tiền SAU khi cô đã bị chạm tới; bản này là câu trả lời chủ động cho trùm sét lan |
+| Bunker Shell | **Dawn Shell** — bước vào trận đã có sẵn một lớp chắn | `START_SHIELDED` | A — +3 máu là một con số, không phải câu trả lời: nó mua thêm hai nhát cắn, không mua đường thoát. Một LỚP thì cú đầu tiên chạm tới cô tốn của bầy đàn cả một lượt |
 
-### 4.2 SHADELEAF (Green Shadow) — xạ thủ thuần
+### 5.2 PEABURST — Peaburst (Đậu Bắn)
 
-Pea Shot (LINE 8, 2 sát thương, miễn phí) + Precision Blast (volley 3 viên — **búa phá lớp
-chắn của phe cây**: viên 1 vỡ lớp, viên 2–3 vào thịt). Hàng của cô đổi **viên đạn làm được
-gì**.
+*Pea Shot (LINE 8, 2 sát thương) + Precision Blast (ba viên, viên overkill bay tiếp).*
+Điểm yếu lõi: **xạ thủ thuần** — fusion đổi *đòn bắn làm được gì*.
 
-| Gear | Ô | Hiệu ứng | Phân loại |
+| Gear | Ô | Hiệu ứng | Loại |
 |---|---|---|---|
-| Sunflower | **Sunbeam Pea** — phát kết liễu +15 nắng | `SUN_ON_KILL 15` | A |
-| Peashooter | **Repeater** — viên thứ hai 1 sát thương, overkill lăn sang thân kế | `DOUBLE_ATTACK 1` | ⭑ chính chủ |
-| Chomper | **Serrated Pea** — đạn để lại vết thương hở (+1 đòn kế) | `BLEED_ON_HIT` | B — đổi từ Vampire Pea vì mô hình lớp làm nó trùng Gourd Sniper cùng hàng |
-| Wall-nut | **Pea-nut** — đạn hất mục tiêu lùi 1 ô | `ON_HIT_PUSH 1` | EX **có chủ đích** — cặp bài trùng với Sling Pea, thẻ ghi thẳng "take it with Pea-nut or Sling Pea"; kèm cả cái tên chơi chữ pea-NUT |
-| Corn | **Mortar Pea** — đạn bay cầu vồng qua vật cản, tầm 4 | `ARC_ATTACK` | A |
-| Cattail | **Smokeline** — Precision Blast phủ bụi cả làn nó xuyên qua | `SKILL_DISARM` | B |
-| Endurian | **Spineguard** — kẻ cận chiến bị hất lùi *vào đúng tầm cô bắn* | `RETALIATE_PUSH` | EX — họ-phản-đòn, biến thể đẩy hợp thân mỏng |
-| Chard | **Sling Pea** — mọi cú đẩy cô gây ra đi xa thêm 1 | `PUSH_DISTANCE 1` | A — nửa kia của cặp Pea-nut |
-| Pumpkin | **Gourd Sniper** — kết liễu là dựng lớp | `SHIELD_ON_KILL 1` | A |
+| Sol Battery | **Sunbeam Pea** — 15 nắng mỗi mạng kết liễu | `SUN_ON_KILL 15` | A (L1) |
+| Seed Gun | **Repeater** — viên thứ hai 1 sát thương, overkill lăn sang thân kế | `DOUBLE_ATTACK 1` | ⭑ |
+| Steel Jaws | **Serrated Pea** — đạn để lại vết thương | `BLEED_ON_HIT` | B |
+| Armor Plate | **Armored Pea** — +3 máu (9 thay vì 6) | `BONUS_HP 3` | A (L5) |
+| Corn Mortar | **Mortar Pea** — đạn bay vòng cung, tầm 4 | `ARC_ATTACK` | A |
+| Rotor Wing | **Smokeline** — Phát Bắn Chuẩn Xác để bụi **đúng ô nó bắn trúng** | `SKILL_DISARM` | B (L6) |
+| Spike Armor | **Barbed Pea** — thứ trúng đạn quay sang cô, lượt sau buộc xông tới | `TAUNT_ON_HIT` | B — nửa còn lại của sầu riêng: không phải gai, mà là **tiếng gọi**. Xạ thủ chọn được con nào ngừng đi tới nhà thì đáng hơn xạ thủ hất nó lùi một ô |
+| Spring Arm | **Overwatch Pea** — địch bị đội đẩy vào làn ngắm ăn 1 sát thương | `OVERWATCH_SHOT` | B — đòn bẩy đọc thành **hoả lực yểm trợ**; muốn dùng phải có Chardslam/Ironhusk trong đội |
+| Bunker Shell | **Warded Pea** — mỗi mạng kết liễu dựng một lớp | `SHIELD_ON_KILL 1` | A |
 
-### 4.3 MAW (Chompzilla) — đao phủ có cửa sổ
+### 5.3 SNAPMAW — Snapmaw (Hàm Thép)
 
-Bite 2 + Devour (nuốt 7 — **một nguồn duy nhất nên KHÔNG xé được lớp chắn**, quyết định 15),
-trả giá bằng 2 lượt tiêu hoá bất lực. Cả hàng của cô vá đúng cửa sổ đó.
+*Bite (2 sát thương) + Devour (7 sát thương, xoá sạch mọi thứ trừ trùm, **tiêu hoá 2 lượt**).*
+Điểm yếu lõi: **bất lực trong lúc tiêu hoá** — cả hàng nhắm vào cửa sổ đó.
 
-| Gear | Ô | Hiệu ứng | Phân loại |
+| Gear | Ô | Hiệu ứng | Loại |
 |---|---|---|---|
-| Sunflower | **Photosynthetic Gut** — vừa nhai vừa quang hợp: +15/lượt | `SUN_PER_TURN 15` | A |
-| Peashooter | **Spitter** — có bãi nhổ tầm ngắn, dùng được *cả khi đang tiêu hoá* | `GRANT_ATTACK` | A |
-| Chomper | **Double Jaw** — tiêu hoá 1 lượt thay vì 2 | `DIGEST_REDUCTION 1` | ⭑ chính chủ |
-| Wall-nut | **Shelled Chomper** — bắt đầu tiêu hoá sau một lớp chắn mới | `ARMOR_WHILE_DIGESTING` | EX — máu của Wall-nut đọc qua lăng kính cửa-sổ-bất-lực, còn đúng chất hơn bản số cũ |
-| Corn | **Buttered Hide** — kẻ đầu tiên cắn cô mỗi lượt tiêu hoá bị trét bơ | `BUTTER_RETALIATE` | EX — *bơ là ngô*; ghim hợp lệ vì chỉ canh cửa sổ |
-| Cattail | **Prowl Drive** — +1 di chuyển | `MOVE_BONUS 1` | A — phải tới được bữa ăn, ăn xong lại chôn chân |
-| Endurian | **Bristleback** — cắn cô là nhận 2, xuyên suốt cả lúc tiêu hoá | `RETALIATE_DAMAGE 2` | A của Endurian |
-| Chard | **Chard Gullet** — đánh cô là bị hất lùi 1 ô, tiêu hoá hay không | `RETALIATE_PUSH` | EX — đẩy kẻ tới cắn ra khỏi tầm trong cửa sổ |
-| Pumpkin | **Gourd Gut** — mỗi mạng là một lớp | `SHIELD_ON_KILL 1` | A |
+| Sol Battery | **Sunlit Gut** — 25 nắng/lượt **chỉ khi đang nhai** | `SUN_WHILE_DIGESTING 25` | A (L1) — thẻ luôn viết "while she chews", engine trước đây trả mọi lượt |
+| Seed Gun | **Rending Claws** — đang tiêu hoá vẫn cào kề bên 1 sát thương | `DIGEST_CLAW` | A — thay *Spitter*, ô mà thẻ hứa "dùng được khi đang tiêu hoá" còn cửa targeting từ chối thẳng |
+| Steel Jaws | **Double Jaw** — tiêu hoá 1 lượt | `DIGEST_REDUCTION 1` | ⭑ |
+| Armor Plate | **Armored Jaws** — −1 sát thương suốt lúc tiêu hoá | `ARMOR_WHILE_DIGESTING 1` | B (L5) — bản lớp chắn trùng với ô bí ngô của chính cô, nên quay về "da dày hơn" |
+| Corn Mortar | **Stun Fang** — cắn thân **còn nguyên máu** thì ghim cứng | `STUN_ON_FULL_HP` | B (L2) |
+| Rotor Wing | **Prowl Veil** — thứ bị cú cắn làm đau đứng lại trong bụi một lượt | `SMOKE_ON_HIT` | B — ô duy nhất trong hàng này từng **cãi lại luật của chính hàng**: mọi fusion của Snapmaw phải đánh vào *cửa sổ tiêu hoá*, mà thêm chân thì chẳng giúp gì cho hai lượt cô không hành động được. Bụi thì làm đúng việc đó |
+| Spike Armor | **Bristleback** — phản 1, kể cả trong tiêu hoá | `RETALIATE_DAMAGE 1` | A (L3) |
+| Spring Arm | **Sprung Gullet** — cú cắn hất thứ nó nhai lùi một ô | `ON_HIT_PUSH 1` | A — bản `RETALIATE_PUSH` trả tiền cho việc *bị cắn*, sai nửa của một hero mà vấn đề là hai lượt không hành động được. Trên CÚ CẮN thì nó là công cụ cô tự tiêu: nhai xong, ném con tiếp theo ra khỏi tầm với trước khi cửa sổ mở |
+| Bunker Shell | **Warded Gut** — mỗi mạng dựng một lớp | `SHIELD_ON_KILL 1` | A |
 
-### 4.4 IRONHUSK (Wall Knight) — bức tường
+### 5.4 IRONHUSK — Ironhusk (Tấm Giáp)
 
-Shield Bash 1 + đẩy, Rolling Charge lăn. Nghề: chặn hành lang, bịt lỗ trồi. Hàng của cô làm
-**việc chặn tự trả lương**.
+*Shield Bash (1 sát thương + đẩy) + Rolling Charge (lăn thẳng, 2 + đẩy, 35 nắng).*
+Điểm yếu lõi: **chặn giỏi mà đóng góp ít** — cả hàng làm cho việc chặn có lãi.
 
-| Gear | Ô | Hiệu ứng | Phân loại |
+| Gear | Ô | Hiệu ứng | Loại |
 |---|---|---|---|
-| Sunflower | **Sunstone Shield** — đứng bịt lỗ trồi được trả 35 nắng | `SUN_ON_BLOCK_SPAWN 35` | EX đẹp nhất ma trận — nắng đo bằng đúng nghề của cô |
-| Peashooter | **Spear Bash** — bash vươn 2 ô, giữ nguyên cú đẩy | `ATTACK_RANGE_BONUS 1` | EX — giáo trên tường: chọn hành lang từ xa hơn |
-| Chomper | **Rending Bash** — bash để lại vết thương hở | `BLEED_ON_HIT` | B |
-| Wall-nut | **Iron Bulwark** — −1 nhận vào, phớt lờ va chạm, bịt lỗ không đau | `STEADFAST 1` | ⭑ chính chủ |
-| Corn | **Cob Turret** — có đòn bắn miễn phí | `GRANT_ATTACK` | ❌ → mục 6.2 |
-| Cattail | **Quick Bulwark** — +1 di chuyển | `MOVE_BONUS 1` | A — đến kịp hành lang là toàn bộ công việc |
-| Endurian | **Spiked Bulwark** — bash trúng mọi địch đứng kề | `ADJACENT_STRIKE` | ❌ → mục 6.3 |
-| Chard | **Chard Bash** — mọi cú đẩy đi xa thêm 1 (bash lẫn charge) | `PUSH_DISTANCE 1` | A của Chard |
-| Pumpkin | **Pumpkin Shell** — −1 nhận vào, +2 máu | `DAMAGE_REDUCTION 1` | ❌ → mục 6.6 |
+| Sol Battery | **Sunstone Shield** — bịt lỗ trồi được 35 nắng | `SUN_ON_BLOCK_SPAWN 35` | A (L1) — ô đẹp nhất cột: Sol đo bằng đúng nghề của cô |
+| Seed Gun | **Spear Bash** — Đập Khiên vươn 1 ô mà vẫn đẩy | `ATTACK_RANGE_BONUS 1` | A |
+| Steel Jaws | **Fanged Bash** — +1 sát thương mọi đòn | `BONUS_DAMAGE 1` | A — thay `BLEED_ON_HIT`, thứ đánh dấu cho *người khác* cash trên chính hero mà vấn đề là 1 sát thương của cô chẳng tới đâu |
+| Armor Plate | **Iron Bulwark** — −1, phớt va chạm, bịt lỗ không đau | `STEADFAST 1` | ⭑ |
+| Corn Mortar | **Stun Charge** — Cú Lăn trét bơ thứ nó tông | `SKILL_STUN` | B (L2) |
+| Rotor Wing | **Quick Bulwark** — +1 di chuyển | `MOVE_BONUS 1` | A |
+| Spike Armor | **Spiked Bulwark** — phản 1 | `RETALIATE_DAMAGE 1` | A (L3) — hero bị đánh nhiều nhất thì đầu ra nên nằm ở chỗ bị đánh |
+| Spring Arm | **Sprung Bash** — mọi cú đẩy xa thêm 1 ô | `PUSH_DISTANCE 1` | A |
+| Bunker Shell | **Bunker Plating** — mỗi trận một lần, cú đánh đáng lẽ kết liễu cô lại dựng lên một lớp | `LAST_STAND_SHIELD` | B — hết trùng trục với Iron Bulwark. `SHIELD_ON_KILL` là lựa chọn hiển nhiên và **sai**: với thân này thì lớp bật lại mỗi hai lượt, tức giáp đội lốt lớp chắn |
 
-### 4.5 COBB (Kernel-Pult) — pháo cầu vồng
+### 5.5 CORNOVA — Cornova (Bắp Ném)
 
-Corn Kernel LOB 2 (đạn bay qua đầu tường nhà mình — thứ không LINE nào làm được), Butter
-Splat ghim đơn mục tiêu. Cô đã **trả giá cho đường cầu vồng bằng tầm, nhịp và độ lì** — hàng
-của cô mua lại đúng ba thứ đó.
+*Corn Kernel (LOB 2) + Nova Shell (LOB 3, ghim 1 lượt).* Điểm yếu lõi: **vòng cung là miễn
+phí, mọi thứ còn lại đều ngắn** — cả hàng mua lại tầm, nhịp và độ bền.
 
-| Gear | Ô | Hiệu ứng | Phân loại |
+| Gear | Ô | Hiệu ứng | Loại |
 |---|---|---|---|
-| Sunflower | **Buttered Sun** — Butter Splat rẻ hơn 15 | `SKILL_DISCOUNT 15` | ❌ → mục 6.1 |
-| Peashooter | **Twin Cob** — hạt thứ hai nhẹ hơn, 1 sát thương | `DOUBLE_ATTACK 1` | B |
-| Chomper | **Shrapnel Kernel** — hạt ngô để lại vết thương hở | `BLEED_ON_HIT` | B |
-| Wall-nut | **Cob Bunker** — +3 máu: pháo phải đứng gần thì phải chịu được bị với tới | `BONUS_HP 3` | A |
-| Corn | **Cob Cannon** — Butter Splat ghim mục tiêu chính, làm chậm vành xung quanh | `SKILL_SPLASH` | ⭑ chính chủ |
-| Cattail | **Skid Carriage** — +1 di chuyển: thêm chân là thêm đường lui | `MOVE_BONUS 1` | A |
-| Endurian | **Durian Shot** — +1 sát thương mọi thứ cô ném | `BONUS_DAMAGE 1` | ❌ → mục 6.4 |
-| Chard | **Chard Recoil** — kẻ cận chiến chạm vào bị hất lùi | `RETALIATE_PUSH` | EX — độ giật của pháo: đường thoát cho khẩu đội đứng sát tuyến |
-| Pumpkin | **Gourd Battery** — hạt kết liễu là dựng lớp | `SHIELD_ON_KILL 1` | A |
+| Sol Battery | **Sunlit Cob** — Đạn Nova rẻ hơn 15 | `SKILL_DISCOUNT 15` | B (L1) |
+| Seed Gun | **Twin Cob** — hạt thứ hai 1 sát thương | `DOUBLE_ATTACK 1` | B |
+| Steel Jaws | **Shrapnel Kernel** — hạt để lại vết thương | `BLEED_ON_HIT` | B |
+| Armor Plate | **Armored Cob** — +3 máu | `BONUS_HP 3` | A (L5) |
+| Corn Mortar | **Cob Howitzer** — Đạn Nova nổ lan, vành ngoài làm chậm | `SKILL_SPLASH` | ⭑ |
+| Rotor Wing | **Ash Carriage** — thứ bị hạt ngô làm đau đứng lại trong bụi một lượt | `SMOKE_ON_HIT` | B — món B của cột rơi đúng vào **hero tầm xa**, vì phần thưởng "thân tôi bắn chẳng vung được" gần như vô giá trị với hero cận chiến (họ sắp bị đánh dù sao, riêng Thornshell còn *muốn* bị đánh) và quyết định với người bắn từ ngoài tầm tay |
+| Spike Armor | **Barbed Cob** — thứ trúng hạt ngô quay sang cô | `TAUNT_ON_HIT` | B — cùng ô với Peaburst, và đọc y hệt trên khẩu pháo: cô là quân duy nhất với tới được con zombie cách Greenspire ba ô, nên cô được quyền quyết định nó đi về phía cô |
+| Spring Arm | **Overwatch Cob** — địch bị đội đẩy vào tầm vòng cung ăn 1 sát thương | `OVERWATCH_SHOT` | B — cùng ô với Peaburst, khác đúng một chỗ và nó tự rơi ra: đạn yểm trợ bắn bằng khẩu súng cô đang cầm, nên của cô **bay vòng cung** (2 ô, kệ vật cản) còn của Peaburst cần hàng thông thoáng |
+| Bunker Shell | **Warded Cob** — mỗi mạng dựng một lớp | `SHIELD_ON_KILL 1` | A |
 
-### 4.6 ZEPHYR (Cattail) — phi công giấy
+### 5.6 REEDWING — Reedwing (Đuôi Mèo)
 
-Wing Guns nước-mã (2 ô × 2 sát thương — hai nguồn riêng, viên đầu phá lớp viên sau vào),
-Smoke Pod. 4 máu, bay, move 4. Hàng của cô mua **sống sót, đường thoát, và cách giữ đội hình
-địch đứng yên** — soạn trọn trong đợt 2, cả 9 ô đều đúng khung.
+*Wing Guns (WING_PAIR, **1 sát thương mỗi ô × 2 ô**) + Smoke Pod (2 ô bụi, 3 lượt).*
+4 máu, move 4, **BAY**. Điểm yếu lõi: **giấy có cánh** — phải bay vào đúng túi mà súng muốn.
 
-| Gear | Ô | Hiệu ứng | Phân loại |
+> Đòn thường hạ từ 2 xuống **1 mỗi ô** trong đợt này. 2×2 = 4 sát thương miễn phí mỗi lượt là
+> gấp đôi mọi đòn thường khác trong game. Ở mức 1, lượt miễn phí của cô đáng 2 — bằng Pea Shot
+> — và thứ 4 máu thật sự mua là **hình dạng**: hai thân cùng lúc, chọn từ bất cứ đâu trên bàn.
+
+| Gear | Ô | Hiệu ứng | Loại |
 |---|---|---|---|
-| Sunflower | **Solar Rotor** — mỗi mạng +15 nắng, hai nòng là hai cơ hội mỗi lượt | `SUN_ON_KILL 15` | A |
-| Peashooter | **Twin Pods** — cả hai cánh bắn loạt hai | `DOUBLE_ATTACK 1` | B |
-| Chomper | **Grinder Pods** — cả HAI mục tiêu cùng chảy máu | `BLEED_ON_HIT` | B — hai vết thương mỗi lượt cho cả đội thu hoạch |
-| Wall-nut | **Armored Fuselage** — 4 → 7 máu, đôi cánh thôi làm bằng giấy | `BONUS_HP 3` | A |
-| Corn | **Cluster Load** — Smoke Pod rẻ hơn 15 | `SKILL_DISCOUNT 15` | EX có ghi lý do trong code: arc vô nghĩa với hình học cố định, stun diện rộng phạm STUN RULE |
-| Cattail | **Overdrive Rotor** — move 5, đang bay. Chính cô, vặn to lên | `MOVE_BONUS 1` | ⭑ chính chủ |
-| Endurian | **Barbed Skids** — kẻ chạm vào bị hất lùi: với khung 4 máu, cú hất LÀ đường thoát | `RETALIATE_PUSH` | A-họ |
-| Chard | **Downwash** — rocket hất thứ nó trúng lùi 1 ô, cả hai ô cùng lúc | `ON_HIT_PUSH 1` | EX — đẩy 2 thân trong một hành động, chưa ai làm được |
-| Pumpkin | **Pod Plating** — mạng hạ là lớp mới: bảo hiểm mua bằng chính họng súng | `SHIELD_ON_KILL 1` | A |
+| Sol Battery | **Solar Rotor** — 15 nắng mỗi mạng, hai nòng hai cơ hội | `SUN_ON_KILL 15` | A |
+| Seed Gun | **Twin Pods** — cả hai cánh bắn loạt thứ hai | `DOUBLE_ATTACK 1` | B |
+| Steel Jaws | **Grinder Pods** — cả hai mục tiêu chảy máu | `BLEED_ON_HIT` | B |
+| Armor Plate | **Armored Fuselage** — +3 máu (7 thay vì 4) | `BONUS_HP 3` | A (L5) |
+| Corn Mortar | **Cluster Load** — tên lửa thứ ba vào **ô giữa cặp cánh** | `WING_MIDSHOT` | B — cánh tay ném đọc theo **hình học** chứ không theo tầm: hai ô cánh cách nhau đúng 2 ô nên luôn có một lỗ ở giữa. Chỉ có nghĩa với cô — không kit nào khác có lỗ của riêng mình |
+| Rotor Wing | **Overdrive Rotor** — +1 di chuyển (move 5, đang bay) | `MOVE_BONUS 1` | ⭑ |
+| Spike Armor | **Barbed Skids** — thứ trúng rocket quay sang cô, rồi cô bay đi | `TAUNT_ON_HIT` | B — `RETALIATE_PUSH` là cú hất mua SAU khi có thứ đã chạm tới khung 4 máu. Tiếng gọi là bản không bao giờ để nó tới nơi: kéo một thân về phía mình rồi lượt sau đơn giản là **không có mặt ở đó**. Cô là đơn vị duy nhất BAY, nên "lại đây" không tốn gì của cô và tốn của bầy đàn một quãng đường |
+| Spring Arm | **Downwash** — rocket hất thứ nó trúng lùi một ô, cả hai ô | `ON_HIT_PUSH 1` | A |
+| Bunker Shell | **Pod Plating** — mỗi mạng dựng một lớp | `SHIELD_ON_KILL 1` | A |
 
-### 4.7 THORNHIDE (Endurian) — cột thu lôi
+### 5.7 THORNSHELL — Thornshell (Sầu Riêng)
 
-Thorn Swipe 2 + nội tại phản đòn, Provoke ép địch xông vào. *"2 damage và move 2 thì chẳng
-tóm được ai"* — anh chỉ mạnh khi địch buộc phải đến. Hàng của anh làm anh **lì hơn, đau hơn
-khi chạm, và gọi to hơn**.
+*Thorn Swipe (2 sát thương) + Provoke (mọi địch trong 3 ô phải tới).* **Nội tại phản 2.**
+Điểm yếu lõi: **chỉ mạnh khi kẻ địch chịu tới chỗ anh** — move 2, 2 sát thương, tóm chẳng ai.
 
-| Gear | Ô | Hiệu ứng | Phân loại |
+| Gear | Ô | Hiệu ứng | Loại |
 |---|---|---|---|
-| Sunflower | **Sunlit Thorn** — Provoke rẻ hơn 15 | `SKILL_DISCOUNT 15` | EX — cả đầu ra của anh nằm ở tiếng gọi 50-nắng; nắng = gọi được nhiều hơn |
-| Peashooter | **Twin Thorn** — cú quật giáng thêm lần hai | `DOUBLE_ATTACK 1` | B |
-| Chomper | **Gnashing Husk** — cú quật miễn phí trúng MỌI địch đứng kề | `ADJACENT_STRIKE` | EX — hàm răng đọc thành cắn-cả-đám: chuẩn hero bị vây |
-| Wall-nut | **Ironthorn** — +3 máu: 13, thân lớn nhất game, vì mọi thứ đều nhắm vào nó | `BONUS_HP 3` | A |
-| Corn | **Reaching Thorn** — quật xa 2 ô | `ATTACK_RANGE_BONUS 1` | EX — arc/stun đều không đứng được trên kit anh; tầm quật là món thay |
-| Cattail | **Windburr** — +1 di chuyển: giờ anh CHỌN nơi đặt lời khiêu khích | `MOVE_BONUS 1` | A — ô đáng giá nhất cột Cattail |
-| Endurian | **Spiked Endurian** — phản 3 thay vì 2 | `RETALIATE_DAMAGE 1` | ⭑ chính chủ (+1 chồng nội tại) |
-| Chard | **Far Provoke** — Provoke vươn 4 ô thay vì 3 | `TAUNT_RADIUS 1` | EX — đòn bẩy của Chard đọc thành *tiếng gọi đi xa hơn*; đây cũng là nơi món B "taunt" của Endurian thực sự sống |
-| Pumpkin | **Gourd Husk** — kết liễu bằng cú quật là dựng lớp | `SHIELD_ON_KILL 1` | A |
+| Sol Battery | **Sunlit Thorn** — Khiêu Khích rẻ hơn 15 | `SKILL_DISCOUNT 15` | B (L1) — đầu ra của anh là *số lần gọi được* |
+| Seed Gun | **Twin Thorn** — quật thêm lần hai | `DOUBLE_ATTACK 1` | B |
+| Steel Jaws | **Rending Husk** — kẻ đánh cận chiến bị **chảy máu** | `RETALIATE_BLEED` | B — thay `ADJACENT_STRIKE`, thứ trả tiền cho việc *tấn công* (nửa cố tình dở của hero này). Nanh quay ra ngoài: bốn thân bị kéo vào tiếp xúc, mỗi con rời đi mang sẵn dấu cho người khác kết liễu |
+| Armor Plate | **Ironthorn** — −1 sát thương mỗi đòn | `DAMAGE_REDUCTION 1` | B (L5) — mọi thứ đều nhắm vào anh, nên trục tính-trên-từng-đòn mới đúng |
+| Corn Mortar | **Bellowing Thorn** — Khiêu Khích vươn 5 ô thay vì 3 | `TAUNT_RADIUS 2` | B — cánh tay ném mang **tiếng gọi** thay vì cú vung; ở 5 ô nó với tới pháo binh và lũ bay vốn ngồi ngoài vòng 3 |
+| Rotor Wing | **Windburr** — +1 di chuyển | `MOVE_BONUS 1` | A |
+| Spike Armor | **Bristling Armor** — phản 3 thay vì 2 | `RETALIATE_DAMAGE 1` | ⭑ (L3, ngoại lệ chính chủ) |
+| Spring Arm | **Sprung Thorn** — cú quét hất mục tiêu lùi một ô | `ON_HIT_PUSH 1` | A — trông như phản-synergy với taunt nhưng ngược lại: anh đứng giữa đám đông theo thiết kế, nên gần như mọi cú hất đều là một thân dúi vào thân khác |
+| Bunker Shell | **Warded Husk** — mỗi mạng kết liễu dựng một lớp | `SHIELD_ON_KILL 1` | A |
 
-### 4.8 CHARDWALL (Chard Guard) — người ném
+### 5.8 CHARDSLAM — Chardslam (Cải Cầu Vồng)
 
-Vault Toss (túm kề, hất qua vai sang ô đối xứng, ngã 1 — sát thương VA CHẠM, không phải số
-damage) + Sweep (hất 4 phía). 0 sát thương là identity, có code chặn hẳn trong
-`utils/fusion.ts`. Hàng của anh mua **hiểm địa, tầm với và sát thương dúi** — không bao giờ
-một con số damage.
+*Vault Toss (miễn phí, tóm thân kề bên quăng qua đầu sang ô đối xứng, **1 sát thương ngã**) +
+Sweep (hất mọi thứ kề bên 2 ô, 50 nắng).* **0 sát thương là hero, không phải lỗ hổng.**
+Điểm yếu lõi: **bàn cờ trống trơn thì anh gần như vô hại**.
 
-| Gear | Ô | Hiệu ứng | Phân loại |
+| Gear | Ô | Hiệu ứng | Loại |
 |---|---|---|---|
-| Sunflower | **Sunlit Guard** — mỗi zombie bị dúi chết vào nước/đá/thân khác +15 nắng | `SUN_ON_KILL 15` | A — nắng đo bằng va chạm, đúng nghề |
-| Peashooter | **Longarm Chard** — túm từ 2 ô, khỏi bước vào tầm chạm | `ATTACK_RANGE_BONUS 1` | EX — GRANT thừa (có đòn), DOUBLE chết (0 damage); tầm túm là món thay. ⚠️ chữ thẻ còn nói "Backswing" — cần sửa thành Vault Toss |
-| Chomper | **Rending Guard** — cú ném để lại vết thương hở | `BLEED_ON_HIT` | B — *ô đẹp nhất trục chảy máu*: hero không kết liễu được ai giờ ĐÁNH DẤU cho cả đội, lách qua cửa cấm-damage một cách chính danh |
-| Wall-nut | **Bulwark Chard** — +3 máu: phải bước vào tầm chạm mới làm được việc | `BONUS_HP 3` | A |
-| Corn | **Cob Catapult** — mọi cú hất đi xa thêm 1 | `PUSH_DISTANCE 1` | EX — "cánh tay ném" là chính mô tả của gear Corn; đòn bẩy chồng đòn bẩy. ⚠️ chữ thẻ còn nói "swing"/Backswing — cần sửa theo Sweep |
-| Cattail | **Veilsweep** — 4 ô Sweep vừa quét chìm trong bụi: vừa văng vừa câm họng | `SKILL_DISARM` | B |
-| Endurian | **Thorned Guard** — kẻ cận chiến bị hất lùi | `RETALIATE_PUSH` | A-họ |
-| Chard | **Grand Chard** — thứ bị anh dúi vào vật cản chịu thêm 2 (ngã Vault Toss thành 3) | `COLLISION_BONUS 2` | ⭑ chính chủ |
-| Pumpkin | **Gourd Guard** — −1 nhận vào | `DAMAGE_REDUCTION 1` | ❌ → mục 6.7 |
+| Sol Battery | **Sunlit Chard** — 15 nắng mỗi thân bị dúi chết | `SUN_ON_KILL 15` | A (L1) |
+| Seed Gun | **Longarm Chard** — Quăng Vượt Đầu tóm từ 2 ô | `ATTACK_RANGE_BONUS 1` | A |
+| Steel Jaws | **Rending Chard** — cú ném để lại vết thương | `BLEED_ON_HIT` | B — ô đẹp nhất trục chảy máu: hero không kết liễu nổi ai giờ đánh dấu cho cả đội. Chảy máu không phải con số sát thương nên qua được cửa duy nhất hàng này canh |
+| Armor Plate | **Armored Chard** — −1 sát thương mỗi đòn | `DAMAGE_REDUCTION 1` | B (L5) |
+| Corn Mortar | **Catapult Chard** — Quét Ngang hất 3 ô thay vì 2 | `PUSH_DISTANCE 1` | A |
+| Rotor Wing | **Veilsweep** — bụi bốc lên **nơi thân đáp xuống** | `SKILL_DISARM` | B (L6) |
+| Spike Armor | **Thorned Chard** — kẻ đánh cận chiến bị hất lùi | `RETALIATE_PUSH` | A |
+| Spring Arm | **Grand Chard** — thân bị dúi vào vật cản chịu thêm 2 | `COLLISION_BONUS 2` | ⭑ |
+| Bunker Shell | **Warded Chard** — mỗi thân dúi chết dựng một lớp | `SHIELD_ON_KILL 1` | A — anh **có** kết liễu: mỗi thân xuống nước/vào đá/vào thân khác đều là một mạng trong sổ (Sunlit Chard trả tiền đúng sự kiện đó) |
 
-### 4.9 GOURDWARD (Pumpkin) — hộ vệ thuần
+### 5.9 GOURDWARD — Gourdward (Vỏ Boong-ke)
 
-Reinforce (lớp cho bất cứ đồng minh nào đứng kề — **kể cả NHÀ**) + Encase (lớp cho mình và cả
-vành dấu cộng) + nội tại miễn BURN/FREEZE/SHOCK. Không còn đòn đánh nào; không nhận nguyên tố
-(elementSlot NONE). Anh đáng giá đúng bằng những gì anh che được.
+*Reinforce (miễn phí, lớp chắn cho **bất cứ đồng minh nào kề bên — kể cả NHÀ**) + Encase (lớp
+cho mình và cả vành dấu cộng).* Không đòn đánh nào. **Có ô nguyên tố, và ô đó chính là lớp
+phòng hộ** (xem mục 6). Điểm yếu lõi: **đáng giá đúng bằng người anh đang che**.
 
-| Gear | Ô | Hiệu ứng | Phân loại |
+| Gear | Ô | Hiệu ứng | Loại |
 |---|---|---|---|
-| Sunflower | **Sunlit Shell** — Encase rẻ hơn 15 | `SKILL_DISCOUNT 15` | EX — cùng logic Sunlit Thorn: đầu ra của anh là số lần bọc |
-| Peashooter | **Pea Turret** — có đòn bắn miễn phí: người gác học được cách bắn trả | `GRANT_ATTACK` | A — câu chuyện "mua lại khẩu súng đã mất" |
-| Chomper | **Fanged Rind** — cắn anh là nhận lại 2 | `RETALIATE_DAMAGE 2` | EX — không đòn đánh nên A/B của Chomper đều chết; hàm răng quay mặt ra ngoài |
-| Wall-nut | **Ironrind** — +3 máu: lớp vỏ quanh đồng đội chỉ sống khi người mang nó còn sống | `BONUS_HP 3` | A |
-| Corn | **Long Arm Shell** — Reinforce vươn 2 ô: bọc đồng minh và nhà từ xa | `ATTACK_RANGE_BONUS 1` | EX — cánh tay ném của ngô đọc thành tầm trao lớp |
-| Cattail | **Rolling Rind** — +1 di chuyển: vỏ đáng giá bằng khả năng tới kịp | `MOVE_BONUS 1` | A |
-| Endurian | **Spined Shell** — đánh anh là bị hất lùi: muốn xuyên qua anh phải trả bằng đất | `RETALIATE_PUSH` | A-họ |
-| Chard | **Braced Shell** — −1 nhận vào, phớt lờ va chạm, bịt lỗ không đau | `STEADFAST 1` | EX — thân cải làm thanh giằng |
-| Pumpkin | **Great Gourd** — lớp anh trao TRÀN sang những ai đứng kề người nhận | `SHIELD_SPREAD` | ⭑ chính chủ |
+| Sol Battery | **Sunlit Rind** — Bọc Giáp rẻ hơn **10** | `SKILL_DISCOUNT 10` | B (L1) — ô discount duy nhất bị hạ giá trị, lý do ở §9.3 |
+| Seed Gun | **Rind Pellet** — Gia Cố bắn đi như viên đạn: bọc đồng minh (hoặc nhà) đầu tiên trong 4 ô | `ATTACK_RANGE_BONUS 3` | A |
+| Steel Jaws | **Glass Rind** — lớp chắn là thuỷ tinh nhọn, kẻ phá vỡ bị chảy máu | `BARBED_SHIELD` | B — nanh cắm vào **mặt duy nhất anh thật sự sở hữu**; cách hại người duy nhất của anh, và vẫn không phải cú vung |
+| Armor Plate | **Ironrind** — −1 sát thương mỗi đòn | `DAMAGE_REDUCTION 1` | B (L5) |
+| Corn Mortar | **Stun Shell** — Bọc Giáp trét bơ mọi zombie nó chạm tới | `SKILL_STUN` | B — hết trùng trục với Rind Pellet. Bơ là món B thật của cột bắp, và đây là kit duy nhất nó vừa: **ngoại lệ ĐẮT NHẤT** của STUN RULE — anh phải đứng GIỮA đám đông, 0 sát thương, 8 máu, hết một lượt và 50 Sol |
+| Rotor Wing | **Rolling Rind** — +1 di chuyển | `MOVE_BONUS 1` | A |
+| Spike Armor | **Spined Rind** — phản 1 | `RETALIATE_DAMAGE 1` | A (L3) |
+| Spring Arm | **Shockrind** — Bọc Giáp thổi bật mọi địch kề bên lùi một ô | `SKILL_REPEL` | B — dựng vỏ là một *sự kiện*; đây cũng là thứ duy nhất cho nguyên tố của anh có chỗ cưỡi |
+| Bunker Shell | **Greatrind** — lớp trao ra tràn sang người đứng kề người nhận | `SHIELD_SPREAD` | ⭑ |
 
 ---
 
-## 5 · Các luật xuyên suốt (áp lên mọi ô)
+## 6 · Đợt map lại 2026-08-06 — ĐÃ TRIỂN KHAI
 
-1. **STUN RULE** — không recipe nào phát stun miễn phí, chấm hết. Stun hợp lệ duy nhất là
-   loại *trả phí* (Butter Splat 50 nắng) hoặc *canh cửa sổ* (Buttered Hide). Mọi on-hit lạnh
-   đều là CHẬM, không bao giờ là băng.
-2. **SUN ECONOMY RULE** — nắng không trả cho việc chỉ-đánh-trúng. Kết liễu, bịt lỗ, hoặc tiêu
-   nguyên lượt.
-3. **Lớp chắn không có số** — mọi nguồn giáp phát cùng một thứ: MỘT lớp. Vì thế mọi cap cũ
-   biến mất, và `SHIELD_BONUS` ("+cỡ giáp") được thay bằng `SHIELD_SPREAD` (+độ phủ).
-4. **Chảy máu cộng SAU giáp mũ** và **xuyên miễn nhiễm STATUS** — gear trị giáp không bị giáp
-   nuốt, và không nguội ở chín trận trùm.
-5. **BONUS_DAMAGE map chứ không append** — Chardwall và mọi hero 0-damage tương lai không thể
-   bị bơm số từ bên hông.
-6. **Rider kỹ năng không bao giờ chạm đòn miễn phí** (SKILL_SPLASH/SKILL_DISARM/SKILL_STUN
-   tương lai) — disarm miễn phí mỗi lượt chính là hình dạng STUN RULE cấm.
-7. **Thẻ bài không được nói dối** — mô tả in trên recipe phải là đúng thứ engine làm. Mọi lần
-   đổi cơ chế trong 4 đợt vừa rồi đều kèm sửa chữ thẻ; hai chữ sót được liệt ở mục 7.
+### 6.1 · Đợt một (27 ô)
+
+| Hero × Gear | Trước | Sau |
+|---|---|---|
+| Sunbloom × Steel Jaws | *Hungry Bloom* `SKILL_DISCOUNT` | **Fanged Blessing** `BLESS_POWER 1` |
+| Sunbloom × Corn | *Mortar Bloom* `ATTACK_RANGE_BONUS 2` | **Solar Corona** `SKILL_AURA` |
+| Sunbloom × Rotor Wing | *Ashveil* `SKILL_DISARM` | **Sunchaser** `MOVE_BONUS 1` |
+| Sunbloom × Spike Armor | phản 2 | phản **1** |
+| Peaburst × Armor Plate | *Armored Pea* `ON_HIT_PUSH` | `BONUS_HP 3` |
+| Peaburst × Spike Armor | *Spineguard* `RETALIATE_PUSH` | **Barbed Pea** `TAUNT_ON_HIT` |
+| Peaburst × Chard | *Sling Pea* `PUSH_DISTANCE` | **Overwatch Pea** `OVERWATCH_SHOT` |
+| Snapmaw × Sol Battery | `SUN_PER_TURN 15` (mọi lượt) | `SUN_WHILE_DIGESTING 25` |
+| Snapmaw × Seed Gun | *Spitter* `GRANT_ATTACK` | **Rending Claws** `DIGEST_CLAW` |
+| Snapmaw × Armor Plate | lớp chắn lúc bắt đầu tiêu hoá | `ARMOR_WHILE_DIGESTING 1` (−1 suốt cửa sổ) |
+| Snapmaw × Corn | *Numbed Hide* `BUTTER_RETALIATE` | **Stun Fang** `STUN_ON_FULL_HP` |
+| Snapmaw × Spike Armor | phản 2 | phản **1** |
+| Ironhusk × Steel Jaws | *Rending Bash* `BLEED_ON_HIT` | **Fanged Bash** `BONUS_DAMAGE 1` |
+| Ironhusk × Corn | *Cob Turret* `GRANT_ATTACK` | **Stun Charge** `SKILL_STUN` |
+| Ironhusk × Spike Armor | *Spiked Bulwark* `ADJACENT_STRIKE` | `RETALIATE_DAMAGE 1` |
+| Reedwing × Corn | *Cluster Load* `SKILL_DISCOUNT` | **Cluster Load** `WING_MIDSHOT` |
+| Thornshell × Steel Jaws | *Gnashing Husk* `ADJACENT_STRIKE` | **Rending Husk** `RETALIATE_BLEED` |
+| Thornshell × Armor Plate | *Ironthorn* `BONUS_HP 3` | `DAMAGE_REDUCTION 1` |
+| Thornshell × Corn | *Reaching Thorn* `ATTACK_RANGE_BONUS` | **Bellowing Thorn** `TAUNT_RADIUS 2` |
+| Thornshell × Chard | *Far Provoke* `TAUNT_RADIUS 1` | **Sprung Thorn** `ON_HIT_PUSH 1` |
+| Chardslam × Armor Plate | *Armored Chard* `BONUS_HP 3` | `DAMAGE_REDUCTION 1` |
+| Chardslam × Bunker Shell | *Warded Chard* `DAMAGE_REDUCTION` | `SHIELD_ON_KILL 1` |
+| Gourdward × Seed Gun | *Pea Turret* `GRANT_ATTACK` | **Rind Pellet** `ATTACK_RANGE_BONUS 3` |
+| Gourdward × Steel Jaws | *Fanged Rind* phản 2 | **Glass Rind** `BARBED_SHIELD` |
+| Gourdward × Armor Plate | *Ironrind* `BONUS_HP 3` | `DAMAGE_REDUCTION 1` |
+| Gourdward × Spike Armor | *Spined Rind* `RETALIATE_PUSH` | `RETALIATE_DAMAGE 1` |
+| Gourdward × Chard | *Braced Shell* `STEADFAST` | **Shockrind** `SKILL_REPEL` |
+
+### 6.2 · Đợt hai (8 ô)
+
+| Hero × Gear | Trước | Sau |
+|---|---|---|
+| Sunbloom × Spring Arm | *Guarded Bloom* `RETALIATE_PUSH` | **Kinetic Bloom** `BLESS_SHOCKWAVE` |
+| Sunbloom × Bunker Shell | *Gourd Bloom* `BONUS_HP 3` | **Dawn Shell** `START_SHIELDED` |
+| Snapmaw × Spring Arm | *Sprung Gullet* `RETALIATE_PUSH` | `ON_HIT_PUSH 1` |
+| Ironhusk × Bunker Shell | *Bunker Plating* `DAMAGE_REDUCTION` | `LAST_STAND_SHIELD` |
+| Cornova × Spike Armor | *Barbed Cob* `BONUS_DAMAGE 1` | `TAUNT_ON_HIT` |
+| Cornova × Spring Arm | *Overwatch Cob* `RETALIATE_PUSH` | `OVERWATCH_SHOT` |
+| Reedwing × Spike Armor | *Barbed Skids* `RETALIATE_PUSH` | `TAUNT_ON_HIT` |
+| Gourdward × Corn Mortar | *Long Arm Shell* `ATTACK_RANGE_BONUS 1` | **Stun Shell** `SKILL_STUN` |
+
+Đợt hai làm được ba việc ngoài tám ô:
+
+- **Đóng cả hai chỗ còn mở** của đợt một (mục 7 cũ). Không hàng nào còn hai ô trùng trục.
+- **Giảm mạnh số ô `RETALIATE_PUSH`**: từ 5 xuống đúng **1** (Thorned Chard của Chardslam). Nó là hiệu ứng "trả tiền SAU khi đã bị
+  chạm tới", và trên phần lớn hero thì đó là nửa sai của bài toán — bốn ô đổi sang thứ ngăn
+  không cho chuyện đó xảy ra (`TAUNT_ON_HIT` ×2, `BLESS_SHOCKWAVE`, `OVERWATCH_SHOT`), một ô
+  chuyển cùng cú đẩy ấy sang **đòn đánh** (`ON_HIT_PUSH` của Snapmaw).
+- **`TAUNT_ON_HIT` thành một trục thật của cột Spike Armor**: ba hero tầm xa (Peaburst,
+  Cornova, Reedwing) đều nhận, và mỗi người dùng nó theo một cách khác nhau — Peaburst kéo
+  con zombie ra khỏi đường tới Greenspire, Cornova với tới thứ ở xa 3 ô, Reedwing kéo về rồi
+  **bay đi mất**.
+
+### 6.3 · Đổi ngoài ma trận
+
+**Reedwing — đòn thường 2 → 1 sát thương mỗi ô.** Hai nòng × 2 là 4 sát thương miễn phí mỗi
+lượt, gấp đôi mọi hero khác. Chỉ số `damage` của cô cũng về 1 cho khớp (nó nuôi cả tia lan sét).
+
+**Gourdward — lớp phòng hộ không còn miễn nhiễm cả ba nguyên tố.** Trước: `immunities:
+['BURN','FREEZE','SHOCK']` cứng, cộng `elementSlot: 'NONE'` để giấu ô nguyên tố — vì một hero
+đã miễn cả ba thì chẳng còn gì để mua, ô đó là cái quầy bán bẫy. Giờ **miễn nhiễm CHÍNH LÀ
+nguyên tố anh chọn**: chọn LỬA thì không bị nướng, chọn BĂNG thì không bị đóng, chọn SÉT thì tia
+không dẫn qua. `elementalImmunities` trong `utils/unitFactory` đã làm đúng việc đó cho mọi hero
+từ khi có nguyên tố, nên cái ward này tốn **0 dòng engine** và ô nguyên tố thành lựa chọn thật
+với giá chuẩn −2 máu tối đa. Đổi lại anh chỉ được bảo vệ bằng một act thay vì ba.
+Trường `HeroDefinition.elementSlot` đã bị xoá — không hero nào dùng nữa (bài học `RADIUS`).
+
+**Luật L4 (phản đòn chỉ cận chiến), L6 (bụi rơi chỗ đáp), L7 (rider nguyên tố).** Ba luật ở mục
+2 đều là sửa engine trong đợt này, không phải mô tả cái sẵn có.
+
+**`BUTTER_RETALIATE` bị xoá hẳn** (type + khối trong `turnManager` + set `butteredThisTurn`);
+`STUN_ON_FULL_HP` thay chỗ. `ADJACENT_STRIKE` thành **mồ côi dữ liệu** — không ô nào nhận, engine
+vẫn phân giải, giữ lại theo tiền lệ `SPIKE_TRAIL`.
 
 ---
 
-## 6 · BẢY Ô ĐỀ XUẤT MAP LẠI — *chưa triển khai, chờ chốt*
+## 7 · Chỗ còn mở
 
-Nguyên tắc rà: một ô bị đánh ❌ khi hiệu ứng của nó **là món chữ ký của cột khác** mà không có
-lý do ghi kèm — tức người chơi nhìn gear không đoán được mình sắp nhận gì.
+Không còn. Hai mục treo của đợt một đều đã đóng trong đợt hai:
 
-**6.1 · Cobb × Sunflower** — *Buttered Sun* (`SKILL_DISCOUNT`) → **Golden Kernel**
-(`SUN_ON_KILL 15`). Discount là món lấp chỗ thứ ba trong cột nắng; trục A của Sunflower là
-thu nắng và Cobb kết liễu đủ nhiều để nó chảy. Hàng cô cũng đang không có ô kinh tế nào.
+- **Gourdward × Corn Mortar** hết trùng trục với *Rind Pellet* — bơ ghim thay cho +1 tầm.
+- **Ironhusk × Bunker Shell** hết trùng trục với *Iron Bulwark* — lớp chắn phút chót thay cho −1
+  sát thương. Đây cũng là ô mà `SHIELD_ON_KILL` (gợi ý cũ) **là lựa chọn sai**: trên một thân khó
+  hạ như cô thì lớp sẽ bật lại mỗi hai lượt, tức là giáp đội lốt lớp chắn.
 
-**6.2 · Ironhusk × Corn** — *Cob Turret* (`GRANT_ATTACK`) → **Butter Bash** (`SKILL_STUN`
-*mới*): "Rolling Charge trét bơ thứ nó tông trúng." GRANT là món A của cột *Peashooter* — nằm
-ở cột Corn là lạc. Bơ đúng chất ngô, đúng món B trong khung, và hợp STUN RULE vì chỉ dính kỹ
-năng trả phí. (Đổi này lấy đi lựa chọn bắn-tầm-xa của cô — nếu bạn quý Cob Turret hơn, ô này
-giữ được như EX, nhưng khi đó món B của Corn tiếp tục không có ô nào nhận.)
-
-**6.3 · Ironhusk × Endurian** — *Spiked Bulwark* (`ADJACENT_STRIKE`) → cùng tên,
-**`RETALIATE_DAMAGE 2`**: "Cắn tường thì chảy máu." ADJACENT_STRIKE là chất Chomper và
-Gnashing Husk của Thornhide đã giữ nó; tường thì phản đòn — đó mới là Endurian.
-
-**6.4 · Cobb × Endurian** — *Durian Shot* (`BONUS_DAMAGE`) → **Durian Husk**
-(`RETALIATE_DAMAGE 2`). BONUS_DAMAGE là món A của cột *Chomper* — lạc cột. LOB 2 ép cô đứng
-sát tuyến; vỏ sầu riêng là độ lì cô cần, đúng "mua lại durability" của hàng.
-
-**6.5 · Sunspot × Pumpkin** — *Gourd Bloom* (`BONUS_HP`) → **Warded Bloom** (`ELEMENT_WARD`
-*mới*): miễn BURN/FREEZE/SHOCK. BONUS_HP là món A của cột *Wall-nut*. Cục pin không thể bị
-đóng băng hay giật cháy — lớp vỏ bí đọc thành tấm bùa, và cô vốn đã miễn BURN bẩm sinh nên
-món này nối dài đúng người.
-
-**6.6 · Ironhusk × Pumpkin** — *Pumpkin Shell* (`DAMAGE_REDUCTION`) → **Warded Bulwark**
-(`ELEMENT_WARD`). DAMAGE_REDUCTION là món B của cột *Wall-nut* (cô đã có bản xịn hơn ở Iron
-Bulwark ngay cạnh). Bức tường không thể bị BĂNG nhấc khỏi hành lang — "blocking pays" đúng
-nghĩa đen, đặc biệt ở stage II.
-
-**6.7 · Chardwall × Pumpkin** — *Gourd Guard* (`DAMAGE_REDUCTION`) → cùng tên,
-**`SHIELD_ON_KILL 1`**. Anh giết bằng va chạm, và mỗi cú dúi chết người tự đắp lớp — ăn khớp
-Sunlit Guard cùng hàng (cùng một cú ném trả cả nắng lẫn giáp là một build có chủ đích).
-
-**Chi phí engine nếu chốt cả 7:**
-
-- `SKILL_STUN` — một nhánh trong `applyFusionToSkill`, sao y cổng `SKILL_DISARM` (sunCost > 0
-  && có damage → thêm STUN nếu chưa có). Rẻ.
-- `ELEMENT_WARD` — ghi ba miễn nhiễm vào `immunities` lúc `applyFusion`, **và** gấp lại ở hai
-  điểm rebuild (`buildHeroFromSnapshot`, `freshHero`) vì rebuild đọc lại def sẽ xoá mảng nếu
-  chỉ ghi một lần. Hai điểm, đã định vị sẵn.
-- 7 ô data + i18n + chạy lại `roster.assert`/`tutorial.assert` (không bàn tutorial nào dùng
-  các ô này — kỳ vọng xanh ngay).
-
----
-
-## 7 · Lỗi chữ phát hiện khi rà (sửa cùng đợt với mục 6)
-
-1. **Longarm Chard** — "Backswing reaches 2 tiles…" → Backswing đã nghỉ; sửa thành tầm túm
-   của Vault Toss.
-2. **Cob Catapult** — "3 from the swing, 3 from the sweep" → nửa "swing" chết theo Backswing;
-   chỉ còn Sweep ăn PUSH_DISTANCE.
+Một giới hạn cần biết chứ không phải lỗi: **`OVERWATCH_SHOT` chỉ nổ trong lượt của phe mình**
+(cú đẩy do đội gây ra, phân giải trong `planSkillActions`). Địch bị đẩy trong lượt địch — phản
+đòn `RETALIATE_PUSH`, cú tông của trùm — nằm ngoài, và thẻ bài viết đúng như vậy.
 
 ---
 
 ## 8 · Trạng thái
 
-- Ma trận 81 ô như mô tả ở mục 4 là **code đang chạy**, typecheck + build + 2 bộ assert xanh.
-- Mục 6 (7 ô) và mục 7 (2 chữ) là **việc chờ chốt** — nói "làm mục 6" là triển khai trọn gói.
-- Khung hai món ghi chuẩn tại `data/fusionRecipes.ts` (comment đầu file) và
-  `PLAN-hero-zephyr.md` §4.
+- 81/81 ô có recipe, **41 hiệu ứng khác nhau** đang được dùng.
+- **Không còn ô EX nào.** Cả 81 ô đều xếp được vào khung hai-món (A/B) hoặc là ô chữ ký — bước cuối là luật cột Sol Battery ở L1, thuộc về 4 ô trước đây không biết đứng đâu.
+- **Mỗi HÀNG một danh từ cây** (NAMING.md đợt 4): không ô nào còn đeo tên cây của hero khác.
+- **Không hàng nào có hai ô trùng trục.**
+- 15 `FusionEffectType` mới qua hai đợt, mỗi cái có ít nhất một ô nhận (bài học `RADIUS`).
+- STUN RULE có **ba ngoại lệ có giá**, mỗi cái ghi rõ giá ngay trong `data/fusionRecipes.ts`.
+- Kiểm chứng: `npm run typecheck` ✅ · `npm run build` ✅ · `roster.assert` ✅ ·
+  `tutorial.assert` (replay 7 màn) ✅ · rà i18n đủ 81 tên + 81 mô tả ✅ · 23 ca logic chạy
+  trực tiếp qua `planSkillActions` / `processTurn` / `calculateDamage` / `buildHeroFromSnapshot`
+  trong trình duyệt ✅
+
+---
+
+## 9 · Đánh giá cân bằng (đo, không đoán)
+
+Mọi con số dưới đây lấy từ code đang chạy, không phải ước lượng. Mục này viết ở vòng rà cân
+bằng; **§9.3 và §9.4 đã được xử lý ngay trong cùng đợt** — phần "trước/sau" giữ lại vì lý do
+của con số mới nằm ở chỗ con số cũ sai thế nào.
+
+### 9.1 · Con số quyết định tất cả: `FUSION_SLOTS = 2`
+
+Mỗi hero chỉ chọn **2 trong 9 ô**. Nghĩa là ma trận không phải "81 lựa chọn" mà là **9 cuộc
+thi 2-suất, chạy song song**. Hệ quả trực tiếp: ô *always-on* gần như luôn thắng ô có điều kiện.
+
+| Loại | Số ô | Nghĩa |
+|---|---|---|
+| Luôn có tác dụng | 63 | máu, giáp, tốc độ, rider trên đòn đánh, phản đòn |
+| Cần **kết liễu** mới trả | 9 | `SHIELD_ON_KILL` ×6 · `SUN_ON_KILL` ×3 |
+| Một lần mỗi trận | 2 | *Dawn Shell* · *Bunker Plating* |
+| **Phụ thuộc ĐỘI HÌNH** | 2 | *Overwatch Pea* · *Overwatch Cob* — chết nếu đội không có ai đẩy |
+
+Chỉ 2/81 ô phụ thuộc người khác. Đó là mức biến thiên lành mạnh: đủ để có một "build xoay
+quanh" mà không biến ma trận thành xổ số.
+
+### 9.2 · Độ đa dạng từng cột (số hiệu ứng khác nhau trên 9 ô)
+
+| Cột | Distinct | Ghi chú |
+|---|---|---|
+| Corn Mortar | **8/9** | cột giàu nhất — mỗi hero nhận một thứ khác hẳn |
+| Steel Jaws · Spring Arm | 6/9 | tốt |
+| Sol Battery | 5/9 | 5 "thêm Sol" + 3 "rẻ kỹ năng" + 1 chữ ký — đúng khung (L1) |
+| Seed Gun · Armor Plate · Bunker Shell | 4/9 | chấp nhận được, đều theo trục rõ |
+| **Rotor Wing** | 3/9 | `MOVE_BONUS`×5 · `SKILL_DISARM`×2 · `SMOKE_ON_HIT`×2 — **đã sửa**, trước là 2/9 với `MOVE_BONUS`×7 |
+| Spike Armor | 3/9 | `RETALIATE_DAMAGE`×5 · `TAUNT_ON_HIT`×3 · `RETALIATE_PUSH`×1 |
+
+Rotor Wing từng là chỗ duy nhất một hiệu ứng chiếm 7/9 ô. Món B của cột (bụi) giờ đã xuống tới
+**hai hero tầm xa** — Snapmaw theo luật riêng của hàng cô (mọi ô phải đánh vào cửa sổ tiêu hoá)
+và Cornova theo luật của cột. Ba hero move-2 còn nhu cầu chân thật (Sunbloom hộ tống, Ironhusk
+tới kịp hành lang, Thornshell "move 2 tóm chẳng ai") vẫn giữ `MOVE_BONUS`, và Reedwing giữ vì
+đó là ô chữ ký — cô **đã có** bụi trong kit, cho thêm là thừa.
+
+Spike Armor 3/9 là mức chấp nhận được chứ không phải lỗi: `RETALIATE_DAMAGE` và `TAUNT_ON_HIT`
+là đúng hai món của gear, chia theo cận chiến / tầm xa.
+
+### 9.3 · Ba chỗ mạnh nhất — và cái mạnh nhất đã bị hạ
+
+**1. Gourdward = *Sunlit Rind* + *Stun Shell*. ĐÃ NERF.** Vì `FUSION_SLOTS = 2`, đúng hai ô này
+LÀ một build hoàn chỉnh, và nó mua "bọc giáp cả đội + ghim mọi thứ đứng kề" với giá rẻ nhất
+bảng. Hạ bằng **hai đòn bẩy cùng lúc**, vì một mình cái nào cũng không đủ:
+
+| | Trước | Sau |
+|---|---|---|
+| Giá Encase | 50 | **60** |
+| Discount ô Sunlit Rind | 15 | **10** |
+| Giá thật mỗi lần cast | 35 | **50** |
+| Số lần cast / trận 6 lượt (200 Sol) | 5 | **4** |
+| Không cắm ô discount | 4 | **3** |
+
+Encase là hiệu ứng trả phí **rộng nhất** game (bản thân + cả vành dấu cộng, mọi lần), nên phanh
+đặt ở GIÁ chứ không ở độ rộng — độ rộng chính là hero. Hai ô discount còn lại **giữ nguyên 15**:
+kỹ năng của Cornova và Thornshell chỉ chạm một mục tiêu, chúng chưa bao giờ là vấn đề.
+
+**2. Peaburst = *Fanged Blessing* nhân ba. ĐÃ CAP.** `VOLLEY` nhân sát thương mỗi phát với số
+phát, nên một cú +1 dành cho đòn đơn tới nơi thành +3 — và các buff cộng dồn: Heavier Peas (+1)
+cộng Ơn Trên (+2) đưa Phát Bắn Chuẩn Xác từ 6 lên **12** trong một cú click. Giờ **mỗi phát của
+một loạt bắn đúng con số thẻ in ra**, không gì nâng được:
+
+| | Trước | Sau |
+|---|---|---|
+| Trần | 3 × 2 = 6 | 3 × 2 = 6 |
+| + Ơn Trên (+2) | 3 × 4 = **12** | 3 × 2 = 6 |
+| + `BONUS_DAMAGE` | 3 × 3 = 9 | 3 × 2 = 6 |
+| Đòn thường Pea Shot (không cap) | 2 → 4 | 2 → **4** |
+
+Cap nằm ở **PHÁT**, không ở tổng — thứ kỹ năng tồn tại để làm (ba phát không bao giờ phí viên
+nào) không hề đụng tới. Và buff không chết: chúng dồn hết vào đòn thường của cô.
+**Lối thoát bằng relic** (chưa dựng): cap được thiết kế để một relic hậu kỳ gỡ ra — "mạnh, có
+ràng buộc" thay vì "mạnh". Khi relic tồn tại, chỗ gỡ là **một mệnh đề nữa trên đúng cái `if`
+đó** trong `utils/fusion.ts`, không file nào khác động. Hôm nay **không khai sẵn cờ/type/field
+nào** cho nó — codebase này đã bị đốt một lần vì từ vựng khai rồi bỏ mặc (`RADIUS`).
+
+**3. Snapmaw = *Stun Fang*. GIỮ NGUYÊN.** Luật "một lần mỗi thân, vĩnh viễn" nghe chặt, nhưng
+zombie mới liên tục đi vào bàn, nên thực chiến nó là "ghim con nào mới tới". Vẫn công bằng —
+cận chiến, phải bước tới tận nơi — nhưng đừng nhầm rằng điều kiện đó siết nhiều.
+
+### 9.4 · Reedwing vs giáp mũ
+
+**Đòn thường Reedwing gây ĐÚNG 0 sát thương lên ba loại zombie.** Giáp mũ (`Unit.armor`) trừ
+thẳng vào **từng nguồn sát thương một** và được phép về 0. Ở mức 1 sát thương mỗi ô, cô vô hiệu
+hoàn toàn trước **Pothelm / Doorbearer / Linebreaker** (giáp 1) — trước khi hạ 2→1 thì còn ăn 1.
+
+**Hướng đang làm (người chơi chốt): nếu chỉ có MỘT địch trong tầm thì phát bắn được 2 sát
+thương.** Tức là bắn tập trung ăn 2, chia hai ô thì 1 mỗi bên — hình phạt/phần thưởng nằm ở
+chính bài toán đội hình mà hero này tồn tại để giải. Lỗ giáp mũ đóng được ở ca tập trung
+(2 − 1 = 1); ca chia hai ô vẫn 0 mỗi bên, và **đó là lựa chọn của người chơi chứ không còn là
+điều bàn cờ áp lên**. Ghi lại để lần rà sau không tưởng đã hết.
+
+### 9.5 · Hai luật nên viết ra trước khi ai đó phá
+
+- **`SKILL_DISCOUNT` không được rơi xuống Ironhusk.** Kỹ năng cô giá 35 (rẻ nhất roster). Giảm
+  15 là **−43%**: ngân sách 200 Sol nhảy từ 5 lần cast lên 10. Ba ô discount hiện tại nằm trên
+  kỹ năng giá 50 (−30%) và 60 (−17%).
+- **Không thêm ô nào cộng thẳng sát thương cho ba hero 0-damage** (Sunbloom, Chardslam,
+  Gourdward). `BONUS_DAMAGE` đã *map chứ không append* nên engine tự chặn, nhưng luật cần nằm
+  ở đây chứ không chỉ trong một comment.
+
+### 9.6 · Kết luận
+
+Sau vòng này: hai chỗ mạnh nhất đã hạ bằng số đo được, cột phẳng nhất đã có món B, và ô duy
+nhất còn treo (Reedwing) đang được sửa ở phía kit chứ không phải phía fusion. **Không ô chết,
+không ô hiển nhiên phải chọn.** Việc còn lại đáng theo dõi khi chơi thật: *Stun Fang* của
+Snapmaw (§9.3), và liệu 4 lần cast Encase mỗi trận có còn quá nhiều không.

@@ -1,7 +1,7 @@
 
 import { GameState, UnitClass } from './types';
 export { ICONS } from './utils/icons';
-export { UNIT_ROLE_MAP, UNIT_SKILLS, DEFAULT_UNIT_DEFINITIONS, DEFAULT_TERRAIN_DEFS, DEFAULT_ITEM_DEFINITIONS, PLAYER_ROSTER } from './data/gameData';
+export { UNIT_ROLE_MAP, UNIT_SKILLS, DEFAULT_UNIT_DEFINITIONS, DEFAULT_TERRAIN_DEFS, DEFAULT_ITEM_DEFINITIONS } from './data/gameData';
 export { GENERATE_MAP, GENERATE_BREACH_MAP, generateBoard } from './utils/mapGenerator';
 
 export const GRID_SIZE = 8;
@@ -16,7 +16,7 @@ export const BOARD_TILT_DEG = 20;
 // The battle axis is HORIZONTAL. `x` is the screen row, `y` is the screen column.
 // Player side is the left (low y), zombies march in from the right (high y) — as in PvZ.
 //
-// House / deploy / spawn positions used to live here as column numbers, copied into three
+// Greenspire / deploy / spawn positions used to live here as column numbers, copied into three
 // files that then drifted apart. They are now authored per map in `data/maps.ts` and read
 // off the tile itself (`isHouse`, `isDeployZone`, `isSpawnZone`). One source of truth.
 
@@ -38,7 +38,7 @@ export const BASE_MAX_TURNS = 5;            // per battle; events may shift it b
  * Every other battle is "survive the timer", so the timer IS the win condition and five turns
  * is the whole design. A boss node asks "kill this thing", which makes the same five turns a
  * DAMAGE CHECK — and the arithmetic says the squad fails it. Three fully-fused heroes cap out
- * near 10 damage a turn (Cobb 4 + Shadeleaf 3 + both of Zephyr's wings 3+), so five turns buys 50, against
+ * near 10 damage a turn (Cornova 4 + Peaburst 3 + both of Reedwing's wings 3+), so five turns buys 50, against
  * bosses at 16-26. That is fine for the nine acts and nowhere near enough for the last one.
  *
  * THE BREACH gets more again: the Blightlord is 36 health AND spends two turns untouchable
@@ -53,7 +53,7 @@ export const BASE_MAX_TURNS = 5;            // per battle; events may shift it b
  */
 export const BOSS_MAX_TURNS = 7;
 export const BREACH_MAX_TURNS = 9;
-export const BRAINS_MAX = 5;                // brains that may be lost across the whole run
+export const BRAINS_MAX = 5;                // sprouts that may be lost across the whole run
 export const SQUAD_SIZE = 3;
 export const FUSION_SLOTS = 2;              // 2 while the material pool is 5; 3 once it reaches 7+
 export const BENCH_CAPACITY = 2;
@@ -62,12 +62,12 @@ export const BENCH_CAPACITY = 2;
 export const SUN_ON_LEVEL_START = 50;
 
 /**
- * Sun paid to the player at the end of every turn, unconditionally.
+ * Sol paid to the player at the end of every turn, unconditionally.
  *
- * Kills stopped paying Sun (that let a shooter refund her own ultimate and spam it), which
- * left Sunspot's Harvest as the only reliable income — one hero, spending her whole
+ * Kills stopped paying Sol (that let a shooter refund her own ultimate and spam it), which
+ * left Sunbloom's Harvest as the only reliable income — one hero, spending her whole
  * action, in a squad of three. That made every hero skill feel unaffordable. A flat turn
- * stipend puts a floor under the economy without rewarding aggression the way kill-Sun did.
+ * stipend puts a floor under the economy without rewarding aggression the way kill-Sol did.
  */
 export const SUN_PER_TURN_INCOME = 25;
 
@@ -87,7 +87,7 @@ export const advancedZombieCap = (depth: number): number =>
     Math.max(1, Math.min(5, Math.ceil(Math.max(1, depth) / 2)));
 
 /**
- * Zombies that simply walk around, over or past a defensive line. A wall answers a Conehead;
+ * Zombies that simply walk around, over or past a defensive line. A wall answers a Scrapcap;
  * nothing in the starting squad answers three Balloons at once, which is why these are the
  * ones on the depth-scaled budget rather than the merely tanky ones.
  *
@@ -95,10 +95,10 @@ export const advancedZombieCap = (depth: number): number =>
  * reinforcements (turnManager).
  */
 export const ADVANCED_ZOMBIES: ReadonlySet<UnitClass> = new Set<UnitClass>([
-    UnitClass.BALLOON_ZOMBIE,
-    UnitClass.CATAPULT_ZOMBIE,
-    UnitClass.DIGGER_ZOMBIE,
-    UnitClass.FLAG_ZOMBIE,
+    UnitClass.FLOATER,
+    UnitClass.LOBBER,
+    UnitClass.MINER,
+    UnitClass.BANNERMAN,
 ]);
 /**
  * A GRAVE digs up a zombie onto the nearest open neighbouring tile every this-many turns
@@ -108,7 +108,7 @@ export const ADVANCED_ZOMBIES: ReadonlySet<UnitClass> = new Set<UnitClass>([
  * arrives — and what climbed out was a 2 HP Basic, which is less than the three points of
  * damage the player had to spend clearing the headstone itself. The thing cost more to
  * answer than it threatened. At two it digs on turns 2 and 4: the first riser has three
- * turns to walk at a house, and ignoring the grave compounds instead of costing one body. Headstones used to be inert HP piles that KILL_ALL made the
+ * turns to walk at a Greenspire, and ignoring the grave compounds instead of costing one body. Headstones used to be inert HP piles that KILL_ALL made the
  * player clean up out of duty; the clock is what turns "clear the grave" into a decision
  * with a deadline. Killing the grave before its turn cancels the spawn.
  */
@@ -141,7 +141,7 @@ export const COIN_REVIVE_HERO = 75;
  *
  * THE BREACH IS THE EXCEPTION. It has no shop node at all — its economy is the camp at the
  * door and the one after every boss (GENERATE_BREACH_MAP), all of them paid. The opening purse
- * is what kits the squad out before the first Gargantuar; after that the gauntlet funds itself
+ * is what kits the squad out before the first Gravehulk; after that the gauntlet funds itself
  * out of what the bosses drop. See COIN_BREACH_PURSE for the arithmetic.
  */
 export const COIN_PER_STAGE = 75;
@@ -164,7 +164,7 @@ export const coinOnRunStart = (stage: 0 | 1 | 2 | 3, base: number = COIN_ON_RUN_
 // --- THE CAMP (a CAMPFIRE node) -------------------------------------------------------
 // Every service here is priced against the same purse the shop draws on, which is the entire
 // design: a camp used to be one free choice out of three, and a choice that costs nothing is
-// answered by whichever box happens to be empty. Now reviving Shadeleaf is not free, it is
+// answered by whichever box happens to be empty. Now reviving Peaburst is not free, it is
 // two items, or a fusion, or most of a hero's patch-up.
 //
 // Priced PER POINT, not per hero. A flat fee would make patching a hero who lost 1 HP a waste
@@ -180,7 +180,7 @@ export const COIN_FUSE = 60;
 /** Items on the camp's shelf. Fewer than a shop's: this is a field kit, not a market. */
 export const CAMP_ITEM_OFFERS = 3;
 
-// Buying a brain back is meant to hurt: the first one costs three clean levels of income,
+// Buying a sprout back is meant to hurt: the first one costs three clean levels of income,
 // and every one after that costs more. It is a way out of a bad run, not a strategy.
 export const COIN_BRAIN_BASE = 150;
 export const COIN_BRAIN_STEP = 75;

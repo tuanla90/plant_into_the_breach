@@ -23,8 +23,8 @@ Licensed **CC BY 3.0**. Attribution is required, so this section must ship with 
 | Barrier | brick-wall | Delapouite |
 | Bridge | packed-planks | Delapouite |
 | Minecart Track | rail-road | Delapouite |
-| House (with brain) | modern-city + brain | Delapouite, Lorc |
-| House (emptied) | modern-city | Delapouite |
+| Greenspire (with sprout) | modern-city + sprout | Delapouite, Lorc |
+| Greenspire (emptied) | modern-city | Delapouite |
 
 Artists: **Lorc** (lorcblog.blogspot.com), **Delapouite** (delapouite.com),
 **Sbed** (opengameart.org/content/95-game-icons), **Carl Olsen** (twitter.com/unstoppableCarl).

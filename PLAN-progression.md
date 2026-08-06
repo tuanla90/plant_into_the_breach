@@ -7,7 +7,7 @@
 > - 2 boss đầu mỗi Stage → **hero**; boss cuối Stage → **element (biến thể)**
 > - 3 element: **BĂNG** (làm chậm) · **LỬA** (cháy dai) · **ĐIỆN** (đánh lan)
 > - Element áp cho **mọi hero**, không riêng đậu
-> - **Màn cuối** đứng riêng: đấu trùm liên hoàn, không có luật não
+> - **Màn cuối** đứng riêng: đấu trùm liên hoàn, không có luật mầm
 
 ---
 
@@ -18,7 +18,7 @@
 | Stage | 3 | |
 | Boss mỗi stage | 3 | 2 trả hero + 1 trả element |
 | **Hero từ boss** | **6** | |
-| Hero khởi đầu | 3 | Shadeleaf · Ironhusk · Sunspot |
+| Hero khởi đầu | 3 | Peaburst · Ironhusk · Sunbloom |
 | **Tổng roster** | **9** | 3 class × 3 lựa chọn — **hết, không có thứ 10** |
 | Gear | **9** | đúng 9 cây gốc của 9 hero |
 | **Element** | **3** | mỗi stage một cái |
@@ -34,9 +34,9 @@ Không thừa không thiếu. Và mỗi Stage kể một câu chuyện trọn v�
 
 | Class | | | |
 |---|---|---|---|
-| **TẦM XA** | **Shadeleaf** *(Peashooter)* | **Cobb** *(Kernel-pult)* | **Thornquill** *(Cactus)* |
-| **TẦM GẦN** | **Ironhusk** *(Wall-nut)* | **Maw** *(Chomper)* | **Thornhide** *(Endurian — sầu riêng)* |
-| **HỖ TRỢ** | **Sunspot** *(Sunflower)* | **Chardwall** *(Chard Guard)* | **Gourdward** *(Pumpkin)* |
+| **TẦM XA** | **Peaburst** *(Seed Gun)* | **Cornova** *(Corn Mortar)* | **Thornquill** *(Cactus)* |
+| **TẦM GẦN** | **Ironhusk** *(Armor Plate)* | **Snapmaw** *(Steel Jaws)* | **Thornshell** *(Spike Armor — sầu riêng)* |
+| **HỖ TRỢ** | **Sunbloom** *(Sol Battery)* | **Chardslam** *(Spring Arm)* | **Gourdward** *(Bunker Shell)* |
 
 **Không có hero thứ 10.** Phần thưởng sau boss rush là một **kết truyện**, không phải một dòng
 nữa trong bảng — xem mục 3quater.
@@ -48,14 +48,14 @@ nghìn cấu hình. Đó là con số chơi lại thật, không phải con số
 
 | Hero | Nó giải bài toán gì |
 |---|---|
-| Shadeleaf | sát thương thẳng, tầm xa nhất |
-| Cobb | bắn vòng qua đầu tường + choáng |
+| Peaburst | sát thương thẳng, tầm xa nhất |
+| Cornova | bắn vòng qua đầu tường + choáng |
 | Thornquill | xuyên cả hàng (và là chỗ gắn luật đối-không nếu làm) |
 | Ironhusk | chặn hành lang, đẩy 1 ô |
-| Maw | hành quyết mục tiêu dày máu |
-| Thornhide | **khiêu khích** — ép địch phải đánh mình, và phản đòn kẻ nào chạm vào |
-| Sunspot | kinh tế Sun |
-| Chardwall | hất ngược 2 ô — biến nước và núi thành vũ khí |
+| Snapmaw | hành quyết mục tiêu dày máu |
+| Thornshell | **khiêu khích** — ép địch phải đánh mình, và phản đòn kẻ nào chạm vào |
+| Sunbloom | kinh tế Sol |
+| Chardslam | hất ngược 2 ô — biến nước và núi thành vũ khí |
 | Gourdward | **khiên** — chắn trước đòn mà bản telegraph đã báo |
 
 ---
@@ -83,20 +83,20 @@ nửa roster**:
 
 | Hero | Sát thương | Sau khi −1 |
 |---|---|---|
-| Shadeleaf · Maw · Cobb | 2 | 1 |
+| Peaburst · Snapmaw · Cornova | 2 | 1 |
 | **Ironhusk** | **1** | **0** |
-| **Sunspot** | **0** | **0** |
+| **Sunbloom** | **0** | **0** |
 
 Trừ một số cố định trên một nền chỉ chạy từ 0 đến 2 thì không phải là cái giá — nó là **−100%
-với người này và −0% với người kia**. ("−1 tầm" của LỬA cũng cùng bệnh: Ironhusk và Maw tầm 1.)
+với người này và −0% với người kia**. ("−1 tầm" của LỬA cũng cùng bệnh: Ironhusk và Snapmaw tầm 1.)
 
 **Máu thì ai cũng có, và có nhiều:**
 
 | Hero | Máu | Mang element |
 |---|---|---|
 | Ironhusk | 5 → 4 | −20% |
-| Maw · Cobb | 4 → 3 | −25% |
-| Shadeleaf · Sunspot | 3 → 2 | −33% |
+| Snapmaw · Cornova | 4 → 3 | −25% |
+| Peaburst · Sunbloom | 3 → 2 | −33% |
 
 Không ai về 0, ai cũng thấy đau. Và vì **máu persist giữa các trận**, −1 máu là khoản chi thật.
 Đội đồng nguyên tố tốn −3 máu toàn đội — đúng giá cho phần cộng hưởng.
@@ -120,17 +120,17 @@ cùng ba luật.
 
 #### L1 — Element bám vào ĐÒN ĐÁNH, không bám vào SÁT THƯƠNG
 
-Hai hero có **0 sát thương** (Sunspot, Chardwall). Nếu element phát biểu là "thêm hiệu ứng lên
+Hai hero có **0 sát thương** (Sunbloom, Chardslam). Nếu element phát biểu là "thêm hiệu ứng lên
 sát thương" thì cả hai đứng ngoài hệ.
 
 > **Element gắn thêm một hiệu ứng vào đòn đánh, bất kể đòn đó gây bao nhiêu sát thương.**
 
-- Chardwall đẩy 0 sát thương + BĂNG → mục tiêu **bị đẩy và bị làm chậm**. Chạy tốt.
-- Chardwall + LỬA → bị đẩy và bốc cháy. Chạy tốt.
+- Chardslam đẩy 0 sát thương + BĂNG → mục tiêu **bị đẩy và bị làm chậm**. Chạy tốt.
+- Chardslam + LỬA → bị đẩy và bốc cháy. Chạy tốt.
 
 #### L2 — Hero không có đòn đánh thì element áp lên SKILL
 
-Sunspot đánh thường là `SELF` (+25 Sun), không nhắm ai. Với cô, element áp lên **Thiêu Nắng**.
+Sunbloom đánh thường là `SELF` (+25 Sol), không nhắm ai. Với cô, element áp lên **Thiêu Nắng**.
 Đây là hero duy nhất rơi vào ca này.
 
 #### L3 — ĐIỆN lan **một lần**, từ **mục tiêu chính**, sát thương = **½ chỉ số sát thương của HERO**
@@ -139,23 +139,23 @@ Ba cái bẫy, xử bằng đúng một câu:
 
 | Bẫy | Nếu phát biểu ẩu | Với L3 |
 |---|---|---|
-| **Maw + ĐIỆN** — Nuốt Chửng là `DAMAGE 999` | lan **499 sát thương** sang con bên cạnh *(đúng con bug Melon-splash đã bàn)* | Maw damage 2 → lan **1**. Hết bẫy. |
+| **Snapmaw + ĐIỆN** — Nuốt Chửng là `DAMAGE 999` | lan **499 sát thương** sang con bên cạnh *(đúng con bug Melon-splash đã bàn)* | Snapmaw damage 2 → lan **1**. Hết bẫy. |
 | **Thornquill + ĐIỆN** — đòn thường xuyên cả hàng | 4 mục tiêu, mỗi con lan 1 = **8 mục tiêu miễn phí** | lan **một lần từ mục tiêu chính** → 4 xuyên + 1 lan |
-| **Chardwall + ĐIỆN** — 0 sát thương | ½ của 0 = 0, ô chết | lan mang theo **cú đẩy** (L1), sát thương 0 — cú hất **dội sang con phía sau** |
+| **Chardslam + ĐIỆN** — 0 sát thương | ½ của 0 = 0, ô chết | lan mang theo **cú đẩy** (L1), sát thương 0 — cú hất **dội sang con phía sau** |
 
-Chardwall + ĐIỆN nhờ vậy lại thành ô hay nhất của anh ta: **một cú hất đẩy hai con**.
+Chardslam + ĐIỆN nhờ vậy lại thành ô hay nhất của anh ta: **một cú hất đẩy hai con**.
 
 > Làm tròn **xuống, không có sàn tối thiểu**: hero 0–1 sát thương thì tia lan chỉ mang hiệu ứng,
-> không mang sát thương. Đó là cố ý — nếu có sàn "tối thiểu 1" thì Chardwall tự nhiên có sát
+> không mang sát thương. Đó là cố ý — nếu có sàn "tối thiểu 1" thì Chardslam tự nhiên có sát
 > thương, phá vỡ bản sắc 0-damage của anh.
 
 #### L4 — Element áp cho **mọi nguồn sát thương của hero, kể cả phản đòn**
 
-Thornhide phản 2 sát thương lên kẻ đánh cận chiến vào mình. Element có áp lên đó không?
+Thornshell phản 2 sát thương lên kẻ đánh cận chiến vào mình. Element có áp lên đó không?
 
 > **Có.** Element là thuộc tính của hero, không phải của một chiêu.
 
-Và đây là ô mạnh nhất trong cả ma trận 27 ô: **Thornhide + BĂNG** = khiêu khích kéo cả bầy vào
+Và đây là ô mạnh nhất trong cả ma trận 27 ô: **Thornshell + BĂNG** = khiêu khích kéo cả bầy vào
 mình, rồi **mọi con chạm vào anh ta đều bị làm chậm**. Nó xứng đáng mạnh — anh ta trả 1 máu tối
 đa trên một thân xác mà công việc *chính là bị đánh*, và anh ta chỉ gây 2 sát thương, không đuổi
 được ai.
@@ -166,14 +166,14 @@ mình, rồi **mọi con chạm vào anh ta đều bị làm chậm**. Nó xứn
 
 | Hero | BĂNG | LỬA | ĐIỆN |
 |---|---|---|---|
-| Shadeleaf | chuẩn | chuẩn | chuẩn |
-| Cobb | chồng với choáng của cô — vẫn ổn | chuẩn | chuẩn |
+| Peaburst | chuẩn | chuẩn | chuẩn |
+| Cornova | chồng với choáng của cô — vẫn ổn | chuẩn | chuẩn |
 | Thornquill | xuyên + chậm cả hàng — **mạnh** | xuyên + cháy cả hàng — **mạnh** | L3: xuyên + lan 1, 0 sát thương |
 | Ironhusk | đẩy + chậm — **rất hợp** | đẩy + cháy | đẩy, lan 0 sát thương |
-| Maw | trên cú cắn | trên cú cắn | L3: lan 1 |
-| Thornhide | L4 — **ô mạnh nhất** | L4 — kẻ đánh mình thì bốc cháy | L4 — phản dội sang con kề |
-| Sunspot | L2 — Thiêu Nắng làm chậm | L2 — Thiêu Nắng đốt | L2 — Thiêu Nắng lan 0 |
-| Chardwall | L1 — đẩy + chậm | L1 — đẩy + cháy | L1+L3 — **hất hai con** |
+| Snapmaw | trên cú cắn | trên cú cắn | L3: lan 1 |
+| Thornshell | L4 — **ô mạnh nhất** | L4 — kẻ đánh mình thì bốc cháy | L4 — phản dội sang con kề |
+| Sunbloom | L2 — Thiêu Nắng làm chậm | L2 — Thiêu Nắng đốt | L2 — Thiêu Nắng lan 0 |
+| Chardslam | L1 — đẩy + chậm | L1 — đẩy + cháy | L1+L3 — **hất hai con** |
 | Gourdward | chuẩn (yếu) | chuẩn (yếu) | chuẩn (yếu) |
 
 Không ô nào chết. Ba ô của Gourdward nhạt — chấp nhận được, vì giá trị của anh ta nằm ở khiên
@@ -196,13 +196,13 @@ một hiệu ứng cộng hưởng.
 
 ## 3ter. Tua Lại Lượt — sức mạnh của cỗ xe, có sẵn từ đầu
 
-**Coffee Bean không còn là hero.** Ý tưởng đó tách thành hai đường, và cả hai đều KHÔNG phải
+**Stim Shot không còn là hero.** Ý tưởng đó tách thành hai đường, và cả hai đều KHÔNG phải
 một nhân vật:
 
 | | Là gì | Đi đâu |
 |---|---|---|
 | **Tua Lại Lượt** | tiện ích | **cỗ máy thời gian Chrona** — có sẵn từ đầu, 1 lần/trận |
-| **Thêm hành động** | sức mạnh | **vật phẩm**, mua bằng Xu như Bom Anh Đào / Mìn Khoai Tây |
+| **Thêm hành động** | sức mạnh | **vật phẩm**, mua bằng Xu như Lựu Đạn Lửa / Mìn Hạt |
 
 ### Cái này KHÔNG phải thêm lore — nó là biến một câu đã có thành cơ chế
 
@@ -221,7 +221,7 @@ là **luôn tồn tại nước đi đúng**. Một game như thế mà phạt n
 biến bài toán suy luận thành bài kiểm tra thao tác. Into the Breach cho Reset Turn từ nhiệm vụ
 đầu tiên, và đó là lý do.
 
-Nó cũng làm dịu luật khắc nghiệt nhất của game (mất sạch não trên một bàn = hết run) **mà không
+Nó cũng làm dịu luật khắc nghiệt nhất của game (mất sạch mầm trên một bàn = hết run) **mà không
 làm luật đó yếu đi**: hoàn tác được một cú bấm nhầm, không hoàn tác được một kế hoạch tồi.
 
 ### Cài đặt: khả thi và rẻ
@@ -240,7 +240,7 @@ làm luật đó yếu đi**: hoàn tác được một cú bấm nhầm, không
 `data/items.ts` đã có, không phải làm gì:
 
 ```ts
-{ id: 'coffee_bean', name: 'Coffee Bean', coinCost: 100, effect: 'REFRESH',
+{ id: 'stim_shot', name: 'Stim Shot', coinCost: 100, effect: 'REFRESH',
   description: 'One hero that has already acted may move and act again this turn.' }
 ```
 
@@ -255,7 +255,7 @@ Không phải hero. Không phải gear. Không phải chỉ số.
 
 **Một chậu đất, một mầm xanh.** Thứ đầu tiên mọc lại sau tất cả.
 
-Cả game là chuyện giữ não cho người khác — giữ những gì còn sót lại của một thế giới đã mất.
+Cả game là chuyện giữ mầm cho người khác — giữ những gì còn sót lại của một thế giới đã mất.
 Phần thưởng cho việc đi hết chặng đường đó không nên là **thêm một công cụ để đánh nhau**, vì
 đánh nhau đã xong rồi. Nó nên là **bằng chứng rằng việc giữ ấy có ý nghĩa**.
 
@@ -283,32 +283,32 @@ phần lặp mà cả thiết kế này sinh ra để bỏ.
 thẻ art và i18n. Chuyển đổi:
 
 - **Kit của Frostpod → luật BĂNG.** Làm chậm mọi đòn, −1 sát thương: đó chính xác là cô ấy.
-- **Art của Frostpod → sprite dạng Băng của Shadeleaf.** Không phí một nét vẽ nào.
+- **Art của Frostpod → sprite dạng Băng của Peaburst.** Không phí một nét vẽ nào.
 - **`Blizzard` (chậm → đóng băng) → cộng hưởng đội toàn Băng.** Đúng chỗ hơn cả chỗ cũ.
 - **Emberwood chưa dựng** nên không mất gì; `PLAN-pack-6-emberwood.md` trở thành tài liệu thiết
   kế cho **luật LỬA** (ô lửa, `fireTurns`, `RETALIATE_BURN`… vẫn dùng được nguyên).
 
-Cần migration cho save cũ: hero `COLD_SNAP` và 6 công thức của cô phải map sang Shadeleaf +
+Cần migration cho save cũ: hero `COLD_SNAP` và 6 công thức của cô phải map sang Peaburst +
 element Băng, không được xoá trắng.
 
 ### 4.2. Ba gear trở nên thừa
 
-Element đã ôm **làm chậm, cháy, đánh lan**. Nên Snow Pea / Fire Pea / Lightning Reed không còn
+Element đã ôm **làm chậm, cháy, đánh lan**. Nên Ice Grenade / Fire Pea / Lightning Reed không còn
 chỗ trong pool gear — nếu giữ, người chơi sẽ hỏi "cái này khác gì element băng?".
 
 Pool gear mới, 9 cây, không trục nào đụng element:
 
 | # | Gear | Trục |
 |---|---|---|
-| 1 | Peashooter | đánh thêm phát nữa |
-| 2 | Wall-nut | +máu / chống chịu |
-| 3 | Sunflower | kinh tế |
-| 4 | Chomper | phản đòn / hành quyết |
-| 5 | Kernel-pult | đường vòng (bỏ qua vật cản) |
+| 1 | Seed Gun | đánh thêm phát nữa |
+| 2 | Armor Plate | +máu / chống chịu |
+| 3 | Sol Battery | kinh tế |
+| 4 | Steel Jaws | phản đòn / hành quyết |
+| 5 | Corn Mortar | đường vòng (bỏ qua vật cản) |
 | 6 | Cactus | xuyên hàng |
-| 7 | Chard Guard | đẩy mạnh 2 ô |
-| 8 | **Endurian** | **phản đòn gai** |
-| 9 | **Pumpkin** | **khiên** |
+| 7 | Spring Arm | đẩy mạnh 2 ô |
+| 8 | **Spike Armor** | **phản đòn gai** |
+| 9 | **Bunker Shell** | **khiên** |
 
 → Ma trận **9 hero × 9 gear = 81 công thức**, trần cấp 81.
 
@@ -326,12 +326,12 @@ Luật này **đã chạy trong code** (`BenchPlant` → `buildBenchUnit` / `app
 Chọn cái này là mất cái kia. Và vì cây ra trận **hao mòn 1 máu vĩnh viễn mỗi lần**, còn ghép
 thì **cần cây còn lành** — sự hao mòn chính là đồng hồ đếm ngược cho quyết định đó.
 
-**Việc phải làm:** `Chard Guard` chưa có trong `UnitClass` (0 kết quả trong `types.ts`). Mọi
+**Việc phải làm:** `Spring Arm` chưa có trong `UnitClass` (0 kết quả trong `types.ts`). Mọi
 gear đều phải triển khai được ra bàn cờ, nên nó cần một entry enum + `benchStats`.
 
 ### 4.3. Công thức fusion gắn với HERO, không gắn với dạng
 
-Nếu Shadeleaf-Băng + Wall-nut là một công thức khác Shadeleaf-Lửa + Wall-nut thì ma trận thành
+Nếu Peaburst-Băng + Armor Plate là một công thức khác Peaburst-Lửa + Armor Plate thì ma trận thành
 **36 × 9 = 324 ô**. Không đời nào viết nổi.
 
 **Luật: fusion nằm trên hero, element nằm chồng lên.** Đổi element giữa stage **không** mất gear
@@ -373,16 +373,16 @@ Nguyên tắc ghép giữ nguyên: **boss là mối đe doạ, phần thưởng 
 
 | Act | Khu vực | Boss | Trả về |
 |---|---|---|---|
-| 1 | Verdant Reach | **Gargantuar** — to đến mức không đẩy nổi | **Maw** — cái mồm nuốt được thứ lớn |
-| 2 | Goldacre *(Wild West)* | **Ironcart** — nã bạn từ 3 ô, tường vô dụng | **Cobb** — khẩu cối bắn vòng |
+| 1 | Verdant Reach | **Gravehulk** — to đến mức không đẩy nổi | **Snapmaw** — cái mồm nuốt được thứ lớn |
+| 2 | Goldacre *(Wild West)* | **Ironcart** — nã bạn từ 3 ô, tường vô dụng | **Cornova** — khẩu cối bắn vòng |
 | 3 | Kiln Row *(núi lửa)* | **Cinder Colossus** — đốt mặt đất nó đi qua | 🔥 **ELEMENT LỬA** |
 
 ### STAGE II — **Bờ Xa** *(bên kia mặt nước)*
 
 | Act | Khu vực | Boss | Trả về |
 |---|---|---|---|
-| 1 | Windward *(bờ biển)* | **The Armada** — bay qua đầu tường | **Chardwall** — hất chúng xuống biển |
-| 2 | Thornwaste *(sa mạc gai)* | **Sandreaver** — độn thổ, trồi lên **sau lưng** tuyến của bạn | **Thornhide** — khiêu khích: độn thổ cũng không thoát được việc bị ép đánh vào cái gai |
+| 1 | Windward *(bờ biển)* | **The Armada** — bay qua đầu tường | **Chardslam** — hất chúng xuống biển |
+| 2 | Thornwaste *(sa mạc gai)* | **Sandreaver** — độn thổ, trồi lên **sau lưng** tuyến của bạn | **Thornshell** — khiêu khích: độn thổ cũng không thoát được việc bị ép đánh vào cái gai |
 | 3 | Frostgate *(băng)* | **Yeti** — đóng băng mọi thứ | ❄️ **ELEMENT BĂNG** |
 
 ### STAGE III — **Thành Phố** *(nơi mọi thứ bắt đầu)*
@@ -395,20 +395,20 @@ Nguyên tắc ghép giữ nguyên: **boss là mối đe doạ, phần thưởng 
 
 ### MÀN CUỐI — **The Breach**
 
-Đấu trùm liên hoàn, **không có luật não**: 9 boss cũ rồi tới **Blightlord**.
+Đấu trùm liên hoàn, **không có luật mầm**: 9 boss cũ rồi tới **Blightlord**.
 
 ---
 
 ## 7. Màn cuối: engine đã đỡ sẵn gần hết
 
-Luật thua theo não trong `turnManager.ts` **đã được chặn bằng `length > 0`**:
+Luật thua theo mầm trong `turnManager.ts` **đã được chặn bằng `length > 0`**:
 
 ```ts
 const housesOnScriptBoard = currentBoard.filter(t => t.isHouse);
-if (housesOnScriptBoard.length > 0 && <hết não>) → GAME_OVER
+if (housesOnScriptBoard.length > 0 && <hết mầm>) → GAME_OVER
 ```
 
-Bàn cờ **không có ô nhà** thì luật não đơn giản không tồn tại. Không cần cờ mới. Cộng thêm
+Bàn cờ **không có ô nhà** thì luật mầm đơn giản không tồn tại. Không cần cờ mới. Cộng thêm
 `KILL_ALL` đã là objective **duy nhất kết thúc sớm** khi bàn cờ sạch — đúng thứ một trận đấu
 trùm cần.
 
@@ -453,7 +453,7 @@ lượt, chia bởi 9 trạm nghỉ. Nếu vẫn dài, bản đầu chỉ lấy 
 | 3 | **`HeroDefinition.forms`** — tầng element | **thay đổi kiểu dữ liệu lớn nhất; làm TRƯỚC khi vẽ art** |
 | 4 | 3 luật element + 2 cách đọc (đánh / hỗ trợ) | ~3 hiệu ứng mới trong `applyFusionToSkill` |
 | 5 | Retire `COLD_SNAP` → luật BĂNG + migration save | có mất mát, mục 4.1 |
-| 6 | Pool gear 9 cây, bỏ Snow Pea / Fire Pea | mục 4.2 |
+| 6 | Pool gear 9 cây, bỏ Ice Grenade / Fire Pea | mục 4.2 |
 | 7 | Cộng hưởng đội đồng nguyên tố | mục 3 |
 | 8 | `WorldType` 4 → 8 khu vực | + hazard cho khu vực mới |
 | 9 | 3 hero mới + 9 encounter boss + art | nặng nhất |

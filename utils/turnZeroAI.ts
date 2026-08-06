@@ -72,7 +72,7 @@ export const performTurnZeroAI = (
         }
 
         const updatedEnemy = { ...enemy, position: finalPos };
-        // Pass the board through: without it planEnemyIntent can't see where the houses are
+        // Pass the board through: without it planEnemyIntent can't see where the Greenspires are
         // and falls back to a straight-line telegraph, which would lie to the player.
         updatedEnemy.intent = planEnemyIntent(updatedEnemy, nonEnemies, currentBoard, terrainDefs, collisionLayer);
         finalUnits.push(updatedEnemy);

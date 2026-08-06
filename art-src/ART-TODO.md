@@ -6,7 +6,7 @@ the originals are parked in `art-src/removed-pvz-art/` for reference only and **
 into `public/`**, since shipping them is what the rename of the game and its cast was meant to
 get away from.
 
-**Done on 2026-08-04:** the four pack-#7 heroes (Thornquill, Thornhide, Chardwall, Gourdward)
+**Done on 2026-08-04:** the four pack-#7 heroes (Thornquill, Thornshell, Chardslam, Gourdward)
 and their four fusion gears now have real art. They were rendered on white and cut out with
 `art-src/make_sprites.py`, which also normalises them onto the shared board geometry — 512×512,
 content 474px tall, bottom edge at y=493. Their eight placeholder SVGs are still on disk but
@@ -16,18 +16,18 @@ nothing references them any more.
 `utils/icons.ts` and nothing else — which is exactly what giving each boss its own ICONS key
 bought, even while every one of them was borrowing another unit's sprite.
 
-**Nothing a player sees is on placeholder art any more (2026-08-05).** `IMP`, `ROCK`, `GRAVE`
+**Nothing a player sees is on placeholder art any more (2026-08-05).** `RUNT`, `ROCK`, `GRAVE`
 and the Disco dancer were the last four, and three boss second-states went in with them
 (`SPRITE_VARIANTS`, utils/icons.ts). Everything still under `public/img/placeholder/` is a dead
 entry: those classes live in `PLANT_DEFINITIONS` but never render, because heroes read
 `HERO_SPRITES` and bench plants read `MATERIAL_SPRITES`.
 
 **No longer true as of 2026-08-06 — five ITEM icons are visible placeholders again.** The
-consumable roster grew (Hypno-shroom, Magnet-shroom, then Aloe and the Doom-shroom with the
+consumable roster grew (Brainwash Dart, Magnet Pulse, then Heal Kit and the Blight Core with the
 sector-unlock system), and those four render a `public/img/placeholder/*.svg` in the item belt,
-the shop shelf, the Chrono Echo offer and the sector-gift toast; Spikeweed additionally borrows
+the shop shelf, the Chrono Echo offer and the sector-gift toast; Spike Trap additionally borrows
 the FLOOR TEXTURE (`img/terrain/spikes.svg`) as its inventory icon. Prompts for all five are
-ready in `ART-PROMPTS-ITEMS.md`, written to sit next to `item-cherry-bomb.png` — same
+ready in `ART-PROMPTS-ITEMS.md`, written to sit next to `item-fire-grenade.png` — same
 plant-as-ordnance icon language as the six item icons that already have real art.
 
 The set has three silhouettes so the families stay tellable apart on a crowded board:
@@ -37,7 +37,7 @@ The set has three silhouettes so the families stay tellable apart on a crowded b
 
 1. Make the art. Match the existing board sprites: cut out, transparent background, roughly
    512×512, dark tactical chibi, lit from the upper left. `public/img/sprite-*.png` are the
-   reference — a new plant should sit next to `sprite-conehead.png` without looking imported.
+   reference — a new plant should sit next to `sprite-scrapcap.png` without looking imported.
 2. Save it as `public/img/<name>.png` using the same kebab-case name as the placeholder.
 3. Point that one entry in `utils/icons.ts` at the new file.
 
@@ -48,37 +48,37 @@ is the role the art should read as at a glance.
 
 | Unit | Placeholder | Ring colour reads as |
 | --- | --- | --- |
-| Peashooter | `placeholder/peashooter.svg` | basic shooter |
-| Snow Pea | `placeholder/snow-pea.svg` | ice shooter |
+| Seed Gun | `placeholder/peashooter.svg` | basic shooter |
+| Ice Grenade | `placeholder/snow-pea.svg` | ice shooter |
 | Repeater | `placeholder/repeater.svg` | double shooter |
-| Bloomerang | `placeholder/bloomerang.svg` | returning shot |
+| Boomerang | `placeholder/bloomerang.svg` | returning shot |
 | Cactus | `placeholder/cactus.svg` | long-range shooter |
-| Melon-pult | `placeholder/melon-pult.svg` | heavy lobber |
-| Cabbage-pult | `placeholder/cabbage-pult.svg` | lobber |
-| Kernel-pult | `placeholder/kernel-pult.svg` | stun lobber |
-| Magnet Shroom | `placeholder/magnet-shroom.svg` | utility fungus |
-| Sun Shroom | `placeholder/sun-shroom.svg` | sun producer |
-| Scaredy Shroom | `placeholder/scaredy-shroom.svg` | fragile fungus |
-| Wall-nut | `placeholder/wallnut.svg` | wall |
-| Tall-nut | `placeholder/tall-nut.svg` | tall wall |
-| Endurian | `placeholder/endurian.svg` | thorned wall |
+| Melon Mortar | `placeholder/melon-pult.svg` | heavy lobber |
+| Cabbage Sling | `placeholder/cabbage-pult.svg` | lobber |
+| Corn Mortar | `placeholder/kernel-pult.svg` | stun lobber |
+| Magnet Pulse | `placeholder/magnet-pulse.svg` | utility fungus |
+| Sol Cap | `placeholder/sun-shroom.svg` | sun producer |
+| Shy Cap | `placeholder/scaredy-shroom.svg` | fragile fungus |
+| Armor Plate | `placeholder/wallnut.svg` | wall |
+| Tower Shield | `placeholder/tall-nut.svg` | tall wall |
+| Spike Armor | `placeholder/endurian.svg` | thorned wall |
 | Sweet Potato | `placeholder/sweet-potato.svg` | taunt / puller |
-| Iron Nut | `placeholder/iron-nut.svg` | armoured wall |
-| Pumpkin | `placeholder/pumpkin.svg` | shell / armour |
-| Chomper | `placeholder/chomper.svg` | melee devourer |
-| Bonk Choy | `placeholder/bonk-choy.svg` | melee brawler |
-| Sunflower | `placeholder/sunflower.svg` | sun producer |
-| Twin Sunflower | `placeholder/twin-sunflower.svg` | double sun |
-| Coffee Bean | `placeholder/coffee-bean.svg` | action refresh |
-| Hypno Shroom | `placeholder/hypno-shroom.svg` | mind control |
-| Umbrella Leaf | `placeholder/umbrella-leaf.svg` | anti-air / cover |
-| Blover | `placeholder/blover.svg` | wind / push |
-| Torchwood | `placeholder/torchwood.svg` | fire buff |
-| Imp | `placeholder/imp.svg` | small zombie |
+| Iron Shell | `placeholder/iron-nut.svg` | armoured wall |
+| Bunker Shell | `placeholder/pumpkin.svg` | shell / armour |
+| Steel Jaws | `placeholder/chomper.svg` | melee devourer |
+| Bok Boxer | `placeholder/bonk-choy.svg` | melee brawler |
+| Sol Battery | `placeholder/sunflower.svg` | sun producer |
+| Twin Sol Battery | `placeholder/twin-sunflower.svg` | double sun |
+| Stim Shot | `placeholder/coffee-bean.svg` | action refresh |
+| Brainwash Dart | `placeholder/brainwash-dart.svg` | mind control |
+| Parasol Leaf | `placeholder/umbrella-leaf.svg` | anti-air / cover |
+| Storm Fan | `placeholder/blover.svg` | wind / push |
+| Ember Log | `placeholder/torchwood.svg` | fire buff |
+| Runt | `placeholder/imp.svg` | small zombie |
 | Mine | `placeholder/mine.svg` | board hazard |
-| Cherry Bomb | `placeholder/cherry.svg` | explosive |
-| Jalapeno | `placeholder/jalapeno.svg` | fire line |
-| Chard Guard | `placeholder/chard-guard.svg` | knockback defender |
+| Fire Grenade | `placeholder/cherry.svg` | explosive |
+| Flame Strike | `placeholder/jalapeno.svg` | fire line |
+| Spring Arm | `placeholder/chard-guard.svg` | knockback defender |
 | Rock | `placeholder/rock.svg` | inert obstacle |
 | Grave | `placeholder/grave.svg` | digs up a zombie on a timer |
 
@@ -92,9 +92,9 @@ file per hero, which is where that split would go).
 | Hero | Placeholder | Should read as |
 | --- | --- | --- |
 | Thornquill | `placeholder/hero-thornquill.svg` | Cactus — spines, piercing, long range |
-| Thornhide | `placeholder/hero-thornhide.svg` | Endurian — spikes facing out, melee, retaliation |
-| Chardwall | `placeholder/hero-chardwall.svg` | Chard Guard — rainbow chard, red stalk, leverage / knockback |
-| Gourdward | `placeholder/hero-gourdward.svg` | Pumpkin — a hollow shell that armours somebody else |
+| Thornshell | `placeholder/hero-thornhide.svg` | Spike Armor — spikes facing out, melee, retaliation |
+| Chardslam | `placeholder/hero-chardwall.svg` | Spring Arm — rainbow chard, red stalk, leverage / knockback |
+| Gourdward | `placeholder/hero-gourdward.svg` | Bunker Shell — a hollow shell that armours somebody else |
 
 ### Fusion gear (cog token) — ✅ DONE, art landed 2026-08-04
 
@@ -104,9 +104,9 @@ with a plant core driving it, which is why the token is a cog rather than a disc
 | Gear | Placeholder | Plant core |
 | --- | --- | --- |
 | Cactus gear | `placeholder/gear-cactus.svg` | Cactus |
-| Endurian gear | `placeholder/gear-endurian.svg` | Endurian |
-| Chard gear | `placeholder/gear-chard.svg` | Chard Guard |
-| Pumpkin gear | `placeholder/gear-pumpkin.svg` | Pumpkin |
+| Spike Armor gear | `placeholder/gear-endurian.svg` | Spike Armor |
+| Chard gear | `placeholder/gear-chard.svg` | Spring Arm |
+| Bunker Shell gear | `placeholder/gear-pumpkin.svg` | Bunker Shell |
 
 Regenerate every token: `node art-src/make_plant_placeholders.mjs`
 
@@ -115,3 +115,12 @@ Regenerate every token: `node art-src/make_plant_placeholders.mjs`
 `data/events.ts` points at 16 `event-*.jpg` illustrations that were not audited in this pass.
 Check their provenance before release — the `event-*.webp` versions removed alongside the
 unit art came from the same wiki, so the `.jpg` ones deserve a look.
+
+## 2026-08-06 — Đợt rename IP (xem NAMING.md ở gốc repo)
+
+- Key art StartMenu (cover) đang VẼ SẴN tựa "PLANT HEROES" trong tranh — cần bản mới
+  với tựa "BLIGHTFALL — The Last Garden". Trước khi có tranh mới, menu chỉ đúng khi
+  không nạp cover (text logo đã đổi đúng).
+- Sprite NHÀ (ô chứa mầm) giờ mang tên hiển thị "Greenspire / Tháp Xanh" — art nên
+  chuyển hướng: tháp kính xanh phát sáng nuôi mầm, thay cho ngôi nhà ngoại ô.
+- Tên hiển thị đổi hàng loạt nhưng TÊN FILE sprite giữ nguyên (đổi ở Phase 2 cùng ID).

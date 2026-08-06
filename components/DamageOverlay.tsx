@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { DamageEvent } from '../types';
-import { Sun, Coins, Gem } from 'lucide-react';
+import { Sun as Sol, Coins, Gem } from 'lucide-react';
 import { useI18n } from '../i18n';
 
 interface DamageOverlayProps {
@@ -24,7 +24,7 @@ export const DamageOverlay: React.FC<DamageOverlayProps> = ({ events }) => {
         >
           {evt.type === 'SUN' && (
              <div className="flex items-center gap-1 text-yellow-400 font-bold text-xl drop-shadow-md stroke-black" style={{ textShadow: '1px 1px 0 #000' }}>
-                 <Sun size={20} fill="currentColor" /> +{evt.amount}
+                 <Sol size={20} fill="currentColor" /> +{evt.amount}
              </div>
           )}
           

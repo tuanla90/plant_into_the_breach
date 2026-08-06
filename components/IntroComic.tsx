@@ -26,7 +26,7 @@ const PANELS = [
     { art: './img/comic/comic-04-gate.jpg', caption: 'The plaza gate held for exactly four seconds.', cols: 'col-span-12 md:col-span-8', h: 'h-96', pos: '50% 70%' },
     { art: './img/comic/comic-05-tunnel.jpg', caption: 'Three survived. None of them were soldiers.', cols: 'col-span-12 md:col-span-4', h: 'h-72' },
     { art: './img/comic/comic-06-gear.jpg', caption: 'But someone had left the gear behind — as if they knew this day would come.', cols: 'col-span-12 md:col-span-4', h: 'h-72' },
-    { art: './img/comic/comic-07-mask.jpg', caption: 'Breathe in. Mask on. Shadeleaf walks out.', cols: 'col-span-12 md:col-span-4', h: 'h-72' },
+    { art: './img/comic/comic-07-mask.jpg', caption: 'Breathe in. Mask on. Peaburst walks out.', cols: 'col-span-12 md:col-span-4', h: 'h-72' },
     { art: './img/comic/comic-08-rooftop.jpg', caption: 'The city may be lost. The world is not.', cols: 'col-span-12', h: 'h-[480px]', captionBottom: true },
 ];
 
@@ -68,7 +68,7 @@ export const IntroComic: React.FC<IntroComicProps> = ({ onDone }) => {
                     <div className="flex items-end justify-between mb-3 gap-4">
                         <div>
                             <h1 className="text-2xl md:text-3xl font-black uppercase tracking-widest text-emerald-400 leading-none">
-                                {t('Plant Heroes: Blightfall')}
+                                {t('Blightfall: The Last Garden')}
                             </h1>
                             <p className="text-gray-500 text-xs uppercase tracking-[0.25em] mt-1">
                                 {t('How it started')}

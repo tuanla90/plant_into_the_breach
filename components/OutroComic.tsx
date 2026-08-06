@@ -64,7 +64,7 @@ export const OutroComic: React.FC<OutroComicProps> = ({ onDone }) => {
                     <div className="flex items-end justify-between mb-3 gap-4">
                         <div>
                             <h1 className="text-2xl md:text-3xl font-black uppercase tracking-widest text-emerald-400 leading-none">
-                                {t('Plant Heroes: Blightfall')}
+                                {t('Blightfall: The Last Garden')}
                             </h1>
                             <p className="text-gray-500 text-xs uppercase tracking-[0.25em] mt-1">
                                 {t('How it ended')}

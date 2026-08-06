@@ -207,12 +207,12 @@ export const useGameEngine = () => {
       // it gets clobbered. Held on one object so the closures below read live values.
       const turnDelta = {
           sunGained: 0,        // from GAIN_SUN / RESOURCE_GAIN
-          brainsAfter: -1,     // authoritative brain count after BRAIN_LOST; -1 = untouched
-          runEnded: false,     // brains hit 0
+          brainsAfter: -1,     // authoritative sprout count after BRAIN_LOST; -1 = untouched
+          runEnded: false,     // sprouts hit 0
           zombiesKilled: 0,    // from UNIT_DIE, for the KILL_COUNT bonus objective
           // The battle ledger's inbox: TRACK_STAT lines (and engine-counted damageTaken)
           // land here, then fold into gameState.battleStats in the reconcile below — the
-          // same clobber-avoidance route Sun and kills already take past `finalState`.
+          // same clobber-avoidance route Sol and kills already take past `finalState`.
           stats: {} as Partial<Record<HeroId, Partial<BattleHeroStats>>>
       };
       const bumpStat = (heroId: HeroId, stat: keyof BattleHeroStats, amount: number) => {
@@ -298,7 +298,7 @@ export const useGameEngine = () => {
                               flood: action.flood !== undefined
                                   ? (action.flood.turns > 0 ? action.flood : undefined)
                                   : t.flood,
-                              // A house's shell layer (Reinforce): raised true, bitten false.
+                              // A Greenspire's shell layer (Reinforce): raised true, bitten false.
                               shielded: action.shielded !== undefined ? action.shielded : t.shielded,
                           };
                       }
@@ -365,9 +365,7 @@ export const useGameEngine = () => {
                               setUnits(prev => prev.map(u => u.id === action.unitId ? { ...u, isAttacking: true, visualOffset: { x: recoilX, y: recoilY }, flipX: shouldFlip } : u));
 
                               let projType: Projectile['type'] = 'PEA';
-                              if (attacker.class === UnitClass.SNOW_PEA) projType = 'FROZEN_PEA';
-                              else if (attacker.class === UnitClass.KERNEL_PULT) projType = 'CORN';
-                              else if (attacker.class === UnitClass.CABBAGE_PULT) projType = 'CABBAGE';
+                              if (attacker.class === UnitClass.CORN_MORTAR) projType = 'CORN';
 
                               const pid = `proj_${Date.now()}_${Math.random()}`;
                               // Calculate pixel-perfect centers (12.5% per tile, center is +6.25%)
@@ -544,7 +542,7 @@ export const useGameEngine = () => {
                       if (!action.isForced) {
                           setUnits(prev => prev.map(u => u.id === action.unitId ? { ...u, prevPosition: u.position } : u));
                       } else {
-                          // ONE thud per body shoved, not one per tile travelled. Chardwall throws
+                          // ONE thud per body shoved, not one per tile travelled. Chardslam throws
                           // two tiles and his Sweep throws four bodies at once; per-tile would be
                           // eight impacts for a single click and would drown the turn.
                           sfx('push');
@@ -686,7 +684,7 @@ export const useGameEngine = () => {
                   const eater = unitsRef.current.find(u => u.id === action.unitId);
                   const pos: Position | undefined = action.pos || eater?.position;
 
-                  // 1. The house goes dark.
+                  // 1. The Greenspire goes dark.
                   if (pos) {
                       setBoard(prev => prev.map(t =>
                           (t.x === pos.x && t.y === pos.y) ? { ...t, hasBrain: false } : t
@@ -694,7 +692,7 @@ export const useGameEngine = () => {
                   }
 
                   // 2. Loud feedback. 'DAMAGE' with a string renders as "-BRAIN" in red.
-                  sfx('brain-lost');
+                  sfx('sprout-lost');
                   triggerShake(ANIMATION_CONFIG.SHAKE_DURATION * 2);
                   if (pos) addDamageEvent(pos.x, pos.y, 'BRAIN', 'DAMAGE');
 
@@ -730,26 +728,26 @@ export const useGameEngine = () => {
           let resolvedScreen = finalState.screen;
           if (prev.screen === 'SQUAD_SELECT') resolvedScreen = 'SQUAD_SELECT';
           else if (prev.screen === 'VICTORY' && resolvedScreen === 'COMBAT') resolvedScreen = 'VICTORY';
-          // Out of brains beats every other outcome, including a level that "completed".
+          // Out of sprouts beats every other outcome, including a level that "completed".
           if (turnDelta.runEnded) resolvedScreen = 'GAME_OVER';
 
           // `finalState` predates the loop. Re-apply what the loop owns:
-          //  - brains only ever go down, so min() is safe whether or not the turn
+          //  - sprouts only ever go down, so min() is safe whether or not the turn
           //    resolver already accounted for the loss.
-          //  - Sun income arrives exclusively as GAIN_SUN / RESOURCE_GAIN actions;
+          //  - Sol income arrives exclusively as GAIN_SUN / RESOURCE_GAIN actions;
           //    finalState carries only what was *spent*.
           const resolvedBrains = turnDelta.brainsAfter < 0
               ? finalState.brainsRemaining
               : Math.min(finalState.brainsRemaining, turnDelta.brainsAfter);
 
           // Kills are counted inside the loop, so they live on turnDelta for the same reason
-          // Sun does. `finalState.mission` still carries anything processTurn decided (e.g.
+          // Sol does. `finalState.mission` still carries anything processTurn decided (e.g.
           // marking the objective failed), so fold the delta onto that rather than onto prev.
           const resolvedMission = finalState.mission
               ? { ...finalState.mission, zombiesKilled: finalState.mission.zombiesKilled + turnDelta.zombiesKilled }
               : finalState.mission;
 
-          // The ledger folds in additively, like Sun: `finalState` predates the loop, so it
+          // The ledger folds in additively, like Sol: `finalState` predates the loop, so it
           // carries every earlier batch's totals and this batch's inbox is added on top.
           let resolvedStats = finalState.battleStats;
           const inbox = Object.entries(turnDelta.stats) as Array<[HeroId, Partial<BattleHeroStats>]>;

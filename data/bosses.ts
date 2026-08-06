@@ -11,20 +11,20 @@ import { BossId, Unit, UnitClass } from '../types';
  * `Partial` is load-bearing here and in BOSS_BEHAVIOURS. `BossId` is the campaign roadmap —
  * ten names, most of which are still just a plan (PLAN-boards-bosses.md section 5) — while
  * these tables are what has actually been built. A boss with no entry falls back to the
- * Gargantuar body and ordinary zombie AI, which is a placeholder rather than a crash.
+ * Gravehulk body and ordinary zombie AI, which is a placeholder rather than a crash.
  */
 
 /** The unit class each boss is fought as. */
 export const BOSS_UNIT_CLASS: Partial<Record<BossId, UnitClass>> = {
-    GARGANTUAR: UnitClass.GARGANTUAR,
-    DISCO_ZOMBOSS: UnitClass.DISCO_ZOMBOSS,
+    GRAVEHULK: UnitClass.GRAVEHULK,
+    HEADLINER: UnitClass.HEADLINER,
     CINDER_COLOSSUS: UnitClass.CINDER_COLOSSUS,
     BLIGHTLORD: UnitClass.BLIGHTLORD,
     VOLTMAW: UnitClass.VOLTMAW,
     YETI: UnitClass.YETI,
-    CATAPULT_LORD: UnitClass.IRONCART,
+    IRONCART: UnitClass.IRONCART,
     CLOCKJAW: UnitClass.CLOCKJAW,
-    BALLOON_ARMADA: UnitClass.ARMADA,
+    ARMADA: UnitClass.ARMADA,
     SANDREAVER: UnitClass.SANDREAVER,
 };
 
@@ -33,22 +33,22 @@ export const BOSS_UNIT_CLASS: Partial<Record<BossId, UnitClass>> = {
  *
  * NOT every boss. `isMassive` is a rules flag, not a rank: The Headliner is a dancer with a
  * microphone, and a squad that has bought a shove deserves to be able to use it on him. Making
- * every boss massive would quietly delete Ironhusk and Chardwall from every boss fight in the
+ * every boss massive would quietly delete Ironhusk and Chardslam from every boss fight in the
  * game — see PLAN-boards-bosses.md section 7, where only three of the nine resist a push.
  */
-export const MASSIVE_BOSSES: ReadonlySet<BossId> = new Set<BossId>(['GARGANTUAR']);
+export const MASSIVE_BOSSES: ReadonlySet<BossId> = new Set<BossId>(['GRAVEHULK']);
 
 /** Telegraph text shown before a boss has planned its first intent. English source string. */
 export const BOSS_OPENING_INTENT: Partial<Record<BossId, string>> = {
-    GARGANTUAR: 'Stomping...',
-    DISCO_ZOMBOSS: 'Taking the stage...',
+    GRAVEHULK: 'Stomping...',
+    HEADLINER: 'Taking the stage...',
     CINDER_COLOSSUS: 'Smouldering...',
     BLIGHTLORD: 'Walking it back...',
     VOLTMAW: 'Charging the grid...',
     YETI: 'Breathing frost...',
-    CATAPULT_LORD: 'Building up steam...',
+    IRONCART: 'Building up steam...',
     CLOCKJAW: 'Winding up...',
-    BALLOON_ARMADA: 'Making its approach...',
+    ARMADA: 'Making its approach...',
     SANDREAVER: 'Testing the sand...',
 };
 
@@ -64,7 +64,7 @@ export const BOSS_OPENING_INTENT: Partial<Record<BossId, string>> = {
  * turns: exactly the window a squad needs to pick a formation before the beating starts.
  */
 export const BOSS_ESCORTS: Partial<Record<BossId, number>> = {
-    DISCO_ZOMBOSS: 0,
+    HEADLINER: 0,
     CLOCKJAW: 0,
     // None. Phase one summons an echo EVERY turn, so an opening escort would be adds on top
     // of adds — and the pit is 6x6, which is not enough floor to spend on bodies the fight
@@ -74,12 +74,12 @@ export const BOSS_ESCORTS: Partial<Record<BossId, number>> = {
 
 /**
  * Opening state a boss's body carries that its class sheet cannot express, because the sheet is
- * shared: an ordinary Balloon Zombie has no gas cells and must not grow any. Per BOSS, which is
+ * shared: an ordinary Floater has no gas cells and must not grow any. Per BOSS, which is
  * where identity already lives, and it keeps unitFactory ignorant of the roster.
  */
 export const BOSS_INITIAL_STATE: Partial<Record<BossId, Partial<Unit>>> = {
-    BALLOON_ARMADA: { buoyancy: 3 },
+    ARMADA: { buoyancy: 3 },
 };
 
 export const bossClassFor = (boss: BossId | undefined): UnitClass =>
-    (boss && BOSS_UNIT_CLASS[boss]) || UnitClass.GARGANTUAR;
+    (boss && BOSS_UNIT_CLASS[boss]) || UnitClass.GRAVEHULK;

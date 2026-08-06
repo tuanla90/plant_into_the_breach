@@ -109,8 +109,8 @@ export const EventScreen: React.FC<EventScreenProps> = ({
             switch (e.type) {
                 case 'GAIN_COIN': parts.push(t('+{value} Coin', { value: e.value })); break;
                 case 'LOSE_COIN': parts.push(t('-{value} Coin', { value: e.value })); break;
-                case 'GAIN_BRAIN': parts.push(t('+1 Brain')); break;
-                case 'LOSE_BRAIN': parts.push(t('-1 Brain')); break;
+                case 'GAIN_BRAIN': parts.push(t('+1 Sprout')); break;
+                case 'LOSE_BRAIN': parts.push(t('-1 Sprout')); break;
                 case 'GAIN_BENCH_PLANT': parts.push(t('A plant joins the bench')); break;
                 case 'LOSE_BENCH_PLANT': parts.push(t('A bench plant is gone')); break;
                 case 'GAIN_ITEM': parts.push(t('You found a new Item!')); break;

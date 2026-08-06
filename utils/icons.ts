@@ -21,38 +21,37 @@ import { mobileSprite } from './platform';
 // so the art can be replaced one unit at a time.
 //
 // To add art: save it under `public/img/` using the ICONS key lowercased in kebab-case
-// (`SNOW_PEA` -> `snow-pea`), with the `hero-` prefix for HERO_ICONS entries. These files
+// (`ICE_GRENADE` -> `snow-pea`), with the `hero-` prefix for HERO_ICONS entries. These files
 // are game assets and ARE committed.
 
-// Hero art, used for the 3-hero squad. The `.jpg` files are original AI-generated
-// tactical hero cards (full card: HUD frame + hex diorama base), replacing the old
-// PvZ Heroes portraits (`hero-*.webp`, kept on disk as fallbacks). Transparent-background
-// sprite versions for the board are planned; until then the card art is used everywhere.
-// hero-captain-combustible.webp is kept for when Captain Combustible returns as an unlockable.
+// Hero art, used for the 3-hero squad: original AI-generated tactical hero cards.
+// The old PvZ Heroes portraits (`hero-*.webp`) are GONE from public/ — original IP must
+// never ship in the bundle (art-src/removed-pvz-art is the only archive). Transparent
+// board sprites share the same files below until dedicated cut-outs land.
 export const HERO_ICONS = {
-    GREEN_SHADOW: `./img/sprite-green-shadow.png`,
-    WALL_KNIGHT: `./img/sprite-wall-knight.png`,
-    SOLAR_FLARE: `./img/sprite-solar-flare.png`,
-    CHOMPZILLA: `./img/sprite-chompzilla.png`,
-    KERNEL_PULT: `./img/sprite-cobb.png`,
+    PEABURST: `./img/sprite-peaburst.png`,
+    IRONHUSK: `./img/sprite-ironhusk.png`,
+    SUNBLOOM: `./img/sprite-sunbloom.png`,
+    SNAPMAW: `./img/sprite-snapmaw.png`,
+    CORNOVA: `./img/sprite-cornova.png`,
     // Placeholder until the drone art lands (prompt in PLAN-hero-zephyr / the user's brief).
-    ZEPHYR: `./img/placeholder/zephyr.svg`,
-    THORNHIDE: `./img/sprite-thornhide.png`,
-    CHARDWALL: `./img/sprite-chardwall.png`,
+    REEDWING: `./img/placeholder/reedwing.svg`,
+    THORNSHELL: `./img/sprite-thornshell.png`,
+    CHARDSLAM: `./img/sprite-chardslam.png`,
     GOURDWARD: `./img/sprite-gourdward.png`,
 };
 
 // Transparent-background board sprites (512x512 PNG, normalized: shared baseline and scale).
 // Generated from the card art, cut out and aligned by scratchpad/make_sprites.py-style processing.
 export const HERO_SPRITES = {
-    GREEN_SHADOW: `./img/sprite-green-shadow.png`,
-    WALL_KNIGHT: `./img/sprite-wall-knight.png`,
-    SOLAR_FLARE: `./img/sprite-solar-flare.png`,
-    CHOMPZILLA: `./img/sprite-chompzilla.png`,
-    KERNEL_PULT: `./img/sprite-cobb.png`,
-    ZEPHYR: `./img/placeholder/zephyr.svg`,
-    THORNHIDE: `./img/sprite-thornhide.png`,
-    CHARDWALL: `./img/sprite-chardwall.png`,
+    PEABURST: `./img/sprite-peaburst.png`,
+    IRONHUSK: `./img/sprite-ironhusk.png`,
+    SUNBLOOM: `./img/sprite-sunbloom.png`,
+    SNAPMAW: `./img/sprite-snapmaw.png`,
+    CORNOVA: `./img/sprite-cornova.png`,
+    REEDWING: `./img/placeholder/reedwing.svg`,
+    THORNSHELL: `./img/sprite-thornshell.png`,
+    CHARDSLAM: `./img/sprite-chardslam.png`,
     GOURDWARD: `./img/sprite-gourdward.png`,
 };
 
@@ -60,45 +59,45 @@ export const HERO_SPRITES = {
 // plant core piloting them). Used by MATERIAL_DEFINITIONS only — the plain plant classes in
 // ICONS below stay untouched because plants.ts shares them.
 export const MATERIAL_SPRITES = {
-    MAT_PEASHOOTER: `./img/gear-peashooter.png`,
-    MAT_SUNFLOWER: `./img/gear-sunflower.png`,
-    MAT_WALLNUT: `./img/gear-wallnut.png`,
-    MAT_CHOMPER: `./img/gear-chomper.png`,
-    MAT_CORN: `./img/gear-corn.png`,
+    MAT_PEASHOOTER: `./img/gear-seed-gun.png`,
+    MAT_SUNFLOWER: `./img/gear-sol-battery.png`,
+    MAT_WALLNUT: `./img/gear-armor-plate.png`,
+    MAT_CHOMPER: `./img/gear-steel-jaws.png`,
+    MAT_CORN_MORTAR: `./img/gear-corn-mortar.png`,
     // The four gears belonging to the four newest heroes.
-    MAT_CATTAIL: `./img/placeholder/gear-cattail.svg`,
-    MAT_ENDURIAN: `./img/gear-endurian.png`,
-    MAT_CHARD: `./img/gear-chard.png`,
-    MAT_PUMPKIN: `./img/gear-pumpkin.png`,
+    MAT_CATTAIL: `./img/placeholder/gear-rotor-wing.svg`,
+    MAT_ENDURIAN: `./img/gear-spike-armor.png`,
+    MAT_SPRING_ARM: `./img/gear-spring-arm.png`,
+    MAT_PUMPKIN: `./img/gear-bunker-shell.png`,
 };
 
 // Combat-item icons: handheld bio-mech consumables (pins, triggers, rip-cords), centered
 // in-frame like inventory icons. data/items.ts points here.
 export const ITEM_SPRITES = {
-    POTATO_MINE: `./img/item-potato-mine.png`,
-    CHERRY_BOMB: `./img/item-cherry-bomb.png`,
-    JALAPENO: `./img/item-jalapeno.png`,
-    SNOW_PEA: `./img/item-snow-pea.png`,
-    COFFEE_BEAN: `./img/item-coffee-bean.png`,
-    BLOVER: `./img/item-blover.png`,
-    SPIKEWEED: `./img/terrain/spikes.svg`,
-    HYPNO_SHROOM: `./img/placeholder/hypno-shroom.svg`,
-    MAGNET_SHROOM: `./img/placeholder/magnet-shroom.svg`,
-    ALOE: `./img/placeholder/aloe.svg`,
-    DOOM_SHROOM: `./img/placeholder/doom-shroom.svg`,
+    SEED_MINE: `./img/item-seed-mine.png`,
+    FIRE_GRENADE: `./img/item-fire-grenade.png`,
+    FLAME_STRIKE: `./img/item-flame-strike.png`,
+    ICE_GRENADE: `./img/item-ice-grenade.png`,
+    STIM_SHOT: `./img/item-stim-shot.png`,
+    STORM_FAN: `./img/item-storm-fan.png`,
+    SPIKE_TRAP: `./img/terrain/spikes.svg`,
+    BRAINWASH_DART: `./img/placeholder/brainwash-dart.svg`,
+    MAGNET_PULSE: `./img/placeholder/magnet-pulse.svg`,
+    HEAL_KIT: `./img/placeholder/heal-kit.svg`,
+    BLIGHT_CORE: `./img/placeholder/blight-core.svg`,
 };
 
 // Neon accent per hero — mirrors the accent color baked into each hero's card art.
 // Shared by every screen that showcases a hero (squad select, fusion bench, ...).
 export const HERO_ACCENTS: Record<string, string> = {
-    GREEN_SHADOW: '#4ade80',
-    WALL_KNIGHT: '#f59e0b',
-    SOLAR_FLARE: '#fb923c',
-    CHOMPZILLA: '#d946ef',
-    KERNEL_PULT: '#eab308',
-    ZEPHYR: '#e879f9',       // cattail magenta
-    THORNHIDE: '#b45309',    // durian husk
-    CHARDWALL: '#ef4444',    // chard stem red
+    PEABURST: '#4ade80',
+    IRONHUSK: '#f59e0b',
+    SUNBLOOM: '#fb923c',
+    SNAPMAW: '#d946ef',
+    CORNOVA: '#eab308',
+    REEDWING: '#e879f9',       // cattail magenta
+    THORNSHELL: '#b45309',    // durian husk
+    CHARDSLAM: '#ef4444',    // chard stem red
     GOURDWARD: '#f97316',    // pumpkin orange
 };
 
@@ -109,7 +108,7 @@ export const HERO_ACCENTS: Record<string, string> = {
  * Sprites drawn facing RIGHT, which every renderer has to mirror.
  *
  * EMPTY, and that is the correct state: the whole zombie set marches leftward toward the lawn
- * and is now drawn that way, Gargantuar included — his art was redrawn facing left, so the
+ * and is now drawn that way, Gravehulk included — his art was redrawn facing left, so the
  * mirror that used to correct him would now be the thing turning him around.
  *
  * The table stays because the fix belongs in ONE place. When it lived inline in the board
@@ -164,11 +163,11 @@ export const SPRITE_VARIANTS: Partial<Record<UnitClass, SpriteVariant[]>> = {
         note: 'grounded — no longer a flier for any rule',
     }],
 
-    // The imp on its back is the tell. It is NOT "has thrown its imp" — the Gargantuar throws
+    // The imp on its back is the tell. It is NOT "has thrown its imp" — the Gravehulk throws
     // imps repeatedly and nothing tracks a count — it is the shared boss phase line,
     // `hp <= floor(maxHp / 2)`, which is the moment its throw range drops from 4 to 2.
     // Losing the passenger is the most readable way to say "this thing changed".
-    [UnitClass.GARGANTUAR]: [{
+    [UnitClass.GRAVEHULK]: [{
         when: u => u.hp <= Math.floor(u.maxHp / 2),
         src: `./img/sprite-gargantuar-wounded.png`,
         note: 'below half health — throw range 4 -> 2',
@@ -190,62 +189,43 @@ export const spriteFor = (unit: Unit): string => {
 };
 
 export const ICONS = {
-    PEASHOOTER: `./img/gear-peashooter.png`,
-    SNOW_PEA: `./img/gear-snow-pea.png`,
-    REPEATER: `./img/placeholder/repeater.svg`,
-    BLOOMERANG: `./img/placeholder/bloomerang.svg`,
-    CACTUS: `./img/gear-cactus.png`,
-    CATTAIL: `./img/placeholder/cattail.svg`,
-    MELON_PULT: `./img/placeholder/melon-pult.svg`,
-    CABBAGE_PULT: `./img/placeholder/cabbage-pult.svg`,
-    KERNEL_PULT: `./img/gear-corn.png`,
-    MAGNET_SHROOM: `./img/placeholder/magnet-shroom.svg`,
-    SUN_SHROOM: `./img/placeholder/sun-shroom.svg`,
-    SCAREDY_SHROOM: `./img/placeholder/scaredy-shroom.svg`,
-    WALLNUT: `./img/gear-wallnut.png`,
+    // Chín thân cây + thùng GEAR_CRATE còn lại sau hai đợt dọn (data/plants.ts). Mười chín
+    // cây PvZ đã bỏ; art placeholder/gear không còn ai trỏ tới cũng đã xoá khỏi public/img.
+    SEED_GUN: `./img/gear-seed-gun.png`,
+    ROTOR_WING: `./img/placeholder/rotor-wing.svg`,
+    CORN_MORTAR: `./img/gear-corn-mortar.png`,
+    ARMOR_PLATE: `./img/gear-armor-plate.png`,
     GEAR_CRATE: `./img/sprite-gear-crate.png`,
-    TALL_NUT: `./img/placeholder/tall-nut.svg`,
-    ENDURIAN: `./img/gear-endurian.png`,
-    SWEET_POTATO: `./img/placeholder/sweet-potato.svg`,
-    IRON_NUT: `./img/placeholder/iron-nut.svg`,
-    PUMPKIN: `./img/gear-pumpkin.png`,
-    CHARD_GUARD: `./img/gear-chard.png`,
-    CHOMPER: `./img/gear-chomper.png`,
-    BONK_CHOY: `./img/placeholder/bonk-choy.svg`,
-    SUNFLOWER: `./img/gear-sunflower.png`,
-    TWIN_SUNFLOWER: `./img/placeholder/twin-sunflower.svg`,
-
-    // NEW PLANTS
-    COFFEE_BEAN: `./img/placeholder/coffee-bean.svg`,
-    HYPNO_SHROOM: `./img/placeholder/hypno-shroom.svg`,
-    BLOVER: `./img/placeholder/blover.svg`,
-    UMBRELLA_LEAF: `./img/placeholder/umbrella-leaf.svg`,
-    TORCHWOOD: `./img/placeholder/torchwood.svg`,
+    SPIKE_ARMOR: `./img/gear-spike-armor.png`,
+    BUNKER_SHELL: `./img/gear-bunker-shell.png`,
+    SPRING_ARM: `./img/gear-spring-arm.png`,
+    STEEL_JAWS: `./img/gear-steel-jaws.png`,
+    SOL_BATTERY: `./img/gear-sol-battery.png`,
 
     // ZOMBIES — `sprite-*.png` are the original cut-out chibi sprites (art-src batches);
-    // classes still on `.webp` are waiting for their art: FLAG (and IMP below).
-    ZOMBIE: `./img/sprite-zombie.png`,
-    CONEHEAD: `./img/sprite-conehead.png`,
-    BUCKETHEAD: `./img/sprite-buckethead.png`,
-    NEWSPAPER: `./img/sprite-newspaper.png`,
-    SCREEN_DOOR: `./img/sprite-screen-door.png`,
-    DIGGER: `./img/sprite-digger.png`,
-    FOOTBALL: `./img/sprite-football.png`,
-    POLE_VAULTER: `./img/sprite-pole-vaulter.png`,
-    DISCO: `./img/sprite-disco.png`,
-    BALLOON: `./img/sprite-balloon.png`,
-    CATAPULT: `./img/sprite-catapult.png`,
-    FLAG: `./img/sprite-flag.png`,
+    // classes still on `.webp` are waiting for their art: BANNERMAN (and RUNT below).
+    WALKER: `./img/sprite-walker.png`,
+    SCRAPCAP: `./img/sprite-scrapcap.png`,
+    POTHELM: `./img/sprite-pothelm.png`,
+    TATTERGUARD: `./img/sprite-tatterguard.png`,
+    DOORBEARER: `./img/sprite-doorbearer.png`,
+    MINER: `./img/sprite-miner.png`,
+    LINEBREAKER: `./img/sprite-linebreaker.png`,
+    LEAPER: `./img/sprite-leaper.png`,
+    DANCER: `./img/sprite-dancer.png`,
+    FLOATER: `./img/sprite-floater.png`,
+    LOBBER: `./img/sprite-lobber.png`,
+    BANNERMAN: `./img/sprite-bannerman.png`,
 
     // BOSS/ETC
-    GARGANTUAR: `./img/sprite-gargantuar.png`,
+    GRAVEHULK: `./img/sprite-gravehulk.png`,
     /**
-     * The eight bosses that came after the Gargantuar. All of them shipped borrowing a sprite
+     * The eight bosses that came after the Gravehulk. All of them shipped borrowing a sprite
      * from a unit they resembled, and each got its own key here rather than reaching for the
      * borrowed one directly — because the swap documented in art-src/ART-TODO.md is "point that
      * one entry in utils/icons.ts at the new file", and that is only true if the entry exists.
      * That paid off on 2026-08-05: retiring all eight was eight edits to this list and nothing
-     * else. Reaching straight for ICONS.GARGANTUAR would have made it an edit to a balance table.
+     * else. Reaching straight for ICONS.GRAVEHULK would have made it an edit to a balance table.
      *
      * Two SECOND STATES also exist as art and are not wired to anything yet:
      * sprite-armada-wreck.png (shot down) and sprite-sandreaver-mound.png (still burrowed).
@@ -260,10 +240,10 @@ export const ICONS = {
     CLOCKJAW: `./img/sprite-clockjaw.png`,
     VOLTMAW: `./img/sprite-voltmaw.png`,
     BLIGHTLORD: `./img/sprite-blightlord.png`,
-    IMP: `./img/sprite-imp.png`,
+    RUNT: `./img/sprite-runt.png`,
     ROCK: `./img/sprite-rock.png`,
     GRAVE: `./img/sprite-grave.png`,
     MINE: `./img/placeholder/mine.svg`,
     CHERRY: `./img/placeholder/cherry.svg`,
-    JALAPENO: `./img/placeholder/jalapeno.svg`
+    FLAME_STRIKE: `./img/placeholder/flame_strike.svg`
 };

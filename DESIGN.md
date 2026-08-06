@@ -1,4 +1,4 @@
-# Plants into the Breach — Thiết kế lõi
+# Blightfall: The Last Garden — Thiết kế lõi
 
 Tài liệu này định nghĩa **luật chơi cốt lõi** và **hệ thống kinh tế**.
 Khác với `brainstorm_balance.md` (bàn về cân bằng chỉ số), tài liệu này trả lời câu hỏi
@@ -27,38 +27,38 @@ Toàn bộ thiết kế dưới đây tồn tại để trả lời một câu h
 
 ---
 
-## 1. Điều kiện thắng thua: Brain
+## 1. Điều kiện thắng thua: Sprout
 
 Bỏ luật "sống sót N lượt". Thay bằng:
 
-- Hàng trên cùng bàn cờ là **các ngôi nhà**, mỗi nhà chứa **1 brain**
-- Zombie đi về phía brain gần nhất, **không** đi về phía cây gần nhất
+- Hàng trên cùng bàn cờ là **các ngôi nhà**, mỗi nhà chứa **1 sprout**
+- Zombie đi về phía sprout gần nhất, **không** đi về phía cây gần nhất
 - Cây trở thành **vật cản** trên đường đó — đúng bản chất PvZ
-- Zombie chạm nhà → **mất 1 brain**, zombie đó biến mất
-- Số brain được phép mất là **ngân sách của cả run**, không phải của từng màn
-- Hết brain → hết run
+- Zombie chạm nhà → **mất 1 sprout**, zombie đó biến mất
+- Số sprout được phép mất là **ngân sách của cả run**, không phải của từng màn
+- Hết sprout → hết run
 
-### Vì sao là brain chứ không phải thanh máu nhà
+### Vì sao là sprout chứ không phải thanh máu nhà
 
-Zombie trong PvZ đi tìm não. Cái tên tự giải thích luật chơi, không cần dạy người chơi.
+Zombie trong PvZ đi tìm mầm. Cái tên tự giải thích luật chơi, không cần dạy người chơi.
 
 ### Vì sao ngân sách theo run chứ không theo màn
 
-Đây là mô hình Power Grid của Into the Breach. Mất brain **không** làm thua ngay,
+Đây là mô hình Power Grid của Into the Breach. Mất sprout **không** làm thua ngay,
 nên "thả một con qua để cứu một hero" trở thành **nước đi hợp lệ có giá**, thay vì thảm họa.
 Đó là thứ biến game từ "chơi hoàn hảo" thành **phân loại ưu tiên** — linh hồn của ItB.
 
-Nó cũng tự động diệt lối chơi thụ động: bấm End Turn liên tục sẽ ăn mòn ngân sách brain
+Nó cũng tự động diệt lối chơi thụ động: bấm End Turn liên tục sẽ ăn mòn ngân sách sprout
 qua từng màn, và bạn chết ở màn thứ ba.
 
-**Số đề xuất: 5 brain cho cả run.** Đủ để hy sinh có tính toán, không đủ để hy sinh bừa.
+**Số đề xuất: 5 sprout cho cả run.** Đủ để hy sinh có tính toán, không đủ để hy sinh bừa.
 
 ### Hai tầng, đừng lẫn
 
 | Tầng | Là gì | Quyết định |
 |---|---|---|
 | Nhà trên bàn cờ | Vị trí cụ thể, cột nào đang bị đe dọa | Chiến thuật, trong màn |
-| Ngân sách brain | Con số toàn run | Chiến lược, giữa các màn |
+| Ngân sách sprout | Con số toàn run | Chiến lược, giữa các màn |
 
 ---
 
@@ -69,7 +69,7 @@ qua từng màn, và bạn chết ở màn thứ ba.
 Squad gồm **3 hero**, lấy cảm hứng từ PvZ Heroes:
 
 - Có một **đòn đánh thường miễn phí**
-- Có một **skill hero tốn Sun**
+- Có một **skill hero tốn Sol**
 - Là thứ duy nhất **nhận được fusion** (xem mục 6)
 
 ### Cây cơ bản — là hàng hóa, không phải trạng thái
@@ -119,17 +119,17 @@ PvZ Heroes có 11 hero phe cây. Roster hiện tại đã chứa gần hết cá
 
 | Hero | Cây gốc | Đã có trong `data/plants.ts` |
 |---|---|---|
-| Green Shadow | Peashooter | ✓ |
-| Solar Flare | Sunflower | ✓ |
-| Wall-Knight | Wall-nut | ✓ |
-| Chompzilla | Chomper | ✓ |
-| Grass Knuckles | Bonk Choy | ✓ |
-| Captain Combustible | Torchwood | ✓ |
-| Nightcap | Scaredy-shroom | ✓ |
-| Rose | Hypno-shroom | ✓ |
+| Green Shadow | Seed Gun | ✓ |
+| Solar Flare | Sol Battery | ✓ |
+| Wall-Knight | Armor Plate | ✓ |
+| Chompzilla | Steel Jaws | ✓ |
+| Grass Knuckles | Bok Boxer | ✓ |
+| Captain Combustible | Ember Log | ✓ |
+| Nightcap | Shy Cap | ✓ |
+| Rose | Brainwash Dart | ✓ |
 | Beta-Carrotina | Sweet Potato | ✓ |
-| Citron | Tall-nut | ✓ |
-| Spudow | Potato Mine | đang là **item**, cần thêm |
+| Citron | Tower Shield | ✓ |
+| Spudow | Seed Mine | đang là **item**, cần thêm |
 
 10/11 đã tồn tại → concept này cần **rất ít nội dung mới**.
 
@@ -148,15 +148,15 @@ sinh ra run đi 7 tầng không gặp điểm nghỉ nào.
 
 ## 3. Nguyên tắc hai loại tiền
 
-> **Sun quyết định lượt này bạn làm được gì. Coin quyết định squad của bạn là ai.**
+> **Sol quyết định lượt này bạn làm được gì. Coin quyết định squad của bạn là ai.**
 
 Câu hỏi kiểm tra khi thêm thứ mới: nó thay đổi *khả năng trong một lượt*,
-hay thay đổi *bản thân đội hình*? Vế đầu là Sun, vế sau là Coin.
+hay thay đổi *bản thân đội hình*? Vế đầu là Sol, vế sau là Coin.
 
 **Không có thứ gì nằm ở cả hai. Không quy đổi qua lại.**
 Đây là điểm mấu chốt để tránh bẫy "tiết kiệm luôn là lựa chọn đúng".
 
-Cách gọi chính xác hơn: **Sun không phải tiền, Sun là kinh tế hành động.**
+Cách gọi chính xác hơn: **Sol không phải tiền, Sol là kinh tế hành động.**
 Nó là cơ chế biến ràng buộc "3 unit, nhiều mối đe dọa" của ItB thành một con số.
 
 ---
@@ -171,7 +171,7 @@ Dùng thang đo gốc của PvZ: **1 sun cơ bản = 25 điểm**.
 |---|---|---|
 | Khởi điểm mỗi màn | **50** | Bằng PvZ gốc. Đủ bật 1 skill bậc vừa ngay lượt 1 |
 | Solar Flare — Harvest | **+25** / lượt | Skill **miễn phí**, nhưng tốn lượt hành động của unit |
-| Hero có fusion Sunflower | **+25** / lượt | Thụ động, không tốn lượt |
+| Hero có fusion Sol Battery | **+25** / lượt | Thụ động, không tốn lượt |
 | Giết zombie | **+10 đến +15** | Theo độ cứng của zombie |
 
 Việc thưởng giết zombie **không** chia hết cho 25 là cố ý: hai mạng zombie ≈ một sun cơ bản,
@@ -183,7 +183,7 @@ nên dọn bàn cờ cho cảm giác tiến triển từng chút, không phải 
 |---|---|---|
 | Đầu màn (ít kill) | 25 + 1 kill | ~35–40 |
 | Giữa màn | 25 + 2–3 kill | ~50–65 |
-| Không có nguồn sinh Sun | 2–3 kill | ~25–40 |
+| Không có nguồn sinh Sol | 2–3 kill | ~25–40 |
 
 ### Chỗ tiêu — chỉ một thứ: kích hoạt skill hero
 
@@ -191,10 +191,10 @@ Bậc giá bám theo giá cây gốc của PvZ:
 
 | Bậc | Giá | Vai trò | Tham chiếu PvZ |
 |---|---|---|---|
-| Rẻ | **25** | Tiện ích, đẩy/kéo 1 ô, sát thương nhỏ | Potato Mine 25 |
-| Vừa | **50** | Skill đặc trưng của hero | Sunflower / Wall-nut 50 |
-| Nặng | **100** | Sát thương lớn, khống chế mạnh | Peashooter 100 |
-| Ultimate | **150–200** | Đổi cục diện bàn cờ | Cherry Bomb 150 / Repeater 200 |
+| Rẻ | **25** | Tiện ích, đẩy/kéo 1 ô, sát thương nhỏ | Seed Mine 25 |
+| Vừa | **50** | Skill đặc trưng của hero | Sol Battery / Armor Plate 50 |
+| Nặng | **100** | Sát thương lớn, khống chế mạnh | Seed Gun 100 |
+| Ultimate | **150–200** | Đổi cục diện bàn cờ | Fire Grenade 150 / Repeater 200 |
 
 ### Đường cong này tạo ra điều gì
 
@@ -214,29 +214,29 @@ Bậc giá bám theo giá cây gốc của PvZ:
 
 ## 5. COIN — kinh tế giữa các màn
 
-Thang đo theo đơn vị **10**, để không bao giờ nhìn nhầm sang Sun.
+Thang đo theo đơn vị **10**, để không bao giờ nhìn nhầm sang Sol.
 
 ### Nguồn thu
 
 | Nguồn | Giá trị |
 |---|---|
 | Hoàn thành màn | **+50** |
-| Không mất brain nào trong màn | **+25** |
+| Không mất sprout nào trong màn | **+25** |
 | Node Elite | **+25** |
 | Boss | **+100** |
 | Event | thay đổi |
 
-Dòng **thưởng theo brain** là mắt xích nối mục tiêu vào tiến trình:
-giữ brain không chỉ để khỏi thua, mà còn để mạnh lên.
-Chơi cẩu thả thì vừa mất brain vừa nghèo — hai hình phạt cộng dồn.
+Dòng **thưởng theo sprout** là mắt xích nối mục tiêu vào tiến trình:
+giữ sprout không chỉ để khỏi thua, mà còn để mạnh lên.
+Chơi cẩu thả thì vừa mất sprout vừa nghèo — hai hình phạt cộng dồn.
 
 ### Chỗ tiêu
 
 | Mục | Giá | Ghi chú |
 |---|---|---|
 | **Mua cây cơ bản** | **25–225** | Chỗ tiêu chính. Dùng làm dự bị **hoặc** nguyên liệu fusion |
-| Item chiến đấu | 25–75 | Potato Mine 25 / Jalapeño 50 / Cherry Bomb 75 |
-| Power Plant | 50 | Một lượt kích hoạt skill không tốn Sun |
+| Item chiến đấu | 25–75 | Seed Mine 25 / Flame Strike 50 / Fire Grenade 75 |
+| Power Plant | 50 | Một lượt kích hoạt skill không tốn Sol |
 | **Hồi sinh hero** | **75** | Cố ý rẻ, phải luôn mua nổi |
 
 ### Shop: reroll và xem trước hiệu ứng
@@ -272,15 +272,15 @@ và đã phân bậc hợp lý. Chỉ cần đổi ý nghĩa của nó từ "ng�
 
 | Cây | `cost` hiện tại | Vai trò nguyên liệu |
 |---|---|---|
-| Sun-shroom, Scaredy-shroom | 25 | Rẻ, hiệu ứng nhỏ |
-| Wall-nut, Sunflower | 50 | Nền tảng |
-| Sweet Potato, Magnet-shroom | 75 | |
-| Peashooter, Cabbage-pult, Blover | 100 | Hạng trung |
-| Bonk Choy, Tall-nut, Pumpkin, Hypno-shroom | 125 | |
-| Cactus, Chomper | 150 | |
-| Torchwood, Snow Pea | 175 | Hạng nặng |
+| Sol Cap, Shy Cap | 25 | Rẻ, hiệu ứng nhỏ |
+| Armor Plate, Sol Battery | 50 | Nền tảng |
+| Sweet Potato, Magnet Pulse | 75 | |
+| Seed Gun, Cabbage Sling, Storm Fan | 100 | Hạng trung |
+| Bok Boxer, Tower Shield, Bunker Shell, Brainwash Dart | 125 | |
+| Cactus, Steel Jaws | 150 | |
+| Ember Log, Ice Grenade | 175 | Hạng nặng |
 | Repeater | 200 | |
-| Melon-pult | 225 | Đắt nhất |
+| Melon Mortar | 225 | Đắt nhất |
 
 Không cần nghĩ lại bảng giá — nó đã đúng.
 
@@ -337,7 +337,7 @@ và làm cho yêu cầu "không mua thừa, không mua trùng" của shop có ng
 ### Vì sao nó thay thế được việc mua chỉ số
 
 Mua chỉ số là mua **con số**: "+1 sát thương" không đổi cách chơi, chỉ đổi tốc độ.
-Fusion là mua **đặc tính**: "Green Shadow của mình gây đóng băng vì đã hợp một Snow Pea vào"
+Fusion là mua **đặc tính**: "Green Shadow của mình gây đóng băng vì đã hợp một Ice Grenade vào"
 — đó là một unit khác về bản chất.
 
 Cùng một hero, hai người chơi sẽ xây ra hai thứ khác nhau.
@@ -354,16 +354,16 @@ Mười cây dưới đây phủ mười trục khác nhau, không cái nào tr�
 
 | Nguyên liệu | Giá | Hiệu ứng khi hợp vào hero | Trục |
 |---|---|---|---|
-| Wall-nut | 50 | +HP lớn | Chống chịu |
-| Sunflower | 50 | Thụ động +25 Sun/lượt | Kinh tế |
-| Coffee Bean | 75 | 1 lần/màn: hồi lại lượt hành động | Nhịp độ |
-| Magnet-shroom | 100 | Đòn đánh kéo mục tiêu 1 ô | Kéo |
-| Blover | 100 | Đòn đánh đẩy mục tiêu 1 ô | Đẩy |
+| Armor Plate | 50 | +HP lớn | Chống chịu |
+| Sol Battery | 50 | Thụ động +25 Sol/lượt | Kinh tế |
+| Stim Shot | 75 | 1 lần/màn: hồi lại lượt hành động | Nhịp độ |
+| Magnet Pulse | 100 | Đòn đánh kéo mục tiêu 1 ô | Kéo |
+| Storm Fan | 100 | Đòn đánh đẩy mục tiêu 1 ô | Đẩy |
 | Cactus | 150 | Đòn đánh xuyên qua hàng | Sát thương diện |
-| Snow Pea | 175 | Đòn đánh gây đóng băng | Khống chế |
-| Torchwood | 175 | Đòn đánh gây cháy | Sát thương kéo dài |
+| Ice Grenade | 175 | Đòn đánh gây đóng băng | Khống chế |
+| Ember Log | 175 | Đòn đánh gây cháy | Sát thương kéo dài |
 | Repeater | 200 | Đánh thường **2 lần** | Sát thương dồn |
-| Melon-pult | 225 | Đòn đánh thành AoE nhỏ | Sát thương lan |
+| Melon Mortar | 225 | Đòn đánh thành AoE nhỏ | Sát thương lan |
 
 Giá lấy nguyên từ `UnitDefinition.cost` sẵn có — đã đúng thang PvZ và đã phân bậc hợp lý.
 
@@ -376,12 +376,12 @@ Cố ý: người chơi mới sẽ mua chúng trước, và học được rằn
 
 | Nhóm | Số lượng | Vai trò |
 |---|---|---|
-| Hình dạng gốc của hero | 11 | Peashooter, Sunflower, Wall-nut, Chomper… |
+| Hình dạng gốc của hero | 11 | Seed Gun, Sol Battery, Armor Plate, Steel Jaws… |
 | Nguyên liệu fusion | 10 | Bảng trên |
-| Kho mở rộng | phần còn lại | Tall-nut, Iron-nut, Pumpkin, Endurian, Bloomerang, Kernel Pult, Cabbage-pult, Scaredy-shroom, Sweet Potato, Umbrella Leaf, Hypno-shroom, Sun-shroom, Twin Sunflower, Bonk Choy |
+| Kho mở rộng | phần còn lại | Tower Shield, Iron Shell, Bunker Shell, Spike Armor, Boomerang, Corn Mortar, Cabbage Sling, Shy Cap, Sweet Potato, Parasol Leaf, Brainwash Dart, Sol Cap, Twin Sol Battery, Bok Boxer |
 
 Ba nhóm **có giao nhau** — một cây vừa là hình dạng gốc của hero, vừa làm nguyên liệu được.
-Sunflower và Wall-nut là ví dụ: chúng là Solar Flare và Wall-Knight, đồng thời hợp được vào hero khác.
+Sol Battery và Armor Plate là ví dụ: chúng là Solar Flare và Wall-Knight, đồng thời hợp được vào hero khác.
 
 Nhóm ba **không đưa vào bản đầu**. Giữ lại làm nguồn mở rộng khi pool 10 cây
 bắt đầu thấy lặp — thêm nguyên liệu là cách rẻ nhất để làm mới game về sau,
@@ -389,7 +389,7 @@ vì mỗi cây thêm vào nhân bội số build lên chứ không cộng.
 
 ### Công thức đặc biệt — để dành
 
-Trong PvZ Fusion, một số cặp cho ra cây lai có tên riêng (Peashooter + Wall-nut = Pea-nut).
+Trong PvZ Fusion, một số cặp cho ra cây lai có tên riêng (Seed Gun + Armor Plate = Turret Pea).
 Có thể thêm sau: vài cặp hero + nguyên liệu cho hiệu ứng vượt mức thông thường.
 Đây là chỗ **duy nhất** đáng bỏ công vẽ sprite riêng, vì số lượng do bạn kiểm soát.
 **Chưa làm ngay.**
@@ -446,11 +446,11 @@ Năm hero phải phủ đủ các trục để bản đầu là một game trọ
 
 | Hero | Cây gốc | Dạy người chơi điều gì |
 |---|---|---|
-| Green Shadow | Peashooter | Bắn thẳng — hero nhập môn |
-| Wall-Knight | Wall-nut | Chặn đường. **Bắt buộc phải có** vì luật brain xoay quanh việc cản zombie |
-| Solar Flare | Sunflower | Vòng lặp kinh tế Sun |
-| Chompzilla | Chomper | Đánh đổi rủi ro — nuốt mạnh nhưng phải tiêu hóa |
-| Captain Combustible | Torchwood | Can thiệp địa hình |
+| Green Shadow | Seed Gun | Bắn thẳng — hero nhập môn |
+| Wall-Knight | Armor Plate | Chặn đường. **Bắt buộc phải có** vì luật sprout xoay quanh việc cản zombie |
+| Solar Flare | Sol Battery | Vòng lặp kinh tế Sol |
+| Chompzilla | Steel Jaws | Đánh đổi rủi ro — nuốt mạnh nhưng phải tiêu hóa |
+| Captain Combustible | Ember Log | Can thiệp địa hình |
 
 Chọn 3 trong 5 → đã có 10 tổ hợp squad ngay từ bản đầu.
 
@@ -458,13 +458,13 @@ Chọn 3 trong 5 → đã có 10 tổ hợp squad ngay từ bản đầu.
 
 | Nguyên liệu | Giá | Hiệu ứng | Trục |
 |---|---|---|---|
-| Wall-nut | 50 | +HP lớn | Chống chịu |
-| Sunflower | 50 | Thụ động +25 Sun/lượt | Kinh tế |
-| Blover | 100 | Đòn đánh đẩy 1 ô | Đẩy lùi |
-| Snow Pea | 175 | Đòn đánh gây đóng băng | Khống chế |
+| Armor Plate | 50 | +HP lớn | Chống chịu |
+| Sol Battery | 50 | Thụ động +25 Sol/lượt | Kinh tế |
+| Storm Fan | 100 | Đòn đánh đẩy 1 ô | Đẩy lùi |
+| Ice Grenade | 175 | Đòn đánh gây đóng băng | Khống chế |
 | Repeater | 200 | Đánh thường 2 lần | Sát thương |
 
-Blover có mặt từ đầu là cố ý: với luật brain, **đẩy lùi một ô là mua được một lượt**.
+Storm Fan có mặt từ đầu là cố ý: với luật sprout, **đẩy lùi một ô là mua được một lượt**.
 Người chơi cần học điều đó sớm, nếu không họ sẽ chỉ biết cộng damage.
 
 Hai nguyên liệu đầu dùng lại đúng sprite của Wall-Knight và Solar Flare,
@@ -476,12 +476,12 @@ Mỗi gói ghép hero với một nguyên liệu bổ trợ cho chính lối ch�
 
 | # | Hero mở khóa | Nguyên liệu kèm theo | Hiệu ứng mới |
 |---|---|---|---|
-| 6 | Grass Knuckles (Bonk Choy) | Cactus | Đòn đánh xuyên hàng |
-| 7 | Nightcap (Scaredy-shroom) | Coffee Bean | 1 lần/màn: hồi lại lượt hành động |
-| 8 | Rose (Hypno-shroom) | Magnet-shroom | Đòn đánh kéo mục tiêu 1 ô |
-| 9 | Citron (Tall-nut) | Melon-pult | Đòn đánh thành AoE nhỏ |
-| 10 | Beta-Carrotina (Sweet Potato) | Torchwood *(dạng nguyên liệu)* | Đòn đánh gây cháy |
-| 11 | Spudow (Potato Mine) | — | Capstone: mở **công thức đặc biệt** thay vì nguyên liệu mới |
+| 6 | Grass Knuckles (Bok Boxer) | Cactus | Đòn đánh xuyên hàng |
+| 7 | Nightcap (Shy Cap) | Stim Shot | 1 lần/màn: hồi lại lượt hành động |
+| 8 | Rose (Brainwash Dart) | Magnet Pulse | Đòn đánh kéo mục tiêu 1 ô |
+| 9 | Citron (Tower Shield) | Melon Mortar | Đòn đánh thành AoE nhỏ |
+| 10 | Beta-Carrotina (Sweet Potato) | Ember Log *(dạng nguyên liệu)* | Đòn đánh gây cháy |
+| 11 | Spudow (Seed Mine) | — | Capstone: mở **công thức đặc biệt** thay vì nguyên liệu mới |
 
 Gói 11 lệch nhịp vì có 11 hero nhưng chỉ cần 10 nguyên liệu.
 Dùng nó làm phần thưởng cuối: mở hệ công thức đặc biệt (hero + nguyên liệu cho hiệu ứng vượt mức),
@@ -510,7 +510,7 @@ hay thua đều tính:
 Cần để lên cấp `n → n+1`: **100 + 50×(n−1)** (100, 150, 200, 250…).
 
 **Mỗi cấp mở 1 công thức fusion.** Các cấp có tên trong `HERO_UNLOCKS` mở thêm 1 hero
-(kèm công thức cây gốc của hero đó): cấp 3 → Maw, cấp 6 → Frostpod, cấp 9 → Cobb.
+(kèm công thức cây gốc của hero đó): cấp 3 → Snapmaw, cấp 6 → Frostpod, cấp 9 → Cornova.
 
 Nhịp thực tế: run đầu chết giữa chừng ≈ 1 cấp; run thắng gọn ≈ 1 cấp có dư. Thua vẫn tiến,
 và đi sâu hơn lần trước thì tiến nhanh hơn — nhưng **không có kênh nào trả thưởng giữa run**
@@ -546,12 +546,12 @@ tiến trình mở khóa là dữ liệu người chơi, mất là mất niềm 
 
 ## 8. Bảng số tổng hợp
 
-### Sun (thang 25 của PvZ) — trong trận, reset mỗi màn
+### Sol (thang 25 của PvZ) — trong trận, reset mỗi màn
 
 | Mục | Giá trị |
 |---|---|
 | Khởi điểm mỗi màn | 50 |
-| Nguồn sinh Sun / lượt | +15 … +50 |
+| Nguồn sinh Sol / lượt | +15 … +50 |
 | Giết zombie | +10 … +15 |
 | Skill rẻ | 25 |
 | Skill vừa | 50 |
@@ -564,7 +564,7 @@ tiến trình mở khóa là dữ liệu người chơi, mất là mất niềm 
 | Mục | Giá trị |
 |---|---|
 | Hoàn thành màn | +50 |
-| Không mất brain | +25 |
+| Không mất sprout | +25 |
 | Elite | +25 |
 | Boss | +100 |
 | Mua cây cơ bản | 25–225 (theo `cost` sẵn có) |
@@ -576,7 +576,7 @@ tiến trình mở khóa là dữ liệu người chơi, mất là mất niềm 
 
 | Mục | Giá trị |
 |---|---|
-| Brain cho cả run | 5 |
+| Sprout cho cả run | 5 |
 | Squad | 3 hero |
 | Sức chứa băng ghế dự bị | 2 cây |
 | Fusion thực tế mỗi run | 4–6 |
@@ -589,7 +589,7 @@ tiến trình mở khóa là dữ liệu người chơi, mất là mất niềm 
 | Giá reroll | 10 → 20 → 30 … (reset mỗi shop) |
 
 > **Tất cả con số trên là điểm khởi đầu để tinh chỉnh.**
-> Con số neo của Sun là **thu nhập mỗi lượt** — mọi giá skill tính ngược từ đó ra.
+> Con số neo của Sol là **thu nhập mỗi lượt** — mọi giá skill tính ngược từ đó ra.
 > Con số neo của Coin là **thu nhập mỗi màn** — nó quyết định số fusion mỗi run.
 
 ---
@@ -609,25 +609,25 @@ tiến trình mở khóa là dữ liệu người chơi, mất là mất niềm 
 
 ### Cần viết mới
 
-- Ô **nhà / brain** ở hàng trên + bộ đếm brain toàn run
-- Đổi mục tiêu của địch: brain gần nhất thay vì cây gần nhất
+- Ô **nhà / sprout** ở hàng trên + bộ đếm sprout toàn run
+- Đổi mục tiêu của địch: sprout gần nhất thay vì cây gần nhất
   (`planEnemyIntent`, `turnManager` PHASE 4)
 - `Skill.sunCost` thay cho `requiresSunCharge` dạng boolean
 - `Unit.isHero`, và **băng ghế dự bị** (kho cây cơ bản đã mua)
 - **Hệ fusion**: slot trên hero, bảng hiệu ứng, UI hợp cây
 - Bỏ `upgradeCosts` / mua chỉ số — fusion thay thế hoàn toàn
-- Tách hai ví: Sun trong trận (reset mỗi màn) / Coin toàn run
-- Thưởng Sun khi giết zombie
+- Tách hai ví: Sol trong trận (reset mỗi màn) / Coin toàn run
+- Thưởng Sol khi giết zombie
 - **Shop reroll** với giá tăng dần trong cùng lượt ghé
 - **Tooltip nguyên liệu**: hiệu ứng + trạng thái slot theo từng hero + chỉ số khi làm dự bị
 - **Hệ mở khóa + save tiến trình** — tách khỏi khối config Admin trong `persistence.ts`
 
 ### Thứ tự đề xuất
 
-1. **Brain + đổi mục tiêu của địch** — sửa lỗi "bấm End Turn là thắng".
+1. **Sprout + đổi mục tiêu của địch** — sửa lỗi "bấm End Turn là thắng".
    Không có bước này thì mọi cân bằng đều vô nghĩa
 2. **Bật telegraph ô nguy hiểm** — rẻ, khung có sẵn, biến game thành puzzle
-3. **Tách Sun / Coin + Sun rơi từ zombie** — nối kinh tế vào combat
+3. **Tách Sol / Coin + Sol rơi từ zombie** — nối kinh tế vào combat
 4. **Hero chết + băng ghế dự bị + hồi sinh**
 5. **Hệ fusion** — thay thế mua chỉ số
 6. **Tua nhanh animation** — cuối màn đang mất 6–9 giây/lượt, sẽ chặn mọi vòng test cân bằng

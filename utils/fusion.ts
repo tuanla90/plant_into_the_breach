@@ -28,6 +28,26 @@ import { elementRider, skillCarriesElement } from './elements';
  * returns a new Unit so the caller stays in control of state updates.
  */
 
+/**
+ * RENDING CLAWS — the one action a DIGEST_CLAW carrier may take through the helpless window.
+ *
+ * Defined here, once, because three places have to agree about it or the fusion breaks in a
+ * different way in each: App builds the button, FusionPanel prints the card, and
+ * getValidSkillTargets holds the digest gate open by ID. The granted Fused Shot (GRANT_ATTACK)
+ * predates this and is still hand-rolled in two places — the drift between those two copies is
+ * exactly what this constant exists to avoid repeating.
+ */
+export const DIGEST_CLAW_SKILL_ID = 'fusion_digest_claw';
+
+export const DIGEST_CLAW_SKILL: Skill = {
+    id: DIGEST_CLAW_SKILL_ID,
+    name: 'Rending Claws',
+    description: 'Claws an adjacent enemy for 1. Only while digesting. Free.',
+    rangeType: 'MELEE',
+    rangeValue: 1,
+    effects: [{ type: 'DAMAGE', value: 1 }],
+};
+
 /** Display name for a unit, preferring the hero definition. */
 const unitName = (unit: Unit): string => {
     if (unit.heroId && HERO_DEFINITIONS[unit.heroId]) return HERO_DEFINITIONS[unit.heroId].name;
@@ -154,7 +174,7 @@ export const applyFusion = (hero: Unit, materialId: MaterialId): Unit => {
  * given this run (data/heroUpgrades.ts).
  *
  * The two sources are merged HERE, in the one function every consumer already reads, rather
- * than being wired separately. Damage, reach, shove distance, retaliation, Sun income and the
+ * than being wired separately. Damage, reach, shove distance, retaliation, Sol income and the
  * targeting overlay all come off this list, so an upgrade added here is an upgrade the player
  * can see in the overlay before committing the click — and `migrateHeroHp` keeps the +2 HP
  * across a reload for free, because it re-derives max health from `BONUS_HP` totalled right
@@ -237,9 +257,9 @@ export const getFusionEffectValue = (unit: Unit, type: FusionEffectType): number
 /**
  * One-line status of a material against one hero, for the shop tooltip.
  *
- * e.g. "Shadeleaf — already fused"
+ * e.g. "Peaburst — already fused"
  *      "Ironhusk — 1 slot free"
- *      "Maw — no slots left"
+ *      "Snapmaw — no slots left"
  *
  * DESIGN.md section 5 calls this the most important line in the shop: it is what
  * stops the two purchases that waste Coin — buying a duplicate of what a hero
@@ -271,7 +291,7 @@ export const describeFusionForHero = (
  * a self-buff shouldn't freeze anything.
  *
  * Pure and shared: App uses it both at cast time AND when computing valid targets,
- * so a fusion that changes reach (Pea Lance, Wall-nut Bowling) is reflected in the
+ * so a fusion that changes reach (Pea Lance, Armor Plate Bowling) is reflected in the
  * targeting overlay, not just in the resolution.
  */
 export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
@@ -299,7 +319,7 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
     // Third clause, and it arrived the same way the element's did: a hero can carry an ACT
     // UPGRADE with no materials fused at all, and under the two-clause test her Heavier Peas
     // were silently dropped for the whole run — the skill came back with its authored 2 and
-    // the +1 existed only in a data file. Measured, not guessed: a fresh Shadeleaf given all
+    // the +1 existed only in a data file. Measured, not guessed: a fresh Peaburst given all
     // three upgrades still handed back `DAMAGE 2, range 8`.
     // Fourth clause, same story as the other three: a BLESSED hero may carry no fusions, no
     // upgrades and no element, and her +1 still has to reach the card and the overlay.
@@ -308,26 +328,26 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
 
     const hasDamage = skill.effects.some(e => e.type === 'DAMAGE');
     // TOSS counts as a shove for every rule here: it is a strike that relocates a body — the
-    // judo grip is Chardwall's Backswing wearing a different trajectory.
+    // judo grip is Chardslam's Backswing wearing a different trajectory.
     const hasShove = skill.effects.some(e => e.type === 'PUSH' || e.type === 'PULL' || e.type === 'GLOBAL_PUSH' || e.type === 'TOSS');
     const hasShield = skill.effects.some(e => e.type === 'SHIELD');
     const hasTaunt = skill.effects.some(e => e.type === 'TAUNT');
 
     /**
      * THE GATE. This used to read "no DAMAGE effect, no fusions", which was a fine shorthand
-     * back when every offensive skill in the game dealt damage. Chardwall broke it: his free
+     * back when every offensive skill in the game dealt damage. Chardslam broke it: his free
      * swing carries PUSH and nothing else — 0 damage is his identity, not a gap — so under the
      * old test every single fusion in his row was dropped on the floor without a word, and so
-     * was Gourdward's shield and Thornhide's taunt.
+     * was Gourdward's shield and Thornshell's taunt.
      *
      * The test is now "does this skill DO something to somebody else", which is what the
-     * shorthand was reaching for all along. A self-buff (Harvest, the Sun charges) still
+     * shorthand was reaching for all along. A self-buff (Harvest, the Sol charges) still
      * matches nothing here and still returns untouched, which is the case the original guard
-     * actually existed to protect: nobody wants Sunspot freezing herself for banking light.
+     * actually existed to protect: nobody wants Sunbloom freezing herself for banking light.
      *
      * The element rider passes this gate on exactly the same terms, which is rule L1 restated:
-     * Chardwall's Vault Toss is 0 damage and pure displacement, and what it throws still lands
-     * carrying his element. Sunspot's free action IS the self-buff, so rule L2 moves her
+     * Chardslam's Vault Toss is 0 damage and pure displacement, and what it throws still lands
+     * carrying his element. Sunbloom's free action IS the self-buff, so rule L2 moves her
      * element onto her PAID skill — Solar Blessing, whose whole point is lending that element
      * on (the loan itself is applied at resolution, not here: a rider on an ally-buff must
      * never mean "slow the ally").
@@ -354,8 +374,8 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
         }
     }
 
-    // The Chomper axis: the strike leaves an open wound. On shoves as well as damage —
-    // Chardwall's throw is a strike on a body even at 0 damage, and marking what he cannot
+    // The Steel Jaws axis: the strike leaves an open wound. On shoves as well as damage —
+    // Chardslam's throw is a strike on a body even at 0 damage, and marking what he cannot
     // finish is his whole cell (Rending Guard) — but never on a shield or a taunt.
     if ((hasDamage || hasShove)
         && hasFusionEffect(caster, 'BLEED_ON_HIT')
@@ -363,9 +383,14 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
         extra.push({ type: 'APPLY_BLEED' });
     }
 
-    // The Cattail axis, skill-only by construction (the SKILL_SPLASH precedent): the PAID
-    // skill also drops dust where it struck. Free-attack dust would be a free disarm every
-    // turn — the exact shape the STUN RULE bans.
+    // The Rotor Wing axis, skill-only by construction (the SKILL_SPLASH precedent): the PAID
+    // skill also drops dust where it struck.
+    //
+    // "Free-attack dust would be a free disarm every turn" is why — and `SMOKE_ON_HIT` is not
+    // a hole in that ban, it is the other side of it. THIS one dusts an AREA (every tile the
+    // cast covered, two turns), which on a free action is a wall raised every single turn.
+    // That one dusts ONE tile for ONE turn under a body the hero already had to hit. The ban
+    // is on the footprint, not on the word "dust".
     if ((skill.sunCost ?? 0) > 0
         && (hasDamage || hasShove)
         && hasFusionEffect(caster, 'SKILL_DISARM')
@@ -373,11 +398,38 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
         extra.push({ type: 'DUST_TILE', value: 2 });
     }
 
+    /**
+     * SKILL_STUN (Stun Charge, Stun Shell) — the corn's pin, on the PAID skill only,
+     * which is the whole of what makes it a priced exception to the STUN RULE rather than a
+     * breach of it. Refuses to stack on a skill that already pins.
+     *
+     * `hasShield` is in the gate beside `hasDamage` for exactly one kit: Gourdward has no
+     * damaging skill at all, so a damage-only gate would have made his cell unbuildable — and
+     * the shape it produces is the DEAREST version of the exception, not a loophole. He must
+     * stand inside the crowd, at 0 damage on 8 hp, and spend his whole turn plus 50 Sol.
+     */
+    if ((skill.sunCost ?? 0) > 0
+        && (hasDamage || hasShield)
+        && hasFusionEffect(caster, 'SKILL_STUN')
+        && !skill.effects.some(e => e.type === 'STUN')) {
+        extra.push({ type: 'STUN' });
+    }
+
+    // SKILL_REPEL (Shockrind) — the paid SHIELD skill becomes a shockwave as well. GLOBAL_PUSH
+    // rather than PUSH because the direction has to be read per tile (away from the caster),
+    // which is exactly what that effect means in skillResolution's radial branch.
+    if ((skill.sunCost ?? 0) > 0
+        && hasShield
+        && hasFusionEffect(caster, 'SKILL_REPEL')
+        && !skill.effects.some(e => e.type === 'PUSH' || e.type === 'PULL' || e.type === 'GLOBAL_PUSH')) {
+        extra.push({ type: 'GLOBAL_PUSH', value: 1 });
+    }
+
     // The retired Cactus gear's axis: the attack leaves the ground it crossed bristling.
     // Allowed on a pure shove as well as a damaging shot — both are strikes that travel over
     // tiles — but not on a shield or a taunt, where there is no swing to leave anything
     // behind. Data-orphaned since Thornquill and her gear retired (PLAN-hero-zephyr); kept
-    // because the Spikeweed item exercises the same spike fields and a future recipe can
+    // because the Spike Trap item exercises the same spike fields and a future recipe can
     // pick the trail back up.
     const spikeTrail = getFusionEffectValue(caster, 'SPIKE_TRAIL');
     if ((hasDamage || hasShove)
@@ -390,7 +442,7 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
 
     // Brittle Bite: the one fusion that lets Frostpod actually finish a kill.
     //
-    // Note this MAPS rather than appends: on Chardwall, whose swing has no DAMAGE effect at
+    // Note this MAPS rather than appends: on Chardslam, whose swing has no DAMAGE effect at
     // all, it does nothing. That is deliberate — 0 damage is the hero, and a material must not
     // be able to bolt a damage number onto him from the side.
     const bonusDamage = getFusionEffectValue(caster, 'BONUS_DAMAGE');
@@ -399,15 +451,48 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
             e.type === 'DAMAGE' ? { ...e, value: (e.value || 0) + bonusDamage } : e);
     }
 
-    // Solar Blessing's +1, this player turn only (BLESSED is cleared before the enemy phase).
-    // MAPS like BONUS_DAMAGE above — on a 0-damage kit the blessing buys the layer and the
-    // element loan, never a damage number the hero was designed not to have.
+    // Solar Blessing's bonus, this player turn only (BLESSED is cleared before the enemy
+    // phase). MAPS like BONUS_DAMAGE above — on a 0-damage kit the blessing buys the layer
+    // and the element loan, never a damage number the hero was designed not to have.
+    //
+    // The amount is read off the BLESSED BODY (`blessPower`, stamped at cast time), not off a
+    // constant: Fanged Blessing makes Sunbloom's gift worth 2. Same reason `blessedElement`
+    // lives on the recipient — by the time this hero swings, the blesser is not in scope.
     if (caster.statusEffects?.includes('BLESSED')) {
+        const gift = Math.max(1, caster.blessPower ?? 1);
         effects = effects.map(e =>
-            e.type === 'DAMAGE' ? { ...e, value: (e.value || 0) + 1 } : e);
+            e.type === 'DAMAGE' ? { ...e, value: (e.value || 0) + gift } : e);
     }
 
-    // The Chard Guard axis: every shove this hero throws travels further. Applied after the
+    /**
+     * THE VOLLEY CAP — a multi-shot skill fires at the number the CARD PRINTS, and nothing
+     * raises it.
+     *
+     * Sits here, after every buff that touches DAMAGE and before anything reads the finished
+     * value, because that is the only position where one clamp covers all of them.
+     *
+     * The arithmetic is the whole argument. A volley multiplies its per-shot damage by the shot
+     * count, so a +1 meant for a single hit arrives as +3 — and the buffs stack: Heavier Peas
+     * (+1) plus a Fanged Blessing (+2) took Precision Blast from 6 to 12 in one click, which is
+     * a mid-tier boss erased by two heroes spending one turn each. Capping the SHOT rather than
+     * the total is what keeps the skill honest without touching the thing it is for: three
+     * shots that never waste a pea. Her free Pea Shot still scales with everything, so the
+     * upgrades and the blessing are not dead — they just cannot be multiplied by three.
+     *
+     * THE RELIC EXIT (design intent, not yet built): the cap is meant to be liftable by a late
+     * relic — "strong, with a condition" rather than "strong". When relics exist, the lift is
+     * one more clause on this `if` and nothing else in the file moves. No flag, no type and no
+     * field is declared for it today: this codebase has been burned once by vocabulary that was
+     * declared and never consumed (`RADIUS`), and a hook nobody can reach is the same mistake.
+     */
+    const volleyShots = effects.find(e => e.type === 'VOLLEY')?.value ?? 0;
+    if (volleyShots > 1) {
+        const printed = skill.effects.find(e => e.type === 'DAMAGE')?.value ?? 0;
+        effects = effects.map(e =>
+            e.type === 'DAMAGE' && (e.value ?? 0) > printed ? { ...e, value: printed } : e);
+    }
+
+    // The Spring Arm axis: every shove this hero throws travels further. Applied after the
     // ON_HIT_PUSH rider above so a fusion-granted shove gets the extra distance too. This is
     // the ONLY place the number is grown — skillResolution reads the finished value straight
     // off the effect and hands it to planPush as a tile count.
@@ -417,7 +502,7 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
             (e.type === 'PUSH' || e.type === 'PULL') ? { ...e, value: (e.value ?? 1) + pushBonus } : e);
     }
 
-    // Thornhide's row: the shout carries further. SHIELD_SPREAD is the odd one out of this
+    // Thornshell's row: the shout carries further. SHIELD_SPREAD is the odd one out of this
     // group and is deliberately NOT here — it is applied in skillResolution instead, because
     // it changes who ELSE gets layered, not anything on the skill card itself.
     const tauntBonus = getFusionEffectValue(caster, 'TAUNT_RADIUS');
@@ -443,7 +528,7 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
      * stun on their free attack, every turn, forever. That is the exact ceiling this codebase
      * has been protecting on purpose for as long as the matrix has existed: it is why every
      * on-hit chill any recipe has ever granted is a SLOW and never a freeze (the STUN RULE at
-     * the top of data/fusionRecipes.ts — the Snow Pea column that once carried those cards is
+     * the top of data/fusionRecipes.ts — the Ice Grenade column that once carried those cards is
      * retired, the rule is not). Handing the same thing to all nine
      * heroes through the element system would delete Frostpod's entire identity, and the price
      * for it is one max HP — the cheapest lockdown in the game by an order of magnitude.
@@ -454,11 +539,23 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
      * element as a rule: it is a floor for heroes who lack the effect, never a multiplier for
      * the one hero built around it.
      */
-    if (carriesElement) {
+    /**
+     * ...and gated on the skill being able to reach an ENEMY, read off the FINISHED effect
+     * list (so Shockrind's shove, grafted on a few lines above, counts).
+     *
+     * Without the gate the rider was appended to ally-only skills as well: Solar Blessing came
+     * back carrying APPLY_BURN, and Gourdward's shells did too. Nothing ever fired — the
+     * resolver only applies statuses inside the hostile branch — but the CARD said it did, and
+     * a card that promises to set your own ally on fire is the kind of lie this file is
+     * written not to tell.
+     */
+    const touchesEnemy = effects.some(e => e.type === 'DAMAGE' || e.type === 'PUSH'
+        || e.type === 'PULL' || e.type === 'GLOBAL_PUSH' || e.type === 'TOSS');
+    if (carriesElement && touchesEnemy) {
         elementRider(lentCaster.element).forEach(rider => {
             /**
              * No stacking a second copy of what the attack already does. `STUN` counts as an
-             * existing slow because it is strictly the better version — Cobb's Butter Splat and
+             * existing slow because it is strictly the better version — Cornova's Nova Shell and
              * anything Blizzard just upgraded must not be dragged back down to a slow, nor pick
              * up a redundant one alongside it.
              *
@@ -472,14 +569,14 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
         });
     }
 
-    // Wall-nut Bowling: extends the reach of every attack (incl. Rolling Charge).
+    // Armor Plate Bowling: extends the reach of every attack (incl. Rolling Charge).
     const reach = getFusionEffectValue(caster, 'ATTACK_RANGE_BONUS');
     let rangeValue = reach > 0 ? skill.rangeValue + reach : skill.rangeValue;
 
     // Pea Lance: the melee swing reaches further, but the shove is gone — reach
     // is bought with the push, not stacked on top of it.
     //
-    // Gated on the swing still dealing damage. On Chardwall the push IS the attack, so paying
+    // Gated on the swing still dealing damage. On Chardslam the push IS the attack, so paying
     // for reach with it would leave a skill whose entire effect list is empty — a free action
     // that does literally nothing, which reads as a broken button rather than a trade.
     if (skill.rangeType === 'MELEE' && hasDamage && hasFusionEffect(caster, 'MELEE_REACH_TRADE')) {
@@ -489,9 +586,9 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
 
     // Mortar Pea / Arcing Frost: the straight shot becomes a lobbed one. Two halves, both
     // deliberate. A LINE stops at the first unit in the way — including a friendly wall, which
-    // is the friction the brain rule manufactures every fight — while a LOB ignores everything
+    // is the friction the sprout rule manufactures every fight — while a LOB ignores everything
     // in between. But LOB range is Manhattan distance in EVERY direction, so keeping the number
-    // would turn Shadeleaf's LINE 8 into most of the board: the arc is bought with the reach,
+    // would turn Peaburst's LINE 8 into most of the board: the arc is bought with the reach,
     // exactly like Pea Lance buys reach with its push.
     //
     // Piercing skills are left as lines on purpose. Pierce is resolved along a path

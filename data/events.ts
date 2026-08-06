@@ -5,12 +5,12 @@ import { COIN_REVIVE_HERO } from '../constants';
  * EVENTS — the between-battle decision points.
  *
  * THE RULE THAT SHAPES ALL OF THESE: an event may only trade in things that survive to the
- * next battle. Sun is reset to SUN_ON_LEVEL_START at the start of every fight, and heroes are
- * rebuilt at full HP from HERO_DEFINITIONS, so the old "gain 100 Sun" / "heal the squad" /
+ * next battle. Sol is reset to SUN_ON_LEVEL_START at the start of every fight, and heroes are
+ * rebuilt at full HP from HERO_DEFINITIONS, so the old "gain 100 Sol" / "heal the squad" /
  * "+1 Max HP" options were all erased before the player could ever use them — 16 of the
  * original 20 options changed nothing at all.
  *
- * What actually survives: Coin, brains, bench plants, items, which heroes are standing, and
+ * What actually survives: Coin, sprouts, bench plants, items, which heroes are standing, and
  * the terms of the next battle (NEXT_BATTLE_MOD).
  *
  * Every option carries `outcomes`, which the screen renders as green/amber/red chips. The
@@ -218,14 +218,14 @@ export const GAME_EVENTS: GameEvent[] = [
         options: [
             {
                 label: "Chase It Down",
-                description: "You catch it. The chase takes you a long way from the houses, and something else gets there first.",
+                description: "You catch it. The chase takes you a long way from the Greenspires, and something else gets there first.",
                 effects: [
                     { type: 'GAIN_COIN', value: 200 },
                     { type: 'NEXT_BATTLE_MOD', mods: { brainlessHouses: 1 } },
                 ],
                 outcomes: [
                     { kind: 'GAIN', text: '+200 Coin' },
-                    { kind: 'RISK', text: 'Next battle: one house starts with its brain already gone' },
+                    { kind: 'RISK', text: 'Next battle: one Greenspire starts with its sprout already gone' },
                 ],
             },
             {
@@ -246,10 +246,10 @@ export const GAME_EVENTS: GameEvent[] = [
         options: [
             {
                 label: "Break It Open",
-                description: "There is a brain inside. It was somebody's, once.",
+                description: "There is a sprout inside. It was somebody's, once.",
                 effects: [{ type: 'GAIN_BRAIN', value: 1 }],
                 outcomes: [
-                    { kind: 'GAIN', text: '+1 brain to your run budget' },
+                    { kind: 'GAIN', text: '+1 sprout to your run budget' },
                     { kind: 'RISK', text: 'Budget already full? You get 100 Coin instead' },
                 ],
             },
@@ -441,13 +441,13 @@ export const GAME_EVENTS: GameEvent[] = [
     {
         id: 'wallnut_bowling',
         tier: 2,
-        title: "Wall-nut Bowling",
-        description: "A roped-off lane, a rack of Wall-nuts, and a bored-looking Conehead at the far end acting as the pin. Somebody has set up a book on it.",
+        title: "Armor Plate Bowling",
+        description: "A roped-off lane, a rack of Armor Plates, and a bored-looking Scrapcap at the far end acting as the pin. Somebody has set up a book on it.",
         imgUrl: "./img/event-bowling.jpg",
         options: [
             {
                 label: "Take the Lane",
-                description: "Pay the stake and roll. The Wall-nut is yours if you knock it down.",
+                description: "Pay the stake and roll. The Armor Plate is yours if you knock it down.",
                 req: { type: 'COIN', value: 30 },
                 effects: [
                     { type: 'LOSE_COIN', value: 30 },
@@ -462,7 +462,7 @@ export const GAME_EVENTS: GameEvent[] = [
                 ],
                 outcomes: [
                     { kind: 'COST', text: '30 Coin to play' },
-                    { kind: 'GAIN', text: 'Win: a Wall-nut on the bench and +90 Coin', chance: 0.55 },
+                    { kind: 'GAIN', text: 'Win: a Armor Plate on the bench and +90 Coin', chance: 0.55 },
                     { kind: 'RISK', text: 'Lose: the stake is gone and nothing else happens', chance: 0.45 },
                 ],
             },
@@ -478,8 +478,8 @@ export const GAME_EVENTS: GameEvent[] = [
     {
         id: 'imp_nest',
         tier: 2,
-        title: "The Imp Nest",
-        description: "A Gargantuar's supply cache, unguarded — and the Imps stacked inside it are still asleep. For now.",
+        title: "The Runt Nest",
+        description: "A Gravehulk's supply cache, unguarded — and the Imps stacked inside it are still asleep. For now.",
         imgUrl: "./img/event-imp-nest.jpg",
         options: [
             {

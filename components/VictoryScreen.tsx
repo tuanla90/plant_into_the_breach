@@ -13,7 +13,7 @@ interface VictoryScreenProps {
     onContinue: () => void;
     /**
      * Coin actually about to be paid, and which bonus objectives earned part of it.
-     * Comes from `previewRewards()` — the screen used to print a hardcoded "+100 Sun",
+     * Comes from `previewRewards()` — the screen used to print a hardcoded "+100 Sol",
      * which was wrong twice: rewards are Coin, and the amount depends on the node type
      * and the bonuses that were met.
      */
@@ -28,7 +28,7 @@ interface VictoryScreenProps {
     /**
      * The battle ledger, passed only after a SLAY_BOSS win. A boss is the one fight long
      * enough for the numbers to mean something, and the one whose telling deserves a scene —
-     * and it is where a support's value finally gets printed: Chardwall ends most boss fights
+     * and it is where a support's value finally gets printed: Chardslam ends most boss fights
      * with a damage column of 0 and a shove column that explains the victory.
      */
     bossStats?: Partial<Record<HeroId, BattleHeroStats>>;
@@ -104,7 +104,7 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({ onContinue, reward
                                                 <span className="flex items-center gap-2">
                                                     <img src={HERO_SPRITES[row.id]} alt="" className="w-6 h-6 object-contain shrink-0" />
                                                     {/* t() — tên hero ở đây là thứ DUY NHẤT trong game vẫn in ra
-                                                        tiếng Anh ("Shadeleaf" giữa một bảng tiếng Việt). Và để nó
+                                                        tiếng Anh ("Peaburst" giữa một bảng tiếng Việt). Và để nó
                                                         XUỐNG DÒNG thay vì cắt: tên tiếng Việt dài gấp ba, mà trên
                                                         điện thoại không có tooltip để đọc phần bị cắt. */}
                                                     <span className="font-bold min-w-0 text-[11px] sm:text-sm leading-tight"

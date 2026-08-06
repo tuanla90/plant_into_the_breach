@@ -14,10 +14,10 @@ Mọi con số dưới đây đo bằng bốn mốc này, không phải bằng c
 
 | Mốc | Số | Nguồn |
 |---|---|---|
-| Ngân sách Sun một trận | 50 + 25/lượt ≈ **225** cho **cả ba** hero | `constants.ts` |
+| Ngân sách Sol một trận | 50 + 25/lượt ≈ **225** cho **cả ba** hero | `constants.ts` |
 | Tỉ lệ lượt dùng skill | **~20%** — 4,5 lần cast trên 21 lượt hành động | suy ra từ trên |
-| Máu zombie | Zombie 2 · Conehead 3 · Buckethead 4 · Cửa Lưới/Football 5 · Gargantuar 16 | `data/zombies.ts` |
-| Ngưỡng chí mạng | **2** giết Zombie/Bóng Bay · **3** giết Conehead · **4** giết Buckethead · **5** giết Cửa Lưới | |
+| Máu zombie | Zombie 2 · Scrapcap 3 · Pothelm 4 · Cửa Lưới/Linebreaker 5 · Gravehulk 16 | `data/zombies.ts` |
+| Ngưỡng chí mạng | **2** giết Zombie/Bóng Bay · **3** giết Scrapcap · **4** giết Pothelm · **5** giết Cửa Lưới | |
 
 > **~80% số lượt là đánh thường.** Nên đòn đánh thường mới là bản sắc của hero; skill chỉ là
 > ngoại lệ. Mọi thiết kế dưới đây đặt trọng lượng ở đòn đánh thường.
@@ -26,14 +26,14 @@ Mọi con số dưới đây đo bằng bốn mốc này, không phải bằng c
 
 # TẦM XA
 
-## 1. Shadeleaf — *Peashooter* — ĐÃ CÓ
+## 1. Peaburst — *Seed Gun* — ĐÃ CÓ
 
 | Máu | Sát thương | Di chuyển |
 |---|---|---|
 | 6 | 2 | 3 |
 
 - **Bắn Đậu** — `LINE 8`, 2 sát thương. Miễn phí.
-- **Bắn Chuẩn** — `LINE 4`, 3 sát thương + xuyên. **50 Sun**.
+- **Bắn Chuẩn** — `LINE 4`, 3 sát thương + xuyên. **50 Sol**.
 
 **Vai:** sát thương thẳng, tầm xa nhất bộ. Hero nhập môn.
 **Điểm yếu lõi:** đòn đánh **dừng ở vật cản đầu tiên, kể cả cây nhà** — thực chiến cô thường
@@ -45,14 +45,14 @@ chỉ có 1–2 mục tiêu hợp lệ, có khi 0.
 
 ---
 
-## 2. Cobb — *Kernel-pult* — ĐÃ CÓ
+## 2. Cornova — *Corn Mortar* — ĐÃ CÓ
 
 | Máu | Sát thương | Di chuyển |
 |---|---|---|
 | 8 | 2 | 2 |
 
 - **Hạt Ngô** — `LOB 2`, 2 sát thương. Miễn phí. **Bay vòng qua mọi vật cản.**
-- **Ném Bơ** — `LOB 3`, 1 sát thương + **choáng**. 50 Sun.
+- **Đạn Nova** — `LOB 3`, 1 sát thương + **choáng**. 50 Sol.
 
 **Vai:** pháo binh tầm gần. Người duy nhất bắn được qua đầu tường nhà mình.
 **Điểm yếu lõi:** tầm 2 và di chuyển 2 — phải bò lên sát tuyến với 4 máu.
@@ -71,18 +71,18 @@ chỉ có 1–2 mục tiêu hợp lệ, có khi 0.
 
 - **Gai Xuyên** — `LINE 6`, 1 sát thương, **XUYÊN cả hàng**. Miễn phí.
 - **Hàng Rào Gai** — `LINE 6`, 2 sát thương xuyên, và **các ô viên đạn đi qua mọc gai 2 lượt**
-  (bất cứ ai bước vào chịu 1 sát thương). 50 Sun.
+  (bất cứ ai bước vào chịu 1 sát thương). 50 Sol.
 
 **Vai:** dọn đám đông xếp hàng — và là hero **địa hình** duy nhất trong bộ.
 **Nguồn:** hạ **The Headliner** (Neon Rose), con trùm biến cả đám đông thành mối nguy.
 
-**Vì sao 1 sát thương chứ không phải 2:** xuyên hàng **miễn phí** là thứ Shadeleaf phải trả 50
-Sun mới có. Nếu Thornquill xuyên với 2 sát thương thì cô ấy là Shadeleaf phiên bản tốt hơn ở
+**Vì sao 1 sát thương chứ không phải 2:** xuyên hàng **miễn phí** là thứ Peaburst phải trả 50
+Sol mới có. Nếu Thornquill xuyên với 2 sát thương thì cô ấy là Peaburst phiên bản tốt hơn ở
 mọi ô. Ở 1 sát thương, hai người trả lời hai câu hỏi khác nhau:
 
 | Bàn cờ | Ai đúng |
 |---|---|
-| Một con Conehead 3 máu | **Shadeleaf** (2 dmg) — Thornquill cần 3 lượt |
+| Một con Scrapcap 3 máu | **Peaburst** (2 dmg) — Thornquill cần 3 lượt |
 | Bốn con Zombie 2 máu xếp hàng | **Thornquill** (4 ô × 1, hai lượt là sạch) |
 
 **Điểm yếu lõi:** không dứt điểm được gì dày máu. Hàng fusion của cô phải xoay quanh **cộng sát
@@ -95,42 +95,42 @@ thương** hoặc **cộng số lần bắn**.
 
 # TẦM GẦN
 
-## 4. Ironhusk — *Wall-nut* — ĐÃ CÓ
+## 4. Ironhusk — *Armor Plate* — ĐÃ CÓ
 
 | Máu | Sát thương | Di chuyển |
 |---|---|---|
 | 10 | 1 | 2 |
 
 - **Đập Khiên** — `MELEE 1`, 1 sát thương + **đẩy 1**. Miễn phí.
-- **Càn Lăn** — `DASH 3`, 2 sát thương + đẩy. **35 Sun**. ✅ *(đã áp)*
+- **Càn Lăn** — `DASH 3`, 2 sát thương + đẩy. **35 Sol**. ✅ *(đã áp)*
 
-**Vai:** chặn hành lang. Bắt buộc phải có vì luật não xoay quanh việc cản zombie.
+**Vai:** chặn hành lang. Bắt buộc phải có vì luật mầm xoay quanh việc cản zombie.
 **Nguồn:** hero khởi đầu.
 **Điểm yếu lõi:** chặn tốt nhưng đóng góp ít.
 
 **✅ Đã áp — giá Càn Lăn 25 → 35.** Đây là món hời nhất game — 2 sát thương + đẩy + lướt 3 ô,
-trên thân 5 máu, giá **bằng nửa** mọi skill khác. Dồn cả 225 Sun cho riêng nó thì một mình
+trên thân 5 máu, giá **bằng nửa** mọi skill khác. Dồn cả 225 Sol cho riêng nó thì một mình
 Ironhusk gây 14 sát thương + 7 cú đẩy, và cả đội không còn gì để tiêu. Thứ ghìm nó lại là lướt
 = **rời vị trí chốt chặn**, nên 35 là đủ, không cần lên 50.
 
 ---
 
-## 5. Maw — *Chomper* — ĐÃ CÓ
+## 5. Snapmaw — *Steel Jaws* — ĐÃ CÓ
 
 | Máu | Sát thương | Di chuyển |
 |---|---|---|
 | 8 | 2 | 3 |
 
 - **Cắn** — `MELEE 1`, 2 sát thương. Miễn phí.
-- **Nuốt Chửng** — `MELEE 1`, **7 sát thương**, **tiêu hoá 2 lượt**. **75 Sun**. ✅ *(đã áp)*
+- **Nuốt Chửng** — `MELEE 1`, **7 sát thương**, **tiêu hoá 2 lượt**. **75 Sol**. ✅ *(đã áp)*
 
 **Vai:** hành quyết mục tiêu dày máu.
-**Nguồn:** hạ **Gargantuar** (Verdant Reach) — thứ to đến mức không đẩy nổi.
+**Nguồn:** hạ **Gravehulk** (Verdant Reach) — thứ to đến mức không đẩy nổi.
 **Điểm yếu lõi:** hai lượt tiêu hoá hoàn toàn vô dụng.
 
 **✅ Đã áp — và đổi cả bản chất, không chỉ cái giá.**
 
-Giá 100 → 75 đúng như phân tích cũ: ở 100 nó **lỗ so với chính game**, vì 100 Sun mua được
+Giá 100 → 75 đúng như phân tích cũ: ở 100 nó **lỗ so với chính game**, vì 100 Sol mua được
 **hai** phát Thiêu Nắng = 8 sát thương ở tầm 3 không kèm gì, còn Nuốt Chửng thì tầm 1 và cộng
 2 lượt đứng không.
 
@@ -141,7 +141,7 @@ chúng bằng một nút bấm. Ngoại lệ giờ khoá theo `bossId`, và quan
 việc nặng** — chặn một đòn 7 sát thương thì sai cũng không chết ai.
 
 **Vì sao đúng 7:** đó là máu của thân xác dày nhất trong game mà không phải trùm — Cửa Lưới
-hoặc Football ở màn **ELITE** (5 × 1,5). Nghĩa là Maw vẫn nuốt trọn **mọi thứ không phải trùm**
+hoặc Linebreaker ở màn **ELITE** (5 × 1,5). Nghĩa là Snapmaw vẫn nuốt trọn **mọi thứ không phải trùm**
 trong một nhát, bản sắc không suy suyển, mà giờ nó là một con số biết gặp khiên, giáp và giảm
 sát thương như mọi con số khác. Ở 5–6 thì đúng hai con elite đó sống sót — mà màn ELITE lại
 chính là chỗ kỹ năng này mới có lãi.
@@ -152,16 +152,16 @@ bị phạt 2 lượt** — cái giá chỉ thu khi phần thưởng đã trả.
 
 ---
 
-## 6. Thornhide — *Endurian (sầu riêng)* — MỚI
+## 6. Thornshell — *Spike Armor (sầu riêng)* — MỚI
 
 | Máu | Sát thương | Di chuyển |
 |---|---|---|
 | 10 | 2 | 2 |
 
 - **Gai Ngược** — `MELEE 1`, 2 sát thương. Miễn phí.
-  **Bị động: kẻ nào đánh cận chiến vào Thornhide chịu 2 sát thương phản.**
-- **Khiêu Khích** — mọi địch trong bán kính 3 **đổi mục tiêu sang Thornhide** ở lượt sau.
-  50 Sun.
+  **Bị động: kẻ nào đánh cận chiến vào Thornshell chịu 2 sát thương phản.**
+- **Khiêu Khích** — mọi địch trong bán kính 3 **đổi mục tiêu sang Thornshell** ở lượt sau.
+  50 Sol.
 
 **Vai:** ép trận đấu diễn ra ở nơi mình chọn.
 
@@ -190,18 +190,18 @@ tốn lượt nào.
 ta chỉ mạnh khi **địch đến chỗ mình**. Hàng fusion phải xoay quanh **sống lâu hơn** và **phản
 mạnh hơn**.
 
-### Vì sao sầu riêng vào ghế này, chứ KHÔNG thay Maw
+### Vì sao sầu riêng vào ghế này, chứ KHÔNG thay Snapmaw
 
-Nếu sầu riêng **thay Maw** thì mất công cụ duy nhất *xoá sổ một mục tiêu cụ thể*, và tổ cận
+Nếu sầu riêng **thay Snapmaw** thì mất công cụ duy nhất *xoá sổ một mục tiêu cụ thể*, và tổ cận
 chiến còn lại đều là "trừng phạt kẻ tới gần mình".
 
-Giữ Maw thì được ba lối chơi khác hẳn nhau:
+Giữ Snapmaw thì được ba lối chơi khác hẳn nhau:
 
 | Hero | Fantasy |
 |---|---|
 | **Ironhusk** | đứng yên, đẩy ra, **không cho ai qua** |
-| **Maw** | đi tới chỗ mối nguy lớn nhất và **xoá nó** |
-| **Thornhide** | **kéo chúng về phía mình** rồi để chúng tự chảy máu |
+| **Snapmaw** | đi tới chỗ mối nguy lớn nhất và **xoá nó** |
+| **Thornshell** | **kéo chúng về phía mình** rồi để chúng tự chảy máu |
 
 **Nguồn:** hạ **Sandreaver** (Thornwaste) — con độn thổ trồi lên sau lưng tuyến của bạn. Khiêu
 khích là thứ duy nhất nó không lách được: bay, độn thổ hay bắn xa cũng phải đánh vào cái gai.
@@ -210,16 +210,16 @@ khích là thứ duy nhất nó không lách được: bay, độn thổ hay b�
 
 # HỖ TRỢ
 
-## 7. Sunspot — *Sunflower* — ĐÃ CÓ
+## 7. Sunbloom — *Sol Battery* — ĐÃ CÓ
 
 | Máu | Sát thương | Di chuyển |
 |---|---|---|
 | 6 | 0 | 2 |
 
-- **Thu Hoạch** — `SELF`, +25 Sun. Miễn phí, nhưng **tốn trọn lượt**.
-- **Thiêu Nắng** — `LOB 3`, **4 sát thương**. 50 Sun. *(sát thương đơn mục tiêu cao nhất game)*
+- **Thu Hoạch** — `SELF`, +25 Sol. Miễn phí, nhưng **tốn trọn lượt**.
+- **Thiêu Nắng** — `LOB 3`, **4 sát thương**. 50 Sol. *(sát thương đơn mục tiêu cao nhất game)*
 
-**Vai:** kinh tế Sun.
+**Vai:** kinh tế Sol.
 **Nguồn:** hero khởi đầu.
 **Điểm yếu lõi:** không tự vệ được, phải hộ tống.
 
@@ -231,14 +231,14 @@ ghi lại để canh.**
 
 ---
 
-## 8. Chardwall — *Chard Guard* — MỚI
+## 8. Chardslam — *Spring Arm* — MỚI
 
 | Máu | Sát thương | Di chuyển |
 |---|---|---|
 | 8 | **0** | 3 |
 
 - **Hất Ngược** — `MELEE 1`, **0 sát thương, đẩy 2 ô**. Miễn phí.
-- **Càn Quét** — đẩy **mọi địch kề** 2 ô. 50 Sun.
+- **Càn Quét** — đẩy **mọi địch kề** 2 ô. 50 Sol.
 
 **Vai:** đổi vị trí thuần. Anh ta **không giết bằng sát thương, anh ta giết bằng địa hình.**
 **Nguồn:** hạ **The Armada** (Windward) — hạm đội bay qua đầu mọi bức tường.
@@ -258,12 +258,12 @@ Hạm đội bay qua đầu tường thì bạn **thôi xây tường và hất 
 **Điểm yếu lõi:** trên bàn cờ trống trơn, không nước không núi, anh ta gần như vô hại. Hàng
 fusion phải cho anh **cách tự gây sát thương** hoặc **đẩy xa hơn**.
 
-**Ironhusk ↔ Chardwall:** Ironhusk **chặn** (đứng yên, ai tới thì đẩy 1), Chardwall **ném đi**
+**Ironhusk ↔ Chardslam:** Ironhusk **chặn** (đứng yên, ai tới thì đẩy 1), Chardslam **ném đi**
 (chủ động lao tới, hất 2). Hai câu trả lời khác hẳn nhau cho cùng bài toán hành lang.
 
 ---
 
-## 9. Gourdward — *Pumpkin* — MỚI
+## 9. Gourdward — *Bunker Shell* — MỚI
 
 | Máu | Sát thương | Di chuyển |
 |---|---|---|
@@ -271,7 +271,7 @@ fusion phải cho anh **cách tự gây sát thương** hoặc **đẩy xa hơn*
 
 - **Vỏ Bí** — `MELEE 1`, 1 sát thương. Miễn phí.
 - **Bọc Giáp** — cho một đồng đội **5 khiên**. Khiên chặn sát thương trước máu và **không mất
-  đi khi hết lượt**. 50 Sun. *(3 → 5 khi thang máu nhân đôi: khiên đo bằng thân xác nó che,
+  đi khi hết lượt**. 50 Sol. *(3 → 5 khi thang máu nhân đôi: khiên đo bằng thân xác nó che,
   và 5 là mức nuốt trọn một đòn trùm.)*
 
 **Vai:** giữ cho hero sống sót — **trục duy nhất cả game chưa có ai làm.**
@@ -284,7 +284,7 @@ lửa trại, giữa các trận. Mà **máu giờ persist giữa các trận** 
 trong trận này là một khoản nợ mang sang trận sau.
 
 Trong bối cảnh đó, một hero giữ máu cho đội **không phải là hỗ trợ nhàm chán, nó là kinh tế** —
-đúng loại kinh tế mà Sunspot không đụng tới.
+đúng loại kinh tế mà Sunbloom không đụng tới.
 
 ### Vì sao khiên chứ không phải hồi máu
 
@@ -306,14 +306,14 @@ của anh ta **bằng giá trị của người anh ta bảo vệ**.
 
 | Class | Hero | Máu | Dmg | Move | Đánh thường | Skill |
 |---|---|---|---|---|---|---|
-| Xa | Shadeleaf | 6 | 2 | 3 | LINE 8 | xuyên 3 dmg @50 |
-| Xa | Cobb | 8 | 2 | 2 | LOB 2 *(vòng)* | choáng @50 |
+| Xa | Peaburst | 6 | 2 | 3 | LINE 8 | xuyên 3 dmg @50 |
+| Xa | Cornova | 8 | 2 | 2 | LOB 2 *(vòng)* | choáng @50 |
 | Xa | Thornquill | 6 | 1 | 2 | LINE 6 *(xuyên)* | gai + địa hình @50 |
 | Gần | Ironhusk | 10 | 1 | 2 | MELEE + đẩy 1 | lướt 3 @**35** |
-| Gần | Maw | 8 | 2 | 3 | MELEE | **7 dmg** @**75** |
-| Gần | **Thornhide** | 10 | 2 | 2 | MELEE + **phản 2** | **khiêu khích** @50 |
-| Hỗ | Sunspot | 6 | 0 | 2 | +25 Sun | 4 dmg @50 |
-| Hỗ | Chardwall | 8 | 0 | 3 | **đẩy 2** | đẩy vòng @50 |
+| Gần | Snapmaw | 8 | 2 | 3 | MELEE | **7 dmg** @**75** |
+| Gần | **Thornshell** | 10 | 2 | 2 | MELEE + **phản 2** | **khiêu khích** @50 |
+| Hỗ | Sunbloom | 6 | 0 | 2 | +25 Sol | 4 dmg @50 |
+| Hỗ | Chardslam | 8 | 0 | 3 | **đẩy 2** | đẩy vòng @50 |
 | Hỗ | **Gourdward** | 8 | 1 | 3 | MELEE | **5 khiên** @50 |
 
 **Máu:** 6·6·6·8·8·8·10·10 — dải hẹp, đúng ý: mất một hero là mất 1/3 đội, nên không ai được
@@ -321,14 +321,14 @@ mỏng manh quá.
 
 > **Thang máu đã nhân đôi** so với bản nháp đầu (3/4/5 → 6/8/10), và **đã áp vào code**.
 > Lý do đầy đủ nằm ở `PLAN-boards-bosses.md` mục 6; gọn lại: máu persist giữa các trận và
-> element trừ máu tối đa, nên ở nền cũ một hero mang element chết vì **một** con Conehead.
+> element trừ máu tối đa, nên ở nền cũ một hero mang element chết vì **một** con Scrapcap.
 > Giá element nhân đôi theo (**−2 máu tối đa**) nên tỉ lệ chịu đau giữ nguyên −20/−25/−33%.
 > Sát thương hero và máu zombie **không đổi** — thời gian giết mọi thứ y hệt như cũ.
 
-**Sát thương:** hai hero **0 sát thương** (Sunspot, Chardwall) là cố ý — chúng chứng minh rằng
+**Sát thương:** hai hero **0 sát thương** (Sunbloom, Chardslam) là cố ý — chúng chứng minh rằng
 trong game này *sát thương không phải con đường duy nhất để thắng*.
 
-**Ba giá skill: 35 · 50 · 75.** Với ngân sách 225 Sun/trận cho cả ba hero, đội "toàn 50" bấm
+**Ba giá skill: 35 · 50 · 75.** Với ngân sách 225 Sol/trận cho cả ba hero, đội "toàn 50" bấm
 được ~4 lần cả trận. Đội có Ironhusk (35) bấm nhiều hơn nhưng mỗi lần nhẹ hơn. Đó là một quyết
 định xây đội thật.
 
@@ -338,8 +338,8 @@ trong game này *sát thương không phải con đường duy nhất để th�
 
 | # | Việc | Ghi chú |
 |---|---|---|
-| 1 | ✅ Nuốt Chửng 999 → **7 dmg** @ **75 Sun**; ✅ Càn Lăn **25 → 35 Sun** | `data/heroes.ts` |
-| 2 | Cơ chế mới cho 3 hero | Thornquill (xuyên ở **đánh thường**), Thornhide (**khiêu khích** + phản đòn), Chardwall (**đẩy 2 ô**) |
+| 1 | ✅ Nuốt Chửng 999 → **7 dmg** @ **75 Sol**; ✅ Càn Lăn **25 → 35 Sol** | `data/heroes.ts` |
+| 2 | Cơ chế mới cho 3 hero | Thornquill (xuyên ở **đánh thường**), Thornshell (**khiêu khích** + phản đòn), Chardslam (**đẩy 2 ô**) |
 | 3 | `TAUNT` — ép `aiLogic` đổi mục tiêu | chưa có gì tương tự trong engine; đây là phần khó nhất |
 | 4 | Đẩy 2 ô (`KNOCKBACK`) | bậc trên của `PUSH` đã có — phải kiểm va chạm dây chuyền |
 | 5 | Hàng fusion cho 4 hero mới | 4 × 9 = 36 ô |

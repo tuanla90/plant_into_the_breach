@@ -34,12 +34,12 @@ export const LAYERS_PER_UNLOCK_PACKAGE = 1;
 /**
  * Which combat items this save may see — in shops, camps, event rewards and Chrono Echo
  * offers alike. Ground is the teacher: each sector's first footstep unlocks its item
- * (data/items.ts SECTOR_ITEM), the tutorial's diploma is the Potato Mine, and nothing
+ * (data/items.ts SECTOR_ITEM), the tutorial's diploma is the Seed Mine, and nothing
  * else exists yet. Pure and cheap enough to recompute at every shelf roll.
  */
 export const unlockedItemIds = (state: UnlockState): Set<string> => {
     const out = new Set<string>();
-    if (state.tutorialDone) out.add('potato_mine');
+    if (state.tutorialDone) out.add('seed_mine');
     (state.sectorsVisited ?? []).forEach(s => {
         const item = SECTOR_ITEM[s as keyof typeof SECTOR_ITEM];
         if (item) out.add(item);
@@ -69,7 +69,7 @@ export const withNextRecipe = (state: UnlockState): UnlockState => {
     // The recipes the tutorial DEMONSTRATED come first. The tutorial only lends them — the
     // loan ends when the chain does — so the natural first thing a bonus objective should
     // buy is the pairing the player has already watched work. Before this the reward rolled
-    // straight into declaration order and handed out Shadeleaf + Chomper: a recipe for a
+    // straight into declaration order and handed out Peaburst + Steel Jaws: a recipe for a
     // plant the player does not own, for a fusion nothing had ever shown them.
     for (const key of TUTORIAL_RECIPES) {
         const parsed = parseRecipeKey(key);

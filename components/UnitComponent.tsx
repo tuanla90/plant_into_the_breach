@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Unit, UnitClass } from '../types';
-import { Zap, Shield, Sun, Utensils, Flame, CloudFog, ArrowRight, Skull, Flag, Brain, Snowflake, Droplets } from 'lucide-react';
+import { Zap, Shield, Sun as Sol, Utensils, Flame, CloudFog, ArrowRight, Skull, Flag, Sprout, Snowflake, Droplets } from 'lucide-react';
 import { ANIMATION_CONFIG, BOARD_TILT_DEG } from '../constants';
 import { facingFlip, spriteFor } from '../utils/icons';
 import { willAct } from '../utils/threat';
@@ -11,7 +11,7 @@ import { useI18n } from '../i18n';
 interface UnitComponentProps {
   unit: Unit;
   isSelected: boolean;
-  /** This zombie walks off with a brain next turn — the board's highest-priority target. */
+  /** This zombie walks off with a sprout next turn — the board's highest-priority target. */
   isBrainThief?: boolean;
 }
 
@@ -23,7 +23,8 @@ const UnitComponentBase: React.FC<UnitComponentProps> = ({ unit, isSelected, isB
   const shownSprite = spriteFor(unit);
   React.useEffect(() => { setImgError(false); }, [shownSprite]);
 
-  const isSunflower = unit.class === UnitClass.SUNFLOWER || unit.class === UnitClass.TWIN_SUNFLOWER || unit.class === UnitClass.SUN_SHROOM;
+  // Sol Cap và Twin Sol Battery đã bỏ cùng đợt dọn cây; chỉ còn một thân cây sinh Sol.
+  const isSolBattery = unit.class === UnitClass.SOL_BATTERY;
   const isDigesting = (unit.digestingTurns || 0) > 0;
   const isGrave = unit.class === UnitClass.GRAVE;
   const isDying = unit.isDying;
@@ -33,7 +34,7 @@ const UnitComponentBase: React.FC<UnitComponentProps> = ({ unit, isSelected, isB
   const hasStun = unit.statusEffects?.includes('STUN');
   const hasFreeze = unit.statusEffects?.includes('FREEZE');
   const isDormant = unit.statusEffects?.includes('DORMANT');
-  // Buffed by a living Flag Zombie: +1 damage, +1 move until the herald is shot.
+  // Buffed by a living Bannerman: +1 damage, +1 move until the herald is shot.
   const isEnraged = unit.statusEffects?.includes('ENRAGED');
   const isSpawning = unit.spawnDelay !== undefined;
   
@@ -60,7 +61,7 @@ const UnitComponentBase: React.FC<UnitComponentProps> = ({ unit, isSelected, isB
   // counter-rotates around its feet (bottom edge) to stand upright, billboard-style.
   // The lunge translate must come first — it happens in the ground plane.
   const standUp = `rotateX(${-BOARD_TILT_DEG}deg)`;
-  // The Gargantuar's art is drawn facing right; every other zombie in the set marches
+  // The Gravehulk's art is drawn facing right; every other zombie in the set marches
   // left, toward the lawn. Mirror it on the WRAPPER, not the <img> — the idle-bob
   // animation owns the img's transform and would silently erase a flip put there.
   const baseFlip = facingFlip(unit.class) === ' scaleX(-1)';
@@ -164,8 +165,8 @@ const UnitComponentBase: React.FC<UnitComponentProps> = ({ unit, isSelected, isB
             <div className="absolute bottom-2 w-[60%] h-[15%] bg-black/50 rounded-[100%] blur-[2px]"></div>
         )}
 
-        {/* --- CHARGE AURA (SUNFLOWER) --- */}
-        {isSunflower && isCharged && !isDying && (
+        {/* --- CHARGE AURA (SOL_BATTERY) --- */}
+        {isSolBattery && isCharged && !isDying && (
             <div className="absolute inset-0 bg-yellow-400/20 rounded-full animate-pulse blur-sm z-0 scale-125"></div>
         )}
 
@@ -283,20 +284,20 @@ const UnitComponentBase: React.FC<UnitComponentProps> = ({ unit, isSelected, isB
                     {isDigesting && <Utensils size={12} className="text-purple-500 animate-bounce" />}
                 </div>
 
-                {/* Brain thief: this one reaches a brain next turn. Kill it, block it, or push it. */}
+                {/* Sprout thief: this one reaches a sprout next turn. Kill it, block it, or push it. */}
                 {isBrainThief && (
                     <>
                         <div className="absolute inset-0 rounded-full ring-2 ring-red-400 shadow-[0_0_12px_rgba(239,68,68,0.9)] animate-[pulse_0.7s_infinite] z-10 pointer-events-none"></div>
                         <div className="absolute -top-2 right-0 z-30 bg-red-600 border border-red-200 rounded-full p-[2px] shadow-lg animate-bounce">
-                            <Brain size={11} className="text-white" />
+                            <Sprout size={11} className="text-white" />
                         </div>
                     </>
                 )}
 
                 {/* Charged Indicator (Icon) */}
-                {isSunflower && isCharged && (
+                {isSolBattery && isCharged && (
                      <div className="absolute top-0 right-0 animate-[spin_3s_linear_infinite] z-20">
-                         <Sun size={16} className="text-yellow-300 fill-yellow-500 drop-shadow-[0_0_2px_black]" />
+                         <Sol size={16} className="text-yellow-300 fill-yellow-500 drop-shadow-[0_0_2px_black]" />
                      </div>
                 )}
 

@@ -1,3 +1,4 @@
+import { aliasHeroId, aliasMaterialId, aliasBossId, aliasRecipeKey } from './idAliases';
 import { UnitClass, UnitDefinition, Skill, TerrainDefinition, ItemDefinition, UnlockState, BossId, HeroId, MaterialId } from '../types';
 import { DEFAULT_UNIT_DEFINITIONS, UNIT_SKILLS, DEFAULT_TERRAIN_DEFS, DEFAULT_ITEM_DEFINITIONS } from '../constants';
 import { HERO_DEFINITIONS, STARTING_HEROES } from '../data/heroes';
@@ -210,6 +211,13 @@ export const loadUnlockState = (): UnlockState => {
         if (!json) return defaultUnlockState();
 
         const saved = JSON.parse(json) ?? {};
+        // ID MIGRATION (NAMING.md Phase 2, 2026-08-06): save cũ mang id cũ. Phải dịch
+        // TRƯỚC TIÊN — mọi filter phía dưới vứt id lạ, chạy trên dữ liệu chưa dịch là
+        // lặng lẽ xoá hero/boss/recipe người chơi đã earn.
+        if (Array.isArray(saved.heroes)) saved.heroes = saved.heroes.map((h: unknown) => typeof h === 'string' ? aliasHeroId(h) : h);
+        if (Array.isArray(saved.materials)) saved.materials = saved.materials.map((m: unknown) => typeof m === 'string' ? aliasMaterialId(m) : m);
+        if (Array.isArray(saved.bossesBeaten)) saved.bossesBeaten = saved.bossesBeaten.map((b: unknown) => typeof b === 'string' ? aliasBossId(b) : b);
+        if (Array.isArray(saved.recipes)) saved.recipes = saved.recipes.map((r: unknown) => typeof r === 'string' ? aliasRecipeKey(r) : r);
         // Saves from before named bosses only counted them. Take the first N off the
         // table so the heroes they already own line up with a boss that explains them.
         // Hoisted out of the literal because the sector migration below reads it too.
@@ -238,7 +246,7 @@ export const loadUnlockState = (): UnlockState => {
             //
             // Filtered by living hero AND living material, for the same reason mergeIds
             // filters both lists: retiring Frostpod left saves holding `COLD_SNAP:MAT_*`
-            // keys, and retiring Thornquill + the Cactus/Snow Pea gears left `THORNQUILL:*`
+            // keys, and retiring Thornquill + the Cactus/Ice Grenade gears left `THORNQUILL:*`
             // and `*:MAT_CACTUS` / `*:MAT_SNOW_PEA` keys the same way. Dead keys are
             // counted, so the Archive read "34/90 recipes" against a roster that can only
             // produce 81 — owned drifting past the total, with nothing on screen to explain.

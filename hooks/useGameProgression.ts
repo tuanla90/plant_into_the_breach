@@ -87,7 +87,7 @@ export const useGameProgression = ({
      */
     const pendingRevives = useRef<Set<HeroId>>(new Set(gameState.pendingRevives ?? []));
     pendingRevives.current = new Set(gameState.pendingRevives ?? []);
-    /** Brains the player had when the current level started — the coin bonus is measured from it. */
+    /** Sprouts the player had when the current level started — the coin bonus is measured from it. */
     const brainsAtLevelStart = useRef<number>(gameState.brainsMax);
     /** Same idea for the "no hero down" bonus. */
     const heroesDownAtLevelStart = useRef<number>(0);
@@ -237,7 +237,7 @@ export const useGameProgression = ({
         const current = unlocksRef.current;
         if (!node) return current;
         let next = current;
-        // Clearing the boss ends the run. Running out of brains does too, and that path
+        // Clearing the boss ends the run. Running out of sprouts does too, and that path
         // comes in through `recordRunLost` below rather than through a node.
         //
         // `endsRun: false` means "a boss, but not the door out" — the Breach's nine corridor
@@ -272,7 +272,7 @@ export const useGameProgression = ({
         }
 
         // The third argument is "did a boss fall", and it can only be true on the node that
-        // both is a boss and closes the run — otherwise it is the brains-lost path arriving
+        // both is a boss and closes the run — otherwise it is the sprouts-lost path arriving
         // here on some ordinary battle node.
         if (endsRun) next = withRunPayout(next, node, node.type === 'BOSS' && node.endsRun !== false);
         return next;
@@ -469,7 +469,7 @@ export const useGameProgression = ({
     /**
      * What the current level is about to pay, WITHOUT paying it.
      *
-     * The victory screen used to print a hardcoded "+100 Sun" that was wrong twice over:
+     * The victory screen used to print a hardcoded "+100 Sol" that was wrong twice over:
      * rewards are Coin, and the amount depends on the node and the bonus objectives.
      * Because `completeLevel` only runs when the player clicks Continue, the screen has to
      * be able to ask for the figure first — hence this read-only twin of the same maths.
@@ -556,7 +556,7 @@ export const useGameProgression = ({
             }
         }
 
-        // Bonus objectives replace the old flat "no brain lost" bonus — that condition is now
+        // Bonus objectives replace the old flat "no sprout lost" bonus — that condition is now
         // one of the bonuses the mission may or may not have rolled.
         // Coin only here. Bonus objectives also pay cross-run progress (fusion recipes), but
         // that half is applied by `projectUnlocks` above — counting it in both places would
@@ -573,11 +573,11 @@ export const useGameProgression = ({
          * An act is a whole map, and clearing its boss lays down the next act's map rather
          * than ending the run — Slay the Spire's shape. Everything the run owns crosses over
          * untouched, because none of it lives in `mapNodes`: the squad and its wounds are in
-         * `units`, the Coin, bench, inventory and brains are in `gameState`, and the fusions
+         * `units`, the Coin, bench, inventory and sprouts are in `gameState`, and the fusions
          * ride on the heroes themselves.
          *
          * NOT for the Breach, and "is there a next act in this stage" is NOT the test that
-         * excludes it: the Breach re-fights all nine campaign bosses, so its Gargantuar is
+         * excludes it: the Breach re-fights all nine campaign bosses, so its Gravehulk is
          * still stage 1 act 1 and would happily ask for a map of Goldacre in the middle of the
          * gauntlet.
          *
@@ -673,7 +673,7 @@ export const useGameProgression = ({
         }
 
         if (node.type === 'SHOP') {
-            // The tutorial shop is pinned. A random 175-Coin Snow Pea here would eat the purse
+            // The tutorial shop is pinned. A random 175-Coin Ice Grenade here would eat the purse
             // and strand the player before the revive two nodes later — assertTutorial checks
             // the budget against exactly this stock list.
             setGameState(prev => ({
@@ -695,7 +695,7 @@ export const useGameProgression = ({
              // player would watch the thing they were about to buy turn into something else.
              // Only ground already walked stocks the shelf (utils/unlockLogic.ts) — the
              // Breach demands all nine bosses, so in practice this is the full catalogue
-             // plus the Doom-shroom the door itself just handed over.
+             // plus the Blight Core the door itself just handed over.
              const pool = unlockedItemIds(unlocksRef.current);
              const items = DEFAULT_ITEM_DEFINITIONS.map(i => i.id).filter(id => pool.has(id));
              const itemShelf: string[] = [];
@@ -792,11 +792,11 @@ export const useGameProgression = ({
     const reviveHeroPaid = (heroId: HeroId): boolean => reviveHero(heroId, false);
 
     // --- BRAIN BUY-BACK ---
-    // Losing every brain on a single board now ends the run there and then (turnManager
+    // Losing every sprout on a single board now ends the run there and then (turnManager
     // PHASE 5), so the run budget alone is no longer a cushion. This is the only way back
     // up, and it is deliberately priced above a hero revival: 150, then 225, then 300…
 
-    /** Coin price of the next brain, given how many have already been bought this run. */
+    /** Coin price of the next sprout, given how many have already been bought this run. */
     /** Leaves the scripted chain for good and drops the player onto a generated map. */
     const finishTutorial = () => {
         // The tutorial grants NO recipes. It briefly lends the ones its script fuses
@@ -938,13 +938,13 @@ export const useGameProgression = ({
         // of setup so they can never leak into the fight after it.
         const mods = gameState.nextBattleMods || {};
 
-        // "One house starts with its brain already gone" (Treasure Yeti). Applied before the
+        // "One Greenspire starts with its sprout already gone" (Treasure Yeti). Applied before the
         // board is handed over, so the AI and the board-dry loss rule both see the real state.
         if (mods.brainlessHouses) {
-            const houses = newBoard.filter(t => t.isHouse && t.hasBrain);
+            const Greenspires = newBoard.filter(t => t.isHouse && t.hasBrain);
             // Never strip the last one — that would lose the battle before it began.
-            const strip = Math.min(mods.brainlessHouses, Math.max(0, houses.length - 1));
-            for (let i = 0; i < strip; i++) houses[i].hasBrain = false;
+            const strip = Math.min(mods.brainlessHouses, Math.max(0, Greenspires.length - 1));
+            for (let i = 0; i < strip; i++) Greenspires[i].hasBrain = false;
         }
 
         // The scripted branch never touches the queue; the generated one drains it inside a
@@ -957,7 +957,7 @@ export const useGameProgression = ({
         // Rolled OUTSIDE the setUnits updater: React may invoke that updater twice (StrictMode
         // does, in development), and a wave rolled inside it would be a different wave each
         // time. Deploy tiles come back with it — same board, same pass.
-        const { enemies: rolledEnemies, allies: rolledAllies, deployTiles } =
+        const { enemies: rolledEnemies, deployTiles } =
             buildEncounter(node, newBoard, depth, unitDefs, terrainDefs, mods, boss);
 
         /**
@@ -1048,7 +1048,7 @@ export const useGameProgression = ({
                     {
                         // hpBonus: the story boss is tougher than its class sheet (tut_7).
                         hpBonus: (sp as any).hpBonus ?? 0,
-                        isMassive: sp.cls === UnitClass.GARGANTUAR,
+                        isMassive: sp.cls === UnitClass.GRAVEHULK,
                     },
                 ));
 
@@ -1122,16 +1122,16 @@ export const useGameProgression = ({
             benchDeployedRef.current = chosenBench.map((p, i) => ({ benchId: p.id, unitId: `bench-${p.id}-${i}` }));
             const benchUnits = chosenBench.map(buildBenchUnit);
 
-            // Wild plants and the gear crate are neither squad nor wave. They go in last and
-            // are never recorded in `benchDeployedRef`, so the end-of-battle ledger cannot
-            // charge the player for a body they did not buy.
-            return [...roster, ...benchUnits, ...gearUnits, ...rolledAllies, ...rolledEnemies];
+            // The gear crate is neither squad nor wave. It goes in last and is never recorded
+            // in `benchDeployedRef`, so the end-of-battle ledger cannot charge the player for
+            // a body they did not buy.
+            return [...roster, ...benchUnits, ...gearUnits, ...rolledEnemies];
         });
 
         setBoard(newBoard);
 
         setGameState(prev => {
-            // Remember the brain count now so completeLevel can pay the "no brain lost" bonus.
+            // Remember the sprout count now so completeLevel can pay the "no sprout lost" bonus.
             brainsAtLevelStart.current = prev.brainsRemaining;
             heroesDownAtLevelStart.current = prev.fallenHeroes.length;
             return {
@@ -1159,8 +1159,8 @@ export const useGameProgression = ({
                 scriptedBattleId: script ? node.tutorialId! : null,
                 // Consumed. `coinOnWin` is deliberately kept — completeLevel pays it out.
                 nextBattleMods: { coinOnWin: mods.coinOnWin || 0 },
-                // Sun is action economy, not savings: every level starts from the same 50.
-                // A scripted board may set its own, because Sun is exactly what decides
+                // Sol is action economy, not savings: every level starts from the same 50.
+                // A scripted board may set its own, because Sol is exactly what decides
                 // which of a hero's two tools exists yet — see TutorialBattle.startingSun.
                 sun: script?.startingSun ?? balancedGlobal('global.SUN_ON_LEVEL_START'),
                 spawnPoints: deployTiles,
@@ -1220,7 +1220,7 @@ export const useGameProgression = ({
         reviveHero,
         reviveHeroPaid,
         reviveAllHeroes,
-        // --- brain buy-back ---
+        // --- sprout buy-back ---
         finishTutorial,
         brainCost,
         canBuyBrain,

@@ -31,8 +31,8 @@ export interface ResolveContext {
 }
 
 /**
- * Kills no longer pay Sun by default — the free 25/50 per kill let a shooter refund
- * her own ultimate and spam it. Kill income now exists ONLY through the Sunflower
+ * Kills no longer pay Sol by default — the free 25/50 per kill let a shooter refund
+ * her own ultimate and spam it. Kill income now exists ONLY through the Sol Battery
  * fusions (SUN_ON_KILL: Sunbeam Pea / Glacial Bloom), and only on the finishing blow.
  */
 export const pushKill = (actions: TurnAction[], victim: Unit, killer?: Unit | null) => {
@@ -53,7 +53,7 @@ export const pushKill = (actions: TurnAction[], victim: Unit, killer?: Unit | nu
 
 /**
  * Turns a PushPlan into actions. Kept beside pushKill so collision damage, drowning and
- * Sun-on-kill all funnel through the same place no matter which shove produced them.
+ * Sol-on-kill all funnel through the same place no matter which shove produced them.
  */
 export const applyPushPlan = (
     plan: ReturnType<typeof planPush>,
@@ -73,7 +73,7 @@ export const applyPushPlan = (
      *
      * `killer` doubles as the shove's author (it is the same unit; the parameter predates the
      * ledger). One line per BODY, not per tile: `plan.moves` holds one entry per step, and a
-     * Chardwall throw across two tiles is one shove — counting it twice would make the column
+     * Chardslam throw across two tiles is one shove — counting it twice would make the column
      * a distance meter. Enemy bodies only, for the friendly-fire reason the damage ledger
      * gives: repositioning your own hero is a cost of the play, not its output.
      */
@@ -89,8 +89,8 @@ export const applyPushPlan = (
         }
     }
 
-    // A warded house ate the shove (gameLogic, PushPlan.wardedHouses): the layer breaks, the
-    // brain stays. Cleared here because the plan is pure and someone has to own the write.
+    // A warded Greenspire ate the shove (gameLogic, PushPlan.wardedHouses): the layer breaks, the
+    // sprout stays. Cleared here because the plan is pure and someone has to own the write.
     plan.wardedHouses.forEach(p => {
         actions.push({ type: 'MODIFY_TERRAIN', pos: { ...p }, shielded: false });
         actions.push({ type: 'APPLY_DAMAGE', targetId: 'tile', amount: 0, eventType: 'BLOCK', pos: p });
@@ -109,7 +109,7 @@ export const applyPushPlan = (
      * turn it had already promised.
      *
      * That trade is the whole point of letting bosses be shoved at all. Instant death from one
-     * tile of leverage would have made Chardwall a delete button on eight of the ten bosses;
+     * tile of leverage would have made Chardslam a delete button on eight of the ten bosses;
      * nothing at all would have made a shove into the sea look like a bug. Costing the boss its
      * telegraphed action is the reading that keeps both the push and the boss meaningful.
      *
@@ -125,13 +125,13 @@ export const applyPushPlan = (
         u.intent = { type: 'WAIT', description: 'Dragged out of the water...' };
     });
 
-    // Shoved into a live house: the brain is gone and the zombie walks off with it. Not a
-    // kill — no death animation, no Sun. BRAIN_LOST is the same action a zombie that walked
+    // Shoved into a live Greenspire: the sprout is gone and the zombie walks off with it. Not a
+    // kill — no death animation, no Sol. BRAIN_LOST is the same action a zombie that walked
     // in on its own turn produces, so the reducer's counter cannot drift between the two.
-    plan.tookBrain.forEach(({ unitId, house }: { unitId: string; house: Position }) => {
+    plan.tookBrain.forEach(({ unitId, Greenspire }: { unitId: string; Greenspire: Position }) => {
         const u = sim.get(unitId);
         if (!u) return;
-        actions.push({ type: 'BRAIN_LOST', pos: house, unitId });
+        actions.push({ type: 'BRAIN_LOST', pos: Greenspire, unitId });
         u.hp = 0;
     });
 
@@ -146,10 +146,15 @@ export const applyPushPlan = (
         // A slam IGNORES helmet armour (4th arg): the bucket keeps a pea out, not a wall
         // arriving at speed. This is also what keeps the two shove heroes employed against
         // an armoured lane — without it, armour silently deleted the collision point that is
-        // Chardwall's only damage and half of Ironhusk's bash.
+        // Chardslam's only damage and half of Ironhusk's bash.
         const r = calculateDamage(u, 1, false, true);
         actions.push({ type: 'APPLY_DAMAGE', targetId: id, amount: r.finalDamage, eventType: 'DAMAGE', pos: u.position });
         u.hp = r.remainingHp;
+        // A slam is a damage instance like any other, so the last stand can eat one — and this
+        // path writes no shield action, so the ONCE-PER-BATTLE flag needs its own.
+        if (r.lastStandSpent) {
+            actions.push({ type: 'UPDATE_UNIT_STATE', unitId: id, updates: { lastStandUsed: true } });
+        }
         if (r.isFatal) pushKill(actions, u, killer ?? undefined);
     });
 };

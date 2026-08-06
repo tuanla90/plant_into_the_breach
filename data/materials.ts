@@ -6,8 +6,8 @@ import { ICONS, MATERIAL_SPRITES } from '../utils/icons';
  *
  * That symmetry is the point: ten plants x ten heroes gives a 10x10 grid of hand-authored
  * recipes (data/fusionRecipes.ts) out of ten sprites. What a fusion does depends on the
- * PAIR, not on the material alone — Peashooter grafted onto Sunspot gives her the attack she
- * lacks, while Peashooter grafted onto Shadeleaf just makes her shoot twice.
+ * PAIR, not on the material alone — Seed Gun grafted onto Sunbloom gives her the attack she
+ * lacks, while Seed Gun grafted onto Peaburst just makes her shoot twice.
  *
  * It also forces a real choice every time one is bought: the same plant can go on the bench
  * as a spare body or be burned into a hero. Pick one, lose the other.
@@ -17,46 +17,48 @@ import { ICONS, MATERIAL_SPRITES } from '../utils/icons';
 export const MATERIAL_DEFINITIONS: Record<MaterialId, MaterialDefinition> = {
     MAT_SUNFLOWER: {
         id: 'MAT_SUNFLOWER',
-        name: 'Sunflower',
+        name: 'Sol Battery',
         description: 'Sunlight. What it grants depends on who absorbs it.',
         coinCost: 50,
         imgUrl: MATERIAL_SPRITES.MAT_SUNFLOWER,
         // Kept for the generic UI; the real effect is looked up per hero.
         effect: { type: 'SUN_PER_TURN', value: 25 },
-        benchClass: UnitClass.SUNFLOWER,
+        benchClass: UnitClass.SOL_BATTERY,
         benchStats: { maxHp: 2, damage: 0, moveRange: 3 },
     },
 
     MAT_PEASHOOTER: {
         id: 'MAT_PEASHOOTER',
-        name: 'Peashooter',
+        name: 'Seed Gun',
         description: 'A firing mechanism. Grants or multiplies ranged attacks.',
         coinCost: 100,
         imgUrl: MATERIAL_SPRITES.MAT_PEASHOOTER,
         effect: { type: 'DOUBLE_ATTACK', value: 1 },
-        benchClass: UnitClass.PEASHOOTER,
+        benchClass: UnitClass.SEED_GUN,
         benchStats: { maxHp: 2, damage: 2, moveRange: 3 },
     },
 
     MAT_CHOMPER: {
         id: 'MAT_CHOMPER',
-        name: 'Chomper',
+        name: 'Steel Jaws',
         description: 'Jaws. Bites back, swallows faster, chews through downtime.',
         coinCost: 150,
         imgUrl: MATERIAL_SPRITES.MAT_CHOMPER,
-        effect: { type: 'RETALIATE_DAMAGE', value: 2 },
-        benchClass: UnitClass.CHOMPER,
+        // Fallback only (a bench plant, or a hero the matrix does not know). Set to the
+        // column's real axis after the remap: the jaws leave a WOUND, they do not bite back.
+        effect: { type: 'BLEED_ON_HIT' },
+        benchClass: UnitClass.STEEL_JAWS,
         benchStats: { maxHp: 3, damage: 2, moveRange: 3 },
     },
 
     MAT_WALLNUT: {
         id: 'MAT_WALLNUT',
-        name: 'Wall-nut',
+        name: 'Armor Plate',
         description: 'Shell. Turns whoever wears it into something zombies struggle to remove.',
         coinCost: 50,
         imgUrl: MATERIAL_SPRITES.MAT_WALLNUT,
         effect: { type: 'BONUS_HP', value: 3 },
-        benchClass: UnitClass.WALLNUT,
+        benchClass: UnitClass.ARMOR_PLATE,
         benchStats: { maxHp: 4, damage: 1, moveRange: 2 },
     },
 
@@ -66,14 +68,14 @@ export const MATERIAL_DEFINITIONS: Record<MaterialId, MaterialDefinition> = {
      * half the reach. On a melee hero the arc means nothing, so those pairings buy something
      * else entirely — the matrix is authored per pair anyway.
      */
-    MAT_CORN: {
-        id: 'MAT_CORN',
-        name: 'Kernel-pult',
+    MAT_CORN_MORTAR: {
+        id: 'MAT_CORN_MORTAR',
+        name: 'Corn Mortar',
         description: 'A throwing arm. What it launches stops caring what is in the way.',
         coinCost: 125,
-        imgUrl: MATERIAL_SPRITES.MAT_CORN,
+        imgUrl: MATERIAL_SPRITES.MAT_CORN_MORTAR,
         effect: { type: 'ARC_ATTACK' },
-        benchClass: UnitClass.KERNEL_PULT,
+        benchClass: UnitClass.CORN_MORTAR,
         benchStats: { maxHp: 4, damage: 1, moveRange: 3 },
     },
 
@@ -82,30 +84,32 @@ export const MATERIAL_DEFINITIONS: Record<MaterialId, MaterialDefinition> = {
     // Pea ITEM (data/items.ts) is a different thing and stays.
 
     /**
-     * Rotors. Zephyr's two traits per the two-item gear rule (PLAN-hero-zephyr §4): speed
+     * Rotors. Reedwing's two traits per the two-item gear rule (PLAN-hero-zephyr §4): speed
      * for the body (MOVE_BONUS), or her Smoke Pod's dust grafted onto a paid skill
      * (SKILL_DISARM) — each recipe picks whichever fits the hero. The only material whose
      * axis is MOVEMENT, which no fusion had ever touched before.
      */
     MAT_CATTAIL: {
         id: 'MAT_CATTAIL',
-        name: 'Cattail',
+        name: 'Rotor Wing',
         description: 'Rotors. Speed for the legs it is grafted onto, or dust for the skill.',
         coinCost: 100,
         imgUrl: MATERIAL_SPRITES.MAT_CATTAIL,
         effect: { type: 'MOVE_BONUS', value: 1 },
-        benchClass: UnitClass.CATTAIL,
+        benchClass: UnitClass.ROTOR_WING,
         benchStats: { maxHp: 2, damage: 2, moveRange: 3 },
     },
 
     MAT_ENDURIAN: {
         id: 'MAT_ENDURIAN',
-        name: 'Endurian',
+        name: 'Spike Armor',
         description: 'Barbed husk. Turns being hit into a way of hitting back.',
         coinCost: 150,
         imgUrl: MATERIAL_SPRITES.MAT_ENDURIAN,
-        effect: { type: 'RETALIATE_DAMAGE', value: 2 },
-        benchClass: UnitClass.ENDURIAN,
+        // 1, matching the RETALIATION RULE in data/fusionRecipes.ts: the durian pays back
+        // one on everybody but the durian.
+        effect: { type: 'RETALIATE_DAMAGE', value: 1 },
+        benchClass: UnitClass.SPIKE_ARMOR,
         benchStats: { maxHp: 5, damage: 1, moveRange: 2 },
     },
 
@@ -114,25 +118,25 @@ export const MATERIAL_DEFINITIONS: Record<MaterialId, MaterialDefinition> = {
      * merely relocates a zombie or drops it in water — so this one is worth most on maps that
      * have somewhere bad to land.
      */
-    MAT_CHARD: {
-        id: 'MAT_CHARD',
-        name: 'Chard Guard',
+    MAT_SPRING_ARM: {
+        id: 'MAT_SPRING_ARM',
+        name: 'Spring Arm',
         description: 'A swinging stem. Whatever gets shoved, goes further.',
         coinCost: 125,
-        imgUrl: MATERIAL_SPRITES.MAT_CHARD,
+        imgUrl: MATERIAL_SPRITES.MAT_SPRING_ARM,
         effect: { type: 'PUSH_DISTANCE', value: 1 },
-        benchClass: UnitClass.CHARD_GUARD,
+        benchClass: UnitClass.SPRING_ARM,
         benchStats: { maxHp: 3, damage: 0, moveRange: 3 },
     },
 
     MAT_PUMPKIN: {
         id: 'MAT_PUMPKIN',
-        name: 'Pumpkin',
+        name: 'Bunker Shell',
         description: 'Shell to spare. Damage that never lands is health carried into the next fight.',
         coinCost: 150,
         imgUrl: MATERIAL_SPRITES.MAT_PUMPKIN,
         effect: { type: 'SHIELD_ON_KILL', value: 1 },
-        benchClass: UnitClass.PUMPKIN,
+        benchClass: UnitClass.BUNKER_SHELL,
         benchStats: { maxHp: 4, damage: 0, moveRange: 2 },
     },
 };
@@ -147,17 +151,17 @@ export const MATERIAL_DEFINITIONS: Record<MaterialId, MaterialDefinition> = {
  * plant on the bench simply unusable rather than making a *combination* something to chase.
  *
  * This is also why a material ships before its hero does: the newest plants pay off on
- * the heroes you already own long before Zephyr and company are unlocked.
+ * the heroes you already own long before Reedwing and company are unlocked.
  */
 export const STARTING_MATERIALS: MaterialId[] = [
     'MAT_SUNFLOWER',
     'MAT_PEASHOOTER',
     'MAT_CHOMPER',
     'MAT_WALLNUT',
-    'MAT_CORN',
+    'MAT_CORN_MORTAR',
     'MAT_CATTAIL',
     'MAT_ENDURIAN',
-    'MAT_CHARD',
+    'MAT_SPRING_ARM',
     'MAT_PUMPKIN',
 ];
 

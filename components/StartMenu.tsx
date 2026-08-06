@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Play, BookOpen, Shield, Skull, ScrollText, RotateCcw, GraduationCap, Download, Settings } from 'lucide-react';
+import { Play, BookOpen, Shield, Skull, RotateCcw, GraduationCap, Download, Settings } from 'lucide-react';
 import { useI18n } from '../i18n';
 
 /**
@@ -21,11 +21,9 @@ interface StartMenuProps {
     onOpenSettings?: () => void;
     /** Start a fresh run on the scripted seven-node tutorial map. */
     onReplayTutorial?: () => void;
-    /** Re-open the intro comic. It only shows itself once, so this is the way back to it. */
-    onReplayIntro?: () => void;
 }
 
-export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTutorial, onOpenSettings, onReplayTutorial, onReplayIntro }) => {
+export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTutorial, onOpenSettings, onReplayTutorial }) => {
     const { t } = useI18n();
     const [hasCover, setHasCover] = useState(true);
     const [installPrompt, setInstallPrompt] = useState<any>(null);
@@ -49,7 +47,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
     };
 
     return (
-        <div className="w-full min-h-[100dvh] h-auto lg:h-[100dvh] bg-[#0d0e11] flex items-end md:items-center justify-center md:justify-end font-pixel text-white relative overflow-y-auto lg:overflow-hidden">
+        <div className="w-full min-h-[100dvh] h-auto lg:h-[100dvh] bg-[#0d0e11] flex items-end md:items-center justify-center font-pixel text-white relative overflow-y-auto lg:overflow-hidden">
 
             {/* --- KEY ART --- */}
             {hasCover && (
@@ -72,10 +70,11 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
                         className="fixed inset-0 w-full h-full object-cover object-[30%_top] md:object-top z-0"
                     />
 
-                    {/* Darken the right side only, where the buttons live. The heroes are on
-                        the left and the composition's bright centre is the wet street, so a
-                        uniform tint would dim exactly the parts worth showing. */}
-                    <div className="fixed inset-0 z-[1] hidden md:block bg-gradient-to-l from-[#0b0d12] via-[#0b0d12]/50 to-transparent"></div>
+                    {/* Scrim dưới cột nút. Trước đây là dải tối bên PHẢI vì cột nút đứng ở
+                        đó; giờ nút về giữa nên scrim cũng phải về giữa — dạng ellipse để hai
+                        mép tranh (nhóm hero bên trái, đám zombie bên phải) vẫn sáng nguyên,
+                        chỉ tối đúng vùng chữ đè lên. */}
+                    <div className="fixed inset-0 z-[1] hidden md:block bg-[radial-gradient(ellipse_46%_62%_at_50%_58%,rgba(11,13,18,0.94)_0%,rgba(11,13,18,0.72)_45%,rgba(11,13,18,0)_78%)]"></div>
                 </>
             )}
 
@@ -102,23 +101,24 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
             <div className="scanlines"></div>
 
             {/* --- MAIN CONTENT CONTAINER --- */}
-            {/* Sized to the darkened band on the right so the stack sits centred in it.
+            {/* Cột nút đứng GIỮA màn hình. Bản cũ ghim nó vào dải 30% bên phải, nghĩa là trên
+                màn rộng nó dạt hẳn ra mép trong khi tâm bố cục của tranh (và cái tên game vẽ
+                trong tranh) nằm ở giữa — mắt phải nhảy hai lần.
                 max-w-sm ĐÈ LÊN CẢ PADDING: cột nút thật ra chỉ rộng 273px giữa màn 375px,
-                hai bên thừa hơn 50px mỗi bên trong khi nhãn "KHO LƯU TRỮ CHIẾN THUẬT" phải
-                xuống ba dòng. Màn dọc lấy gần hết bề ngang; desktop giữ nguyên dải bên phải.
+                hai bên thừa hơn 50px mỗi bên. Màn dọc lấy gần hết bề ngang.
                 pb-safe: cả khối ghim đáy, phải chừa thanh home của iPhone. */}
-            <div className={`relative z-20 flex flex-col items-center gap-6 w-full max-w-sm portrait:max-w-none px-5 md:px-6 ${hasCover ? 'md:w-[30%] md:max-w-none md:px-7 pb-[calc(2.5rem_+_env(safe-area-inset-bottom,0px))] md:pb-0' : 'max-w-2xl gap-12'}`}>
+            <div className={`relative z-20 flex flex-col items-center gap-6 w-full max-w-sm portrait:max-w-none px-5 md:px-6 ${hasCover ? 'pb-[calc(2.5rem_+_env(safe-area-inset-bottom,0px))] md:pb-0' : 'max-w-2xl gap-12'}`}>
 
                 {/* GAME TITLE — text logo only when the key art (which carries its own
                     painted title) is unavailable. */}
                 {!hasCover && (
                     <div className="text-center space-y-2">
                         <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-green-400 to-green-700 drop-shadow-[0_5px_0_rgba(0,0,0,1)] tracking-wider">
-                            {t('PLANT HEROES')}
+                            {t('BLIGHTFALL')}
                         </h1>
                         <div className="flex items-center justify-center gap-4 text-gray-500 uppercase tracking-widest text-sm md:text-base">
                             <span className="w-12 h-[1px] bg-gray-600"></span>
-                            {t('Blightfall')}
+                            {t('The Last Garden')}
                             <span className="w-12 h-[1px] bg-gray-600"></span>
                         </div>
                     </div>
@@ -157,27 +157,21 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
                         </span>
                     </button>
 
-                    {/* SECONDARY ACTIONS GRID FOR SPACE SAVING */}
+                    {/* HAI CỬA ĐỌC — bộ sưu tập và tutorial.
+                        Cài Đặt và Tải App từng chiếm hai ô ở đây; cả hai là việc của hệ
+                        thống chứ không phải của người chơi, nên chúng dọn lên góc phải trên
+                        và lưới này còn đúng hai thứ đáng bấm giữa hai trận. Dòng "đọc lại
+                        truyện mở đầu" cũng biến mất khỏi đây: truyện giờ nằm trong Bộ Sưu
+                        Tập cùng mọi cảnh khác. */}
                     <div className="grid grid-cols-2 gap-2 mt-1">
-                        {/* TUTORIAL BUTTON */}
+                        {/* COLLECTION BUTTON */}
                         <button
                             onClick={onTutorial}
                             className="group relative px-2 py-3 bg-gray-950/85 backdrop-blur-sm border border-gray-500 hover:border-white text-gray-300 hover:text-white transition-all duration-200 uppercase font-bold tracking-[0.05em] text-[10px] sm:text-xs flex flex-col items-center justify-center gap-1.5 rounded-md"
                         >
                             <BookOpen size={16} />
-                            {t('Tactical Archive')}
+                            {t('Collection')}
                         </button>
-
-                        {/* SETTINGS BUTTON */}
-                        {onOpenSettings && (
-                            <button
-                                onClick={onOpenSettings}
-                                className="group relative px-2 py-3 bg-slate-900/85 backdrop-blur-sm border border-slate-600 hover:border-sky-400 text-slate-200 hover:text-sky-300 transition-all duration-200 uppercase font-bold tracking-[0.05em] text-[10px] sm:text-xs flex flex-col items-center justify-center gap-1.5 rounded-md"
-                            >
-                                <Settings size={16} className="text-sky-400" />
-                                {t('Settings')}
-                            </button>
-                        )}
 
                         {/* REPLAY TUTORIAL BUTTON */}
                         {onReplayTutorial && (
@@ -189,31 +183,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
                                 {t('Tutorial')}
                             </button>
                         )}
-
-                        {/* CÀI APP — ô thứ tư của lưới, chỉ trên mobile.
-                            Bản ghim ở góc phải dưới là bản cho desktop. Trên màn dọc nó
-                            đứng đúng chỗ dòng "đọc lại truyện mở đầu" và chuỗi phiên bản
-                            cùng tranh nhau 30px cuối màn hình — ba thứ chồng lên nhau ở
-                            đúng nơi ngón cái hay chạm. Ở đây nó lấp ô trống của lưới ba
-                            nút và có cỡ bấm bằng những nút còn lại. */}
-                        <button
-                            onClick={handleInstallClick}
-                            className="md:hidden group relative px-2 py-3 bg-sky-950/70 backdrop-blur-sm border border-sky-500/50 hover:bg-sky-500 hover:text-black text-sky-300 transition-all duration-200 uppercase font-bold tracking-[0.05em] text-[10px] sm:text-xs flex flex-col items-center justify-center gap-1.5 rounded-md"
-                        >
-                            <Download size={16} />
-                            {t('Install App')}
-                        </button>
                     </div>
-
-                    {/* READ INTRO COMIC BUTTON */}
-                    {onReplayIntro && (
-                        <button
-                            onClick={onReplayIntro}
-                            className="mt-2 py-2 min-h-[40px] flex items-center justify-center text-slate-500 hover:text-slate-300 transition-colors text-[10px] sm:text-xs uppercase tracking-widest font-bold underline underline-offset-4 decoration-slate-700 mx-auto"
-                        >
-                            {t('Read the intro comic')}
-                        </button>
-                    )}
 
                 </div>
 
@@ -227,15 +197,33 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
                 {t('System Ready // V1.0.4')}
             </div>
 
-            {/* DOWNLOAD / INSTALL PWA BUTTON — bản desktop, ghim góc phải dưới.
-                Trên mobile nút này là ô thứ tư trong lưới nút phụ ở trên. */}
-            <button
-                onClick={handleInstallClick}
-                className="hidden md:flex absolute bottom-3 right-4 z-20 group px-3 py-2 bg-sky-950/60 backdrop-blur-sm border border-sky-500/50 hover:bg-sky-500 hover:text-black text-sky-300 transition-all duration-200 uppercase font-bold tracking-widest text-[10px] items-center gap-2 rounded-md"
-            >
-                <Download size={14} />
-                {t('Install App')}
-            </button>
+            {/* --- CỤM HỆ THỐNG, GHIM GÓC PHẢI TRÊN ---
+                Cài Đặt phải ở một chỗ CỐ ĐỊNH, vì nó là nút duy nhất người chơi đi tìm khi
+                đang bực (nhạc quá to, chữ quá nhỏ) — nằm trong lưới thì mỗi màn hình nó lại
+                trôi đi một chỗ. Tải App đứng ngay bên trái, cỡ nhỏ hơn và chỉ có icon: nó
+                là lời mời, không phải việc cần làm, nhưng vẫn giữ đủ 40px bề bấm.
+                `fixed` chứ không `absolute`: màn dọc cho phép cuộn (overflow-y-auto), cụm này
+                phải đứng yên theo màn hình. pt theo safe-area để không chui vào tai thỏ. */}
+            <div className="fixed top-0 right-0 z-30 flex items-center gap-2 p-3 pt-[calc(0.75rem_+_env(safe-area-inset-top,0px))]">
+                <button
+                    onClick={handleInstallClick}
+                    title={t('Install App')}
+                    aria-label={t('Install App')}
+                    className="w-9 h-9 min-w-[36px] min-h-[36px] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm border border-slate-700 hover:border-sky-400 text-slate-400 hover:text-sky-300 transition-colors rounded-md"
+                >
+                    <Download size={15} />
+                </button>
+                {onOpenSettings && (
+                    <button
+                        onClick={onOpenSettings}
+                        title={t('Settings')}
+                        aria-label={t('Settings')}
+                        className="w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center bg-slate-900/80 backdrop-blur-sm border border-slate-600 hover:border-sky-400 text-sky-400 hover:text-sky-300 transition-colors rounded-md"
+                    >
+                        <Settings size={18} />
+                    </button>
+                )}
+            </div>
         </div>
     );
 };

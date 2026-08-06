@@ -1,6 +1,6 @@
-# Gói mở khóa #7 — Emberwood + Torchwood
+# Gói mở khóa #7 — Emberwood + Ember Log
 
-> **Đã dời xuống gói #7.** Gói #6 giờ là Cobb (Kernel-pult) — xem `PLAN-pack-6-cobb.md`:
+> **Đã dời xuống gói #7.** Gói #6 giờ là Cornova (Corn Mortar) — xem `PLAN-pack-6-cobb.md`:
 > rẻ hơn hẳn (kỹ năng đã viết sẵn trong `data/skills.ts`) và vá đúng một ma sát người chơi
 > đang chịu mỗi trận. Emberwood vẫn cần bước P0 sửa "ô lửa vĩnh viễn" ở mục 2 trước khi bắt đầu.
 >
@@ -13,12 +13,12 @@
 ## 1. Chọn gì, và vì sao
 
 ### Hero #6: **Emberwood** — `CAPTAIN_COMBUSTIBLE`, cây gốc `TORCHWOOD`
-### Gear #6: **Torchwood** — `MAT_TORCHWOOD`, trục **địa hình / cháy dai**
+### Gear #6: **Ember Log** — `MAT_TORCHWOOD`, trục **địa hình / cháy dai**
 
 Ba lý do, xếp theo sức nặng:
 
 **1. Đây là lỗ hổng thiết kế lớn nhất còn lại.** Cả 5 hero hiện tại đều nhắm vào *unit*:
-Shadeleaf bắn thẳng, Ironhusk chặn & đẩy, Sunspot làm kinh tế, Maw hành quyết, Frostpod khống chế.
+Peaburst bắn thẳng, Ironhusk chặn & đẩy, Sunbloom làm kinh tế, Snapmaw hành quyết, Frostpod khống chế.
 **Không ai đụng vào cái bàn cờ.** Đó chính là thứ làm nên Into the Breach — và game đã có sẵn
 ô lửa, ô dung nham, ô khói, mìn. Hero đốt ô là mảnh ghép còn thiếu, không phải hero thứ ba biết đánh cận chiến.
 
@@ -27,7 +27,7 @@ Shadeleaf bắn thẳng, Ironhusk chặn & đẩy, Sunspot làm kinh tế, Maw h
 - Ô `FIRE`: 2 sát thương + bắt cháy ai đứng trên (`turnManager.ts:294`), có texture, có animation
 - `ON_HIT_BURN` **đã nối dây sẵn** trong `applyFusionToSkill` (`fusion.ts:218`) — chưa recipe nào dùng
 - `RETALIATE_BURN`, `FIRE_SPREAD`, `SWALLOW_EXPLODE` **đã khai báo sẵn trong `FusionEffectType`** và
-  không recipe nào dùng. Ba cái tên đó chính là bóng ma của một Torchwood từng được lên kế hoạch.
+  không recipe nào dùng. Ba cái tên đó chính là bóng ma của một Ember Log từng được lên kế hoạch.
 - `utils/icons.ts:29` còn ghi chú: *"hero-captain-combustible.webp giữ lại cho khi Captain Combustible
   quay lại làm hero mở khóa"* (file thực tế đã mất, phải vẽ lại).
 
@@ -37,15 +37,15 @@ Bản ship đã thay bằng Cold Snap. Đây là lấy lại đúng món nợ đ
 ### Đã cân nhắc và loại
 | Phương án | Lý do loại |
 |---|---|
-| Grass Knuckles (Bonk Choy) — theo lộ trình cũ trong DESIGN.md | Melee thứ ba. Ironhusk + Maw đã phủ cận chiến. Trục "xuyên hàng" (Cactus) thì Shadeleaf đã có `PIERCE_ATTACK` sẵn trong skill |
-| Spudow (Potato Mine) — bẫy | Rất hợp Into the Breach, nhưng Potato Mine **đang là item** (`items.ts`, effect `TRAP`). Biến nó thành hero sẽ giẫm chân lên item, phải thiết kế lại cả hai |
+| Grass Knuckles (Bok Boxer) — theo lộ trình cũ trong DESIGN.md | Melee thứ ba. Ironhusk + Snapmaw đã phủ cận chiến. Trục "xuyên hàng" (Cactus) thì Peaburst đã có `PIERCE_ATTACK` sẵn trong skill |
+| Spudow (Seed Mine) — bẫy | Rất hợp Into the Breach, nhưng Seed Mine **đang là item** (`items.ts`, effect `TRAP`). Biến nó thành hero sẽ giẫm chân lên item, phải thiết kế lại cả hai |
 | Rose / Nightcap | Cần cơ chế mới hoàn toàn (thôi miên, tàng hình) — không tái dùng được gì |
 
-**Spudow nên là gói #7**, sau khi item Potato Mine được đổi vai.
+**Spudow nên là gói #7**, sau khi item Seed Mine được đổi vai.
 
 ### Tên gọi
 `HeroId` giữ đúng quy ước tên gốc PvZ Heroes: `CAPTAIN_COMBUSTIBLE`.
-Tên hiển thị theo lối đặt tên thiên nhiên của roster (Shadeleaf, Ironhusk, Sunspot, Maw, Frostpod):
+Tên hiển thị theo lối đặt tên thiên nhiên của roster (Peaburst, Ironhusk, Sunbloom, Snapmaw, Frostpod):
 
 > **Emberwood** — đề xuất chính. Dự phòng: *Cinderbark*, *Scorchpine*, *Ashvein*.
 
@@ -58,7 +58,7 @@ Tên riêng **không dịch sang tiếng Việt** (đúng luật i18n đang áp 
 Không có chỗ nào trong code xoá `environment: 'FIRE'`. Đốt một ô là ô đó cháy đến hết trận.
 
 Với hero hiện tại thì vô hại (chỉ skill `ignite` của một cây phụ tạo ra lửa). Với Emberwood thì
-**vỡ game**: 50 Sun một lần là khoá vĩnh viễn một lối đi trước dãy nhà, và cuối trận cả bàn cờ là biển lửa.
+**vỡ game**: 50 Sol một lần là khoá vĩnh viễn một lối đi trước dãy nhà, và cuối trận cả bàn cờ là biển lửa.
 
 **Phải làm trước khi làm hero:**
 
@@ -112,11 +112,11 @@ CAPTAIN_COMBUSTIBLE: {
 ```
 
 **Vì sao các con số này:**
-- `damage 1` + burn: tổng 2 sát thương nhưng **trả góp**. Shadeleaf gây 2 ngay lập tức. Emberwood không
+- `damage 1` + burn: tổng 2 sát thương nhưng **trả góp**. Peaburst gây 2 ngay lập tức. Emberwood không
   bao giờ được là lựa chọn tốt hơn khi cần dứt điểm — đổi lại anh ta đánh trúng *chỗ*, không phải *người*.
 - `moveRange 2`: chậm. Anh ta dựng vùng cấm rồi đứng giữ, không phải chạy khắp bàn.
-- `maxHp 4`: dày hơn Shadeleaf/Sunspot/Frostpod (3), mỏng hơn Ironhusk (5).
-- `sunCost 50`: bằng Sun Burn của Sunspot (4 sát thương **chắc chắn**). Firebreak yếu hơn khi tính ngay,
+- `maxHp 4`: dày hơn Peaburst/Sunbloom/Frostpod (3), mỏng hơn Ironhusk (5).
+- `sunCost 50`: bằng Sol Burn của Sunbloom (4 sát thương **chắc chắn**). Firebreak yếu hơn khi tính ngay,
   mạnh hơn khi đọc đúng đường đi. Nếu chơi thử thấy yếu → hạ 25, **đừng** tăng sát thương ô lửa.
 
 **Một dòng code chặn đường:** `App.tsx:1014` đang hardcode `if (skill.id === 'ignite')`.
@@ -124,14 +124,14 @@ Phải nới thành danh sách id hoặc tốt hơn là đọc `terrain/environm
 
 ---
 
-## 4. Torchwood — gear mới
+## 4. Ember Log — gear mới
 
 ```ts
 MAT_TORCHWOOD: {
     id: 'MAT_TORCHWOOD',
-    name: 'Torchwood',
+    name: 'Ember Log',
     description: 'Gỗ mồi. Cái gì đi qua nó cũng bốc cháy.',
-    coinCost: 175,                        // ngang Snow Pea; đúng bậc trong DESIGN.md
+    coinCost: 175,                        // ngang Ice Grenade; đúng bậc trong DESIGN.md
     imgUrl: MATERIAL_SPRITES.MAT_TORCHWOOD,
     effect: { type: 'ON_HIT_BURN' },      // fallback chung; hiệu ứng thật tra theo cặp
     benchClass: UnitClass.TORCHWOOD,
@@ -150,49 +150,49 @@ Nghĩa là gear mới có tác dụng cho 5 hero cũ **ngay khi ra mắt**, khô
 
 > Luật của `fusionRecipes.ts`: mỗi fusion phải trả lời **điểm yếu lõi** của chính hero đó.
 > Điểm yếu của Emberwood: **(a)** không dứt điểm được lượt này, **(b)** mỏng khi bị áp sát,
-> **(c)** lửa không tự lan, **(d)** tiền Sun không tự sinh.
+> **(c)** lửa không tự lan, **(d)** tiền Sol không tự sinh.
 
 | Gear | Tên fusion | Hiệu ứng | Trả lời | Code |
 |---|---|---|---|---|
-| Peashooter | **Flare Gun** | `DOUBLE_ATTACK` | (a) — hai mục tiêu cùng cháy, hoặc dồn 1 mục tiêu | ✅ đã có |
-| Wall-nut | **Charwood** | `DAMAGE_REDUCTION 1` | (b) — đứng giữ vùng cấm mà không chết | ✅ đã có |
-| Snow Pea | **Scalding Mist** | `ON_HIT_SLOW` | (a) — làm chậm = **zombie đứng trong lửa lâu hơn** | ✅ đã có |
-| Chomper | **Backdraft** | `RETALIATE_BURN` | (b) — ai cắn anh ta thì bốc cháy | ⚠️ cần nối dây |
-| Sunflower | **Bonfire Bloom** | `SUN_PER_BURNING 15` *(type mới)* | (d) — kinh tế tỉ lệ thuận với số zombie đang cháy | ⚠️ type mới |
+| Seed Gun | **Flare Gun** | `DOUBLE_ATTACK` | (a) — hai mục tiêu cùng cháy, hoặc dồn 1 mục tiêu | ✅ đã có |
+| Armor Plate | **Charwood** | `DAMAGE_REDUCTION 1` | (b) — đứng giữ vùng cấm mà không chết | ✅ đã có |
+| Ice Grenade | **Scalding Mist** | `ON_HIT_SLOW` | (a) — làm chậm = **zombie đứng trong lửa lâu hơn** | ✅ đã có |
+| Steel Jaws | **Backdraft** | `RETALIATE_BURN` | (b) — ai cắn anh ta thì bốc cháy | ⚠️ cần nối dây |
+| Sol Battery | **Bonfire Bloom** | `SUN_PER_BURNING 15` *(type mới)* | (d) — kinh tế tỉ lệ thuận với số zombie đang cháy | ⚠️ type mới |
 
 **Scalding Mist là mảnh ghép hay nhất của cả hàng** — làm chậm không phải để khống chế, mà để giữ mục
 tiêu lại trong lửa thêm một lượt. Fire + ice ở đây cộng hưởng thật chứ không phải dán hai từ khoá vào nhau.
 
 **Bonfire Bloom**: bản rẻ là `SUN_PER_TURN 15` (đã có sẵn, 0 dòng code) nhưng nhạt. Bản đúng —
-"+15 Sun mỗi lượt **nếu có ít nhất một zombie đang cháy**" — cần một type mới, khoảng 8 dòng trong
+"+15 Sol mỗi lượt **nếu có ít nhất một zombie đang cháy**" — cần một type mới, khoảng 8 dòng trong
 `turnManager.ts` PHASE 2. Đáng làm: nó biến kinh tế của anh ta thành hệ quả của việc chơi giỏi.
 
 ---
 
-## 6. Cột dọc — 5 hero cũ × Torchwood
+## 6. Cột dọc — 5 hero cũ × Ember Log
 
 | Hero | Tên fusion | Hiệu ứng | Trả lời điểm yếu | Code |
 |---|---|---|---|---|
-| Shadeleaf | **Fire Pea** | `ON_HIT_BURN` | Bắn suông không có đuôi — giờ mỗi phát để lại 1 sát thương trả góp | ✅ đã có |
+| Peaburst | **Fire Pea** | `ON_HIT_BURN` | Bắn suông không có đuôi — giờ mỗi phát để lại 1 sát thương trả góp | ✅ đã có |
 | Frostpod | **Steam Shot** | `ON_HIT_BURN` | Cô ấy **không giết được gì** — cháy là cơ chế kết liễu đầu tiên cô có | ✅ đã có |
 | Ironhusk | **Brazier Shield** | `RETALIATE_BURN` | Chặn tốt mà không đóng góp — giờ mỗi cú cắn vào tường phải trả giá | ⚠️ cần nối dây |
-| Maw | **Cinder Gullet** | `SWALLOW_EXPLODE` | 2 lượt tiêu hoá vô dụng — giờ mỗi cú nuốt nổ ra lửa quanh mình | ⚠️ cần nối dây |
-| Sunspot | **Solar Kiln** | `SKILL_LEAVES_FIRE` *(type mới)* | Không tự vệ được — Sun Burn giờ để lại ô lửa làm tường | ⚠️ type mới |
+| Snapmaw | **Cinder Gullet** | `SWALLOW_EXPLODE` | 2 lượt tiêu hoá vô dụng — giờ mỗi cú nuốt nổ ra lửa quanh mình | ⚠️ cần nối dây |
+| Sunbloom | **Solar Kiln** | `SKILL_LEAVES_FIRE` *(type mới)* | Không tự vệ được — Sol Burn giờ để lại ô lửa làm tường | ⚠️ type mới |
 
 Hai dòng `ON_HIT_BURN` trùng nhau là **cố ý và đúng chuẩn ma trận hiện tại** (`SUN_ON_KILL` xuất hiện 2 lần,
 `DOUBLE_ATTACK` 2 lần, `ON_HIT_FREEZE` 2 lần). Cùng một hiệu ứng nhưng đọc ra hai câu chuyện khác nhau:
-với Shadeleaf là thêm đuôi sát thương, với Frostpod là **lần đầu tiên cô ấy tự kết liễu được mục tiêu**.
+với Peaburst là thêm đuôi sát thương, với Frostpod là **lần đầu tiên cô ấy tự kết liễu được mục tiêu**.
 
-**Cinder Gullet** là công thức có tính chuyển hoá cao nhất cột này: Maw hiện tại nuốt xong là đứng chịu trận
+**Cinder Gullet** là công thức có tính chuyển hoá cao nhất cột này: Snapmaw hiện tại nuốt xong là đứng chịu trận
 2 lượt. Cho cú nuốt nổ ra lửa quanh mình nghĩa là cửa sổ tiêu hoá **tự nó là một vùng cấm** — đúng
-tinh thần "mọi fusion của Maw phải đánh vào cửa sổ tiêu hoá" đã ghi trong file.
+tinh thần "mọi fusion của Snapmaw phải đánh vào cửa sổ tiêu hoá" đã ghi trong file.
 
 **Solar Kiln** bản rẻ: dùng `ON_HIT_BURN` (0 dòng code). Bản đúng cần type mới nhưng chỉ ~8 dòng, tái dùng
 action `MODIFY_TERRAIN` đã có.
 
 ---
 
-## 7. Công thức chữ ký — Emberwood × Torchwood
+## 7. Công thức chữ ký — Emberwood × Ember Log
 
 | Tên | Hiệu ứng | Ghi chú |
 |---|---|---|
@@ -201,7 +201,7 @@ action `MODIFY_TERRAIN` đã có.
 `SIGNATURE_MATERIAL` = công thức hero **biết sẵn khi vừa mở khoá**. Nên cân nhắc:
 
 - Đây là công thức mạnh nhất gói. Trao ngay lúc mở khoá là một cú nhảy sức mạnh lớn.
-- **Nhưng** các signature hiện tại cũng không hề nhẹ (Shadeleaf + Peashooter = Repeater = nhân đôi damage).
+- **Nhưng** các signature hiện tại cũng không hề nhẹ (Peaburst + Seed Gun = Repeater = nhân đôi damage).
 - Bắt buộc phải có rào chắn, nếu không cả bàn cờ sẽ cháy: **không lan vào ô nhà, ô spawn, và ô đang có
   cây đứng**; mỗi ô chỉ lan **một lần**; và `fireTurns` (mục 2) là cái phanh cuối.
 
@@ -264,7 +264,7 @@ Trình biên dịch chính là checklist — không thể quên ô nào.
 2. **Fire friendly-fire.** Ô lửa đốt cả cây. Emberwood miễn nhiễm, đồng đội thì không. Đây là **áp lực
    thiết kế tốt** (đặt lửa sai chỗ là tự chặn đường mình) nhưng cần overlay đọc được — ô lửa hiện đã có
    hiệu ứng riêng, nên coi như đủ.
-3. **Lửa và ô nhà.** Phải chốt luật: lửa **không** được đốt ô nhà và **không** làm mất não.
+3. **Lửa và ô nhà.** Phải chốt luật: lửa **không** được đốt ô nhà và **không** làm mất mầm.
    Chưa có cơ chế nào cho phép điều đó xảy ra, nhưng `FIRE_SPREAD` sẽ tạo ra nó nếu không chặn.
 4. **AI không né lửa.** Hiện tại tốt (lửa thành thuế đường đi). Nếu sau này thêm né tránh vào `aiLogic`,
    Emberwood mất giá trị ngay — lúc đó lửa phải chuyển thành công cụ **lùa** thay vì gây sát thương.

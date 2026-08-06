@@ -8,7 +8,7 @@ import { Position, TileData, Unit } from '../types';
  * React-free so it can be unit tested or reused by the HUD.
  *
  * COORDINATES: `x` is the screen ROW (vertical), `y` is the screen COLUMN (horizontal).
- * Houses live at column `y === HOUSE_COLUMN` (0), zombies march in from high `y`.
+ * Greenspires live at column `y === HOUSE_COLUMN` (0), zombies march in from high `y`.
  */
 
 /** A single incoming hit on a tile, attributed to the unit that will deliver it. */
@@ -19,15 +19,15 @@ export interface ThreatMark {
 }
 
 /**
- * A brain that will be carried off on the enemy's next turn.
+ * A sprout that will be carried off on the enemy's next turn.
  *
- * This is the single most expensive thing that can happen — brains are a run-wide budget
+ * This is the single most expensive thing that can happen — sprouts are a run-wide budget
  * and running out ends the run — yet it used to be drawn as an ordinary amber "walks here"
  * marker, indistinguishable from a zombie shuffling one tile forward. It gets its own
  * overlay so the player can never miss the turn they had to react.
  */
 export interface BrainThreat {
-    /** The house about to be robbed. */
+    /** The Greenspire about to be robbed. */
     pos: Position;
     /** The zombie that will take it, so the culprit can be marked too. */
     sourceId: string;
@@ -68,8 +68,8 @@ export const willAct = (unit: Unit): boolean => {
      * `isDying` is a rendering flag: the reducer sets it when it starts the death animation,
      * which is a separate action from the APPLY_DAMAGE that emptied the health bar. Between
      * those two — and on any path that removes a body without animating it — the corpse is
-     * still in `units` with an intent on it, so the board went on warning that a house was
-     * about to lose its brain to a zombie the player had already killed. The whole point of
+     * still in `units` with an intent on it, so the board went on warning that a Greenspire was
+     * about to lose its sprout to a zombie the player had already killed. The whole point of
      * the telegraph is that it can be trusted; one warning that cannot be acted on teaches
      * people to ignore the ones that can.
      */
@@ -134,40 +134,40 @@ export const computeThreatenedTiles = (units: Unit[]): Position[] => {
 };
 
 /**
- * Houses that lose their brain next turn, and who takes it.
+ * Greenspires that lose their sprout next turn, and who takes it.
  *
- * A zombie takes a brain by BITING the house from the tile beside it, and that bite is an
- * ordinary ATTACK intent aimed at the house (turnManager, "BRAIN BITE"). So the telegraph is
- * simply: is something aiming an attack at a house?
+ * A zombie takes a sprout by BITING the Greenspire from the tile beside it, and that bite is an
+ * ordinary ATTACK intent aimed at the Greenspire (turnManager, "BRAIN BITE"). So the telegraph is
+ * simply: is something aiming an attack at a Greenspire?
  *
- * There used to be a second case — a walk whose destination was a house — and removing it is
+ * There used to be a second case — a walk whose destination was a Greenspire — and removing it is
  * the point. It fired a full turn before the zombie could do anything, on a unit the player
- * could still intercept, which trained people to read the red house marker as noise. A
+ * could still intercept, which trained people to read the red Greenspire marker as noise. A
  * warning that cannot be acted on yet is worse than no warning.
  */
 export const computeBrainThreats = (units: Unit[], board: TileData[]): BrainThreat[] => {
-    const houses = new Map<string, TileData>();
+    const Greenspires = new Map<string, TileData>();
     for (const tile of board || []) {
-        if (tile.isHouse && tile.hasBrain !== false) houses.set(key(tile), tile);
+        if (tile.isHouse && tile.hasBrain !== false) Greenspires.set(key(tile), tile);
     }
-    if (houses.size === 0) return [];
+    if (Greenspires.size === 0) return [];
 
     const threats: BrainThreat[] = [];
     for (const unit of units || []) {
         if (!willAct(unit)) continue;
         const intent = unit.intent!;
 
-        // Two ways a brain is about to go. The ATTACK case is the urgent one: the zombie is
-        // already standing on the doorstep and takes the brain when the turn resolves, so
+        // Two ways a sprout is about to go. The ATTACK case is the urgent one: the zombie is
+        // already standing on the doorstep and takes the sprout when the turn resolves, so
         // this is the player's last chance to kill it or shove it off.
         if (intent.type === 'ATTACK') {
             if (!isValidPos(intent.target)) continue;
-            const house = houses.get(key(intent.target));
-            if (!house) continue;
-            // A warded house is not "a brain about to go" — the bite will break the layer,
-            // not the house (PLAN-hero-zephyr §6.3). Painting it red anyway would teach the
+            const Greenspire = Greenspires.get(key(intent.target));
+            if (!Greenspire) continue;
+            // A warded Greenspire is not "a sprout about to go" — the bite will break the layer,
+            // not the Greenspire (PLAN-hero-zephyr §6.3). Painting it red anyway would teach the
             // player that Reinforce does nothing.
-            if (house.shielded) continue;
+            if (Greenspire.shielded) continue;
             threats.push({ pos: { x: intent.target.x, y: intent.target.y }, sourceId: unit.id });
             continue;
         }
@@ -176,7 +176,7 @@ export const computeBrainThreats = (units: Unit[], board: TileData[]): BrainThre
     return threats;
 };
 
-/** Ids of the zombies that will carry a brain off next turn. */
+/** Ids of the zombies that will carry a sprout off next turn. */
 export const brainThiefIds = (threats: BrainThreat[]): Set<string> =>
     new Set((threats || []).map(threat => threat.sourceId));
 

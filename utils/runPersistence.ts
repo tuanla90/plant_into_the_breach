@@ -1,3 +1,4 @@
+import { aliasHeroId, aliasClassId, aliasBossId, aliasItemId } from './idAliases';
 import { GameState, MapNode, Unit, UnitType } from '../types';
 import { HERO_DEFINITIONS } from '../data/heroes';
 import { getFusionEffectValue } from './fusion';
@@ -126,14 +127,33 @@ export const loadRunState = (): SavedRun | null => {
         if (saved?.version !== 1) return null;
         if (!saved.gameState || !Array.isArray(saved.units) || !Array.isArray(saved.mapNodes)) return null;
         const run = saved as SavedRun;
+        // ID MIGRATION (NAMING.md Phase 2, 2026-08-06): snapshot cũ mang id cũ trong
+        // class/heroId/skills/inventory/heroElements/fallenHeroes/bossId. Dịch ngay tại
+        // biên nạp, TRƯỚC mọi lookup theo definition — thiếu bước này run đang dở vỡ im lặng.
+        const migratedUnits = run.units.map(u => ({
+            ...u,
+            class: aliasClassId(u.class as unknown as string) as Unit['class'],
+            heroId: u.heroId ? aliasHeroId(u.heroId as unknown as string) as Unit['heroId'] : u.heroId,
+        }));
         return {
             ...run,
+            mapNodes: run.mapNodes.map(n => n.bossId
+                ? { ...n, bossId: aliasBossId(n.bossId as unknown as string) as MapNode['bossId'] }
+                : n),
             gameState: {
                 ...run.gameState,
+                inventory: Array.isArray(run.gameState.inventory)
+                    ? run.gameState.inventory.map(aliasItemId)
+                    : run.gameState.inventory,
+                fallenHeroes: Array.isArray(run.gameState.fallenHeroes)
+                    ? (run.gameState.fallenHeroes.map(id => aliasHeroId(id as unknown as string)) as GameState['fallenHeroes'])
+                    : run.gameState.fallenHeroes,
                 // Optional in the snapshot on purpose: a run saved before elements existed has
                 // no map at all, and "no map" is exactly the base-form squad it was played as.
                 // Materialised to {} here so nothing downstream has to guard the lookup.
-                heroElements: run.gameState.heroElements ?? {},
+                heroElements: Object.fromEntries(
+                    Object.entries(run.gameState.heroElements ?? {}).map(([k, v]) => [aliasHeroId(k), v]),
+                ) as GameState['heroElements'],
             },
             /**
              * Scrubbed on the way IN as well as on the way out.
@@ -143,7 +163,7 @@ export const loadRunState = (): SavedRun | null => {
              * the bug that made it. Filtering on load is what makes those runs recover rather
              * than carry a box around for the rest of the game.
              */
-            units: migrateHeroHp(run.units.filter(u => !isBattleOnlyUnit(u))),
+            units: migrateHeroHp(migratedUnits.filter(u => !isBattleOnlyUnit(u))),
         };
     } catch {
         return null;

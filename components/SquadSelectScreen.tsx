@@ -4,7 +4,7 @@ import { ElementId, HeroId, HeroRole, Skill, UnitClass, UnitDefinition } from '.
 import { SQUAD_SIZE } from '../constants';
 import { HERO_DEFINITIONS, STARTING_HEROES } from '../data/heroes';
 import { bossForElement, unlockInfoFor } from '../data/unlocks';
-import { HandFist, Heart, ArrowLeft, ArrowRight, Sun, Footprints, Swords, Sparkles, Lock, Ban, Snowflake, Flame, Zap, Atom, Settings } from 'lucide-react';
+import { HandFist, Heart, ArrowLeft, ArrowRight, Sun as Sol, Footprints, Swords, Sparkles, Lock, Ban, Snowflake, Flame, Zap, Atom, Settings } from 'lucide-react';
 import { HERO_ACCENTS } from '../utils/icons';
 import { IS_COARSE_POINTER } from '../utils/platform';
 import { ELEMENTS, ELEMENT_DEFINITIONS, ELEMENT_HP_COST, RESONANCE_DESCRIPTIONS, resonanceOf } from '../utils/elements';
@@ -45,7 +45,7 @@ const prettyClass = (cls: UnitClass) =>
     cls.toString().toLowerCase().split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
 
-/** One line of a hero card: the free basic attack, or the Sun-priced hero skill. */
+/** One line of a hero card: the free basic attack, or the Sol-priced hero skill. */
 const SkillLine: React.FC<{ skill: Skill; isSkill?: boolean }> = ({ skill, isSkill }) => {
     const { t } = useI18n();
     const cost = skill.sunCost ?? 0;
@@ -64,7 +64,7 @@ const SkillLine: React.FC<{ skill: Skill; isSkill?: boolean }> = ({ skill, isSki
                 )}
                 {cost > 0 ? (
                     <span className="flex items-center gap-0.5 text-[10px] font-black text-yellow-400">
-                        <Sun size={9} fill="currentColor" /> {cost}
+                        <Sol size={9} fill="currentColor" /> {cost}
                     </span>
                 ) : (
                     <span className="text-[9px] font-bold uppercase text-green-400">{t('Free')}</span>
@@ -504,11 +504,11 @@ export const SquadSelectScreen: React.FC<SquadSelectScreenProps> = ({
               style={{ flex: '0 0 240px', width: 240 }}
           >
               {card}
-              {/* `elementSlot: 'NONE'` (Gourdward): a kit with no enemy-facing action would
-                  pay the element's 2 max HP for literally nothing, and his ward already
-                  grants all three immunities — the picker here would be a shop selling a
-                  trap. Hidden, not disabled: there is no choice to explain. */}
-              {isSelected && !locked && hero.elementSlot !== 'NONE' && (
+              {/* Every hero picks. Gourdward used to be hidden here (`elementSlot: 'NONE'`)
+                  because his ward granted all three immunities outright, which left nothing to
+                  buy; the ward is ONE element now — the one he picks — so the slot is a real
+                  decision for him too. */}
+              {isSelected && !locked && (
                   <ElementPicker
                       chosen={element}
                       onChoose={el => handleChooseElement(heroId, el)}

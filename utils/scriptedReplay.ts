@@ -12,8 +12,8 @@
  * So this runs it. Every scripted battle is replayed click-for-click at module load,
  * against the same code the game executes: processTurn for the enemy half, and a faithful
  * copy of App.tsx's action semantics for the player half (getValidMoves / gettValidSkillTargets
- * for legality, calculateDamage, planPush + collision/drown/brain rules, mid-path mine
- * triggers, Sun costs, the Repeater's weaker second shot). A step that would strand the
+ * for legality, calculateDamage, planPush + collision/drown/sprout rules, mid-path mine
+ * triggers, Sol costs, the Repeater's weaker second shot). A step that would strand the
  * real overlay throws here, with the board state attached.
  *
  * Deliberately NOT modelled: hero HP carried between boards (each board replays from full
@@ -47,7 +47,7 @@ export interface ReplayContext {
     benchMaterials: string[];
     /** heroId -> material ids fused at earlier campfires. */
     fusions: Record<string, string[]>;
-    /** Brains left in the run when the board starts. */
+    /** Sprouts left in the run when the board starts. */
     brainsRemaining: number;
 }
 
@@ -124,7 +124,7 @@ export const replayScriptedBattle = (
             attackRange: def.attackRange ?? 1,
             armor: def.armor,
             intent: { type: 'MOVE', description: 'Watching...' },
-            isMassive: sp.cls === UnitClass.GARGANTUAR,
+            isMassive: sp.cls === UnitClass.GRAVEHULK,
         } as Unit);
     });
 
@@ -153,10 +153,10 @@ export const replayScriptedBattle = (
         log.push(`${u.heroId || u.class} dies at ${TILE(u.position.x, u.position.y)}`);
         units = units.filter(z => z.id !== u.id);
     };
-    const loseBrain = (house: Position, taker?: Unit) => {
+    const loseBrain = (Greenspire: Position, taker?: Unit) => {
         brainsLost += 1;
-        log.push(`BRAIN LOST at ${TILE(house.x, house.y)}`);
-        board.forEach(t => { if (t.x === house.x && t.y === house.y) (t as any).hasBrain = false; });
+        log.push(`BRAIN LOST at ${TILE(Greenspire.x, Greenspire.y)}`);
+        board.forEach(t => { if (t.x === Greenspire.x && t.y === Greenspire.y) (t as any).hasBrain = false; });
         if (taker) units = units.filter(z => z.id !== taker.id);
     };
     /** The engine's trap rule: first enemy to enter the tile eats it and stops. */
@@ -177,7 +177,7 @@ export const replayScriptedBattle = (
     // -------------------------------------------------- player-half: skill resolution
     // A faithful copy of App.tsx's resolveTargets, narrowed to the effects the tutorial
     // uses. planPush/applyPushPlan semantics are the real ones: chain shoves, collision
-    // damage at walls and edges, drowning, and shoved-into-a-live-house brain theft.
+    // damage at walls and edges, drowning, and shoved-into-a-live-Greenspire sprout theft.
     const applyPush = (target: Unit, caster: Unit, pos: Position) => {
         if (target.immunities.includes('PUSH')) return;
         let dx = pos.x - caster.position.x, dy = pos.y - caster.position.y;
@@ -188,9 +188,9 @@ export const replayScriptedBattle = (
             if (u) stepThroughTraps(u, [m.to]);
         });
         plan.drowned.forEach(id => { const u = living().find(z => z.id === id); if (u) { log.push(`${u.class} drowns`); killUnit(u); } });
-        plan.tookBrain.forEach(({ unitId, house }) => {
+        plan.tookBrain.forEach(({ unitId, Greenspire }) => {
             const u = living().find(z => z.id === unitId);
-            if (u) loseBrain(house, u);
+            if (u) loseBrain(Greenspire, u);
         });
         plan.collided.forEach(id => {
             const u = living().find(z => z.id === id);
@@ -426,7 +426,7 @@ export const replayScriptedBattle = (
                 const tile = getTileAt({ x, y }, board) as any;
                 const bad = !tile || unitAt(x, y) || tile.trap
                     || !DEFAULT_TERRAIN_DEFS[tile.terrain]?.isWalkable || tile.isHouse;
-                if (bad) fail(`cannot arm ${item!.id} on ${describeTile(x, y)} — needs an empty walkable non-house tile`);
+                if (bad) fail(`cannot arm ${item!.id} on ${describeTile(x, y)} — needs an empty walkable non-Greenspire tile`);
                 tile.trap = { damage: item!.damage, imgUrl: item!.imgUrl };
                 log.push(`${item!.id} armed at ${TILE(x, y)}`);
                 continue;
@@ -443,7 +443,7 @@ export const replayScriptedBattle = (
                 fail(`${sel.heroId || sel.class}@${TILE(sel.position.x, sel.position.y)} cannot target ${describeTile(x, y)} with ${skill.id} (turn ${turn}) — ${boardLine()}`);
             }
             const cost = Math.max(0, (skill.sunCost ?? 0) - getFusionEffectValue(sel, 'SKILL_DISCOUNT'));
-            if (cost > sun) fail(`${skill.id} costs ${cost} Sun, only ${sun} banked (turn ${turn})`);
+            if (cost > sun) fail(`${skill.id} costs ${cost} Sol, only ${sun} banked (turn ${turn})`);
             sun -= cost;
             castSkill(sel, skill, { x, y });
             // The Repeater fusion: a second, weaker shot rides every free basic attack.

@@ -3,7 +3,8 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { MapNode, Unit, UnitType, UnitClass, UnitDefinition, WorldType } from '../types';
 import { WORLD_META } from '../data/worlds';
-import { Skull, Swords, Tent, Crown, HelpCircle, Sun, ShoppingBag, Map as MapIcon, Check, Crosshair, ZoomIn, ZoomOut, Users, X, Info, Bug, Library, Settings } from 'lucide-react';
+import { unitDisplayName } from '../utils/unitFactory';
+import { Skull, Swords, Tent, Crown, HelpCircle, Sun as Sol, ShoppingBag, Map as MapIcon, Check, Crosshair, ZoomIn, ZoomOut, Users, X, Info, Bug, Library, Settings } from 'lucide-react';
 import { useI18n } from '../i18n';
 
 // --- CONFIGURATION & HELPERS ---
@@ -26,7 +27,7 @@ const NODE_INFO: Record<string, { label: string; desc: string; icon: React.React
         color: 'text-emerald-400', border: 'border-emerald-500', bg: 'bg-emerald-950'
     },
     'SHOP': {
-        label: 'Supply Depot', desc: 'Spend Sun on items.',
+        label: 'Supply Depot', desc: 'Spend Sol on items.',
         icon: <ShoppingBag size={20} />,
         // Gold/Yellow
         color: 'text-yellow-300', border: 'border-yellow-400', bg: 'bg-yellow-900'
@@ -63,13 +64,12 @@ interface MapScreenProps {
   highlightLegend?: string[];
   /** Dev wallet top-up, so a jumped-to Shop is actually testable. */
   onDebugGrant?: () => void;
-  /** Dev: burn a brain, so the buy-back is reachable without playing a losing map. */
+  /** Dev: burn a sprout, so the buy-back is reachable without playing a losing map. */
   onDebugLoseBrain?: () => void;
   units: Unit[];
   sun: number;
   unitDefs: Record<UnitClass, UnitDefinition>;
   onUpgradeUnit: (unitId: string, stat: 'HP' | 'DMG' | 'MOVE' | 'CDR') => void;
-  onEvolveUnit: (unitId: string, targetClass: UnitClass) => void;
   /** Opens the heroes-and-fusions reference. Mid-run it answers "is this plant worth buying". */
   onOpenCodex?: () => void;
   onOpenSettings?: () => void;
@@ -102,7 +102,7 @@ const NodeTooltip = ({ type, x, y, zoom }: { type: string, x: number, y: number,
     );
 };
 
-export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units, sun, unitDefs, onUpgradeUnit, onEvolveUnit, debugMode = false, onToggleDebug, onDebugGrant, onDebugLoseBrain, forceLegend = false, highlightLegend, onOpenCodex, onOpenSettings }) => {
+export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units, sun, unitDefs, onUpgradeUnit, debugMode = false, onToggleDebug, onDebugGrant, onDebugLoseBrain, forceLegend = false, highlightLegend, onOpenCodex, onOpenSettings }) => {
   const { t } = useI18n();
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -359,7 +359,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
                         onClick={onDebugLoseBrain}
                         className="px-3 py-1 border border-fuchsia-500 text-fuchsia-200 hover:bg-fuchsia-900 font-bold"
                     >
-                        {t('-1 Brain')}
+                        {t('-1 Sprout')}
                     </button>
                 </div>
             </div>
@@ -460,7 +460,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
                      <button
                         onClick={onOpenCodex}
                         className="p-2 min-w-[40px] min-h-[40px] flex items-center justify-center border border-gray-700 hover:border-gray-500 hover:bg-gray-800 rounded text-gray-400 hover:text-white"
-                        title={t('Tactical Archive')}
+                        title={t('Collection')}
                      >
                          <Library size={18} />
                      </button>
@@ -638,7 +638,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
                                 <Users size={32} className="text-green-400" /> {t('Squad Status')}
                             </h2>
                             <div className="bg-yellow-900/20 px-4 py-2 rounded-full border border-yellow-600/50 flex items-center gap-3">
-                                <Sun size={24} className="text-yellow-400 fill-yellow-500" />
+                                <Sol size={24} className="text-yellow-400 fill-yellow-500" />
                                 <span className="text-2xl text-yellow-400 font-bold">{sun}</span>
                             </div>
                         </div>
@@ -654,9 +654,15 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
                     <div className="flex-1 overflow-y-auto p-8 bg-[#0d0e11]">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
                             {playerUnits.map(unit => {
+                                // `unitDefs[unit.class]` là bảng CÂY, và một hero mang class
+                                // bằng cây gốc của mình — nên trước đây thẻ này in tên cây
+                                // ("Seed Gun" thay vì "Peaburst"), và một hero mà bảng cây
+                                // không có entry thì mất hẳn thẻ do dòng `return null`.
                                 const def = unitDefs[unit.class];
-                                if (!def) return null;
-                                const { maxStats, upgradeCosts, evolvesTo, evolutionCost } = def;
+                                const maxStats = def?.maxStats
+                                    ?? { hp: unit.maxHp, dmg: unit.damage, move: unit.moveRange, cdr: 2 };
+                                const upgradeCosts = def?.upgradeCosts
+                                    ?? { hp: 0, dmg: 0, move: 0, cdr: 0 };
 
                                 return (
                                 <div key={unit.id} className="bg-[#1e2025] border-2 border-[#333] p-5 rounded-lg flex flex-col gap-4 hover:border-yellow-500 transition-all group shadow-lg">
@@ -667,7 +673,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between items-start">
-                                                <span className="text-lg font-bold text-white uppercase truncate">{t(def.name)}</span>
+                                                <span className="text-lg font-bold text-white uppercase truncate">{t(unitDisplayName(unit, def?.name))}</span>
                                                 <span className="text-xs text-blue-400 font-bold bg-blue-900/20 px-2 py-0.5 rounded border border-blue-800">{t('Lv {level}', { level: unit.level })}</span>
                                             </div>
                                             <div className="text-sm text-gray-500 uppercase mt-1 tracking-wider">{t(unit.role)}</div>
@@ -678,7 +684,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between">
                                             <span className="text-xs uppercase text-gray-500 font-bold">{t('Upgrades')}</span>
-                                            <span className="text-xs text-yellow-500 flex items-center gap-1"><Sun size={10}/> {t('Cost')}</span>
+                                            <span className="text-xs text-yellow-500 flex items-center gap-1"><Sol size={10}/> {t('Cost')}</span>
                                         </div>
                                         <div className="grid grid-cols-2 gap-3">
                                             <StatButton
@@ -692,28 +698,12 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
                                         </div>
                                     </div>
 
-                                    {/* Evolution */}
-                                    {evolvesTo && evolvesTo.length > 0 && (
-                                        <div className="mt-auto pt-4 border-t border-gray-700">
-                                            <span className="text-xs uppercase text-gray-500 font-bold block mb-2">{t('Evolution')}</span>
-                                            <div className="space-y-2">
-                                                {evolvesTo.map(targetClass => (
-                                                    <button
-                                                        key={targetClass}
-                                                        onClick={() => sun >= (evolutionCost || 9999) && onEvolveUnit(unit.id, targetClass)}
-                                                        className={`w-full py-3 px-3 border rounded text-xs uppercase font-bold flex items-center justify-between transition-all
-                                                            ${sun >= (evolutionCost || 9999)
-                                                                ? 'bg-purple-900/30 border-purple-500 text-purple-200 hover:bg-purple-900/60 shadow-[0_0_10px_rgba(168,85,247,0.2)]'
-                                                                : 'bg-black/30 border-gray-700 text-gray-600 cursor-not-allowed'}
-                                                        `}
-                                                    >
-                                                        <span className="flex items-center gap-2"><div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div> {t('Evolve')}</span>
-                                                        <span className="text-yellow-500">{evolutionCost} ☀️</span>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
+                                    {/* TIẾN HOÁ — đã gỡ. Nó đổi thẳng `class` của unit sang một cây
+                                        khác, mà mọi đích tiến hoá (Repeater, Tower Shield, Twin Sol
+                                        Battery) đều nằm trong nhóm cây vừa bị dọn. Kể cả khi còn,
+                                        nút này biến một HERO thành cây thường — hero mang `class`
+                                        bằng chính cây gốc của mình — và tiêu Sol trên bản đồ trong
+                                        khi Sol là tài nguyên trong-một-trận. */}
                                 </div>
                             )})}
 

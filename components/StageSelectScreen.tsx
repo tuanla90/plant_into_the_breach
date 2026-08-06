@@ -62,14 +62,14 @@ const ElementCrest: React.FC<{ element: ElementId; accent: string; open: boolean
  * one of them did before their sprites landed), and the same picture on two of the nine cards
  * is worse than no picture: this screen exists to tell nine fights apart. The day a tenth boss
  * is added it will borrow too, and it should land on the skull plate rather than quietly
- * wearing the Gargantuar's face.
+ * wearing the Gravehulk's face.
  */
-const GARGANTUAR_ART = './img/sprite-gargantuar.png';
+const GARGANTUAR_ART = './img/sprite-gravehulk.png';
 const bossPortrait = (id: BossId): string | undefined => {
     const cls = BOSS_UNIT_CLASS[id];
     const art = cls ? (ZOMBIE_DEFINITIONS as any)[cls]?.imgUrl as string | undefined : undefined;
     if (!art) return undefined;
-    if (art === GARGANTUAR_ART && id !== 'GARGANTUAR') return undefined;
+    if (art === GARGANTUAR_ART && id !== 'GRAVEHULK') return undefined;
     return art;
 };
 
@@ -629,7 +629,7 @@ export const StageSelectScreen: React.FC<StageSelectScreenProps> = ({ unlocks, o
                                                             className="min-h-0 max-h-full w-auto max-w-full object-contain transition-transform duration-200 group-hover:scale-105"
                                                             style={{
                                                                 // Same mirror the board applies (utils/icons facingFlip):
-                                                                // the Gargantuar is drawn facing right, and on this card
+                                                                // the Gravehulk is drawn facing right, and on this card
                                                                 // that meant turning his back on the hero he is fighting.
                                                                 transform: bossFlip.trim() || undefined,
                                                                 filter: open

@@ -17,7 +17,7 @@ import { COIN_NO_BRAIN_LOST } from '../constants';
  */
 
 const BONUS_POOL: MissionBonus[] = [
-    { type: 'NO_BRAIN_LOST', description: 'Finish without losing a brain', coins: COIN_NO_BRAIN_LOST },
+    { type: 'NO_BRAIN_LOST', description: 'Finish without losing a sprout', coins: COIN_NO_BRAIN_LOST },
     { type: 'NO_HERO_DOWN', description: 'Finish with every hero standing', coins: 25 },
     { type: 'KILL_COUNT', description: 'Destroy 6 zombies', coins: 25, count: 6 },
 ];
@@ -62,7 +62,7 @@ export const buildMission = (
         ? 'SURVIVE_TURNS'
         : pickOne(available);
 
-    const houses = board.filter(t => t.isHouse && t.hasBrain);
+    const Greenspires = board.filter(t => t.isHouse && t.hasBrain);
     const spawns = board.filter(t => t.isSpawnZone);
     // Somewhere in the middle of the board — a tile worth fighting over, not a safe corner.
     //
@@ -85,13 +85,13 @@ export const buildMission = (
 
     switch (objective) {
         case 'PROTECT_HOUSE': {
-            const house = houses.length ? pickOne(houses) : null;
-            if (!house) break;
+            const Greenspire = Greenspires.length ? pickOne(Greenspires) : null;
+            if (!Greenspire) break;
             return {
                 ...base,
                 objective,
-                target: { x: house.x, y: house.y },
-                description: 'Protect the marked house — losing its brain ends the mission.',
+                target: { x: Greenspire.x, y: Greenspire.y },
+                description: 'Protect the marked Greenspire — losing its sprout ends the mission.',
             };
         }
         case 'KILL_ALL':
@@ -121,7 +121,7 @@ export const buildMission = (
             if (!boss) break;
             return {
                 ...base, objective, bossId: boss.bossId,
-                description: 'Bring it down. No houses to hold and no clock — this one ends when one side stops standing.',
+                description: 'Bring it down. No Greenspires to hold and no clock — this one ends when one side stops standing.',
             };
         }
 
@@ -163,8 +163,8 @@ const someoneOn = (pos: Position, units: Unit[]) =>
 export const isMissionFailed = (mission: Mission | null, board: TileData[]): boolean => {
     if (!mission || mission.failed) return !!mission?.failed;
     if (mission.objective === 'PROTECT_HOUSE' && mission.target) {
-        const house = board.find(t => t.x === mission.target!.x && t.y === mission.target!.y);
-        return !!house && !house.hasBrain;
+        const Greenspire = board.find(t => t.x === mission.target!.x && t.y === mission.target!.y);
+        return !!Greenspire && !Greenspire.hasBrain;
     }
     return false;
 };

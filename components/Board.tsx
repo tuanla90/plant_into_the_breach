@@ -17,7 +17,7 @@ import {
   findEnemyPathTile,
   sumThreatDamageAt,
 } from '../utils/threat';
-import { Brain, TriangleAlert } from 'lucide-react';
+import { Sprout, TriangleAlert } from 'lucide-react';
 import { mobileSprite } from '../utils/platform';
 
 interface BoardProps {
@@ -60,7 +60,7 @@ interface BoardProps {
   hazardTiles?: Position[];
   /** One-line description of the pending hazard, shown as a banner. */
   hazardLabel?: string;
-  /** Tiles the mission objective points at (house to protect, tile to hold, spawns to block). */
+  /** Tiles the mission objective points at (Greenspire to protect, tile to hold, spawns to block). */
   missionTiles?: Position[];
 }
 
@@ -159,14 +159,14 @@ export const Board: React.FC<BoardProps> = ({
     return enemyPathTiles ?? computeEnemyPathTiles(units);
   }, [showEnemyPaths, enemyPathTiles, units]);
 
-  // Brains that walk away next turn. Loudest telegraph on the board: losing every brain
+  // Sprouts that walk away next turn. Loudest telegraph on the board: losing every sprout
   // ends the run, so this can never look like an ordinary move marker.
   const brainThreats = React.useMemo(
     () => (showEnemyPaths ? computeBrainThreats(units, boardData) : []),
     [showEnemyPaths, units, boardData]
   );
   const thiefIds = React.useMemo(() => brainThiefIds(brainThreats), [brainThreats]);
-  // Two zombies can converge on the same house; the warning is per-tile, so draw it once.
+  // Two zombies can converge on the same Greenspire; the warning is per-tile, so draw it once.
   const brainThreatTiles = React.useMemo(
     () => dedupePositions(brainThreats.map(threat => threat.pos)),
     [brainThreats]
@@ -296,7 +296,7 @@ export const Board: React.FC<BoardProps> = ({
                 )}
 
                 {/* LAYER 1.45: BRAIN THEFT WARNING — a zombie finishes its walk on this
-                    house next turn and carries the brain off. Above the hazard layer on
+                    Greenspire next turn and carries the sprout off. Above the hazard layer on
                     purpose: nothing else on the board matters more. */}
                 {brainThreatTiles.length > 0 && (
                     <div className="absolute inset-0 z-[6] pointer-events-none">
@@ -311,9 +311,9 @@ export const Board: React.FC<BoardProps> = ({
                                 <div className="absolute inset-0 border-[3px] border-red-400 shadow-[0_0_16px_rgba(239,68,68,0.9),inset_0_0_14px_rgba(239,68,68,0.7)]" />
                                 {/* Expanding ring, so it reads even in peripheral vision */}
                                 <div className="absolute inset-1 border-2 border-red-300 rounded-sm animate-ping" />
-                                {/* Brain being taken */}
+                                {/* Sprout being taken */}
                                 <div className="absolute inset-0 flex items-center justify-center">
-                                    <Brain size={26} className="text-red-100 drop-shadow-[0_0_6px_black] animate-[pulse_0.7s_infinite]" />
+                                    <Sprout size={26} className="text-red-100 drop-shadow-[0_0_6px_black] animate-[pulse_0.7s_infinite]" />
                                 </div>
                                 <div className="absolute -top-1 -right-1 bg-red-600 border border-red-200 rounded-full p-[2px] shadow-lg">
                                     <TriangleAlert size={11} className="text-white" />
@@ -322,10 +322,10 @@ export const Board: React.FC<BoardProps> = ({
                         ))}
 
                         <div className="absolute top-2 left-1/2 -translate-x-1/2 px-4 py-1.5 bg-red-950/95 border-2 border-red-400 text-red-100 text-sm font-pixel uppercase font-black tracking-wide whitespace-nowrap shadow-[0_0_20px_rgba(239,68,68,0.6)] rounded-md flex items-center gap-2 animate-[pulse_1.2s_infinite]">
-                            <Brain size={16} className="text-red-300" />
+                            <Sprout size={16} className="text-red-300" />
                             {brainThreatTiles.length > 1
-                                ? t('{count} brains will be taken next turn!', { count: brainThreatTiles.length })
-                                : t('A zombie takes this brain next turn!')}
+                                ? t('{count} sprouts will be taken next turn!', { count: brainThreatTiles.length })
+                                : t('A zombie takes this sprout next turn!')}
                         </div>
                     </div>
                 )}
@@ -394,10 +394,8 @@ export const Board: React.FC<BoardProps> = ({
                         >
                             <div className={`
                                 w-4 h-4 rounded-full shadow-lg stroke-2 border border-black
-                                ${proj.type === 'PEA' ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]' : 
-                                  proj.type === 'FROZEN_PEA' ? 'bg-sky-300 shadow-[0_0_8px_rgba(56,189,248,0.8)]' : 
-                                  proj.type === 'CORN' ? 'bg-amber-400 rounded-sm' : 
-                                  proj.type === 'CABBAGE' ? 'bg-emerald-700 rounded-full' : 'bg-white'}
+                                ${proj.type === 'PEA' ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]' :
+                                  proj.type === 'CORN' ? 'bg-amber-400 rounded-sm' : 'bg-white'}
                             `}></div>
                         </div>
                     )})}

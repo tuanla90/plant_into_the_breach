@@ -4,7 +4,7 @@ import { HERO_SPRITES, ICONS } from '../utils/icons';
  * PRE-NODE DIALOGUE for the tutorial chain (data/tutorial.ts).
  *
  * One short scene before each node, so the seven boards read as a story instead of seven
- * disconnected exercises: Sunspot down → she recovers → Shadeleaf falls → the
+ * disconnected exercises: Sunbloom down → she recovers → Peaburst falls → the
  * merchant → Ironhusk takes point → Penny appears → the reunion at the campfire → the
  * unwinnable boss and the timeline jump.
  *
@@ -57,13 +57,13 @@ export interface DialogueLine {
 
 // Hero names, not plant-class names: these are the characters talking, so they use the
 // same names the rest of the game shows (data/heroes.ts).
-const GS = { name: 'Shadeleaf', img: HERO_SPRITES.GREEN_SHADOW, color: '#4ade80' };
-const SF = { name: 'Sunspot', img: HERO_SPRITES.SOLAR_FLARE, color: '#fb923c' };
-const WK = { name: 'Ironhusk', img: HERO_SPRITES.WALL_KNIGHT, color: '#f59e0b' };
+const GS = { name: 'Peaburst', img: HERO_SPRITES.PEABURST, color: '#4ade80' };
+const SF = { name: 'Sunbloom', img: HERO_SPRITES.SUNBLOOM, color: '#fb923c' };
+const WK = { name: 'Ironhusk', img: HERO_SPRITES.IRONHUSK, color: '#f59e0b' };
 const DAVE = { name: 'Old Mulch', img: './img/portrait-mulch.jpg', color: '#facc15' };
 const PENNY = { name: 'Chrona', img: './img/portrait-chrona.jpg', color: '#38bdf8' };
-const ZOMBIE = { name: 'Zombie', img: ICONS.ZOMBIE, color: '#f87171' };
-const GARG = { name: 'Gargantuar', img: ICONS.GARGANTUAR, color: '#ef4444' };
+const ZOMBIE = { name: 'Walker', img: ICONS.WALKER, color: '#f87171' };
+const GARG = { name: 'Gravehulk', img: ICONS.GRAVEHULK, color: '#ef4444' };
 
 /**
  * The backdrop each scene opens on. Named here rather than inline so the eight are visible as
@@ -78,7 +78,7 @@ const SCENE = {
     IRONHUSK: './img/comic/cutscene-hero-meet-ironhusk.jpg',
     CHRONA: './img/comic/cutscene-hero-meet-chrona.jpg',
     CAMPFIRE: './img/comic/cutscene-hero-reunion-campfire.jpg',
-    GARGANTUAR: './img/comic/cutscene-tut-gargantuar.jpg',
+    GRAVEHULK: './img/comic/cutscene-tut-gargantuar.jpg',
 };
 
 export const TUTORIAL_DIALOGUES: Record<string, DialogueLine[]> = {
@@ -94,9 +94,9 @@ export const TUTORIAL_DIALOGUES: Record<string, DialogueLine[]> = {
     ],
 
     tut_1: [
-        { ...GS, side: 'left', scene: SCENE.SUNSPOT, text: '(Phủi lớp tro tàn, giật mình) Sunspot?! Cậu còn sống sao?! Cố lên, mở mắt ra nhìn tôi này!' },
-        { ...SF, side: 'right', text: '(Mở mắt tiều tụy, thốt lên) ...Shadeleaf...? Là cậu thật sao... Đầu óc tôi quay cuồng quá... không còn chút sức lực nào để đứng dậy...' },
-        { ...GS, side: 'left', text: '(Nắm chặt tay Sunspot, giơ súng che chắn) Nằm yên đó! Đã có tôi ở đây. Không kẻ nào được chạm vào cậu!' },
+        { ...GS, side: 'left', scene: SCENE.SUNSPOT, text: '(Phủi lớp tro tàn, giật mình) Sunbloom?! Cậu còn sống sao?! Cố lên, mở mắt ra nhìn tôi này!' },
+        { ...SF, side: 'right', text: '(Mở mắt tiều tụy, thốt lên) ...Peaburst...? Là cậu thật sao... Đầu óc tôi quay cuồng quá... không còn chút sức lực nào để đứng dậy...' },
+        { ...GS, side: 'left', text: '(Nắm chặt tay Sunbloom, giơ súng che chắn) Nằm yên đó! Đã có tôi ở đây. Không kẻ nào được chạm vào cậu!' },
         { ...ZOMBIE, side: 'right', text: '(Tiếng gầm rú khàn đục trồi lên từ màn sương) Naõooo... thịt tươi...' },
         { ...GS, side: 'left', text: 'Chúng ngửi thấy mùi sống rồi. Chỉ cần trụ vững ba lượt đấu — tôi sẽ dọn sạch lũ quái vật này!' },
     ],
@@ -110,7 +110,7 @@ export const TUTORIAL_DIALOGUES: Record<string, DialogueLine[]> = {
 
     tut_3: [
         { ...DAVE, side: 'left', scene: SCENE.MULCH, text: '(Rít một hơi thuốc rập rờn khói, nhìn quanh) HÀNG NÓNG ĐÂY! Hè hè... ơ kìa, sao đám nhóc lại thiếu mất một bóng người rồi?' },
-        { ...SF, side: 'right', text: '(Gục đầu, nghẹn ngào) ...Shadeleaf... cô ấy đã ngã xuống để bảo vệ cháu...' },
+        { ...SF, side: 'right', text: '(Gục đầu, nghẹn ngào) ...Peaburst... cô ấy đã ngã xuống để bảo vệ cháu...' },
         { ...DAVE, side: 'left', text: '(Thở dài, nét mặt trầm xuống) Nghe chú dặn này nhóc. Cây dự bị không bao giờ thay thế được MỘT LINH HỒN — nhưng nó gánh được VỊ TRÍ. Trận chiến không chờ ai đau thương cả.' },
         { ...DAVE, side: 'left', text: 'Kệ trên là CÂY: thay người ra trận, sống sót thì lui về dưỡng sức. Nhưng chúng non lắm, mỗi đợt hít bụi độc là rụi một nấc máu. Kệ dưới là VẬT PHẨM: nổ một phát là tan thành mây khói.' },
         { ...SF, side: 'right', text: 'Cháu... cháu tiêu hết chỗ Xu này để mua sạch đồ được không?' },
@@ -118,16 +118,16 @@ export const TUTORIAL_DIALOGUES: Record<string, DialogueLine[]> = {
     ],
 
     tut_4: [
-        { ...SF, side: 'left', text: '(Bước đi trên tàn tích, ôm chậu cây dự bị vừa mua, nghẹn ngào) Shadeleaf mất rồi... một mình tôi làm sao tiếp tục hành trình này đây...' },
-        // The backdrop lands on HIS line, not on hers: the scene opens on Sunspot alone in the
+        { ...SF, side: 'left', text: '(Bước đi trên tàn tích, ôm chậu cây dự bị vừa mua, nghẹn ngào) Peaburst mất rồi... một mình tôi làm sao tiếp tục hành trình này đây...' },
+        // The backdrop lands on HIS line, not on hers: the scene opens on Sunbloom alone in the
         // dark, and the painting is the thing that walks into it.
         { ...WK, side: 'right', scene: SCENE.IRONHUSK, text: '(Bước ra từ hốc đá nứt, cắm phập tấm khiên thép xuống đất) Cô không đi một mình đâu, nhóc ạ.' },
         { ...SF, side: 'left', text: '(Giật mình ngước nhìn) Anh... anh là Ironhusk! Anh cũng thoát khỏi đợt tấn công ở Quảng trường sao?!' },
         { ...WK, side: 'right', text: '(Gật đầu trầm lắng) Tôi đuổi theo tiếng súng từ Cái Hố, nhưng tiếc là... đến không kịp để cứu cô ấy. Từ giờ, tôi sẽ đi đầu — không một ai được phép ngã xuống nữa!' },
-        { ...SF, side: 'left', text: '(Lau nước mắt, ánh mắt kiên định hơn) Cảm ơn anh... Nhưng nhìn kìa! Ba tên quái vật đang dồn vào hai căn nhà ở hai hướng... mình không thể cứu cả hai!' },
+        { ...SF, side: 'left', text: '(Lau nước mắt, ánh mắt kiên định hơn) Cảm ơn anh... Nhưng nhìn kìa! Ba tên quái vật đang dồn vào hai Tháp Xanh ở hai hướng... mình không thể cứu cả hai!' },
         { ...WK, side: 'right', text: 'Đúng vậy. Chiến trường đòi hỏi sự đánh đổi. Mỗi Căn Nhà mất đi là mất vĩnh viễn. Mất sạch 5 Căn Nhà — toàn bộ chiến dịch sụp đổ!' },
         { ...WK, side: 'right', text: 'Tấm khiên của tôi không hạ sát ai được, nhưng đòn ĐẨY lùi có thể chuyển hướng chúng. Hướng đẩy tính từ vị trí TÔI đứng — đứng sai góc là tự tay hất quái vào nhà!' },
-        { ...SF, side: 'left', text: 'Còn quả Mìn Khoai Tây mua từ xe hàng lão Mulch — gài xuống đất, kẻ nào giẫm lên sẽ nổ tung. Phải dành riêng cho con trâu nhất!' },
+        { ...SF, side: 'left', text: 'Còn quả Mìn Hạt mua từ xe hàng lão Mulch — gài xuống đất, kẻ nào giẫm lên sẽ nổ tung. Phải dành riêng cho con trâu nhất!' },
     ],
 
     tut_5: [
@@ -148,7 +148,7 @@ export const TUTORIAL_DIALOGUES: Record<string, DialogueLine[]> = {
     ],
 
     tut_7: [
-        { ...WK, side: 'left', scene: SCENE.GARGANTUAR, text: '(Cắm chặt khiên xuống đất) ...Mặt đất rên siết. Cả ngọn núi đang rung chuyển... Cảm nhận thấy không?' },
+        { ...WK, side: 'left', scene: SCENE.GRAVEHULK, text: '(Cắm chặt khiên xuống đất) ...Mặt đất rên siết. Cả ngọn núi đang rung chuyển... Cảm nhận thấy không?' },
         { ...GARG, side: 'right', text: '(Tiếng gầm văng vẳng xé rách màng nhĩ) GRAAAAAAAAAAAAHHH!' },
         { ...GS, side: 'left', text: '(Giơ súng, tay run nhẹ) Hai mươi lăm đơn vị sinh lực... Một quái vật khổng lồ... Chúng ta không thể hạ gục nó!' },
         { ...WK, side: 'right', text: 'Tấm khiên của tôi đẩy lùi được muôn loài... nhưng thân hình nó quá đồ sộ. Nó sẽ không lùi dẫu chỉ một bước!' },

@@ -1,8 +1,9 @@
 import { Position, Skill, StatusEffectType, TurnAction, Unit, UnitType } from '../types';
-import { calculateDamage, getSkillTargetPath, getTileAt, planPush, survivesWater, wingTwin } from './gameLogic';
+import { calculateDamage, getSkillTargetPath, getTileAt, planPush, shieldUpdatesFor, survivesWater, wingMid, wingTwin } from './gameLogic';
 import { getFusionEffects, getFusionEffectValue, hasFusionEffect } from './fusion';
 import { applyPushPlan, pushKill, type ResolveContext } from './actionBuilders';
 import { chainDamageFor, chainStep, skillCarriesElement } from './elements';
+import { HERO_DEFINITIONS } from '../data/heroes';
 
 /**
  * EVERY HERO ATTACK IN THE GAME, RESOLVED.
@@ -16,8 +17,8 @@ import { chainDamageFor, chainStep, skillCarriesElement } from './elements';
  * It is a pure function: units, board and terrain in, TurnAction[] out. Nothing is mutated
  * except the simulation map it builds for itself.
  *
- * The caller still owns the two things that are NOT actions: spending the Sun (which must be
- * inside the snapshot handed to the engine) and burning a Sun charge.
+ * The caller still owns the two things that are NOT actions: spending the Sol (which must be
+ * inside the snapshot handed to the engine) and burning a Sol charge.
  */
 export const planSkillActions = (
     caster: Unit,
@@ -51,7 +52,7 @@ export const planSkillActions = (
 
     // Encase's shape (PLAN-hero-zephyr §6.3): a PAID self-shield covers the caster AND the
     // four tiles beside him — under layers the worth of a shield skill is breadth. Gated on
-    // the Sun cost so the bench plants' free self-shells (Harden, Iron Stance) stay personal.
+    // the Sol cost so the bench plants' free self-shells (Harden, Iron Stance) stay personal.
     const hasRadialShield = skill.rangeType === 'SELF'
         && (skill.sunCost ?? 0) > 0
         && skill.effects.some(e => e.type === 'SHIELD');
@@ -63,11 +64,9 @@ export const planSkillActions = (
                 if (p.x !== pos.x || p.y !== pos.y) targets.push(p);
             });
         }
-    } else if (skill.id === 'gust') {
-        targets.length = 0;
-        units.filter(u => u.isEnemy).forEach(u => {
-            targets.push(u.position);
-        });
+    // Nhánh `skill.id === 'gust'` (quét toàn bàn) đã bỏ cùng Storm Fan — nó khoá theo ID của
+    // đúng một cây, và cây đó không còn. Vật phẩm Blover thổi bay cả bàn bằng đường khác
+    // (utils/itemResolution), không đi qua đây.
     } else if (hasRadialPush) {
         // SELF-range push (Seismic Slam, Bounce Away) hits every adjacent tile.
         // Without this the skill resolved against the caster's own tile and did nothing.
@@ -85,6 +84,16 @@ export const planSkillActions = (
             && !(tw.x === pos.x && tw.y === pos.y)) {
             targets.push(tw);
         }
+        // Cluster Load: a third rocket into the gap the pair always leaves between them. A
+        // third full instance, on the same terms as the twin — so a layer standing in the
+        // middle is popped by it rather than shrugging the whole volley.
+        if (hasFusionEffect(caster, 'WING_MIDSHOT')) {
+            const mid = wingMid(caster.position, pos);
+            if (mid.x >= 0 && mid.x < 8 && mid.y >= 0 && mid.y < 8
+                && !targets.some(t => t.x === mid.x && t.y === mid.y)) {
+                targets.push(mid);
+            }
+        }
     } else if (hasRadialShield) {
         // Self plus the four beside him, allies filtered by the SHIELD branch itself.
         targets.length = 0;
@@ -95,15 +104,15 @@ export const planSkillActions = (
         });
     }
 
-    // Cob Cannon: the butter splatters onto the four neighbouring tiles.
-    // Gated on the skill costing Sun — the same effect on a free basic attack would
+    // Cob Howitzer: the stun splatters onto the four neighbouring tiles.
+    // Gated on the skill costing Sol — the same effect on a free basic attack would
     // be splash damage every turn for nothing, which is a different (and much
     // stronger) game than the one this fusion is priced for. NOTE: allies in the
     // splash ring take the damage since friendly fire — aim the big shots accordingly.
     //
     // THE RING IS HALF-STRENGTH. Splash tiles used to resolve the FULL skill — Needle
     // Bloom's card said "4 to the target, 2 around it" while the engine dealt 4 everywhere,
-    // and Butter Splat's ring landed a full STUN on five tiles at once, which is the free
+    // and Nova Shell's ring landed a full STUN on five tiles at once, which is the free
     // mass-stun the STUN RULE in data/fusionRecipes.ts exists to ban. Membership in this
     // set is what resolveTargets uses to halve damage and shield, and to soften STUN to
     // SLOW — one rule, and all three splash cards read true at once.
@@ -121,7 +130,7 @@ export const planSkillActions = (
     // ADJACENT_STRIKE: the free melee swing lands on everything beside the hero, not only the
     // body it was aimed at. Built on SKILL_SPLASH above, with both of its lessons inverted:
     //
-    //  - SPLASH is gated on the skill COSTING Sun, because free splash every turn is a much
+    //  - SPLASH is gated on the skill COSTING Sol, because free splash every turn is a much
     //    stronger game than the one it is priced for. This one is gated the other way, on the
     //    attack being FREE, because a swing that fires every turn IS the fusion — putting it
     //    on the paid skill as well would just be splash a second time.
@@ -146,10 +155,112 @@ export const planSkillActions = (
     // same resolution must stop blocking pushes and stop being valid targets.
     // ...and anything under the sand. This ONE predicate is why the burrow rule did not become
     // five: the pierced lane, the splash ring, the lightning arc, the Repeater's second shot
-    // and Blover's sweep all route through here and NONE of them go anywhere near
+    // and Storm Fan's sweep all route through here and NONE of them go anywhere near
     // getValidSkillTargets. Filtering only at the door would have missed every one.
     const getTempUnit = (p: Position) => Array.from(tempUnits.values())
         .find(u => u.hp > 0 && !u.isBurrowed && u.position.x === p.x && u.position.y === p.y);
+
+    /**
+     * How far the ally-buff spills (Solar Corona). 0 = the aimed body and nobody else.
+     *
+     * Paid-skill only and no-DAMAGE only, both for the SKILL_SPLASH reasons: an aura on a free
+     * action is a different game, and an aura on an attack is area damage bought through the
+     * wrong door.
+     */
+    const auraRadius = (skill.sunCost ?? 0) > 0
+        && !skill.effects.some(e => e.type === 'DAMAGE')
+        && hasFusionEffect(caster, 'SKILL_AURA') ? 2 : 0;
+
+    /**
+     * Everything a skill does TO AN ALLY, on one body. Lifted out of the per-tile loop so
+     * Solar Corona can hand the identical treatment to a dozen of them without a second copy
+     * of the layer, the blessing and the loan drifting away from the first.
+     */
+    const applyAllyEffects = (ally: Unit, at: Position) => {
+        skill.effects.forEach(e => {
+            if (e.type === 'HEAL') actions.push({ type: 'APPLY_DAMAGE', targetId: ally.id, amount: e.value || 0, eventType: 'HEAL', pos: at });
+            if (e.type === 'SHIELD') {
+                /**
+                 * A shield is a LAYER (PLAN-hero-zephyr §6.0): granting one to a body that
+                 * already has one is a no-op, never a stack — which is also why every cap
+                 * that used to police shield totals is gone. The authored `value` only
+                 * answers "does this effect grant at all" (splash ring included: half of any
+                 * positive shell still rounds to a real layer).
+                 *
+                 * `shieldBarbed` is written WITH the layer, always, true or false: Glass Rind
+                 * belongs to the shell rather than to whoever is standing nearby, so a body
+                 * re-shelled later by somebody without the gear must come back unbarbed.
+                 *
+                 * SHIELD_SPREAD (the old SHIELD_BONUS's replacement — "+2 size" cannot exist
+                 * when shields have no size): the caster's layers spill over, covering
+                 * whoever stands beside the recipient too.
+                 */
+                const barbed = hasFusionEffect(caster, 'BARBED_SHIELD');
+                if ((e.value || 0) > 0 && (ally.shield || 0) === 0) {
+                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: ally.id, updates: { shield: 1, shieldBarbed: barbed } });
+                    // Keep the simulation in step, so a second pass sees the layer.
+                    ally.shield = 1;
+                    ally.shieldBarbed = barbed;
+                    actions.push({ type: 'APPLY_DAMAGE', targetId: ally.id, amount: 0, eventType: 'BLOCK', pos: at });
+                }
+                if ((e.value || 0) > 0 && hasFusionEffect(caster, 'SHIELD_SPREAD')) {
+                    [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }].forEach(d => {
+                        const n = getTempUnit({ x: at.x + d.x, y: at.y + d.y });
+                        if (n && !n.isEnemy && (n.shield || 0) === 0) {
+                            n.shield = 1;
+                            n.shieldBarbed = barbed;
+                            actions.push({ type: 'UPDATE_UNIT_STATE', unitId: n.id, updates: { shield: 1, shieldBarbed: barbed } });
+                            actions.push({ type: 'APPLY_DAMAGE', targetId: n.id, amount: 0, eventType: 'BLOCK', pos: n.position });
+                        }
+                    });
+                }
+            }
+            if (e.type === 'REFRESH_ACTION') {
+                actions.push({ type: 'UPDATE_UNIT_STATE', unitId: ally.id, updates: { hasMoved: false, hasAttacked: false } });
+                actions.push({ type: 'APPLY_DAMAGE', targetId: ally.id, amount: 0, eventType: 'BUFF', pos: at });
+            }
+            if (e.type === 'BLESS') {
+                /**
+                 * Solar Blessing (PLAN-hero-zephyr §6.1): +1 damage until the END OF THIS
+                 * PLAYER TURN — bless first, then swing; the decay in turnManager makes a
+                 * blessing after the ally has acted a wasted cast. The element LOAN rides
+                 * the same status: only into an empty hand (own element wins), spent by
+                 * the same decay.
+                 *
+                 * `blessPower` is stamped alongside, and for the same reason the loan is:
+                 * when the blessed hero finally swings, the blesser and her gear are long out
+                 * of scope, so the WORTH of the gift has to travel on the body that got it.
+                 */
+                const updates: Partial<Unit> = {};
+                const gift = 1 + getFusionEffectValue(caster, 'BLESS_POWER');
+                if (!ally.statusEffects.includes('BLESSED')) {
+                    const blessed: StatusEffectType[] = [...ally.statusEffects, 'BLESSED'];
+                    updates.statusEffects = blessed;
+                    ally.statusEffects = blessed;
+                }
+                if ((ally.blessPower ?? 0) !== gift) {
+                    updates.blessPower = gift;
+                    ally.blessPower = gift;
+                }
+                if (caster.element && !ally.element && !ally.blessedElement) {
+                    updates.blessedElement = caster.element;
+                    ally.blessedElement = caster.element;
+                }
+                if (Object.keys(updates).length > 0) {
+                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: ally.id, updates });
+                }
+                actions.push({ type: 'APPLY_DAMAGE', targetId: ally.id, amount: 0, eventType: 'BUFF', pos: at });
+            }
+            if (e.type === 'BUFF_STAT') {
+                const amount = e.value || 0;
+                const updates = e.stat === 'HP'
+                    ? { maxHp: ally.maxHp + amount, hp: ally.hp + amount }
+                    : { damage: ally.damage + amount };
+                actions.push({ type: 'UPDATE_UNIT_STATE', unitId: ally.id, updates });
+                actions.push({ type: 'APPLY_DAMAGE', targetId: ally.id, amount: 0, eventType: 'BUFF', pos: at });
+            }
+        });
+    };
 
     /**
      * COLLISION_BONUS — extra damage for bodies THIS hero slams into something.
@@ -173,7 +284,7 @@ export const planSkillActions = (
             const r = calculateDamage(u, collisionBonus, false, true);
             if (r.shieldDamage > 0) {
                 actions.push({ type: 'APPLY_DAMAGE', targetId: id, amount: 0, eventType: 'BLOCK', pos: u.position });
-                actions.push({ type: 'UPDATE_UNIT_STATE', unitId: id, updates: { shield: r.remainingShield } });
+                actions.push({ type: 'UPDATE_UNIT_STATE', unitId: id, updates: shieldUpdatesFor(r) });
             }
             if (r.finalDamage > 0) {
                 actions.push({ type: 'APPLY_DAMAGE', targetId: id, amount: r.finalDamage, eventType: 'DAMAGE', pos: u.position });
@@ -206,8 +317,8 @@ export const planSkillActions = (
         }
 
         // Reinforce on a HOUSE (PLAN-hero-zephyr §6.3): no unit stands there — the layer
-        // lives on the tile (TileData.shielded) and the brain bite consumes it in
-        // turnManager. Idempotent like every layer: a shielded house gains nothing more.
+        // lives on the tile (TileData.shielded) and the sprout bite consumes it in
+        // turnManager. Idempotent like every layer: a shielded Greenspire gains nothing more.
         if (!getTempUnit(targetPos) && skill.effects.some(e => e.type === 'SHIELD')) {
             const houseTile = getTileAt(targetPos, board);
             if (houseTile?.isHouse && houseTile.hasBrain && !houseTile.shielded) {
@@ -217,73 +328,26 @@ export const planSkillActions = (
         }
 
         if (targetUnit && !targetUnit.isEnemy) {
-            skill.effects.forEach(e => {
-                if (e.type === 'HEAL') actions.push({ type: 'APPLY_DAMAGE', targetId: targetUnit.id, amount: e.value || 0, eventType: 'HEAL', pos: targetPos });
-                if (e.type === 'SHIELD') {
-                    /**
-                     * A shield is a LAYER now (PLAN-hero-zephyr §6.0): granting one to a body
-                     * that already has one is a no-op, never a stack — which is also why
-                     * every cap that used to police shield totals is gone. The authored
-                     * `value` only answers "does this effect grant at all" (splash ring
-                     * included: half of any positive shell still rounds to a real layer).
-                     *
-                     * SHIELD_SPREAD (the old SHIELD_BONUS's replacement — "+2 size" cannot
-                     * exist when shields have no size): the caster's layers spill over,
-                     * covering whoever stands beside the recipient too.
-                     */
-                    if ((e.value || 0) > 0 && (targetUnit.shield || 0) === 0) {
-                        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: targetUnit.id, updates: { shield: 1 } });
-                        // Keep the simulation in step, so a second pass sees the layer.
-                        targetUnit.shield = 1;
-                        actions.push({ type: 'APPLY_DAMAGE', targetId: targetUnit.id, amount: 0, eventType: 'BLOCK', pos: targetPos });
-                    }
-                    if ((e.value || 0) > 0 && hasFusionEffect(caster, 'SHIELD_SPREAD')) {
-                        [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }].forEach(d => {
-                            const n = getTempUnit({ x: targetPos.x + d.x, y: targetPos.y + d.y });
-                            if (n && !n.isEnemy && (n.shield || 0) === 0) {
-                                n.shield = 1;
-                                actions.push({ type: 'UPDATE_UNIT_STATE', unitId: n.id, updates: { shield: 1 } });
-                                actions.push({ type: 'APPLY_DAMAGE', targetId: n.id, amount: 0, eventType: 'BLOCK', pos: n.position });
-                            }
-                        });
-                    }
-                }
-                if (e.type === 'REFRESH_ACTION') {
-                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: targetUnit.id, updates: { hasMoved: false, hasAttacked: false } });
-                    actions.push({ type: 'APPLY_DAMAGE', targetId: targetUnit.id, amount: 0, eventType: 'BUFF', pos: targetPos });
-                }
-                if (e.type === 'BLESS') {
-                    /**
-                     * Solar Blessing (PLAN-hero-zephyr §6.1): +1 damage until the END OF THIS
-                     * PLAYER TURN — bless first, then swing; the decay in turnManager makes a
-                     * blessing after the ally has acted a wasted cast. The element LOAN rides
-                     * the same status: only into an empty hand (own element wins), spent by
-                     * the same decay.
-                     */
-                    const updates: Partial<Unit> = {};
-                    if (!targetUnit.statusEffects.includes('BLESSED')) {
-                        const blessed: StatusEffectType[] = [...targetUnit.statusEffects, 'BLESSED'];
-                        updates.statusEffects = blessed;
-                        targetUnit.statusEffects = blessed;
-                    }
-                    if (caster.element && !targetUnit.element && !targetUnit.blessedElement) {
-                        updates.blessedElement = caster.element;
-                        targetUnit.blessedElement = caster.element;
-                    }
-                    if (Object.keys(updates).length > 0) {
-                        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: targetUnit.id, updates });
-                    }
-                    actions.push({ type: 'APPLY_DAMAGE', targetId: targetUnit.id, amount: 0, eventType: 'BUFF', pos: targetPos });
-                }
-                if (e.type === 'BUFF_STAT') {
-                    const amount = e.value || 0;
-                    const updates = e.stat === 'HP'
-                        ? { maxHp: targetUnit.maxHp + amount, hp: targetUnit.hp + amount }
-                        : { damage: targetUnit.damage + amount };
-                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: targetUnit.id, updates });
-                    actions.push({ type: 'APPLY_DAMAGE', targetId: targetUnit.id, amount: 0, eventType: 'BUFF', pos: targetPos });
-                }
-            });
+            applyAllyEffects(targetUnit, targetPos);
+            /**
+             * SKILL_AURA (Solar Corona) — the same gift, to everyone standing within 2 tiles
+             * of where it landed.
+             *
+             * Applied as a SPILL off the primary recipient rather than by widening `targets`,
+             * for the reason SHIELD_SPREAD above is written the same way: the target list also
+             * decides what the attack STRIKES, what the dust covers and where a Greenspire may be
+             * shelled, and none of those should move because a support skill grew a radius.
+             * Manhattan 2 is the "move range 2" diamond — 12 tiles, the shape the rest of the
+             * game already measures range in.
+             */
+            if (auraRadius > 0) {
+                Array.from(tempUnits.values()).forEach(u => {
+                    if (u.hp <= 0 || u.isEnemy || u.isBurrowed || u.id === targetUnit.id) return;
+                    const dist = Math.abs(u.position.x - targetPos.x) + Math.abs(u.position.y - targetPos.y);
+                    if (dist > auraRadius) return;
+                    applyAllyEffects(u, u.position);
+                });
+            }
         }
 
         const resEffect = skill.effects.find(e => e.type === 'RESOURCE_GAIN');
@@ -309,24 +373,28 @@ export const planSkillActions = (
         if (targetUnit && (targetUnit.isEnemy || targetUnit.type === UnitType.OBSTACLE || friendlyFire)) {
             const dmgEffect = skill.effects.find(e => e.type === 'DAMAGE');
             let isDead = false;
+            // Stun Fang reads the bar BEFORE the bite. A body still at full health is the
+            // only thing that pin ever lands on, which is what makes it once per zombie ever
+            // rather than once per turn — the distinction the STUN RULE turns on.
+            const wasFullHp = targetUnit.hp >= targetUnit.maxHp;
 
             if (dmgEffect) {
                 // The override replaces the authored damage outright; terrain and
                 // buff boosts still apply on top, same as the first shot.
                 let rawDmg = (damageOverride ?? (dmgEffect.value || 0)) + damageBoost;
                 /**
-                 * Chomper's swallow is an instant kill, but some things cannot be eaten.
+                 * Steel Jaws's swallow is an instant kill, but some things cannot be eaten.
                  *
-                 * `isMassive` alone was enough while the Gargantuar was the only boss in the
+                 * `isMassive` alone was enough while the Gravehulk was the only boss in the
                  * game — it is massive, so the check covered it by accident rather than on
                  * purpose. It stopped covering anything the moment bosses started shipping
                  * that are deliberately NOT massive (data/bosses.ts: only three of the nine
                  * resist a shove, because two shove heroes need work in the other six). The
-                 * Headliner, the Colossus and every boss after them were one 75-Sun button
+                 * Headliner, the Colossus and every boss after them were one 75-Sol button
                  * away from being deleted on the turn they appeared.
                  *
-                 * So the rule is named rather than inferred: a NAMED BOSS is not food. Maw's
-                 * reward for beating the Gargantuar is an executioner for thick regular
+                 * So the rule is named rather than inferred: a NAMED BOSS is not food. Snapmaw's
+                 * reward for beating the Gravehulk is an executioner for thick regular
                  * units — it was never meant to be a key that skips the next eight fights.
                  *
                  * The bite itself is 7 now rather than 999 (data/heroes.ts), so this line is
@@ -336,7 +404,7 @@ export const planSkillActions = (
                  */
                 if (skill.id === 'burrow_strike' && (targetUnit.isMassive || targetUnit.bossId)) rawDmg = 1;
                 // The splash ring lands at half strength, floored — Needle Bloom's 4 bursts
-                // for 2, and Butter Splat's ring (1 damage) grazes for 0 and only chills.
+                // for 2, and Nova Shell's ring (1 damage) grazes for 0 and only chills.
                 if (isSplash) rawDmg = Math.floor(rawDmg / 2);
                 const totalDmg = rawDmg;
                 // Use tempUnit for calculation (safe)
@@ -344,7 +412,7 @@ export const planSkillActions = (
 
                 if (result.shieldDamage > 0) {
                     actions.push({ type: 'APPLY_DAMAGE', targetId: targetUnit.id, amount: 0, eventType: 'BLOCK', pos: targetPos });
-                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: targetUnit.id, updates: { shield: result.remainingShield } });
+                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: targetUnit.id, updates: shieldUpdatesFor(result) });
                 }
 
                 // A hit the helmet zeroed out must CLANG. Silence here reads as a bug — the
@@ -388,8 +456,10 @@ export const planSkillActions = (
                     if (casterSim && targetUnit.isEnemy && targetUnit.type !== UnitType.OBSTACLE
                         && (casterSim.shield || 0) === 0
                         && hasFusionEffect(caster, 'SHIELD_ON_KILL')) {
+                        const barbed = hasFusionEffect(caster, 'BARBED_SHIELD');
                         casterSim.shield = 1;
-                        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: caster.id, updates: { shield: 1 } });
+                        casterSim.shieldBarbed = barbed;
+                        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: caster.id, updates: { shield: 1, shieldBarbed: barbed } });
                         actions.push({ type: 'APPLY_DAMAGE', targetId: caster.id, amount: 0, eventType: 'BLOCK', pos: casterSim.position });
                     }
                 }
@@ -404,10 +474,10 @@ export const planSkillActions = (
                 && !targetUnit.immunities.includes('STATUS');
             if (!isDead && skill.effects.some(e => e.type === 'STUN')) {
                 if (isSplash) {
-                    // Cob Cannon: the RING is chilled, never pinned. A stun on five tiles for
+                    // Cob Howitzer: the RING is chilled, never pinned. A stun on five tiles for
                     // one cast is the mass lost-turn the STUN RULE bans; the card says "slows
                     // surrounding tiles" and this branch is that sentence. STATUS immunity
-                    // still refuses it — that is the Screen Door's whole job.
+                    // still refuses it — that is the Doorbearer's whole job.
                     if (targetUnit.immunities.includes('STATUS')) {
                         actions.push({ type: 'APPLY_DAMAGE', targetId: targetUnit.id, amount: 0, eventType: 'IMMUNE', pos: targetPos });
                     } else if (!targetUnit.statusEffects.includes('SLOW')) {
@@ -430,16 +500,61 @@ export const planSkillActions = (
                 }
             }
 
+            /**
+             * STUN FANG (STUN_ON_FULL_HP) — the STUN RULE's priced exception.
+             *
+             * Fires only on a body that was at FULL health when the blow landed, so it can
+             * never be spent on the same zombie twice, and only where the hero could reach
+             * one. Immunity is read exactly as every other pin in the file reads it: STATUS
+             * refuses everything, FREEZE refuses the pin itself.
+             */
+            if (!isDead && dmgEffect && wasFullHp
+                && targetUnit.isEnemy && targetUnit.type !== UnitType.OBSTACLE
+                && hasFusionEffect(caster, 'STUN_ON_FULL_HP')) {
+                if (targetUnit.immunities.includes('STATUS') || targetUnit.immunities.includes('FREEZE')) {
+                    actions.push({ type: 'APPLY_DAMAGE', targetId: targetUnit.id, amount: 0, eventType: 'IMMUNE', pos: targetPos });
+                } else if (!targetUnit.statusEffects.includes('STUN')) {
+                    const pinned: StatusEffectType[] = [...targetUnit.statusEffects, 'STUN'];
+                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: targetUnit.id, updates: { statusEffects: pinned } });
+                    targetUnit.statusEffects = pinned;
+                }
+            }
+
+            /**
+             * BARBED PEA (TAUNT_ON_HIT) — whatever she hurts turns on her.
+             *
+             * The same TAUNTED + `tauntedBy` pair Provoke sets, so aiLogic needs no new case
+             * and the enemy telegraphs "Provoked!" from the shot rather than from a shout. It
+             * lasts exactly one enemy turn like every taunt, and STATUS immunity refuses it —
+             * which is the honest limit: a Doorbearer still walks past her to the Greenspire.
+             */
+            if (!isDead && dmgEffect
+                && targetUnit.isEnemy && targetUnit.type !== UnitType.OBSTACLE
+                && hasFusionEffect(caster, 'TAUNT_ON_HIT')) {
+                if (targetUnit.immunities.includes('STATUS')) {
+                    actions.push({ type: 'APPLY_DAMAGE', targetId: targetUnit.id, amount: 0, eventType: 'IMMUNE', pos: targetPos });
+                } else {
+                    const taunted: StatusEffectType[] = targetUnit.statusEffects.includes('TAUNTED')
+                        ? targetUnit.statusEffects
+                        : [...targetUnit.statusEffects, 'TAUNTED'];
+                    // `tauntedBy` is rewritten even when the status is already set — same rule
+                    // as Provoke: whoever touched it last owns it.
+                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: targetUnit.id, updates: { statusEffects: taunted, tauntedBy: caster.id } });
+                    targetUnit.statusEffects = taunted;
+                    targetUnit.tauntedBy = caster.id;
+                }
+            }
+
             // Frostpod's baseline: costs the target ground rather than its whole turn.
             //
             // SLOW deliberately does NOT check FREEZE immunity. It used to, and the
             // knock-on effect landed squarely on the fight that decides a run: the
-            // Gargantuar is PUSH- and FREEZE-immune and Massive, so the push, the
-            // freeze, the butter AND the slow were all blanked at once — Ironhusk,
-            // Frostpod, Cobb and Maw were each reduced to 1-2 chip damage a turn, and
+            // Gravehulk is PUSH- and FREEZE-immune and Massive, so the push, the
+            // freeze, the stun AND the slow were all blanked at once — Ironhusk,
+            // Frostpod, Cornova and Snapmaw were each reduced to 1-2 chip damage a turn, and
             // squad select quietly became "bring damage or lose the boss". Something
             // too heavy to freeze solid can still be chilled into moving slower.
-            // STATUS immunity (Screen Door) still stops everything: that is its job.
+            // STATUS immunity (Doorbearer) still stops everything: that is its job.
             //
             // ICE RESONANCE — a slow landing on something ALREADY slowed sets instead of chills.
             //
@@ -452,7 +567,7 @@ export const planSkillActions = (
             // FREEZE immunity IS checked here, and only here, which looks like a contradiction
             // of the long note below until you read what is being applied: the fallback branch
             // lands a SLOW (never checked against FREEZE, deliberately), this branch lands a
-            // STUN. A Gargantuar that cannot be frozen still gets chilled by the plain slow it
+            // STUN. A Gravehulk that cannot be frozen still gets chilled by the plain slow it
             // was always going to get; it just never escalates.
             //
             // BLIZZARD does not interact with this at all, and that is by construction rather
@@ -522,9 +637,18 @@ export const planSkillActions = (
                 let dx = 0, dy = 0;
 
                 if (pushEffect.type === 'GLOBAL_PUSH') {
-                    const gx = Math.sign(pos.x - caster.position.x);
-                    const gy = Math.sign(pos.y - caster.position.y);
-                    dx = gx; dy = gy;
+                    /**
+                     * Two readings of one effect, told apart by where the skill was cast.
+                     *
+                     * Storm Fan's gust is aimed: ONE heading, off `pos`, and every body on the
+                     * board goes that way. Shockrind is cast on the caster's own tile, so
+                     * `pos` is his own square and that reading yields (0,0) — nothing moves.
+                     * A SELF cast is radial by construction: each tile is shoved away from
+                     * HIM, read per target, and his own square is skipped by the zero check.
+                     */
+                    const from = skill.rangeType === 'SELF' ? targetPos : pos;
+                    dx = Math.sign(from.x - caster.position.x);
+                    dy = Math.sign(from.y - caster.position.y);
                 } else {
                     dx = targetPos.x - caster.position.x;
                     dy = targetPos.y - caster.position.y;
@@ -540,15 +664,18 @@ export const planSkillActions = (
                 // Read from the simulation, not live state: a unit killed earlier in
                 // this same resolution no longer blocks the push.
                 const livingSim = Array.from(tempUnits.values()).filter(u => u.hp > 0);
-                // A PUSH's `value` is a DISTANCE in tiles. Chardwall throws 2, and the
+                // A PUSH's `value` is a DISTANCE in tiles. Chardslam throws 2, and the
                 // PUSH_DISTANCE fusions add to that number in applyFusionToSkill, so this is
                 // the single place the whole game reads it. Every shove authored before
-                // Chardwall carries value 1 and GLOBAL_PUSH carries none, which is what the
+                // Chardslam carries value 1 and GLOBAL_PUSH carries none, which is what the
                 // fallback preserves — nothing existing changes reach.
                 const pushTiles = pushEffect.type === 'GLOBAL_PUSH' ? 1 : (pushEffect.value ?? 1);
-                const plan = planPush(targetUnit, dx, dy, livingSim, board, terrainDefs, 3, new Set(), pushTiles);
-                applyPushPlan(plan, actions, tempUnits, caster);
-                applyCollisionBonus(plan);
+                // A radial GLOBAL_PUSH read off the caster's own square has nowhere to go.
+                if (dx !== 0 || dy !== 0) {
+                    const plan = planPush(targetUnit, dx, dy, livingSim, board, terrainDefs, 3, new Set(), pushTiles);
+                    applyPushPlan(plan, actions, tempUnits, caster);
+                    applyCollisionBonus(plan);
+                }
             }
 
             /**
@@ -594,7 +721,7 @@ export const planSkillActions = (
                             const r = calculateDamage(targetUnit, fall, false, true);
                             if (r.shieldDamage > 0) {
                                 actions.push({ type: 'APPLY_DAMAGE', targetId: targetUnit.id, amount: 0, eventType: 'BLOCK', pos: dest });
-                                actions.push({ type: 'UPDATE_UNIT_STATE', unitId: targetUnit.id, updates: { shield: r.remainingShield } });
+                                actions.push({ type: 'UPDATE_UNIT_STATE', unitId: targetUnit.id, updates: shieldUpdatesFor(r) });
                             }
                             if (r.finalDamage > 0) {
                                 actions.push({ type: 'APPLY_DAMAGE', targetId: targetUnit.id, amount: r.finalDamage, eventType: 'DAMAGE', pos: dest });
@@ -632,7 +759,7 @@ export const planSkillActions = (
         const radius = tauntEffect.value ?? 1;
         units.forEach(u => {
             // Obstacles are excluded even though they are hostile: a rock does not walk, so
-            // redirecting it is a wasted 50 Sun and a confusing status icon.
+            // redirecting it is a wasted 50 Sol and a confusing status icon.
             if (!u.isEnemy || u.hp <= 0 || u.type === UnitType.OBSTACLE) return;
             const dist = Math.abs(u.position.x - caster.position.x) + Math.abs(u.position.y - caster.position.y);
             if (dist > radius) return;
@@ -663,7 +790,55 @@ export const planSkillActions = (
         });
     }
 
+    /**
+     * WHERE THE DUST WILL SETTLE — snapshotted BEFORE anything resolves.
+     *
+     * The rule is "dust rises where the BODY ends up", and that needs both halves of the
+     * sentence: which bodies the strike found (only knowable now, before they are shoved or
+     * killed) and where each of them finished (only knowable after). So the tile is paired
+     * with the id here, and the position is read back off the simulation down in the dust
+     * block. Veilsweep is why: a body swept two tiles away leaves the veil on the tile it
+     * LANDED on — dust on the square it just vacated cancels nothing, which was the bug.
+     */
+    const dustAnchors = skill.effects.some(e => e.type === 'DUST_TILE')
+        ? targets.map(t => ({ tile: { ...t }, unitId: getTempUnit(t)?.id }))
+        : [];
+
     resolveTargets();
+
+    /**
+     * BLESS_SHOCKWAVE (Kinetic Bloom) — the blessing lands and the ground beside it clears.
+     *
+     * Everything in the ring around the BLESSED body is shoved a tile away from it: enemy,
+     * ally, and the blesser herself when she is standing next to the body she just blessed.
+     * That last one is the feature rather than a leak — a lightning arc hops between ADJACENT
+     * bodies, so this is the cell that makes a squad stop standing in a line, and it works on
+     * the squad because the squad is what forms the line.
+     *
+     * Centred on `pos`, and only on `pos`: with Solar Corona also fused the blessing can reach
+     * a dozen allies, and a shockwave from each of them would be a board-wide scatter nobody
+     * could read. One cast, one wave, where the player aimed it.
+     *
+     * Routed through planPush/applyPushPlan like every other shove in the game, so it drowns,
+     * chains and collides by identical rules — including the honest downside: a hero standing
+     * between the blessing and open water goes in.
+     */
+    if (hasFusionEffect(caster, 'BLESS_SHOCKWAVE') && skill.effects.some(e => e.type === 'BLESS')) {
+        [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }].forEach(d => {
+            const at = { x: pos.x + d.x, y: pos.y + d.y };
+            if (at.x < 0 || at.x >= 8 || at.y < 0 || at.y >= 8) return;
+            const body = getTempUnit(at);
+            if (!body) return;
+            if (body.immunities.includes('PUSH')) {
+                actions.push({ type: 'APPLY_DAMAGE', targetId: body.id, amount: 0, eventType: 'IMMUNE', pos: at });
+                return;
+            }
+            const living = Array.from(tempUnits.values()).filter(u => u.hp > 0);
+            const plan = planPush(body, d.x, d.y, living, board, terrainDefs, 3, new Set(), 1);
+            applyPushPlan(plan, actions, tempUnits, caster);
+            applyCollisionBonus(plan);
+        });
+    }
 
     /**
      * RULE L3 — the LIGHTNING arc (PLAN-progression.md section 3).
@@ -672,15 +847,15 @@ export const planSkillActions = (
      * that makes this correct is in the three words "once, from `pos`, `damageOverride`":
      *
      *  - ONCE, and from the PRIMARY target only. A multi-tile attack (a PIERCE_ATTACK lane
-     *    once, Zephyr's WING_PAIR today) resolves against several tiles, so arcing from every
+     *    once, Reedwing's WING_PAIR today) resolves against several tiles, so arcing from every
      *    tile in `targets` would double the hit count for nothing. `targetList` is a single
      *    tile, chosen off `pos`, and the other struck tiles never arc.
      *  - THROUGH `damageOverride`, which is why this reuses resolveTargets instead of copying
-     *    the effect list the way SKILL_SPLASH does. Maw's Devour is `DAMAGE 999`; a naive copy
+     *    the effect list the way SKILL_SPLASH does. Snapmaw's Devour is `DAMAGE 999`; a naive copy
      *    would carry 499 into the next tile — the Melon-splash bug again. The override replaces
-     *    the authored number outright with the HERO's stat, so Maw (damage 2) arcs for 1.
+     *    the authored number outright with the HERO's stat, so Snapmaw (damage 2) arcs for 1.
      *  - WITH THE WHOLE ATTACK, not just its damage. chainDamageFor has no minimum, so
-     *    Chardwall arcs for 0 — and that cell would be a dead no-op if the arc were damage.
+     *    Chardslam arcs for 0 — and that cell would be a dead no-op if the arc were damage.
      *    Routed through resolveTargets it carries the SHOVE as well, so his one arc is a single
      *    swing that throws two bodies. That is the best cell he has, and it falls out for free.
      *
@@ -798,6 +973,138 @@ export const planSkillActions = (
     }
 
     /**
+     * OVERWATCH_SHOT (Overwatch Pea) — the one fusion in the matrix that fires on somebody
+     * ELSE'S action.
+     *
+     * Any enemy this cast MOVED — swept, bashed, thrown, slammed down a chain — is a body that
+     * just stumbled through open ground. A hero carrying the gear puts one pea into it if she
+     * has a clear row to where it stopped. Her own turn is untouched: the shove is what paid.
+     *
+     * Three limits, all deliberate:
+     *  - it reads the finished action list, the same trick FIRE RESONANCE uses, so it catches
+     *    every door a body can be moved through without any of them knowing about it;
+     *  - ONE pea per body per cast, from the first shooter with the angle — the sweep that
+     *    throws four zombies is four peas, not four peas each;
+     *  - it fires only during the SQUAD'S OWN resolution. Shoves that happen on the enemy turn
+     *    (a retaliation, a boss's slam) are outside this function and are not covered, which
+     *    is exactly what the card promises: "any enemy the squad shoves".
+     */
+    const snipers = units.filter(u => !u.isEnemy && u.hp > 0 && u.type !== UnitType.OBSTACLE
+        && hasFusionEffect(u, 'OVERWATCH_SHOT'));
+    if (snipers.length > 0) {
+        /**
+         * The support shot is fired with THE GUN SHE IS HOLDING — same shape, same reach,
+         * fusions included. It can never promise more than her own basic attack does, and the
+         * difference between the two carriers falls out for free rather than being authored
+         * twice: Peaburst's is a LINE and needs a clear row, Cornova's is a LOB and arcs over
+         * whatever is in the way at her (short) 2 tiles.
+         */
+        const gunOf = (u: Unit) => {
+            const basic = u.heroId ? HERO_DEFINITIONS[u.heroId]?.basicAttack : undefined;
+            const lobbed = basic?.rangeType === 'LOB';
+            const base = (basic?.rangeType === 'LINE' || lobbed) ? basic!.rangeValue : 4;
+            return { lobbed, reach: base + getFusionEffectValue(u, 'ATTACK_RANGE_BONUS') };
+        };
+        const clearShot = (shooter: Unit, to: Position): boolean => {
+            const { lobbed, reach } = gunOf(shooter);
+            const dx = to.x - shooter.position.x;
+            const dy = to.y - shooter.position.y;
+            const dist = Math.abs(dx) + Math.abs(dy);
+            if (dist === 0 || dist > reach) return false;
+            if (lobbed) return true;                           // the arc ignores what is between
+            if (dx !== 0 && dy !== 0) return false;             // a pea travels one row
+            const sx = Math.sign(dx), sy = Math.sign(dy);
+            for (let i = 1; i < dist; i++) {
+                const p = { x: shooter.position.x + sx * i, y: shooter.position.y + sy * i };
+                const tile = getTileAt(p, board);
+                if (tile && terrainDefs[tile.terrain]?.type === 'MOUNTAIN') return false;
+                if (getTempUnit(p)) return false;              // any body stops it, ally included
+            }
+            return true;
+        };
+
+        const moved = Array.from(new Set(
+            actions.filter(a => a.type === 'UNIT_MOVE' && a.unitId).map(a => a.unitId!)));
+        moved.forEach(id => {
+            const victim = tempUnits.get(id);
+            if (!victim || victim.hp <= 0 || !victim.isEnemy || victim.type === UnitType.OBSTACLE) return;
+            for (const s of snipers) {
+                const shooter = tempUnits.get(s.id) ?? s;
+                if (shooter.hp <= 0) continue;
+                // The symmetric dust rule: a shooter standing in smoke cannot line anything up,
+                // support shot or otherwise (gameLogic's getValidSkillTargets, same sentence).
+                const standing = getTileAt(shooter.position, board);
+                if (standing?.smoke && standing.smoke.turns > 0) continue;
+                if (!clearShot(shooter, victim.position)) continue;
+
+                actions.push({ type: 'UNIT_ATTACK', unitId: shooter.id, targetPos: { ...victim.position }, attackRange: 'LINE' });
+                const r = calculateDamage(victim, 1);
+                if (r.shieldDamage > 0) {
+                    actions.push({ type: 'APPLY_DAMAGE', targetId: victim.id, amount: 0, eventType: 'BLOCK', pos: victim.position });
+                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: victim.id, updates: { shield: r.remainingShield } });
+                }
+                if (r.absorbedByArmor) {
+                    actions.push({ type: 'APPLY_DAMAGE', targetId: victim.id, amount: 0, eventType: 'BLOCKED', pos: victim.position });
+                }
+                if (r.finalDamage > 0) {
+                    actions.push({ type: 'APPLY_DAMAGE', targetId: victim.id, amount: r.finalDamage, eventType: 'DAMAGE', pos: victim.position });
+                }
+                if (r.bleedConsumed) {
+                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: victim.id, updates: { statusEffects: [...victim.statusEffects] } });
+                }
+                const ledgered = r.shieldDamage + r.finalDamage;
+                if (shooter.heroId && ledgered > 0) {
+                    actions.push({ type: 'TRACK_STAT', heroId: shooter.heroId, stat: 'damageDealt', amount: ledgered });
+                }
+                victim.hp = r.remainingHp;
+                victim.shield = r.remainingShield;
+                if (r.isFatal) {
+                    pushKill(actions, victim, shooter);
+                    victim.hp = 0;
+                }
+                break;   // one pea per body
+            }
+        });
+    }
+
+    /**
+     * SMOKE_ON_HIT (Prowl Veil, Ash Carriage) — the body you hurt is left in a cloud.
+     *
+     * Read off the finished action list, the same trick FIRE RESONANCE and the support shot
+     * use, and for the same reason: this hero can hurt something through the damage pass, the
+     * Repeater's second pass, a volley shot or a lightning arc, and one scan catches all four
+     * without any of them knowing about it. The position comes from the SIMULATION, so it
+     * obeys L6 — the cloud goes up where the body ended up, not where it was standing when the
+     * shot left.
+     *
+     * ONE tile, ONE turn, and only under something still alive. Smoke Pod is five tiles for
+     * three; the whole reason a free attack may carry this at all is that it is neither.
+     */
+    if (hasFusionEffect(caster, 'SMOKE_ON_HIT')) {
+        const hurt = new Set(actions
+            .filter(a => a.type === 'APPLY_DAMAGE' && a.eventType === 'DAMAGE'
+                && a.targetId && a.targetId !== 'tile' && (a.amount ?? 0) > 0)
+            .map(a => a.targetId!));
+        const dusted = new Set<string>();
+        hurt.forEach(id => {
+            const victim = tempUnits.get(id);
+            // A corpse needs no blinding, and an obstacle never swings.
+            if (!victim || victim.hp <= 0 || !victim.isEnemy || victim.type === UnitType.OBSTACLE) return;
+            const key = `${victim.position.x},${victim.position.y}`;
+            if (dusted.has(key)) return;
+            dusted.add(key);
+            const tile = getTileAt(victim.position, board);
+            if (!tile || tile.terrain === 'WALL' || tile.terrain === 'MOUNTAIN') return;
+            actions.push({
+                type: 'MODIFY_TERRAIN',
+                pos: { ...victim.position },
+                environment: 'SMOKE',
+                smoke: { turns: 1 },
+            });
+        });
+    }
+
+    /**
      * SPIKE_TILE — the row stays dangerous after the volley has landed.
      *
      * Every tile the attack COVERED is spiked, not just the one the player clicked. On a
@@ -856,14 +1163,27 @@ export const planSkillActions = (
     if (dustEffect) {
         /**
          * Where the dust settles. Three shapes, one rule each:
-         *  - an ALLY-targeted carrier (Ashveil on Solar Blessing) dusts the RING around the
-         *    recipient and never their own tile — the veil protects the blessed body, it must
-         *    not disarm it (the symmetric can't-aim-from-dust rule would hit the ally too);
+         *  - an ALLY-targeted carrier dusts the RING around the recipient and never their own
+         *    tile — the veil protects the blessed body, it must not disarm it (the symmetric
+         *    can't-aim-from-dust rule would hit the ally too);
          *  - a pure ground pod (Smoke Pod) drops the hazard's own plus, centre included;
-         *  - a strike carrier dusts what the strike covered, like the spike trail.
+         *  - a STRIKE carrier dusts where the bodies it touched ENDED UP.
+         *
+         * That third rule replaced two older ones at once, and both were wrong in the same
+         * direction — they dusted GROUND rather than bodies. Smokeline used to hang the whole
+         * lane the pea crossed, which walled off her own squad's firing lines as often as the
+         * horde's; Veilsweep used to dust the ring Chardslam swept, i.e. the tiles the zombies
+         * had just been thrown OFF, so the veil reliably missed everything it was aimed at.
+         * One sentence — "the cloud goes up where the body comes down" — fixes both, and the
+         * lane shot narrows to the single tile the first pea found.
          */
         const centreOccupant = getTempUnit(pos);
-        const allyCentred = !!centreOccupant && !centreOccupant.isEnemy;
+        // "Aimed at an ally" means SOMEBODY ELSE. A SELF-ranged skill is aimed at the caster's
+        // own tile, so without the second clause Sweep read as an ally-centred cast and dusted
+        // the ring around Chardslam — the tiles the zombies had just been thrown off, which is
+        // precisely the bug the landing rule exists to fix.
+        const allyCentred = !!centreOccupant && !centreOccupant.isEnemy
+            && centreOccupant.id !== caster.id;
         const ring: Position[] = [
             { x: pos.x + 1, y: pos.y }, { x: pos.x - 1, y: pos.y },
             { x: pos.x, y: pos.y + 1 }, { x: pos.x, y: pos.y - 1 }];
@@ -877,7 +1197,7 @@ export const planSkillActions = (
          * inside dust) the wide version walled off its own line as often as the horde's.
          *
          * The second tile is the neighbour on the CASTER'S side, which is not an arbitrary
-         * pick: the cloud always ends up between Zephyr and what she just blinded, so the
+         * pick: the cloud always ends up between Reedwing and what she just blinded, so the
          * pod covers her way out — the exact thing the skill exists to buy ("it buys the TURN
          * she needs to leave the pocket she just flew into"). Deterministic tie-break in
          * reading order, like every other aim in this file: a telegraph decided by a coin
@@ -890,13 +1210,16 @@ export const planSkillActions = (
                 - (Math.abs(b.x - caster.position.x) + Math.abs(b.y - caster.position.y))
                 || a.x - b.x || a.y - b.y)
             .slice(0, 1);
+        // Read back off the simulation: each body the strike found, wherever it finished.
+        // Tiles that held nobody drop out entirely — no body, no cloud.
+        const landed: Position[] = dustAnchors
+            .filter(a => !!a.unitId)
+            .map(a => ({ ...(tempUnits.get(a.unitId!)?.position ?? a.tile) }));
         const covered: Position[] = allyCentred
             ? ring
             : !skill.effects.some(e => e.type === 'DAMAGE' || e.type === 'PUSH')
                 ? [pos, ...podTrail]
-                : ((skill.rangeType === 'LINE' || skill.rangeType === 'DASH')
-                    ? getSkillTargetPath(caster, skill, pos, board)
-                    : targets);
+                : landed;
         const dusted = new Set<string>();
         covered.forEach(p => {
             if (p.x < 0 || p.x >= 8 || p.y < 0 || p.y >= 8) return;
@@ -956,25 +1279,14 @@ export const planSkillActions = (
         });
     }
 
-    // Chomper is helpless while it digests. Without this the swallow had no downside.
+    // Steel Jaws is helpless while it digests. Without this the swallow had no downside.
     if (skill.id === 'burrow_strike' && actions.some(a => a.type === 'UNIT_DIE')) {
-        // Double Jaw shortens the helpless window that is Maw's whole drawback.
+        // Double Jaw shortens the helpless window that is Snapmaw's whole drawback.
         const digest = Math.max(1, 2 - getFusionEffectValue(caster, 'DIGEST_REDUCTION'));
-        const updates: Partial<Unit> = { digestingTurns: digest };
-        // Shelled Chomper: the helpless window opens behind a fresh LAYER (§6.0) — the first
-        // blow of the digest is eaten whole, the window itself stays a window. The old
-        // version was total immunity checked inside calculateDamage, which made the digest
-        // window not a drawback at all; the numbered 3-shield replaced that, and the layer
-        // replaces the number.
-        if (hasFusionEffect(caster, 'ARMOR_WHILE_DIGESTING')) {
-            const casterSim = tempUnits.get(caster.id);
-            if (((casterSim ?? caster).shield || 0) === 0) {
-                updates.shield = 1;
-                if (casterSim) casterSim.shield = 1;
-                actions.push({ type: 'APPLY_DAMAGE', targetId: caster.id, amount: 0, eventType: 'BLOCK', pos: caster.position });
-            }
-        }
-        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: caster.id, updates });
+        // Armored Jaws used to raise a LAYER here. It is a flat reduction now, read inside
+        // calculateDamage off `digestingTurns` — so there is nothing to grant at this site and
+        // it softens EVERY blow of the window instead of the first one.
+        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: caster.id, updates: { digestingTurns: digest } });
     }
 
     if (skill.rangeType === 'DASH') {

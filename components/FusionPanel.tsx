@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { BenchPlant, FusionEffectType, HeroId, MaterialId, Skill, Unit } from '../types';
 import {
     FlaskConical, X, AlertTriangle, Sprout, Ban, Heart, HandFist, Footprints,
-    Sun, Swords, Sparkles, Shield, ArrowRight,
+    Sun as Sol, Swords, Sparkles, Shield, ArrowRight,
 } from 'lucide-react';
 import { FUSION_SLOTS } from '../constants';
 import { HERO_DEFINITIONS } from '../data/heroes';
 import { getMaterial } from '../data/materials';
 import { getRecipe } from '../data/fusionRecipes';
-import { canFuse, applyFusion, applyFusionToSkill, getFusionEffectValue, hasFusionEffect } from '../utils/fusion';
+import { canFuse, applyFusion, applyFusionToSkill, getFusionEffectValue, hasFusionEffect, DIGEST_CLAW_SKILL } from '../utils/fusion';
 import { ELEMENT_DEFINITIONS, ELEMENT_HP_COST } from '../utils/elements';
 import { HERO_ACCENTS } from '../utils/icons';
 import { ElementBadge } from './ElementBadge';
@@ -42,11 +42,14 @@ type Translate = (text: string, vars?: Record<string, string | number>) => strin
 const categoryOf = (type: FusionEffectType): { label: string; color: string } => {
     switch (type) {
         case 'GRANT_ATTACK':
+        case 'DIGEST_CLAW':
             return { label: 'New active skill', color: '#4ade80' };
         case 'BONUS_HP':
         case 'BONUS_DAMAGE':
+        case 'MOVE_BONUS':
             return { label: 'Stats', color: '#f59e0b' };
         case 'SUN_PER_TURN':
+        case 'SUN_WHILE_DIGESTING':
         case 'SUN_ON_KILL':
         case 'SUN_ON_BLOCK_SPAWN':
         case 'SKILL_DISCOUNT':
@@ -61,6 +64,20 @@ const categoryOf = (type: FusionEffectType): { label: string; color: string } =>
         case 'ATTACK_RANGE_BONUS':
         case 'ARC_ATTACK':
         case 'SKILL_SPLASH':
+        case 'SKILL_STUN':
+        case 'SKILL_DISARM':
+        case 'SKILL_AURA':
+        case 'SKILL_REPEL':
+        case 'BLEED_ON_HIT':
+        case 'TAUNT_ON_HIT':
+        case 'STUN_ON_FULL_HP':
+        case 'WING_MIDSHOT':
+        case 'OVERWATCH_SHOT':
+        case 'BLESS_POWER':
+        case 'PUSH_DISTANCE':
+        case 'COLLISION_BONUS':
+        case 'TAUNT_RADIUS':
+        case 'ADJACENT_STRIKE':
             return { label: 'Attack upgrade', color: '#fb923c' };
         default:
             return { label: 'Passive', color: '#38bdf8' };
@@ -82,7 +99,7 @@ interface SkillView {
     key: string;
     name: string;
     desc: string;
-    /** Net Sun cost after SKILL_DISCOUNT — mirrors App's netCost formula. */
+    /** Net Sol cost after SKILL_DISCOUNT — mirrors App's netCost formula. */
     cost: number;
     damage: number;
     rangeText: string;
@@ -92,7 +109,7 @@ interface SkillView {
 
 /**
  * The hero's active skills AS THE COMBAT CODE WOULD RESOLVE THEM for this unit:
- * fusion grafts included via applyFusionToSkill, Sun discount included, plus the
+ * fusion grafts included via applyFusionToSkill, Sol discount included, plus the
  * granted Fused Shot when a GRANT_ATTACK fusion is present.
  */
 const skillViewsOf = (unit: Unit, t: Translate): SkillView[] => {
@@ -123,7 +140,7 @@ const skillViewsOf = (unit: Unit, t: Translate): SkillView[] => {
             if (e.type === 'STUN') tags.push(t('Freeze'));
             if (e.type === 'APPLY_BURN') tags.push(t('Burn'));
             if (e.type === 'APPLY_SLOW') tags.push(t('Slow'));
-            if (e.type === 'RESOURCE_GAIN') tags.push(`+${e.value ?? 0} ${t('Sun')}`);
+            if (e.type === 'RESOURCE_GAIN') tags.push(`+${e.value ?? 0} ${t('Sol')}`);
         });
 
         views.push({
@@ -137,6 +154,21 @@ const skillViewsOf = (unit: Unit, t: Translate): SkillView[] => {
         });
     });
 
+    // Mirrors the claw App builds in skillsFor() — same shared constant, so the card and the
+    // button can never describe different weapons.
+    if (hasFusionEffect(unit, 'DIGEST_CLAW')) {
+        views.push({
+            key: 'claw',
+            name: t(DIGEST_CLAW_SKILL.name),
+            desc: t(DIGEST_CLAW_SKILL.description),
+            cost: 0,
+            damage: DIGEST_CLAW_SKILL.effects.find(e => e.type === 'DAMAGE')?.value ?? 1,
+            rangeText: t('Melee'),
+            tags: [],
+            isHeroSkill: false,
+        });
+    }
+
     // Mirrors the granted skill App builds in skillsFor(): LINE 6, 2 DMG, costs the effect value.
     if (hasFusionEffect(unit, 'GRANT_ATTACK')) {
         const cost = getFusionEffectValue(unit, 'GRANT_ATTACK');
@@ -144,7 +176,7 @@ const skillViewsOf = (unit: Unit, t: Translate): SkillView[] => {
             key: 'granted',
             name: t('Fused Shot'),
             desc: cost > 0
-                ? t('A ranged shot granted by fusion. Costs {cost} Sun.', { cost })
+                ? t('A ranged shot granted by fusion. Costs {cost} Sol.', { cost })
                 : t('A ranged shot granted by fusion. Free.'),
             cost,
             damage: 2,
@@ -533,7 +565,7 @@ export const FusionPanel: React.FC<FusionPanelProps> = ({ squad, bench, onFuse, 
                                                             )}
                                                             {(view.cost > 0 || (prev?.cost ?? 0) > 0) ? (
                                                                 <span className="flex items-center gap-1 text-yellow-400">
-                                                                    <Sun size={10} fill="currentColor" /> <Diff before={prev?.cost ?? view.cost} after={after ? view.cost : undefined} />
+                                                                    <Sol size={10} fill="currentColor" /> <Diff before={prev?.cost ?? view.cost} after={after ? view.cost : undefined} />
                                                                 </span>
                                                             ) : (
                                                                 <span className="text-[10px] font-bold uppercase text-green-400">{t('Free')}</span>

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { BenchPlant, ItemDefinition, MaterialId, Unit } from '../types';
-import { ShoppingCart, Heart, Sun, ArrowLeft, Coins, RefreshCw, Sprout, AlertTriangle, Brain, Info } from 'lucide-react';
+// `Brain` là tên icon của lucide, không phải tên tài nguyên trong game — đợt đổi
+// Brain→Sprout quét trúng cả nó và đâm vào icon Sprout vốn đã có ở đây.
+import { ShoppingCart, Heart, Sun as Sol, ArrowLeft, Coins, RefreshCw, Brain, AlertTriangle, Sprout, Info } from 'lucide-react';
 import { BENCH_CAPACITY, FUSION_SLOTS, shopRerollCost } from '../constants';
 import { getMaterial } from '../data/materials';
 import { canFuse, describeFusionForHero } from '../utils/fusion';
@@ -15,7 +17,7 @@ interface ShopScreenProps {
     onLeave: () => void;
 
     // --- Base plants, bought with Coin (DESIGN.md section 5) ---
-    /** Coin wallet. Coin decides who your squad *is*; Sun decides what a turn can do. */
+    /** Coin wallet. Coin decides who your squad *is*; Sol decides what a turn can do. */
     coins?: number;
     /** The materials on offer this visit. Rerolled as a whole set. */
     offers?: MaterialId[];
@@ -32,11 +34,11 @@ interface ShopScreenProps {
     onBuyMaterial?: (id: MaterialId, index: number) => void;
     onReroll?: () => void;
 
-    // --- Brain buy-back. Losing every brain on one board ends the run, so this is the
+    // --- Sprout buy-back. Losing every sprout on one board ends the run, so this is the
     //     only way back up — and it is priced to be a last resort, not a routine purchase.
     brainsRemaining?: number;
     brainsMax?: number;
-    /** Coin price of the next brain. Escalates with each one already bought. */
+    /** Coin price of the next sprout. Escalates with each one already bought. */
     brainCost?: number;
     onBuyBrain?: () => void;
 }
@@ -84,7 +86,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({
     const [openDetails, setOpenDetails] = useState<string | null>(null);
     const detailsHint = IS_COARSE_POINTER ? t('Tap for details') : t('Hover for details');
 
-    // Shop services and items are all paid in Coin — Sun never leaves the battlefield
+    // Shop services and items are all paid in Coin — Sol never leaves the battlefield
     // (DESIGN.md section 3). `sun` is shown in the header for reference only.
     const heroes = squad.filter(u => u.isHero);
     const rerollCost = shopRerollCost(rerollsUsed);
@@ -107,8 +109,8 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({
                         <ShoppingCart size={26} className="shrink-0" /> <span className="truncate">{t("Old Mulch's Supply")}</span>
                     </h1>
                     <div className="flex items-center gap-5 text-lg shrink-0">
-                        <div className="flex items-center gap-1.5" title={t('Sun — spent on hero skills. Resets every level.')}>
-                            <Sun size={20} className="text-yellow-400" />
+                        <div className="flex items-center gap-1.5" title={t('Sol — spent on hero skills. Resets every level.')}>
+                            <Sol size={20} className="text-yellow-400" />
                             <span>{sun}</span>
                         </div>
                         <div className="flex items-center gap-1.5 text-amber-300" title={t('Coin — spent between levels on plants, items and revives.')}>
@@ -118,7 +120,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({
                     </div>
                 </div>
 
-                {/* Services strip: brain buy-back only.
+                {/* Services strip: sprout buy-back only.
                     Squad Repair used to sit here too, and it has been removed on purpose:
                     healing belongs to the Campfire ("Sleep It Off"), and a shop that also
                     sold health made the Campfire's main draw redundant while quietly
@@ -127,11 +129,11 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({
                 <div className="flex gap-3">
                     <div
                         className="flex-1 bg-[#1a1c21] border border-purple-800/60 px-4 py-3 shadow-lg flex items-center justify-between gap-3"
-                        title={t('Lose every brain on one map and the run ends there. This is the only way back up.')}
+                        title={t('Lose every sprout on one map and the run ends there. This is the only way back up.')}
                     >
                         <div className="flex items-center gap-3 min-w-0">
                             <Brain size={22} className="text-purple-400 shrink-0" />
-                            <span className="uppercase font-bold text-sm text-purple-300 truncate">{t('Spare Brain')}</span>
+                            <span className="uppercase font-bold text-sm text-purple-300 truncate">{t('Spare Sprout')}</span>
                             <Info size={12} className="text-gray-600 shrink-0" />
                             <span className={`text-sm font-bold shrink-0 ${brainsRemaining <= 1 ? 'text-red-400' : 'text-purple-300'}`}>
                                 {brainsRemaining}<span className="text-gray-600">/{brainsMax}</span>
@@ -141,8 +143,8 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({
                             onClick={onBuyBrain}
                             disabled={!canBuyBrain}
                             title={brainsFull
-                                ? t('Your brain budget is already full.')
-                                : t('Each brain costs more than the last: {cost} now, {next} after.', { cost: brainCost, next: brainCost + 75 })}
+                                ? t('Your sprout budget is already full.')
+                                : t('Each sprout costs more than the last: {cost} now, {next} after.', { cost: brainCost, next: brainCost + 75 })}
                             className={`
                                 flex items-center gap-2 px-4 py-2 border-2 uppercase text-xs font-bold shrink-0
                                 ${canBuyBrain
@@ -150,7 +152,7 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({
                                     : 'bg-gray-800 border-gray-600 text-gray-500 cursor-not-allowed'}
                             `}
                         >
-                            {brainsFull ? t('Budget Full') : t('Buy Brain')}
+                            {brainsFull ? t('Budget Full') : t('Buy Sprout')}
                             {!brainsFull && <span className="flex items-center gap-1 text-amber-300"><Coins size={12} /> {brainCost}</span>}
                         </button>
                     </div>

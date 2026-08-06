@@ -1,4 +1,4 @@
-// Service Worker for Plant Heroes: Blightfall PWA
+// Service Worker for Blightfall: The Last Garden PWA
 //
 // MỌI đường dẫn ở đây phải TƯƠNG ĐỐI (./...), không được bắt đầu bằng "/".
 // Site deploy dưới đường dẫn con (https://<user>.github.io/<repo>/), nên "/index.html"

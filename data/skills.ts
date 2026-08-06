@@ -3,169 +3,52 @@ import { UnitClass, Skill } from '../types';
 import { SkillFactory } from '../utils/skillFactory';
 
 export const UNIT_SKILLS: Record<UnitClass, Skill[]> = {
-  [UnitClass.PEASHOOTER]: [
-    SkillFactory.createLineAttack('pea_shot', 'Pea Shot', 8, 2, 'Fires a pea in a straight line.')
+  [UnitClass.SEED_GUN]: [
+    SkillFactory.createLineAttack('pea_shot', 'Seed Shot', 8, 2, 'Fires a seed in a straight line.')
   ],
-  // Was two entries sharing the id 'snow_pea'. Skill lookup is by id, so the second one
-  // (the one that actually froze) could never be selected. Collapsed into a single skill.
-  [UnitClass.SNOW_PEA]: [
-    {
-        ...SkillFactory.createLineAttack('snow_pea', 'Ice Pea', 8, 2, 'Deals 2 damage and freezes the target for one turn.'),
-        effects: [{ type: 'DAMAGE', value: 2 }, { type: 'STUN' }]
-    }
+  // Bench Rotor Wing — the seedling body of MAT_CATTAIL. A plain homing dart, nothing fancy:
+  // the drone tricks belong to Reedwing, the hero grown from it.
+  [UnitClass.ROTOR_WING]: [
+    SkillFactory.createLineAttack('tail_dart', 'Rotor Dart', 4, 2, 'Fires a spiked dart.')
   ],
-  [UnitClass.REPEATER]: [
-    SkillFactory.createLineAttack('repeater', 'Double Shot', 8, 4, 'Fires two peas.')
-  ],
-  [UnitClass.BLOOMERANG]: [
-    SkillFactory.createLineAttack('boomerang_toss', 'Boomerang', 4, 1, 'Attacks all enemies in line.', true)
-  ],
-  [UnitClass.CACTUS]: [
-    SkillFactory.createLineAttack('needle_shot', 'Needle Shot', 8, 2, 'Fires a piercing spike.', true),
-    SkillFactory.createBuffSkill('height', 'Stretch', 'SELF', 0, 'BUFF_STAT', 1, 'Gain range bonus.')
-  ],
-  // Bench Cattail — the seedling body of MAT_CATTAIL. A plain homing dart, nothing fancy:
-  // the drone tricks belong to Zephyr, the hero grown from it.
-  [UnitClass.CATTAIL]: [
-    SkillFactory.createLineAttack('tail_dart', 'Tail Dart', 4, 2, 'Fires a spiked dart.')
-  ],
-  [UnitClass.MELON_PULT]: [
-    SkillFactory.createLobAttack('melon_lob', 'Melon Lob', 4, 4, 'Heavy lobbed damage + Push.', [{ type: 'PUSH', value: 1 }])
-  ],
-  [UnitClass.CABBAGE_PULT]: [
-    SkillFactory.createLobAttack('cabbage_lob', 'Cabbage', 4, 2, 'Lobs a cabbage at the target.')
-  ],
-  [UnitClass.KERNEL_PULT]: [
+  [UnitClass.CORN_MORTAR]: [
     SkillFactory.createLobAttack('corn_toss', 'Corn Kernel', 4, 1, 'Lob corn over obstacles.'),
-    SkillFactory.createLobAttack('butter_splat', 'Butter Splat', 4, 1, 'Immobilize enemy with butter.', [{ type: 'STUN' }])
+    SkillFactory.createLobAttack('nova_shell', 'Nova Shell', 4, 1, 'A concussive shell: immobilizes the target.', [{ type: 'STUN' }])
   ],
-  [UnitClass.MAGNET_SHROOM]: [
-    {
-        id: 'magnetic_pull', name: 'Magnetize', description: 'Pulls the target 1 tile closer.',
-        rangeType: 'LINE', rangeValue: 4,
-        effects: [{ type: 'PULL', value: 1 }]
-    }
-  ],
-  [UnitClass.SUN_SHROOM]: [
-    {
-        id: 'synthesize_shroom', name: 'Synthesize', description: 'Absorb nutrients. Charges ability.',
-        rangeType: 'SELF', rangeValue: 0,
-        effects: [{ type: 'CHARGE_SUN', value: 1 }]
-    },
-    {
-        id: 'harvest_shroom', name: 'Harvest', description: 'Gain 25 Sun. Requires Charge.',
-        rangeType: 'SELF', rangeValue: 0,
-        requiresSunCharge: true,
-        effects: [{ type: 'RESOURCE_GAIN', value: 25, resource: 'SUN' }]
-    }
-  ],
-  [UnitClass.SCAREDY_SHROOM]: [
-    SkillFactory.createLineAttack('spore_shot', 'Spore Shot', 4, 3, 'Deals damage. Cannot use if Enemy is adjacent.')
-  ],
-  [UnitClass.WALLNUT]: [
+  [UnitClass.ARMOR_PLATE]: [
     // Shields are LAYERS (PLAN-hero-zephyr §6.0): the value only says "this grants one".
     SkillFactory.createSelfHealOrShield('harden', 'Harden', 'SHIELD', 1, 'Raise a shell layer — the next hit is blocked in full.'),
     SkillFactory.createMeleeAttack('body_slam', 'Body Slam', 1, 'Bash and Push enemy.', [{ type: 'PUSH', value: 1 }])
   ],
-  [UnitClass.TALL_NUT]: [
-    SkillFactory.createSelfHealOrShield('iron_stance', 'Iron Stance', 'SHIELD', 1, 'Raise a shell layer — the next hit is blocked in full.'),
-    {
-        id: 'seismic_slam', name: 'Seismic Slam', description: 'Push all adjacent enemies.',
-        rangeType: 'SELF', rangeValue: 0,
-        effects: [{ type: 'PUSH', value: 1 }]
-    }
-  ],
-  [UnitClass.ENDURIAN]: [
+  [UnitClass.SPIKE_ARMOR]: [
     SkillFactory.createSelfHealOrShield('harden', 'Harden', 'HEAL', 2, 'Gain 2 Temporary HP.')
   ],
-  [UnitClass.SWEET_POTATO]: [
-    {
-        id: 'sweet_scent', name: 'Sweet Scent', description: 'Pulls a distant enemy towards you.',
-        rangeType: 'LOB', rangeValue: 3,
-        effects: [{ type: 'PULL', value: 1 }]
-    }
-  ],
-  [UnitClass.IRON_NUT]: [
-    SkillFactory.createSelfHealOrShield('iron_fortress', 'Iron Fortress', 'SHIELD', 1, 'Raise a shell layer — the next hit is blocked in full.'),
-    SkillFactory.createMeleeAttack('shield_bash', 'Shield Bash', 3, 'Bash and push enemy.', [{ type: 'PUSH', value: 1 }])
-  ],
-  [UnitClass.PUMPKIN]: [
-    SkillFactory.createBuffSkill('pumpkin_shell', 'Pumpkin Shell', 'ADJACENT', 1, 'SHIELD', 1, 'Shell an ally in a layer — the next hit against them is blocked in full.')
+  [UnitClass.BUNKER_SHELL]: [
+    SkillFactory.createBuffSkill('pumpkin_shell', 'Bunker Plating', 'ADJACENT', 1, 'SHIELD', 1, 'Shell an ally in a layer — the next hit against them is blocked in full.')
   ],
   // No damage on purpose — the shove IS the attack. Where the target lands (water, a
   // mountain, another body) is what costs it health, not the swing itself.
-  [UnitClass.CHARD_GUARD]: [
+  [UnitClass.SPRING_ARM]: [
     SkillFactory.createMeleeAttack('chard_backswing', 'Backswing', 0, 'Hurls an adjacent enemy two tiles back.', [{ type: 'PUSH', value: 2 }])
   ],
-  [UnitClass.CHOMPER]: [
+  [UnitClass.STEEL_JAWS]: [
     SkillFactory.createMeleeAttack('burrow_strike', 'Burrow Strike', 999, 'Instantly kill non-massive unit.'),
     {
-        ...SkillFactory.createLineAttack('goop', 'Sticky Goop', 3, 1, 'Slow and damage enemy.', true),
+        ...SkillFactory.createLineAttack('sap_snare', 'Sap Snare', 3, 1, 'Slow and damage enemy.', true),
         effects: [{ type: 'DAMAGE', value: 1 }, { type: 'STUN' }]
     }
   ],
-  [UnitClass.BONK_CHOY]: [
-    SkillFactory.createMeleeAttack('uppercut', 'Uppercut', 3, 'Heavy punch that pushes enemy.', [{ type: 'PUSH', value: 1 }])
-  ],
-  [UnitClass.SUNFLOWER]: [
+  [UnitClass.SOL_BATTERY]: [
     {
         id: 'synthesize', name: 'Synthesize', description: 'Absorb light. Charges ability.',
         rangeType: 'SELF', rangeValue: 0,
         effects: [{ type: 'CHARGE_SUN', value: 1 }]
     },
     {
-        id: 'harvest', name: 'Harvest', description: 'Produce 50 Sun. Requires Charge.',
+        id: 'harvest', name: 'Harvest', description: 'Produce 50 Sol. Requires Charge.',
         rangeType: 'SELF', rangeValue: 0,
         requiresSunCharge: true,
         effects: [{ type: 'RESOURCE_GAIN', value: 50, resource: 'SUN' }]
-    }
-  ],
-  [UnitClass.TWIN_SUNFLOWER]: [
-    {
-        id: 'synthesize_twin', name: 'Synthesize', description: 'Absorb light. Charges ability.',
-        rangeType: 'SELF', rangeValue: 0,
-        effects: [{ type: 'CHARGE_SUN', value: 1 }]
-    },
-    {
-        id: 'harvest_twin', name: 'Harvest', description: 'Produce 100 Sun. Requires Charge.',
-        rangeType: 'SELF', rangeValue: 0,
-        requiresSunCharge: true,
-        effects: [{ type: 'RESOURCE_GAIN', value: 100, resource: 'SUN' }]
-    }
-  ],
-  [UnitClass.COFFEE_BEAN]: [
-    {
-        id: 'caffeine_boost', name: 'Caffeine Boost', description: 'Reset an ally\'s Move and Attack.',
-        rangeType: 'ADJACENT', rangeValue: 1,
-        effects: [{ type: 'REFRESH_ACTION' }]
-    }
-  ],
-  [UnitClass.HYPNO_SHROOM]: [
-    {
-        id: 'hypnosis', name: 'Hypnotize', description: 'Turns an enemy around to fight for you.',
-        rangeType: 'ADJACENT', rangeValue: 1,
-        effects: [{ type: 'HYPNOTIZE' }]
-    }
-  ],
-  [UnitClass.BLOVER]: [
-    {
-        id: 'gust', name: 'Gust', description: 'Choose a direction to blow ALL enemies.',
-        rangeType: 'ADJACENT', rangeValue: 1, 
-        effects: [{ type: 'GLOBAL_PUSH' }]
-    }
-  ],
-  [UnitClass.UMBRELLA_LEAF]: [
-    {
-        id: 'bounce_away', name: 'Bounce Away', description: 'Push all adjacent units away.',
-        rangeType: 'SELF', rangeValue: 0,
-        effects: [{ type: 'PUSH', value: 1 }]
-    }
-  ],
-  [UnitClass.TORCHWOOD]: [
-    {
-        id: 'ignite', name: 'Ignite', description: 'Create a Fire tile adjacent to self.',
-        rangeType: 'ADJACENT', rangeValue: 1,
-        effects: [{ type: 'TERRAIN_MOD' }]
     }
   ],
   
@@ -174,21 +57,21 @@ export const UNIT_SKILLS: Record<UnitClass, Skill[]> = {
   // the action bar honest when the player clicks it.
   [UnitClass.GEAR_CRATE]: [],
 
-  [UnitClass.BASIC_ZOMBIE]: [ SkillFactory.createMeleeAttack('bite', 'Bite', 1, 'Chomp.') ],
-  [UnitClass.CONEHEAD]: [ SkillFactory.createMeleeAttack('cone_smash', 'Cone Smash', 2, 'Heavy hit.') ],
-  [UnitClass.BUCKETHEAD]: [ SkillFactory.createMeleeAttack('bucket_smash', 'Bucket Smash', 2, 'Crushing blow.') ],
-  [UnitClass.NEWSPAPER_ZOMBIE]: [ SkillFactory.createMeleeAttack('paper_slap', 'Paper Slap', 1, 'Slaps.') ],
-  [UnitClass.SCREEN_DOOR_ZOMBIE]: [ SkillFactory.createMeleeAttack('door_bash', 'Door Bash', 2, 'Hits with door.') ],
-  [UnitClass.DIGGER_ZOMBIE]: [ SkillFactory.createMeleeAttack('pickaxe', 'Pickaxe', 2, 'Hits with pickaxe.') ],
-  [UnitClass.FOOTBALL_ZOMBIE]: [ SkillFactory.createMeleeAttack('tackle', 'Tackle', 2, 'Rushes target.', [{ type: 'PUSH', value: 1 }]) ],
-  [UnitClass.POLE_VAULTER]: [ SkillFactory.createDash('vault_kick', 'Vault Kick', 4, 2, false, 'Jumps over.') ],
-  [UnitClass.DISCO_ZOMBIE]: [ 
+  [UnitClass.WALKER]: [ SkillFactory.createMeleeAttack('bite', 'Bite', 1, 'Chomp.') ],
+  [UnitClass.SCRAPCAP]: [ SkillFactory.createMeleeAttack('scrap_smash', 'Scrap Smash', 2, 'Heavy hit.') ],
+  [UnitClass.POTHELM]: [ SkillFactory.createMeleeAttack('pot_smash', 'Pot Smash', 2, 'Crushing blow.') ],
+  [UnitClass.TATTERGUARD]: [ SkillFactory.createMeleeAttack('paper_slap', 'Paper Slap', 1, 'Slaps.') ],
+  [UnitClass.DOORBEARER]: [ SkillFactory.createMeleeAttack('door_bash', 'Door Bash', 2, 'Hits with door.') ],
+  [UnitClass.MINER]: [ SkillFactory.createMeleeAttack('pickaxe', 'Pickaxe', 2, 'Hits with pickaxe.') ],
+  [UnitClass.LINEBREAKER]: [ SkillFactory.createMeleeAttack('tackle', 'Tackle', 2, 'Rushes target.', [{ type: 'PUSH', value: 1 }]) ],
+  [UnitClass.LEAPER]: [ SkillFactory.createDash('vault_kick', 'Vault Kick', 4, 2, false, 'Jumps over.') ],
+  [UnitClass.DANCER]: [ 
     { id: 'summon_backup', name: 'Summon Backup', rangeType: 'ADJACENT', rangeValue: 1, description: 'Summons backup.', effects: [{ type: 'SPAWN' }] } 
   ],
-  [UnitClass.BALLOON_ZOMBIE]: [ SkillFactory.createMeleeAttack('balloon_drop', 'Drop Kick', 2, 'Drops onto a plant from above.') ],
-  [UnitClass.CATAPULT_ZOMBIE]: [ SkillFactory.createLobAttack('basketball_lob', 'Basketball', 3, 2, 'Shells a plant from three tiles away.') ],
-  [UnitClass.FLAG_ZOMBIE]: [ SkillFactory.createMeleeAttack('flag_swat', 'Flag Swat', 1, 'A feeble whack with the flagpole.') ],
-  [UnitClass.DISCO_ZOMBOSS]: [
+  [UnitClass.FLOATER]: [ SkillFactory.createMeleeAttack('balloon_drop', 'Drop Kick', 2, 'Drops onto a plant from above.') ],
+  [UnitClass.LOBBER]: [ SkillFactory.createLobAttack('boulder_lob', 'Boulder Lob', 3, 2, 'Shells a plant from three tiles away.') ],
+  [UnitClass.BANNERMAN]: [ SkillFactory.createMeleeAttack('flag_swat', 'Flag Swat', 1, 'A feeble whack with the flagpole.') ],
+  [UnitClass.HEADLINER]: [
     SkillFactory.createMeleeAttack('mic_swing', 'Mic Swing', 1, 'A backhand with the microphone. The damage was never the point.'),
     { id: 'call_the_dancers', name: 'Call the Dancers', rangeType: 'ADJACENT', rangeValue: 1, description: 'Four more take the floor.', effects: [{ type: 'SPAWN' }] }
   ],
@@ -234,7 +117,7 @@ export const UNIT_SKILLS: Record<UnitClass, Skill[]> = {
   [UnitClass.ARMADA]: [
     SkillFactory.createLobAttack('bomb_drop', 'Bomb Drop', 2, 2, 'Two damage on the tile and on all four beside it. Coming from above, nothing is behind anything.'),
     { id: 'landing_party', name: 'Landing Party', rangeType: 'LOB', rangeValue: 4,
-      description: 'Two crews touch down between your line and the house it is guarding.',
+      description: 'Two crews touch down between your line and the Greenspire it is guarding.',
       effects: [{ type: 'SPAWN' }] },
     SkillFactory.createMeleeAttack('wreck_salvo', 'Wreck Salvo', 4, 'Grounded, it stops flying and starts hurting: four damage, one tile at a time.')
   ],
@@ -246,11 +129,11 @@ export const UNIT_SKILLS: Record<UnitClass, Skill[]> = {
       'Pulls a hero into the sand. No damage — it takes the turn they needed to step out of the ring.',
       [{ type: 'STUN' }])
   ],
-  [UnitClass.GARGANTUAR]: [
-    SkillFactory.createMeleeAttack('telephone_smash', 'Telephone Smash', 5, 'Massive damage.'),
-    { id: 'imp_toss', name: 'Throw Imp', rangeType: 'LOB', rangeValue: 4, description: 'Throws Imp.', effects: [{ type: 'SPAWN' }] }
+  [UnitClass.GRAVEHULK]: [
+    SkillFactory.createMeleeAttack('telephone_smash', 'Tombstone Smash', 5, 'Massive damage.'),
+    { id: 'runt_toss', name: 'Throw Runt', rangeType: 'LOB', rangeValue: 4, description: 'Throws Runt.', effects: [{ type: 'SPAWN' }] }
   ],
-  [UnitClass.IMP]: [ SkillFactory.createMeleeAttack('bite', 'Bite', 1, 'Small bite.') ],
+  [UnitClass.RUNT]: [ SkillFactory.createMeleeAttack('bite', 'Bite', 1, 'Small bite.') ],
   [UnitClass.ROCK]: [],
   [UnitClass.GRAVE]: [],
 };

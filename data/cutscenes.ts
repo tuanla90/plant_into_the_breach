@@ -43,7 +43,7 @@ export interface CutsceneDef {
  */
 export const BOSS_CUTSCENES: Partial<Record<BossId, CutsceneDef>> = {
     // ---- STAGE I — The Green Belt -------------------------------------------------------
-    GARGANTUAR: {
+    GRAVEHULK: {
         art: './img/comic/cutscene-boss-clear-gargantuar.jpg',
         kicker: 'Verdant Reach — cleared',
         captions: [
@@ -51,7 +51,7 @@ export const BOSS_CUTSCENES: Partial<Record<BossId, CutsceneDef>> = {
             'Nothing that big had ever been stopped here. Verdant Reach answered with a mouth to match it.',
         ],
     },
-    CATAPULT_LORD: {
+    IRONCART: {
         art: './img/comic/cutscene-boss-clear-ironcart.jpg',
         kicker: 'Goldacre — cleared',
         captions: [
@@ -69,7 +69,7 @@ export const BOSS_CUTSCENES: Partial<Record<BossId, CutsceneDef>> = {
     },
 
     // ---- STAGE II — The Far Shore -------------------------------------------------------
-    BALLOON_ARMADA: {
+    ARMADA: {
         art: './img/comic/cutscene-boss-clear-armada.jpg',
         kicker: 'Windward — cleared',
         captions: [
@@ -95,7 +95,7 @@ export const BOSS_CUTSCENES: Partial<Record<BossId, CutsceneDef>> = {
     },
 
     // ---- STAGE III — The City -----------------------------------------------------------
-    DISCO_ZOMBOSS: {
+    HEADLINER: {
         art: './img/comic/cutscene-boss-clear-headliner.jpg',
         kicker: 'Neon Rose — cleared',
         captions: [
@@ -167,13 +167,13 @@ export const STAGE_CUTSCENES: Record<1 | 2 | 3, CutsceneDef> = {
  * is (by the boss whose act is opening), and absent art simply leaves the black behind.
  */
 export const ACT_INTRO_ART: Partial<Record<BossId, string>> = {
-    GARGANTUAR: './img/comic/cutscene-act-verdant-reach.jpg',
-    CATAPULT_LORD: './img/comic/cutscene-act-goldacre.jpg',
+    GRAVEHULK: './img/comic/cutscene-act-verdant-reach.jpg',
+    IRONCART: './img/comic/cutscene-act-goldacre.jpg',
     CINDER_COLOSSUS: './img/comic/cutscene-act-kiln-row.jpg',
-    BALLOON_ARMADA: './img/comic/cutscene-act-windward.jpg',
+    ARMADA: './img/comic/cutscene-act-windward.jpg',
     SANDREAVER: './img/comic/cutscene-act-thornwaste.jpg',
     YETI: './img/comic/cutscene-act-frostgate.jpg',
-    DISCO_ZOMBOSS: './img/comic/cutscene-act-neon-rose.jpg',
+    HEADLINER: './img/comic/cutscene-act-neon-rose.jpg',
     CLOCKJAW: './img/comic/cutscene-act-old-quarter.jpg',
     VOLTMAW: './img/comic/cutscene-act-the-grid.jpg',
     BLIGHTLORD: './img/comic/cutscene-act-the-breach.jpg',
