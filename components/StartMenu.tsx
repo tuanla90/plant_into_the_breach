@@ -165,15 +165,6 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
                             </button>
                         )}
 
-                        {/* DOWNLOAD / INSTALL PWA BUTTON */}
-                        <button
-                            onClick={handleInstallClick}
-                            className="group relative px-2 py-3 bg-sky-950/85 backdrop-blur-sm border border-sky-500 hover:bg-sky-500 hover:text-black text-sky-300 transition-all duration-200 uppercase font-bold tracking-[0.05em] text-[10px] sm:text-xs flex flex-col items-center justify-center gap-1.5 rounded-md"
-                        >
-                            <Download size={16} />
-                            {t('Install App')}
-                        </button>
-
                         {/* REPLAY TUTORIAL BUTTON */}
                         {onReplayTutorial && (
                             <button
@@ -205,6 +196,16 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
             <div className="absolute bottom-3 left-4 z-20 text-xs text-gray-500 uppercase tracking-widest opacity-70">
                 {t('System Ready // V1.0.4')}
             </div>
+
+            {/* DOWNLOAD / INSTALL PWA BUTTON - Pinned to bottom right corner */}
+            <button
+                onClick={handleInstallClick}
+                className="absolute bottom-3 right-4 z-20 group relative px-3 py-2 bg-sky-950/60 backdrop-blur-sm border border-sky-500/50 hover:bg-sky-500 hover:text-black text-sky-300 transition-all duration-200 uppercase font-bold tracking-widest text-[10px] flex items-center gap-2 rounded-md"
+            >
+                <Download size={14} />
+                <span className="hidden sm:inline">{t('Install App')}</span>
+                <span className="sm:hidden">{t('App')}</span>
+            </button>
         </div>
     );
 };
