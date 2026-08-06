@@ -63,7 +63,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
                         src={COVER_ART}
                         alt=""
                         onError={() => setHasCover(false)}
-                        className="fixed inset-0 w-full h-full object-cover object-top z-0"
+                        className="fixed inset-0 w-full h-full object-cover max-md:object-[30%_top] md:object-top z-0"
                     />
 
                     {/* Darken the right side only, where the buttons live. The heroes are on
@@ -117,16 +117,11 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
                 {/* MENU BUTTONS */}
                 <div className="flex flex-col w-full max-w-sm gap-3">
 
-                    {/* CONTINUE — only when a saved run exists. Sits above Start: resuming
-                        is the likelier intent, and Start silently abandons the save. */}
-                    {/* No whitespace-nowrap on the two primary buttons: inside the md
-                        key-art band the column is ~200px wide and the Vietnamese labels
-                        overflowed the button frame; tighter tracking below lg plus a
-                        graceful wrap beats clipped text. */}
+                    {/* CONTINUE */}
                     {onContinue && (
                         <button
                             onClick={onContinue}
-                            className="group relative px-3 lg:px-5 py-4 bg-amber-950/85 backdrop-blur-sm border-2 border-amber-500 hover:bg-amber-500 text-amber-400 hover:text-black transition-all duration-200 uppercase font-bold tracking-[0.04em] lg:tracking-[0.08em] text-sm lg:text-base flex items-center justify-center gap-3 overflow-hidden rounded-md"
+                            className="group relative px-3 lg:px-5 py-4 bg-amber-950/85 backdrop-blur-sm border-2 border-amber-500 hover:bg-amber-500 text-amber-400 hover:text-black transition-all duration-200 uppercase font-bold tracking-[0.04em] lg:tracking-[0.08em] text-sm lg:text-base flex items-center justify-center gap-3 overflow-hidden rounded-md shadow-lg"
                         >
                             <div className="absolute inset-0 bg-amber-400 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-200 z-0"></div>
                             <span className="relative z-10 flex items-center gap-2.5">
@@ -139,7 +134,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
                     {/* START BUTTON */}
                     <button
                         onClick={onStart}
-                        className="group relative px-3 lg:px-5 py-4 bg-green-950/85 backdrop-blur-sm border-2 border-green-500 hover:bg-green-600 text-green-400 hover:text-black transition-all duration-200 uppercase font-bold tracking-[0.04em] lg:tracking-[0.08em] text-sm lg:text-base flex items-center justify-center gap-3 overflow-hidden rounded-md"
+                        className="group relative px-3 lg:px-5 py-4 bg-green-950/85 backdrop-blur-sm border-2 border-green-500 hover:bg-green-600 text-green-400 hover:text-black transition-all duration-200 uppercase font-bold tracking-[0.04em] lg:tracking-[0.08em] text-sm lg:text-base flex items-center justify-center gap-3 overflow-hidden rounded-md shadow-lg"
                     >
                         <div className="absolute inset-0 bg-green-500 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-200 z-0"></div>
                         <span className="relative z-10 flex items-center gap-2.5">
@@ -148,53 +143,55 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
                         </span>
                     </button>
 
-                    {/* TUTORIAL BUTTON */}
-                    <button
-                        onClick={onTutorial}
-                        className="group relative px-5 py-3.5 bg-gray-950/85 backdrop-blur-sm border border-gray-500 hover:border-white text-gray-300 hover:text-white transition-all duration-200 uppercase font-bold tracking-[0.05em] text-sm whitespace-nowrap flex items-center justify-center gap-3 rounded-md"
-                    >
-                        <BookOpen size={18} />
-                        {t('Tactical Archive')}
-                    </button>
-
-                    {/* SETTINGS BUTTON */}
-                    {onOpenSettings && (
+                    {/* SECONDARY ACTIONS GRID FOR SPACE SAVING */}
+                    <div className="grid grid-cols-2 gap-2 mt-1">
+                        {/* TUTORIAL BUTTON */}
                         <button
-                            onClick={onOpenSettings}
-                            className="group relative px-5 py-3.5 bg-slate-900/85 backdrop-blur-sm border border-slate-600 hover:border-sky-400 text-slate-200 hover:text-sky-300 transition-all duration-200 uppercase font-bold tracking-[0.05em] text-sm whitespace-nowrap flex items-center justify-center gap-3 rounded-md"
+                            onClick={onTutorial}
+                            className="group relative px-2 py-3 bg-gray-950/85 backdrop-blur-sm border border-gray-500 hover:border-white text-gray-300 hover:text-white transition-all duration-200 uppercase font-bold tracking-[0.05em] text-[10px] sm:text-xs flex flex-col items-center justify-center gap-1.5 rounded-md"
                         >
-                            <Settings size={18} className="text-sky-400" />
-                            {t('Cài Đặt Hệ Thống')}
+                            <BookOpen size={16} />
+                            {t('Tactical Archive')}
                         </button>
-                    )}
 
-                    {/* DOWNLOAD / INSTALL PWA BUTTON */}
-                    <button
-                        onClick={handleInstallClick}
-                        className="group relative px-5 py-3.5 bg-sky-950/85 backdrop-blur-sm border border-sky-500 hover:bg-sky-500 hover:text-black text-sky-300 transition-all duration-200 uppercase font-bold tracking-[0.05em] text-sm whitespace-nowrap flex items-center justify-center gap-3 rounded-md"
-                    >
-                        <Download size={18} />
-                        {t('Tải App PWA (Full Screen)')}
-                    </button>
+                        {/* SETTINGS BUTTON */}
+                        {onOpenSettings && (
+                            <button
+                                onClick={onOpenSettings}
+                                className="group relative px-2 py-3 bg-slate-900/85 backdrop-blur-sm border border-slate-600 hover:border-sky-400 text-slate-200 hover:text-sky-300 transition-all duration-200 uppercase font-bold tracking-[0.05em] text-[10px] sm:text-xs flex flex-col items-center justify-center gap-1.5 rounded-md"
+                            >
+                                <Settings size={16} className="text-sky-400" />
+                                {t('Settings')}
+                            </button>
+                        )}
 
-                    {/* REPLAY TUTORIAL BUTTON */}
-                    {onReplayTutorial && (
+                        {/* DOWNLOAD / INSTALL PWA BUTTON */}
                         <button
-                            onClick={onReplayTutorial}
-                            className="group relative px-5 py-3.5 bg-slate-900/80 backdrop-blur-sm border border-slate-700 hover:border-slate-400 text-slate-300 hover:text-white transition-all duration-200 uppercase font-semibold tracking-[0.05em] text-xs whitespace-nowrap flex items-center justify-center gap-2.5 rounded-md"
+                            onClick={handleInstallClick}
+                            className="group relative px-2 py-3 bg-sky-950/85 backdrop-blur-sm border border-sky-500 hover:bg-sky-500 hover:text-black text-sky-300 transition-all duration-200 uppercase font-bold tracking-[0.05em] text-[10px] sm:text-xs flex flex-col items-center justify-center gap-1.5 rounded-md"
                         >
-                            <GraduationCap size={16} />
-                            {t('Replay the tutorial')}
+                            <Download size={16} />
+                            {t('Install App')}
                         </button>
-                    )}
+
+                        {/* REPLAY TUTORIAL BUTTON */}
+                        {onReplayTutorial && (
+                            <button
+                                onClick={onReplayTutorial}
+                                className="group relative px-2 py-3 bg-slate-900/80 backdrop-blur-sm border border-slate-700 hover:border-slate-400 text-slate-300 hover:text-white transition-all duration-200 uppercase font-bold tracking-[0.05em] text-[10px] sm:text-xs flex flex-col items-center justify-center gap-1.5 rounded-md"
+                            >
+                                <GraduationCap size={16} />
+                                {t('Tutorial')}
+                            </button>
+                        )}
+                    </div>
 
                     {/* READ INTRO COMIC BUTTON */}
                     {onReplayIntro && (
                         <button
                             onClick={onReplayIntro}
-                            className="group relative px-5 py-3.5 bg-slate-900/80 backdrop-blur-sm border border-slate-700 hover:border-slate-400 text-slate-300 hover:text-white transition-all duration-200 uppercase font-semibold tracking-[0.05em] text-xs whitespace-nowrap flex items-center justify-center gap-2.5 rounded-md"
+                            className="mt-2 text-slate-500 hover:text-slate-300 transition-colors text-[10px] sm:text-xs uppercase tracking-widest font-bold underline underline-offset-4 decoration-slate-700 mx-auto"
                         >
-                            <ScrollText size={16} />
                             {t('Read the intro comic')}
                         </button>
                     )}
