@@ -148,7 +148,7 @@ export const setAudioSettings = (patch: Partial<AudioSettings>) => {
     applyMusicVolume();
     // Unmuting is a deliberate act, so it should be audible immediately rather than at the
     // next screen change — restart whatever track the game currently wants.
-    if (!settings.muted && currentTrack && musicEl?.paused) void startMusic(currentTrack);
+    if (!settings.muted && currentTrack && musicPool[activeMusicIdx]?.paused) void startMusic(currentTrack);
     if (settings.muted) stopMusic();
     listeners.forEach(fn => fn({ ...settings }));
 };
