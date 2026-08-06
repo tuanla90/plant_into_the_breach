@@ -5,6 +5,7 @@ import { SQUAD_SIZE } from '../constants';
 import { UNIT_SKILLS, DEFAULT_TERRAIN_DEFS } from '../constants';
 import { Crosshair, Move, Shield, Zap, XCircle, Hourglass, ChevronsRight, ArrowUpCircle, Utensils, RotateCcw, Sun, Skull, Info, Mountain, Radar, Sword, ArrowRight, Play, UserPlus, MinusCircle, AlertCircle, Plus } from 'lucide-react';
 import { formatGridPosition, isSunProducingSkill } from '../utils/gameLogic';
+import { mobileSprite } from '../utils/platform';
 import { useI18n } from '../i18n';
 
 interface ActionPanelProps {
@@ -173,7 +174,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                                 ${isSelected ? 'border-amber-400 bg-amber-950/40 shadow-[0_0_15px_rgba(245,158,11,0.25)]' : 'border-[#293245] bg-[#161a26] hover:border-sky-400 hover:bg-[#1d2334]'}
                             `}
                         >
-                            <img src={unit.imgUrl} className="w-10 h-10 object-contain bg-[#0b0d14] rounded-lg border border-[#293245] p-1" alt={t(unit.class.replace(/_/g, ' '))} />
+                            <img src={mobileSprite(unit.imgUrl)} className="w-10 h-10 object-contain bg-[#0b0d14] rounded-lg border border-[#293245] p-1" alt={t(unit.class.replace(/_/g, ' '))} />
                             <div className="flex-1">
                                 <div className="text-sm font-black text-white uppercase">{t(unit.class.replace(/_/g, ' '))}</div>
                                 <div className="text-[11px] text-gray-400 uppercase font-medium">{t(unit.role)}</div>
@@ -313,7 +314,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
               inside a 384px panel. overflow-hidden keeps any future oversized art contained. */}
           <div className="relative w-12 h-12 lg:w-16 lg:h-16 bg-[#0b0d14] border-2 border-white/20 rounded-xl shadow-inner shrink-0 overflow-hidden p-1">
               <img 
-                 src={selectedUnit!.imgUrl} 
+                 src={mobileSprite(selectedUnit!.imgUrl)}
                  className={`w-full h-full object-contain ${isDone ? 'grayscale opacity-60' : ''}`}
                  alt={t(selectedUnit!.class.replace(/_/g, ' '))}
               />

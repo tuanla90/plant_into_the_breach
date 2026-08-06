@@ -18,6 +18,7 @@ import {
   sumThreatDamageAt,
 } from '../utils/threat';
 import { Brain, TriangleAlert } from 'lucide-react';
+import { mobileSprite } from '../utils/platform';
 
 interface BoardProps {
   boardData: TileData[];
@@ -261,7 +262,7 @@ export const Board: React.FC<BoardProps> = ({
                                 isPlacementZone={isPlacementZone}
                                 pushDirection={isHoveredTarget ? previewPushDirection : null}
                                 pushDistance={previewPushDistance}
-                                ghostImgUrl={showGhost ? selectedRosterUnit?.imgUrl : undefined} 
+                                ghostImgUrl={showGhost && selectedRosterUnit ? mobileSprite(selectedRosterUnit.imgUrl) : undefined} 
                                 onClick={() => onTileClickRef.current({ x: tile.x, y: tile.y })}
                                 onMouseEnter={() => {
                                     if (!hoverEnabled) return;

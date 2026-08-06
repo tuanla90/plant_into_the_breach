@@ -11,3 +11,15 @@ export const IS_COARSE_POINTER =
     typeof window !== 'undefined'
     && typeof window.matchMedia === 'function'
     && window.matchMedia('(pointer: coarse)').matches;
+
+/**
+ * Trên cảm ứng, đổi sprite board 512×512 sang bản 128×128 trong img/small/
+ * (sinh bởi scripts hạ cỡ — đủ nét vì ô bàn cờ trên điện thoại chỉ ~36-52px,
+ * còn GPU thoát cảnh kéo texture to gấp 14 lần mỗi khung hình animation).
+ * Chỉ áp cho sprite-/gear-/item-*.png — art trưng bày lớn (hero-*.jpg, cover,
+ * event) không có bản nhỏ và giữ nguyên chất lượng.
+ */
+export const mobileSprite = (url: string): string =>
+    IS_COARSE_POINTER
+        ? url.replace(/(^|\/)img\/((?:sprite|gear|item)-[^/]+\.png)$/, '$1img/small/$2')
+        : url;

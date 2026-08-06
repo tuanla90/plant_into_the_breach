@@ -5,6 +5,7 @@ import { Shield, Zap, Move, Heart, X } from 'lucide-react';
 import { useI18n } from '../i18n';
 import { ElementBadge } from './ElementBadge';
 import { ELEMENT_HP_COST } from '../utils/elements';
+import { mobileSprite } from '../utils/platform';
 
 interface SquadViewerProps {
   units: Unit[];
@@ -39,7 +40,7 @@ export const SquadViewer: React.FC<SquadViewerProps> = ({ units, onClose }) => {
 
                         {/* Portrait */}
                         <div className="w-24 h-24 bg-black border border-gray-600 shrink-0 relative z-10">
-                            <img src={unit.imgUrl} className="w-full h-full object-contain" />
+                            <img src={mobileSprite(unit.imgUrl)} className="w-full h-full object-contain" />
                             <div className="absolute top-0 left-0 bg-yellow-600 text-black text-xs font-bold px-1">
                                 {t('Lv {level}', { level: unit.level })}
                             </div>

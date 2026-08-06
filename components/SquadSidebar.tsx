@@ -4,6 +4,7 @@ import { useI18n } from '../i18n';
 import { Shield } from 'lucide-react';
 import { ElementBadge } from './ElementBadge';
 import { ELEMENT_DEFINITIONS } from '../utils/elements';
+import { mobileSprite } from '../utils/platform';
 
 interface SquadSidebarProps {
   units: Unit[];
@@ -68,7 +69,7 @@ export const SquadSidebar = ({ units, selectedUnitId, onSelectUnit }: SquadSideb
                             ? 'border-amber-400 shadow-[0_0_16px_rgba(245,158,11,0.4)] ring-2 ring-amber-400/30'
                             : 'border-[#293245] hover:border-sky-400'}
                     `}>
-                        <img src={unit.imgUrl} className="w-full h-full object-contain p-1" alt={label} />
+                        <img src={mobileSprite(unit.imgUrl)} className="w-full h-full object-contain p-1" alt={label} />
 
                         {/* HP readout */}
                         <div className="absolute bottom-0 left-0 w-full bg-[#0b0d14]/80 p-0.5 backdrop-blur-xs">

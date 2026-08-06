@@ -3,6 +3,7 @@ import React from 'react';
 import { GameState, ItemDefinition } from '../types';
 import { Sun, Coins, Brain, Users, Settings, Flag, FastForward, SkipForward, Target, Zap } from 'lucide-react';
 import { useI18n } from '../i18n';
+import { mobileSprite } from '../utils/platform';
 
 interface HUDProps {
   gameState: GameState;
@@ -96,7 +97,7 @@ export const HUD: React.FC<HUDProps> = ({
                         `}
                         title={t(item.name)}
                      >
-                         <img src={item.imgUrl} className="w-6 h-6 object-contain" alt={item.name} />
+                         <img src={mobileSprite(item.imgUrl)} className="w-6 h-6 object-contain" alt={item.name} />
                      </button>
                  );
              })}
