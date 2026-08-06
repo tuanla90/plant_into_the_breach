@@ -35,8 +35,8 @@ interface TileProps {
   children?: React.ReactNode;
 }
 
-export const Tile: React.FC<TileProps> = ({ 
-  data, 
+const TileBase: React.FC<TileProps> = ({
+  data,
   terrainDefs = DEFAULT_TERRAIN_DEFS,
   isSelected,
   isThreatened,
@@ -453,3 +453,37 @@ export const Tile: React.FC<TileProps> = ({
     </div>
   );
 };
+
+/**
+ * Memo có so sánh tuỳ chỉnh — BỎ QUA hai prop hàm (onClick/onMouseEnter).
+ *
+ * Mỗi thay đổi state ở App render lại Board, Board tạo MỚI 64 cặp closure cho 64 ô,
+ * nên memo mặc định không bao giờ trúng và mọi cú bấm phải trả tiền dựng lại toàn bộ
+ * lưới (~40ms desktop, nhân 6-10 lần trên điện thoại — đó chính là độ trễ chạm).
+ *
+ * Bỏ qua danh tính hàm CHỈ an toàn vì Board bơm handler qua ref "luôn mới nhất"
+ * (onTileClickRef/onTileHoverRef): ô bị skip render giữ closure cũ, nhưng closure đó
+ * gọi ref.current nên vẫn chạy logic của lượt render hiện hành. Thêm prop hàm mới vào
+ * Tile thì phải đi cùng một ref như vậy ở Board, không thì so sánh nó ở đây.
+ */
+export const Tile = React.memo(TileBase, (prev, next) => (
+  prev.data === next.data
+  && prev.terrainDefs === next.terrainDefs
+  && prev.isSelected === next.isSelected
+  && prev.isThreatened === next.isThreatened
+  && prev.threatDamage === next.threatDamage
+  && prev.isInEnemyPath === next.isInEnemyPath
+  && prev.isEnemyPathDestination === next.isEnemyPathDestination
+  && prev.isValidMove === next.isValidMove
+  && prev.isValidTarget === next.isValidTarget
+  && prev.isHovered === next.isHovered
+  && prev.isInAttackPath === next.isInAttackPath
+  && prev.isInSkillRange === next.isInSkillRange
+  && prev.isInItemAoe === next.isInItemAoe
+  && prev.isEnemySpawn === next.isEnemySpawn
+  && prev.isPlacementZone === next.isPlacementZone
+  && prev.pushDirection === next.pushDirection
+  && prev.pushDistance === next.pushDistance
+  && prev.ghostImgUrl === next.ghostImgUrl
+  && prev.children === next.children
+));

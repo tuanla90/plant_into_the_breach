@@ -15,7 +15,7 @@ interface UnitComponentProps {
   isBrainThief?: boolean;
 }
 
-export const UnitComponent: React.FC<UnitComponentProps> = ({ unit, isSelected, isBrainThief = false }) => {
+const UnitComponentBase: React.FC<UnitComponentProps> = ({ unit, isSelected, isBrainThief = false }) => {
   const { t } = useI18n();
   const [imgError, setImgError] = useState(false);
   // Reset on a sprite swap: without this a single failed load would keep the skull fallback
@@ -335,3 +335,8 @@ export const UnitComponent: React.FC<UnitComponentProps> = ({ unit, isSelected, 
     </div>
   );
 };
+
+// Memo mặc định là đủ: cả ba prop đều là ref/primitive. Engine thay unit theo kiểu
+// bất biến (map ra object mới khi unit đổi), nên unit không liên quan tới thay đổi
+// state hiện tại sẽ giữ nguyên ref và được bỏ qua khi App re-render mỗi cú bấm.
+export const UnitComponent = React.memo(UnitComponentBase);

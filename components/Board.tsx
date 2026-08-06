@@ -102,6 +102,23 @@ export const Board: React.FC<BoardProps> = ({
   // viewport ratios are kept only as an upper bound so desktop keeps its exact size.
   const boardAreaRef = React.useRef<HTMLDivElement | null>(null);
   const chassisRef = React.useRef<HTMLDivElement | null>(null);
+
+  // Bộ chuyển tiếp "luôn mới nhất" cho hai handler của ô. Tile được memo và cố ý bỏ
+  // qua danh tính hàm khi so props (xem cuối Tile.tsx): một ô bị skip render vẫn giữ
+  // closure của lượt render cũ, nên closure đó phải gọi qua ref — nếu bắt thẳng prop,
+  // cú bấm sẽ chạy handler cũ đọc state cũ (chọn ô khi đáng lẽ phải huỷ nhắm mục tiêu).
+  const onTileClickRef = React.useRef(onTileClick);
+  onTileClickRef.current = onTileClick;
+  const onTileHoverRef = React.useRef(onTileHover);
+  onTileHoverRef.current = onTileHover;
+
+  // Cảm ứng không có hover thật — nhưng mỗi cú chạm vẫn bắn mouseover TRƯỚC click,
+  // thành hai lượt render App cho một lần bấm. Preview theo hover (đường đạn, ghost
+  // đặt quân) cũng chưa từng hiển thị được trên màn cảm ứng, nên tắt hẳn cho rẻ.
+  const hoverEnabled = React.useMemo(
+    () => typeof window.matchMedia !== 'function' || window.matchMedia('(hover: hover)').matches,
+    []
+  );
   const [boardSide, setBoardSide] = React.useState<number | null>(null);
   React.useLayoutEffect(() => {
     const area = boardAreaRef.current;
@@ -200,7 +217,7 @@ export const Board: React.FC<BoardProps> = ({
                         transform: `translate(-50%, -53%) perspective(1400px) rotateX(${BOARD_TILT_DEG}deg)`,
                         transformStyle: 'preserve-3d',
                     }}
-                    onMouseLeave={() => onTileHover && onTileHover(null)}
+                    onMouseLeave={() => { if (hoverEnabled) { const hover = onTileHoverRef.current; hover && hover(null); } }}
                 >
                 {/* CRT Scanlines Overlay */}
                 <div className="scanlines" />
@@ -245,11 +262,13 @@ export const Board: React.FC<BoardProps> = ({
                                 pushDirection={isHoveredTarget ? previewPushDirection : null}
                                 pushDistance={previewPushDistance}
                                 ghostImgUrl={showGhost ? selectedRosterUnit?.imgUrl : undefined} 
-                                onClick={() => onTileClick({ x: tile.x, y: tile.y })}
+                                onClick={() => onTileClickRef.current({ x: tile.x, y: tile.y })}
                                 onMouseEnter={() => {
+                                    if (!hoverEnabled) return;
                                     (window as any).hoverX = tile.x;
                                     (window as any).hoverY = tile.y;
-                                    onTileHover && onTileHover({ x: tile.x, y: tile.y });
+                                    const hover = onTileHoverRef.current;
+                                    hover && hover({ x: tile.x, y: tile.y });
                                 }}
                             />
                         </div>
