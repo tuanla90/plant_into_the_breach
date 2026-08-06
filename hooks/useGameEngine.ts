@@ -331,6 +331,10 @@ export const useGameEngine = () => {
                               setUnits(prev => prev.map(u => u.id === action.unitId ? { ...u, isAttacking: true, visualOffset: { x: lungeX, y: lungeY }, flipX: shouldFlip } : u));
                               await wait(ANIMATION_CONFIG.ATTACK_LUNGE_DURATION);
 
+                              if (attacker.element === 'FIRE') addEffect(action.targetPos.x, action.targetPos.y, 'HIT_FIRE');
+                              else if (attacker.element === 'ICE') addEffect(action.targetPos.x, action.targetPos.y, 'HIT_ICE');
+                              else if (attacker.element === 'LIGHTNING') addEffect(action.targetPos.x, action.targetPos.y, 'HIT_ELEC');
+
                               // Retract
                               setUnits(prev => prev.map(u => u.id === action.unitId ? { ...u, visualOffset: { x: 0, y: 0 }, flipX: undefined } : u));
                               await wait(100);
@@ -392,6 +396,10 @@ export const useGameEngine = () => {
 
                               // 3. Remove
                               setProjectiles(prev => prev.filter(p => p.id !== pid));
+
+                              if (attacker.element === 'FIRE') addEffect(action.targetPos.x, action.targetPos.y, 'HIT_FIRE');
+                              else if (attacker.element === 'ICE') addEffect(action.targetPos.x, action.targetPos.y, 'HIT_ICE');
+                              else if (attacker.element === 'LIGHTNING') addEffect(action.targetPos.x, action.targetPos.y, 'HIT_ELEC');
                           }
                       }
                   } else {
