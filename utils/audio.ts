@@ -84,8 +84,8 @@ const SFX: Record<SfxName, { files: string[]; gain: number }> = {
     'fusion':       { files: ['fusion.wav'],      gain: 0.65 },
 };
 
-const MUSIC: Record<MusicTrack, { file: string; gain: number }> = {
-    menu:   { file: 'music-menu.mp3',   gain: 0.30 },
+const MUSIC: Record<MusicTrack, { file: string; gain: number; startTime?: number }> = {
+    menu:   { file: 'music-menu.mp3',   gain: 0.30, startTime: 18 },
     intro:  { file: 'music-intro.mp3',  gain: 0.34 },
     map:    { file: 'music-map.mp3',    gain: 0.26 },
     combat: { file: 'music-combat.mp3', gain: 0.30 },
@@ -271,7 +271,7 @@ const fadeOutEl = (el: HTMLAudioElement) => {
     }
     let v = el.volume;
     const timer = window.setInterval(() => {
-        v -= 0.05;
+        v -= 0.15;
         if (v <= 0) { 
             el.pause(); 
             clearInterval(timer); 
@@ -307,18 +307,21 @@ const startMusic = async (track: MusicTrack) => {
     el.volume = 0;
     
     // Autoplay policy might block this if not unlocked
-    try { await el.play(); } catch { return; }
+    try { 
+        if (def.startTime) el.currentTime = def.startTime;
+        await el.play(); 
+    } catch { return; }
 
     const target = musicTargetVolume();
     let v = 0;
     activeFadeTimer = window.setInterval(() => {
-        v = Math.min(target, v + target / 15);
+        v = Math.min(target, v + target / 5);
         if (musicPool[activeMusicIdx] === el) el.volume = v;
         if (v >= target - 0.001) {
             if (activeFadeTimer !== null) clearInterval(activeFadeTimer);
             activeFadeTimer = null;
         }
-    }, 40);
+    }, 30);
 };
 
 const stopMusic = () => {
