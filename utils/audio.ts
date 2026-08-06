@@ -243,62 +243,99 @@ export const sfx = (name: SfxName, volumeScale = 1) => {
 
 // --- MUSIC ------------------------------------------------------------------
 
-let musicEl: HTMLAudioElement | null = null;
+const musicPool: HTMLAudioElement[] = [];
+let activeMusicIdx = 0;
 let currentTrack: MusicTrack | null = null;
-let fadeTimer: number | null = null;
+let activeFadeTimer: number | null = null;
+const outFadeTimers = new Map<HTMLAudioElement, number>();
+
+const getMusicEl = (idx: number) => {
+    if (!musicPool[idx]) {
+        musicPool[idx] = new Audio();
+        musicPool[idx].loop = true;
+    }
+    return musicPool[idx];
+};
 
 const musicTargetVolume = () =>
     settings.muted ? 0 : (MUSIC[currentTrack!]?.gain ?? 0.3) * settings.music * settings.master;
 
 const applyMusicVolume = () => {
-    if (musicEl && currentTrack) musicEl.volume = musicTargetVolume();
+    const el = musicPool[activeMusicIdx];
+    if (el && currentTrack) el.volume = musicTargetVolume();
 };
 
-const clearFade = () => {
-    if (fadeTimer !== null) { clearInterval(fadeTimer); fadeTimer = null; }
+const fadeOutEl = (el: HTMLAudioElement) => {
+    if (outFadeTimers.has(el)) {
+        clearInterval(outFadeTimers.get(el)!);
+    }
+    let v = el.volume;
+    const timer = window.setInterval(() => {
+        v -= 0.05;
+        if (v <= 0) { 
+            el.pause(); 
+            clearInterval(timer); 
+            outFadeTimers.delete(el);
+        } else {
+            el.volume = Math.max(0, v);
+        }
+    }, 40);
+    outFadeTimers.set(el, timer);
 };
 
 const startMusic = async (track: MusicTrack) => {
-    clearFade();
     const def = MUSIC[track];
     if (!def) return;
 
-    if (!musicEl) {
-        musicEl = new Audio();
-        musicEl.loop = true;
+    // Fade out current playing track
+    const oldEl = musicPool[activeMusicIdx];
+    if (oldEl && !oldEl.paused) {
+        fadeOutEl(oldEl);
     }
-    musicEl.src = BASE + def.file;
-    currentTrack = track;
-    musicEl.volume = 0;
-    try { await musicEl.play(); } catch { return; }
+    
+    if (activeFadeTimer !== null) {
+        clearInterval(activeFadeTimer);
+        activeFadeTimer = null;
+    }
 
-    // Fade in. Instant-on reads as a glitch when a screen transition is still animating.
+    // Swap to the other audio element
+    activeMusicIdx = (activeMusicIdx + 1) % 2;
+    const el = getMusicEl(activeMusicIdx);
+    
+    el.src = BASE + def.file;
+    currentTrack = track;
+    el.volume = 0;
+    
+    // Autoplay policy might block this if not unlocked
+    try { await el.play(); } catch { return; }
+
     const target = musicTargetVolume();
     let v = 0;
-    fadeTimer = window.setInterval(() => {
-        v = Math.min(target, v + target / 12);
-        if (musicEl) musicEl.volume = v;
-        if (v >= target - 0.001) clearFade();
+    activeFadeTimer = window.setInterval(() => {
+        v = Math.min(target, v + target / 15);
+        if (musicPool[activeMusicIdx] === el) el.volume = v;
+        if (v >= target - 0.001) {
+            if (activeFadeTimer !== null) clearInterval(activeFadeTimer);
+            activeFadeTimer = null;
+        }
     }, 40);
 };
 
 const stopMusic = () => {
-    clearFade();
-    if (!musicEl) return;
-    const el = musicEl;
-    let v = el.volume;
-    fadeTimer = window.setInterval(() => {
-        v -= 0.06;
-        if (v <= 0) { el.pause(); clearFade(); return; }
-        el.volume = Math.max(0, v);
-    }, 40);
+    if (activeFadeTimer !== null) { clearInterval(activeFadeTimer); activeFadeTimer = null; }
+    const el = musicPool[activeMusicIdx];
+    if (el && !el.paused) {
+        fadeOutEl(el);
+    }
+    currentTrack = null;
 };
 
 /** Idempotent: asking for the track already playing does nothing, so it is safe in an effect. */
 export const playMusic = (track: MusicTrack | null) => {
-    if (track === currentTrack && musicEl && !musicEl.paused) return;
+    const el = musicPool[activeMusicIdx];
+    if (track === currentTrack && el && !el.paused) return;
 
-    if (track === null) { currentTrack = null; stopMusic(); return; }
+    if (track === null) { stopMusic(); return; }
 
     if (!unlocked) { pendingTrack = track; currentTrack = track; return; }
     void startMusic(track);

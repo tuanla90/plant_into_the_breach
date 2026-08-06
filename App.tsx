@@ -29,7 +29,8 @@ import { activeResonance } from './utils/elements';
 import { isBattleOnlyUnit } from './utils/unitFactory';
 import { freshHero } from './utils/unitFactory';
 import { itemTargetInvalid, planItemActions } from './utils/itemResolution';
-import { loadConfigFromStorage } from './utils/persistence';
+import { loadConfigFromStorage, loadChronoEcho, clearChronoEcho } from './utils/persistence';
+import { ChronoEchoModal } from './components/ChronoEchoModal';
 import { saveRunState, loadRunState, clearRunState, hasSavedRun } from './utils/runPersistence';
 import { TUTORIAL_DIALOGUES } from './data/tutorialDialogues';
 import { GENERATE_TUTORIAL_MAP } from './data/tutorial';
@@ -39,7 +40,6 @@ import { Board } from './components/Board';
 import { HUD } from './components/HUD';
 import { ActionPanel } from './components/ActionPanel';
 import { SquadSidebar } from './components/SquadSidebar';
-import { OrientationOverlay } from './components/OrientationOverlay';
 import { MapScreen } from './components/MapScreen';
 import { ShopScreen } from './components/ShopScreen';
 import { StartMenu } from './components/StartMenu';
@@ -212,6 +212,14 @@ const App: React.FC = () => {
 
   /** Whether the menu should offer "Continue Campaign". Re-checked whenever the menu shows. */
   const [hasResumableRun, setHasResumableRun] = useState(() => hasSavedRun());
+
+  /**
+   * The Chrono Echo offer, rolled by handleStartGame when a pending echo exists (a lost
+   * run wrote one — utils/persistence.ts). Local state, not GameState: the offer is a
+   * one-shot overlay over the map, and putting it in a saved snapshot would mean a
+   * resumed run could reopen a choice that was already declined by reloading.
+   */
+  const [echoOffer, setEchoOffer] = useState<ItemDefinition[] | null>(null);
   useEffect(() => {
       if (gameState.screen === 'START_MENU') setHasResumableRun(hasSavedRun());
   }, [gameState.screen]);
@@ -279,7 +287,7 @@ const App: React.FC = () => {
           mapNodes.find(n => n.id === gameState.currentLevelId)?.type === 'BOSS'
       );
       const TRACKS: Partial<Record<GameState['screen'], MusicTrack | null>> = {
-          START_MENU: 'menu', SQUAD_SELECT: 'menu', TUTORIAL: 'menu',
+          START_MENU: 'menu', SQUAD_SELECT: 'menu', TUTORIAL: 'menu', STAGE_SELECT: 'menu',
           MAP: 'map', SHOP: 'map', EVENT: 'map',
           COMBAT: isBossCombat ? 'boss' : 'combat',
           // Silence under the win/lose stinger — music competing with it just muddies both.
@@ -655,6 +663,40 @@ const App: React.FC = () => {
           sun: 0,
           coins: coinOnRunStart(target?.stage ?? 1, balancedGlobal('global.COIN_ON_RUN_START')),
       }));
+
+      /**
+       * CHRONO ECHO — a lost run's gift, offered at the START of the next run (StS's Neow
+       * beat) rather than on the defeat screen: the moment of loss is for reading the
+       * damage, the moment of a fresh squad is when a free item is a plan.
+       *
+       * The player chooses, but the shelf is capped by how deep the fallen run got —
+       * an act-I wipe offers the cheap tier, a deep run earns the expensive one. The cap
+       * is what keeps the gift proportionate to the squad the player is fielding now:
+       * Coffee Bean (100) never appears, because "stronger than anything you could have
+       * bought yet" stops being consolation and starts being strategy.
+       */
+      const echo = loadChronoEcho();
+      if (echo) {
+          // The tutorial's graduation gift is the starter tier alone (25 = the Potato Mine);
+          // real defeats scale with how deep the fallen run got. When items gain per-sector
+          // unlocks, this pool also intersects with what is unlocked — the echo never
+          // previews an item the player has not earned yet (design call, 2026-08-06).
+          const cap = echo.tutorial ? 25 : echo.layers >= 7 ? 75 : echo.layers >= 4 ? 60 : 40;
+          const bag = itemDefs.filter(i => i.coinCost <= cap);
+          const picks: ItemDefinition[] = [];
+          while (picks.length < 3 && bag.length > 0) {
+              picks.push(bag.splice(Math.floor(Math.random() * bag.length), 1)[0]);
+          }
+          if (picks.length > 0) setEchoOffer(picks);
+      }
+  };
+
+  /** Taking the echo consumes the voucher; the item joins the run like any shop purchase. */
+  const handleEchoPick = (item: ItemDefinition) => {
+      setEchoOffer(null);
+      clearChronoEcho();
+      sfx('ui-item');
+      setGameState(prev => ({ ...prev, inventory: [...prev.inventory, item.id] }));
   };
 
   // --- SHOP: rolling offers, rerolling, buying base plants ---
@@ -1491,7 +1533,8 @@ const App: React.FC = () => {
   return (
     <div className="w-full h-[100dvh] bg-[#111] flex flex-col overflow-hidden select-none">
 
-      <OrientationOverlay />
+      {/* OrientationOverlay đã nghỉ hưu: màn dọc giờ có layout riêng (bàn cờ trên,
+          panel hành động dưới) thay vì một tấm chắn bắt người chơi xoay máy. */}
 
       {/* Global Settings Modal (Audio, Language, Abandon Run) */}
       <SettingsModal
@@ -1823,7 +1866,10 @@ const App: React.FC = () => {
                 onSkipAnimation={skipAnimation}
             />
             
-            <div className="flex-1 flex overflow-hidden">
+            {/* Màn dọc: xếp cột — hàng chân dung đội, bàn cờ (ăn hết bề ngang),
+                rồi ActionPanel chiếm khối dưới. Board tự đo container nên không
+                cần số đo nào ở đây ngoài tỉ lệ dành cho panel. */}
+            <div className="flex-1 flex portrait:flex-col overflow-hidden">
                 {/* In flow on the row's left edge — as a fixed overlay it covered the
                     board's A/B files and its tail ran off-screen on short viewports. */}
                 <SquadSidebar
@@ -2032,6 +2078,12 @@ const App: React.FC = () => {
 
       {gameState.showAdmin && (
           <BalanceScreen onClose={() => setGameState(prev => ({ ...prev, showAdmin: false }))} />
+      )}
+
+      {/* Gated on MAP so the offer never covers a combat that a debug jump or tutorial
+          hop reached before the player touched it. */}
+      {echoOffer && gameState.screen === 'MAP' && (
+          <ChronoEchoModal items={echoOffer} onPick={handleEchoPick} />
       )}
 
       {showQuitConfirm && (
