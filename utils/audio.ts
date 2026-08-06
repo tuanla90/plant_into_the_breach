@@ -87,9 +87,9 @@ const SFX: Record<SfxName, { files: string[]; gain: number }> = {
 const MUSIC: Record<MusicTrack, { file: string; gain: number; startTime?: number }> = {
     menu:   { file: 'music-menu.mp3',   gain: 0.30, startTime: 18 },
     intro:  { file: 'music-intro.mp3',  gain: 0.34 },
-    map:    { file: 'music-map.mp3',    gain: 0.26 },
-    combat: { file: 'music-combat.mp3', gain: 0.30 },
-    boss:   { file: 'music-boss.mp3',   gain: 0.32 },
+    map:    { file: 'music-map.mp3',    gain: 0.26, startTime: 8 },
+    combat: { file: 'music-combat.mp3', gain: 0.30, startTime: 4 },
+    boss:   { file: 'music-boss.mp3',   gain: 0.32, startTime: 6 },
 };
 
 // BASE_URL chứ không phải '/audio/' cứng: site deploy dưới đường dẫn con
