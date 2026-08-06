@@ -120,6 +120,29 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
   const MAP_HEIGHT_BASE = 1800;
 
   /**
+   * ĐIỆN THOẠI CẦM NGANG: bản đồ chạy NGANG (xuất phát trái → trùm phải).
+   *
+   * Bản đồ leo-từ-đáy-lên hợp màn cao; trên viewport ~375px cao nó bắt người chơi
+   * cuộn dọc liên tục qua một khe nhìn mỏng. Xoay trục cho khớp chiều màn hình:
+   * dữ liệu node giữ nguyên (x = làn, y = tiến độ, y lớn = điểm xuất phát),
+   * chỉ TOẠ ĐỘ VẼ đổi qua mapPos() — mọi thứ (node, cạnh nối, tooltip, band,
+   * auto-scroll) đều đi qua một chỗ đó. Desktop và màn dọc không đổi.
+   */
+  const [horizontal, setHorizontal] = useState(
+      () => typeof window !== 'undefined'
+          && window.matchMedia('(orientation: landscape) and (max-height: 520px)').matches
+  );
+  useEffect(() => {
+      const mq = window.matchMedia('(orientation: landscape) and (max-height: 520px)');
+      const onChange = () => setHorizontal(mq.matches);
+      mq.addEventListener('change', onChange);
+      return () => mq.removeEventListener('change', onChange);
+  }, []);
+  /** Toạ độ dữ liệu → toạ độ vẽ (%). Ngang: trục tiến độ lật để xuất phát nằm bên trái. */
+  const mapPos = (n: { x: number; y: number }) =>
+      horizontal ? { x: 100 - n.y, y: n.x } : { x: n.x, y: n.y };
+
+  /**
    * THE SECTORS THIS RUN WALKS, as bands down the page.
    *
    * Read off the nodes rather than passed in, because the nodes are the only thing that knows:
@@ -177,14 +200,22 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
       if (!scrollRef.current) return;
       const activeNode = nodes.find(n => n.status === 'AVAILABLE');
       if (activeNode) {
-           const scrollY = (activeNode.y / 100) * (MAP_HEIGHT_BASE * zoom);
-           const containerHeight = scrollRef.current.clientHeight;
-           scrollRef.current.scrollTo({
-               top: scrollY - (containerHeight / 2),
-               behavior: 'smooth'
-           });
+           const pos = mapPos(activeNode);
+           if (horizontal) {
+               const scrollX = (pos.x / 100) * (MAP_HEIGHT_BASE * zoom);
+               scrollRef.current.scrollTo({
+                   left: scrollX - (scrollRef.current.clientWidth / 2),
+                   behavior: 'smooth'
+               });
+           } else {
+               const scrollY = (pos.y / 100) * (MAP_HEIGHT_BASE * zoom);
+               scrollRef.current.scrollTo({
+                   top: scrollY - (scrollRef.current.clientHeight / 2),
+                   behavior: 'smooth'
+               });
+           }
       } else {
-           scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+           scrollRef.current.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
       }
   };
 
@@ -253,11 +284,13 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
                     opacity = "1";
                 }
 
+                const a = mapPos(node);
+                const b = mapPos(nextNode);
                 return (
                     <line
                         key={`${node.id}-${nextId}`}
-                        x1={`${node.x}%`} y1={`${node.y}%`}
-                        x2={`${nextNode.x}%`} y2={`${nextNode.y}%`}
+                        x1={`${a.x}%`} y1={`${a.y}%`}
+                        x2={`${b.x}%`} y2={`${b.y}%`}
                         stroke={stroke}
                         strokeWidth={width}
                         strokeDasharray={dash}
@@ -280,6 +313,9 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
   const legendBody = (
       <>
           <div className="text-sm uppercase font-bold text-gray-500 border-b border-gray-700 pb-2 mb-1">{t('Map Legend')}</div>
+          {/* Màn thấp (điện thoại ngang): một cột 8 mục cao hơn cả viewport — trải
+              thành lưới 3 cột; panel bọc ngoài cũng nới rộng theo (short:w-...). */}
+          <div className="flex flex-col gap-3 short:grid short:grid-cols-3 short:gap-2">
           {Object.entries(NODE_INFO).map(([key, info]) => {
               // No list at all means every row reads normally. A list means the rows it does
               // NOT name recede, so the eye lands on the symbol being talked about right now.
@@ -287,19 +323,20 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
               const dimmed = !!highlightLegend?.length && !named;
               return (
                   <div key={key}
-                       className={`flex items-start gap-3 rounded p-1 transition-all duration-300
+                       className={`flex items-start gap-3 short:gap-2 rounded p-1 transition-all duration-300
                            ${dimmed ? 'opacity-40' : 'opacity-100'}
                            ${named ? 'bg-white/10 ring-1 ring-white/30' : ''}`}>
-                      <div className={`p-1 rounded ${info.bg} border ${info.border} ${info.color}`}>
+                      <div className={`p-1 rounded shrink-0 ${info.bg} border ${info.border} ${info.color}`}>
                           {info.icon}
                       </div>
-                      <div>
+                      <div className="min-w-0">
                           <div className={`text-sm font-bold ${info.color}`}>{t(info.label)}</div>
                           <div className="text-xs text-gray-400 leading-tight">{t(info.desc)}</div>
                       </div>
                   </div>
               );
           })}
+          </div>
       </>
   );
 
@@ -341,8 +378,8 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
           anywhere, and a panel that swallowed those clicks would read as a frozen game.
         */}
         {legendOpen && forceLegend && createPortal(
-            <div className="fixed top-[4.5rem] right-6 w-64 z-[80] pointer-events-none
-                            bg-[#1a1c21] border border-gray-500 rounded p-4 flex flex-col gap-3
+            <div className="fixed top-[4.5rem] right-6 w-64 short:w-[min(44rem,calc(100vw-3rem))] z-[80] pointer-events-none
+                            bg-[#1a1c21] border border-gray-500 rounded p-4 short:p-3 flex flex-col gap-3
                             shadow-[0_0_40px_rgba(0,0,0,0.95)] ring-1 ring-white/10
                             animate-in fade-in slide-in-from-top-2 duration-200">
                 {legendBody}
@@ -401,7 +438,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
 
                      {/* LEGEND DROPDOWN — anchored to the button during normal play. */}
                      {legendOpen && !forceLegend && (
-                         <div className="absolute top-12 right-0 w-64 bg-[#1a1c21] border border-gray-600 shadow-2xl rounded p-4 z-50 flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                         <div className="absolute top-12 right-0 w-64 short:w-[min(44rem,calc(100vw-3rem))] short:max-h-[calc(100dvh-6rem)] short:overflow-y-auto bg-[#1a1c21] border border-gray-600 shadow-2xl rounded p-4 short:p-3 z-50 flex flex-col gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
                              {legendBody}
                          </div>
                      )}
@@ -456,9 +493,15 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
                     ref={scrollRef}
                     className="w-full h-full overflow-auto custom-scrollbar relative cursor-grab active:cursor-grabbing"
                 >
-                    {/* SCALABLE CONTAINER */}
+                    {/* SCALABLE CONTAINER — trục dài chạy dọc (mặc định) hay ngang (điện
+                        thoại cầm ngang) tuỳ `horizontal`; phần còn lại y nguyên. */}
                     <div
-                        style={{
+                        style={horizontal ? {
+                            width: `${MAP_HEIGHT_BASE * zoom}px`,
+                            height: '100%',
+                            minHeight: '260px',
+                            position: 'relative'
+                        } : {
                             height: `${MAP_HEIGHT_BASE * zoom}px`,
                             width: '100%',
                             minWidth: '800px',
@@ -467,7 +510,15 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
                     >
                         {/* TRANSFORM WRAPPER */}
                         <div
-                            style={{
+                            style={horizontal ? {
+                                width: `${MAP_HEIGHT_BASE}px`,
+                                height: '100%',
+                                transform: `scale(${zoom})`,
+                                transformOrigin: 'left center',
+                                position: 'absolute',
+                                top: 0,
+                                left: 0
+                            } : {
                                 width: '100%',
                                 height: `${MAP_HEIGHT_BASE}px`,
                                 transform: `scale(${zoom})`,
@@ -484,14 +535,21 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
                             {bands.map(band => {
                                 const meta = WORLD_META[band.world];
                                 const hereNow = here?.world === band.world;
+                                // Dải sector: dọc là băng ngang trang; NGANG là cột đứng —
+                                // trục tiến độ đã lật (mapPos) nên mép "trên" của band thành
+                                // mép PHẢI: left tính từ 100 - bottom.
+                                const bandPos = horizontal
+                                    ? { left: `${100 - band.bottom}%`, width: `${band.bottom - band.top}%`, top: 0, bottom: 0 }
+                                    : { top: `${band.top}%`, height: `${band.bottom - band.top}%`, left: 0, right: 0 };
+                                const fadeDeg = horizontal ? 90 : 180;
                                 return (
                                     <div
                                         key={`${band.world}-${band.index}`}
-                                        className="absolute left-0 right-0 pointer-events-none"
-                                        style={{ top: `${band.top}%`, height: `${band.bottom - band.top}%` }}
+                                        className="absolute pointer-events-none"
+                                        style={bandPos}
                                     >
                                         <div className="absolute inset-0" style={{
-                                            background: `linear-gradient(180deg, ${meta.accent}00 0%, ${meta.accent}1f 18%, ${meta.accent}1f 82%, ${meta.accent}00 100%)`,
+                                            background: `linear-gradient(${fadeDeg}deg, ${meta.accent}00 0%, ${meta.accent}1f 18%, ${meta.accent}1f 82%, ${meta.accent}00 100%)`,
                                         }} />
                                         <div className="absolute inset-0" style={{
                                             backgroundImage: meta.texture,
@@ -499,8 +557,8 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
                                             // Faded at the seams for the same reason the tint is:
                                             // a hard edge between two textures reads as a UI
                                             // panel, and this is meant to read as ground.
-                                            maskImage: 'linear-gradient(180deg, transparent 0%, black 16%, black 84%, transparent 100%)',
-                                            WebkitMaskImage: 'linear-gradient(180deg, transparent 0%, black 16%, black 84%, transparent 100%)',
+                                            maskImage: `linear-gradient(${fadeDeg}deg, transparent 0%, black 16%, black 84%, transparent 100%)`,
+                                            WebkitMaskImage: `linear-gradient(${fadeDeg}deg, transparent 0%, black 16%, black 84%, transparent 100%)`,
                                             opacity: hereNow ? 1 : 0.55,
                                         }} />
                                         {/* The name, at the band's own left margin. The title bar
@@ -520,7 +578,9 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
 
                             {renderConnections()}
 
-                            {nodes.map(node => (
+                            {nodes.map(node => {
+                                const pos = mapPos(node);
+                                return (
                                 <React.Fragment key={node.id}>
                                     <button
                                         className={`
@@ -531,7 +591,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
                                                 ? 'grayscale-0 brightness-100 opacity-100 pointer-events-auto cursor-pointer ring-2 ring-fuchsia-500/70 ring-offset-1 ring-offset-black'
                                                 : ''}
                                         `}
-                                        style={{ left: `${node.x}%`, top: `${node.y}%`, transform: 'translate(-50%, -50%)' }}
+                                        style={{ left: `${pos.x}%`, top: `${pos.y}%`, transform: 'translate(-50%, -50%)' }}
                                         onClick={() => { if (debugMode || node.status === 'AVAILABLE') onSelectNode(node); }}
                                         onMouseEnter={() => setHoveredNodeId(node.id)}
                                         onMouseLeave={() => setHoveredNodeId(null)}
@@ -548,10 +608,11 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
 
                                     {/* Tooltip */}
                                     {hoveredNodeId === node.id && (
-                                        <NodeTooltip type={node.type} x={node.x} y={node.y} zoom={zoom} />
+                                        <NodeTooltip type={node.type} x={pos.x} y={pos.y} zoom={zoom} />
                                     )}
                                 </React.Fragment>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 </div>
