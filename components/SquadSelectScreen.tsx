@@ -6,6 +6,7 @@ import { HERO_DEFINITIONS, STARTING_HEROES } from '../data/heroes';
 import { bossForElement, unlockInfoFor } from '../data/unlocks';
 import { HandFist, Heart, ArrowLeft, ArrowRight, Sun, Footprints, Swords, Sparkles, Lock, Ban, Snowflake, Flame, Zap, Atom, Settings } from 'lucide-react';
 import { HERO_ACCENTS } from '../utils/icons';
+import { IS_COARSE_POINTER } from '../utils/platform';
 import { ELEMENTS, ELEMENT_DEFINITIONS, ELEMENT_HP_COST, RESONANCE_DESCRIPTIONS, resonanceOf } from '../utils/elements';
 import { ROLE_META, ROLE_ORDER, HeroRoleChip } from './HeroRoleChip';
 import { useI18n } from '../i18n';
@@ -422,10 +423,17 @@ export const SquadSelectScreen: React.FC<SquadSelectScreenProps> = ({
                       style={{
                           // A locked hero is a silhouette: you can see the shape of what you
                           // are working towards without being shown the art.
+                          // Trên cảm ứng, bỏ các drop-shadow trang trí: filter trên 9 sprite
+                          // lớn buộc GPU iOS render từng ảnh qua lớp riêng mỗi khung hình khi
+                          // lướt ngang — nguồn giật chính của màn này. Silhouette (brightness/
+                          // grayscale) mang nghĩa nên giữ ở mọi thiết bị.
                           filter: locked
-                              ? 'brightness(0.18) grayscale(1) drop-shadow(0 10px 12px rgba(0,0,0,0.7))'
-                              : `drop-shadow(0 10px 12px rgba(0,0,0,0.7))${isSelected ? ` drop-shadow(0 0 14px ${accent}55)` : ''}`,
+                              ? `brightness(0.18) grayscale(1)${IS_COARSE_POINTER ? '' : ' drop-shadow(0 10px 12px rgba(0,0,0,0.7))'}`
+                              : IS_COARSE_POINTER
+                                  ? undefined
+                                  : `drop-shadow(0 10px 12px rgba(0,0,0,0.7))${isSelected ? ` drop-shadow(0 0 14px ${accent}55)` : ''}`,
                       }}
+                      decoding="async"
                   />
                   <div
                       className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[72%] h-4 rounded-[100%] pointer-events-none"
@@ -564,7 +572,7 @@ export const SquadSelectScreen: React.FC<SquadSelectScreenProps> = ({
                                         : t('Empty')}
                                 >
                                     {id
-                                        ? <img src={HERO_DEFINITIONS[id].imgUrl} alt="" className="w-full h-full object-contain" />
+                                        ? <img src={HERO_DEFINITIONS[id].boardImgUrl ?? HERO_DEFINITIONS[id].imgUrl} alt="" className="w-full h-full object-contain p-1" />
                                         : <span className="text-[10px] font-mono text-gray-700">{i + 1}</span>}
                                     {el && (
                                         <span
