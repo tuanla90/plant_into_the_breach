@@ -149,9 +149,13 @@ export const processTurn = (
             const field = simSpikes.get(`${step.x},${step.y}`);
             if (!field) continue;
             // Spikes come up under the boots, not against the helmet — armour is bypassed,
-            // which keeps Thornquill's fields an honest answer to an armoured lane.
+            // which keeps spike fields (the Spikeweed item; formerly Thornquill's trail) an
+            // honest answer to an armoured lane.
             const r = calculateDamage(u, field.damage, false, true);
             actions.push({ type: 'APPLY_DAMAGE', targetId: u.id, amount: r.finalDamage, eventType: 'DAMAGE', pos: step });
+            if (r.bleedConsumed) {
+                actions.push({ type: 'UPDATE_UNIT_STATE', unitId: u.id, updates: { statusEffects: [...u.statusEffects] } });
+            }
             u.hp = r.remainingHp;
             u.shield = r.remainingShield;
             if (r.isFatal) {
@@ -160,6 +164,24 @@ export const processTurn = (
             }
         }
     };
+
+    /**
+     * SOLAR BLESSING EXPIRES HERE — at the door of the enemy phase, which IS "the end of the
+     * player turn" (PLAN-hero-zephyr §6.1). The +1 and the borrowed element exist only
+     * between the bless and this line, so blessing an ally who has already acted buys
+     * nothing: bless first, then swing. Cleared before anything else so no enemy-phase code
+     * ever sees a blessed body.
+     */
+    simUnits.forEach(u => {
+        if (!u.isEnemy && (u.statusEffects?.includes('BLESSED') || u.blessedElement)) {
+            u.statusEffects = (u.statusEffects ?? []).filter(s => s !== 'BLESSED');
+            u.blessedElement = undefined;
+            actions.push({
+                type: 'UPDATE_UNIT_STATE', unitId: u.id,
+                updates: { statusEffects: [...u.statusEffects], blessedElement: undefined },
+            });
+        }
+    });
 
     // --- PHASE 0: SECTOR HAZARD ---
     // Whatever was telegraphed last turn resolves now, before anything else moves. The player
@@ -218,6 +240,13 @@ export const processTurn = (
             pending.tiles.forEach(pos => {
                 const victim = simUnits.find(u => u.hp > 0 && u.position.x === pos.x && u.position.y === pos.y);
                 if (!victim) return;
+                // Electricity does not enter a SHOCK-immune body (the lightning hero's
+                // element perk): no bite, no stun — standing on the live grid is her whole
+                // counter-pick against this sector.
+                if (victim.immunities.includes('SHOCK')) {
+                    actions.push({ type: 'APPLY_DAMAGE', targetId: victim.id, amount: 0, eventType: 'IMMUNE', pos });
+                    return;
+                }
                 const r = calculateDamage(victim, 1, false);
                 actions.push({ type: 'APPLY_DAMAGE', targetId: victim.id, amount: r.finalDamage, eventType: 'DAMAGE', pos });
                 victim.hp = r.remainingHp;
@@ -548,6 +577,9 @@ export const processTurn = (
             // Environment ignores helmet armour (gameLogic): the fire is inside the bucket.
             const result = calculateDamage(u, amount, piercing, true);
             actions.push({ type: 'APPLY_DAMAGE', targetId: u.id, amount: result.finalDamage, eventType: 'BURN', pos });
+            if (result.bleedConsumed) {
+                actions.push({ type: 'UPDATE_UNIT_STATE', unitId: u.id, updates: { statusEffects: [...u.statusEffects] } });
+            }
             u.hp = result.remainingHp;
             u.shield = result.remainingShield;
             if (result.isFatal) {
@@ -665,8 +697,23 @@ export const processTurn = (
          * loop and the blast — because "cancels attacks" has to mean the whole action and not
          * its damage line. A Sandreaver blinded underground stays underground, which is the
          * correct reading of both rules at once.
+         *
+         * ATTACK ONLY. `SPAWN` used to be cancelled here too, and that was the two sides of
+         * one rule disagreeing: the player's half (utils/gameLogic.ts, `getValidSkillTargets`)
+         * stops a skill only when it carries a DAMAGE effect, because "dust takes away AIM" —
+         * a shield, a taunt or a harvest needs no line of sight. A summon needs none either.
+         * The Headliner shouting for four dancers is not a swing, and a veil that cancelled it
+         * would make one 50-Sun pod the answer to the act whose whole thesis is the crowd.
+         * Four callers ride this line — the Headliner, the Blightlord's echoes, the
+         * Gargantuar's imp toss and `summon_backup` — and none of them is blinded now.
+         *
+         * KEYED ON THE INTENT TYPE, never on comparing `intent.target` to the unit's own
+         * tile. Sandreaver's eruption is an ATTACK aimed at the square it is standing in
+         * (damage 0, the ring lives in `strikes`), so a "only blocks attacks aimed elsewhere"
+         * reading would let the one attack this hazard is most needed against sail straight
+         * through, and nothing would look broken.
          */
-        if ((intent.type === 'ATTACK' || intent.type === 'SPAWN') && blinded(enemy.position)) {
+        if (intent.type === 'ATTACK' && blinded(enemy.position)) {
             actions.push({ type: 'APPLY_DAMAGE', targetId: enemy.id, amount: 0, eventType: 'MISS', pos: enemy.position });
             return;
         }
@@ -701,6 +748,21 @@ export const processTurn = (
             const houseKey = `${intent.target.x},${intent.target.y}`;
             const adjacent = Math.abs(intent.target.x - enemy.position.x)
                 + Math.abs(intent.target.y - enemy.position.y) === 1;
+            /**
+             * THE WARDED DOOR (PLAN-hero-zephyr §6.3). A house wearing Gourdward's layer
+             * (TileData.shielded) answers the bite the way any layer answers any blow: the
+             * layer breaks, the brain does not move, and the zombie is still standing on the
+             * doorstep — it re-telegraphs next turn, and Reinforce next turn is the
+             * tug-of-war the mechanic exists for. Mutating the sim tile matters: a SECOND
+             * biter this same phase must find the shell already gone.
+             */
+            if (adjacent && houseTile?.isHouse && houseTile.hasBrain && houseTile.shielded) {
+                houseTile.shielded = false;
+                actions.push({ type: 'UNIT_ATTACK', unitId: enemy.id, targetPos: intent.target, attackRange: 'MELEE' });
+                actions.push({ type: 'MODIFY_TERRAIN', pos: { x: intent.target.x, y: intent.target.y }, shielded: false });
+                actions.push({ type: 'APPLY_DAMAGE', targetId: 'tile', amount: 0, eventType: 'BLOCK', pos: intent.target });
+                return;
+            }
             if (adjacent && houseTile?.isHouse && houseTile.hasBrain && !brainsTakenThisTurn.has(houseKey)) {
                 brainsTakenThisTurn.add(houseKey);
                 actions.push({ type: 'UNIT_ATTACK', unitId: enemy.id, targetPos: intent.target, attackRange: 'MELEE' });
@@ -811,7 +873,9 @@ export const processTurn = (
                         ]);
                         const [arcTarget] = chainStep(at,
                             p => simUnits.find(u => u.hp > 0 && u.position.x === p.x && u.position.y === p.y),
-                            u => !u.isEnemy && u.type !== UnitType.OBSTACLE, struck);
+                            // SHOCK-immune bodies are not conductors: the horde's arc cannot
+                            // pick a lightning hero as its hop, same rule as SURGE.
+                            u => !u.isEnemy && u.type !== UnitType.OBSTACLE && !u.immunities.includes('SHOCK'), struck);
                         if (arcTarget) {
                             actions.push({ type: 'UNIT_ATTACK', unitId: enemy.id, targetPos: { ...arcTarget.position }, attackRange: 'LINE', isArc: true });
                             const arc = calculateDamage(arcTarget, arcDamage, false);
@@ -846,6 +910,9 @@ export const processTurn = (
                 if (thorns > 0) {
                     const back = calculateDamage(enemy, thorns, false);
                     actions.push({ type: 'APPLY_DAMAGE', targetId: enemy.id, amount: back.finalDamage, eventType: 'DAMAGE', pos: enemy.position });
+                    if (back.bleedConsumed) {
+                        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: enemy.id, updates: { statusEffects: [...enemy.statusEffects] } });
+                    }
                     // Battle ledger. Retaliation is the one damage source with no skill cast
                     // behind it, so without this line Thornhide's whole output happens during
                     // the ENEMY's turn and the report prints him as a bystander.

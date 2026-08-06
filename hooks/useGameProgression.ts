@@ -10,11 +10,11 @@ import {
     COIN_PER_LEVEL, COIN_ELITE_BONUS, COIN_BOSS_BONUS, COIN_REVIVE_HERO,
     CAMP_ITEM_OFFERS, SHOP_OFFER_COUNT, brainBuybackCost
 } from '../constants';
-import { DEFAULT_ITEM_DEFINITIONS } from '../data/items';
+import { DEFAULT_ITEM_DEFINITIONS, SECTOR_ITEM } from '../data/items';
 import { applyFusion, applyUpgrade } from '../utils/fusion';
 // This hook used to hold all of the following inline. What is left here is the part that is
 // genuinely about React state and the run; the rules moved to utils/, where they can be run.
-import { withLevelUps, withBossDefeated } from '../utils/unlockLogic';
+import { withLevelUps, withBossDefeated, withSectorVisited, unlockedItemIds } from '../utils/unlockLogic';
 import { freshHero, buildHeroFromSnapshot, buildBenchUnit, buildEnemy, isBattleOnlyUnit } from '../utils/unitFactory';
 import { buildEncounter, layerOfNode, tiersForLayer } from '../utils/encounterBuilder';
 import { performTurnZeroAI as runTurnZeroAI } from '../utils/turnZeroAI';
@@ -29,7 +29,7 @@ import {
 } from '../data/unlocks';
 import { FUSION_RECIPES } from '../data/fusionRecipes';
 import { tutorialNode, tutorialBattle, tutorialBoard, GENERATE_TUTORIAL_MAP, TUTORIAL_CHAIN } from '../data/tutorial';
-import { loadUnlockState, saveUnlockState, defaultUnlockState } from '../utils/persistence';
+import { loadUnlockState, saveUnlockState, defaultUnlockState, saveChronoEcho } from '../utils/persistence';
 import { balancedGlobal } from '../utils/balance';
 
 interface UseGameProgressionProps {
@@ -107,6 +107,34 @@ export const useGameProgression = ({
     const clearPendingUnlocks = () => setPendingUnlocks([]);
 
     /**
+     * The sector gift waiting to be announced — set by visitSector, drained by the toast.
+     * Hook-local React state, NOT GameState: it is a one-shot announcement, and a saved
+     * snapshot must never be able to replay it.
+     */
+    const [sectorGift, setSectorGift] = useState<{ itemId: string } | null>(null);
+    const clearSectorGift = () => setSectorGift(null);
+
+    /**
+     * FIRST FOOTSTEP ON NEW GROUND. Marks the sector visited for the whole save, and — if
+     * the ground teaches a tool (data/items.ts SECTOR_ITEM) — permanently unlocks that item
+     * and pockets one free copy for the run that walked in. Idempotent: old ground pays
+     * nothing, which is also what keeps the legacy-save migration (utils/persistence.ts)
+     * from showering a veteran with nine toasts.
+     *
+     * Called from selectNode for ordinary ground and from App for the Breach's door
+     * ('BREACH' — a run mode, not a WorldType, so no map node can carry it).
+     */
+    const visitSector = (sector: string) => {
+        if ((unlocksRef.current.sectorsVisited ?? []).includes(sector)) return;
+        commitUnlocks(withSectorVisited(unlocksRef.current, sector));
+        const gifted = SECTOR_ITEM[sector as keyof typeof SECTOR_ITEM];
+        if (gifted) {
+            setGameState(prev => ({ ...prev, inventory: [...prev.inventory, gifted] }));
+            setSectorGift({ itemId: gifted });
+        }
+    };
+
+    /**
      * Turns the difference between two UnlockStates into announcements. Diffing here rather
      * than at each grant site means no future grant can forget to announce itself.
      */
@@ -173,6 +201,8 @@ export const useGameProgression = ({
             heroes,
             materials,
             recipes,
+            // Every ground walked too, so the whole item catalogue opens with the roster.
+            sectorsVisited: Object.keys(SECTOR_ITEM),
             // Enough XP to sit at the ceiling the roster allows. Not Infinity: levelOf caps
             // against it and a non-finite XP would render as "NaN" on the map header.
             xp: XP_PER_LEVEL * capOf({ ...unlocksRef.current, heroes, materials }),
@@ -333,6 +363,20 @@ export const useGameProgression = ({
         const payout = runPayoutPreview(false);
         const nodeId = gameState.currentLevelId;
         const node = nodeId ? mapNodes.find(n => n.id === nodeId) : undefined;
+        // A real defeat sends one item forward to the next run — the Chrono Echo
+        // (utils/persistence.ts). Abandoning never reaches this function at all (App's
+        // confirmQuit goes straight to the menu), so quitting cannot farm it.
+        if (!gameState.scriptedBattleId) {
+            const layer = node ? Math.floor(layerOfNode(node, mapNodes)) : 0;
+            saveChronoEcho({ layers: Number.isFinite(layer) ? Math.max(0, layer) : 0 });
+        } else if (!unlocksRef.current.tutorialDone) {
+            // The tutorial's scripted defeat pays one out too — board 7's whole lesson is
+            // "a real loss is not empty-handed", and the first campaign opening with the
+            // echo screen is that lesson landing. Starter tier only (`tutorial` caps the
+            // offer in App), and only ONCE: tutorialDone is set when the chain ends, so
+            // "Chơi lại hướng dẫn" replays the fight but never re-mints the gift.
+            saveChronoEcho({ layers: 0, tutorial: true });
+        }
         commitUnlocks(withRunPayout(unlocksRef.current, node, false));
         // The build dies with the run. Nothing reads it after this point, but leaving it set
         // would mean the next squad screen is picking on top of a dead run's answers.
@@ -587,6 +631,11 @@ export const useGameProgression = ({
      *              stays intact and you can keep hopping around it.
      */
     const selectNode = (node: MapNode, benchToDeploy?: BenchPlant[], debug = false) => {
+        // New ground pays its tool on ENTRY, not on map generation — a map merely showing
+        // a sector is not the same as walking it. Tutorial nodes are excluded: the scripted
+        // chain owns its inventory beat for beat, and a surprise magnet in the item belt
+        // would desync the very tutorial that teaches items.
+        if (node.world && !node.tutorialId) visitSector(node.world);
         if (debug) {
             setMapNodes(prev => prev.map(n =>
                 n.id === node.id && n.status !== 'COMPLETED'
@@ -644,7 +693,11 @@ export const useGameProgression = ({
              // Both shelves are rolled ON ARRIVAL and stored, for the same reason the shop's
              // are: rolling during render would deal a new hand on every state change, and the
              // player would watch the thing they were about to buy turn into something else.
-             const items = [...DEFAULT_ITEM_DEFINITIONS.map(i => i.id)];
+             // Only ground already walked stocks the shelf (utils/unlockLogic.ts) — the
+             // Breach demands all nine bosses, so in practice this is the full catalogue
+             // plus the Doom-shroom the door itself just handed over.
+             const pool = unlockedItemIds(unlocksRef.current);
+             const items = DEFAULT_ITEM_DEFINITIONS.map(i => i.id).filter(id => pool.has(id));
              const itemShelf: string[] = [];
              while (itemShelf.length < CAMP_ITEM_OFFERS && items.length > 0) {
                  itemShelf.push(items.splice(Math.floor(Math.random() * items.length), 1)[0]);
@@ -1152,6 +1205,10 @@ export const useGameProgression = ({
         previewUnlocks,
         runPayoutPreview,
         recordRunLost,
+        // --- sector item unlocks ---
+        sectorGift,
+        clearSectorGift,
+        visitSector,
         // Bound to this hook's terrainDefs so App keeps the same three-argument call it had.
         performTurnZeroAI: (currentUnits: Unit[], currentBoard: TileData[], holdPositions = false) =>
             runTurnZeroAI(currentUnits, currentBoard, terrainDefs, holdPositions),

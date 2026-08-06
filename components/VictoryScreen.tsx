@@ -57,8 +57,12 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({ onContinue, reward
         : [];
 
     return (
-        <div className="fixed inset-0 z-[60] bg-black/90 flex flex-col items-center justify-center font-pixel animate-in fade-in duration-500">
-            <div className="bg-[#1a1c21] border-4 border-yellow-500 p-8 max-w-lg w-full text-center shadow-[0_0_50px_rgba(234,179,8,0.3)] relative max-h-[100dvh] overflow-y-auto custom-scrollbar">
+        // p-3 trên nền + max-h-full trên thẻ: trước đây thẻ là `w-full max-h-[100dvh]` trong
+        // một nền KHÔNG có padding, nên trên điện thoại nó dán sát bốn mép — viền vàng 4px
+        // chạm cạnh màn và nút Tiếp Tục nằm đúng vạch thanh home. Desktop không đổi: max-w-lg
+        // vẫn là thứ quyết định bề ngang ở đó.
+        <div className="fixed inset-0 z-[60] bg-black/90 flex flex-col items-center justify-center font-pixel animate-in fade-in duration-500 p-3 sm:p-4">
+            <div className="bg-[#1a1c21] border-4 border-yellow-500 p-5 sm:p-8 max-w-lg w-full text-center shadow-[0_0_50px_rgba(234,179,8,0.3)] relative max-h-full overflow-y-auto custom-scrollbar">
                 {/* Background Rays */}
                 <div className="absolute inset-0 bg-[repeating-conic-gradient(from_0deg,transparent_0deg_10deg,rgba(255,255,0,0.05)_10deg_20deg)] animate-[spin_20s_linear_infinite]"></div>
 
@@ -81,7 +85,11 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({ onContinue, reward
                             <table className="w-full text-sm">
                                 <thead>
                                     <tr>
-                                        <th className="text-left font-normal pb-2"></th>
+                                        {/* Ghìm cột tên lại 45% dưới sm: để bảng tự chia, tên hero
+                                            tiếng Việt (dài gấp ba tên gốc) chiếm 216/303px và mỗi
+                                            cột số chỉ còn 17px — vừa đủ cho số có hai chữ số, và
+                                            một con "120 sát thương" là bảng tràn ngang. */}
+                                        <th className="text-left font-normal pb-2 w-[45%] sm:w-auto"></th>
                                         {REPORT_COLUMNS.map(col => (
                                             <th key={col.stat} className="pb-2 font-normal" title={t(col.label)}>
                                                 <col.icon size={14} className="inline text-gray-400" />
@@ -94,8 +102,15 @@ export const VictoryScreen: React.FC<VictoryScreenProps> = ({ onContinue, reward
                                         <tr key={row.id} className="border-t border-gray-800">
                                             <td className="py-1.5 text-left">
                                                 <span className="flex items-center gap-2">
-                                                    <img src={HERO_SPRITES[row.id]} alt="" className="w-6 h-6 object-contain" />
-                                                    <span className="font-bold" style={{ color: HERO_ACCENTS[row.id] }}>{row.name}</span>
+                                                    <img src={HERO_SPRITES[row.id]} alt="" className="w-6 h-6 object-contain shrink-0" />
+                                                    {/* t() — tên hero ở đây là thứ DUY NHẤT trong game vẫn in ra
+                                                        tiếng Anh ("Shadeleaf" giữa một bảng tiếng Việt). Và để nó
+                                                        XUỐNG DÒNG thay vì cắt: tên tiếng Việt dài gấp ba, mà trên
+                                                        điện thoại không có tooltip để đọc phần bị cắt. */}
+                                                    <span className="font-bold min-w-0 text-[11px] sm:text-sm leading-tight"
+                                                          style={{ color: HERO_ACCENTS[row.id] }}>
+                                                        {t(row.name)}
+                                                    </span>
                                                 </span>
                                             </td>
                                             {REPORT_COLUMNS.map(col => (

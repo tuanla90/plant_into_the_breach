@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BenchPlant, ItemDefinition, MaterialId, Unit } from '../types';
 import { ShoppingCart, Heart, Sun, ArrowLeft, Coins, RefreshCw, Sprout, AlertTriangle, Brain, Info } from 'lucide-react';
 import { BENCH_CAPACITY, FUSION_SLOTS, shopRerollCost } from '../constants';
 import { getMaterial } from '../data/materials';
 import { canFuse, describeFusionForHero } from '../utils/fusion';
+import { IS_COARSE_POINTER } from '../utils/platform';
 import { useI18n } from '../i18n';
 
 interface ShopScreenProps {
@@ -70,6 +71,19 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({
     onBuyBrain,
 }) => {
     const { t } = useI18n();
+
+    /**
+     * Thẻ nào đang MỞ bảng chi tiết, mở bằng cách BẤM.
+     *
+     * Mọi thứ đáng để cân nhắc trước khi tiêu Xu — vật liệu này làm gì, hero nào còn nhận
+     * được nó, giữ lại ở khu dự bị thì đánh đấm ra sao — đều nằm trong bảng `group-hover`.
+     * Trên điện thoại KHÔNG CÓ hover: cả ba dòng đó không có đường nào tới được, và thẻ chỉ
+     * còn cái tên với cái giá. Bấm là cách duy nhất, nên dòng "xem chi tiết" thành một nút.
+     * Hover vẫn giữ nguyên cho chuột — nó nhanh hơn và không tốn cú bấm nào.
+     */
+    const [openDetails, setOpenDetails] = useState<string | null>(null);
+    const detailsHint = IS_COARSE_POINTER ? t('Tap for details') : t('Hover for details');
+
     // Shop services and items are all paid in Coin — Sun never leaves the battlefield
     // (DESIGN.md section 3). `sun` is shown in the header for reference only.
     const heroes = squad.filter(u => u.isHero);
@@ -175,10 +189,16 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-3">
+                    {/* Màn dọc: một cột. Ba cột trên màn 390px cho mỗi thẻ 106px — ảnh cây
+                        đã chiếm 56px, phần tên còn 40px, tức mọi tên cây đều bị cắt cụt và
+                        nút Mua hẹp hơn ngón tay. */}
+                    <div className="grid grid-cols-3 portrait:grid-cols-1 gap-3">
                         {offers.map((materialId, index) => {
                             const def = getMaterial(materialId);
                             if (!def) return null;
+
+                            const detailKey = `mat-${materialId}-${index}`;
+                            const detailsOpen = openDetails === detailKey;
 
                             const affordable = coins >= def.coinCost;
                             const buyable = affordable && !benchFull && !!onBuyMaterial;
@@ -216,9 +236,14 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="font-bold text-green-200 text-sm truncate">{t(def.name)}</div>
-                                            <div className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5">
-                                                <Info size={10} /> {t('Hover for details')}
-                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setOpenDetails(detailsOpen ? null : detailKey)}
+                                                className={`text-[10px] flex items-center gap-1 mt-0.5 py-1 pr-2 transition-colors
+                                                            ${detailsOpen ? 'text-yellow-400' : 'text-gray-500 hover:text-gray-300'}`}
+                                            >
+                                                <Info size={10} /> {detailsHint}
+                                            </button>
                                         </div>
                                     </div>
 
@@ -243,7 +268,16 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({
                                         Opens DOWNWARD (the grid sits near the top of the page) but is
                                         anchored inside the card column so it can never leave the page
                                         horizontally; z-50 floats it over the sections below. --- */}
-                                    <div className="pointer-events-none absolute z-50 left-0 right-0 top-full mt-1 hidden group-hover:block">
+                                    {/* Mở bằng chạm thì bảng phải ĂN cú chạm tiếp theo (và tự đóng):
+                                        nó phủ lên hai thẻ dưới, mà pointer-events-none nghĩa là cú
+                                        chạm "để tắt bảng" rơi thẳng xuống nút MUA của thẻ bị che —
+                                        tiêu Xu vì một cú bấm người chơi tưởng là đóng. Chuột rê thì
+                                        vẫn phải xuyên qua, không thì bảng tự cướp hover của chính nó. */}
+                                    <div
+                                        onClick={() => setOpenDetails(null)}
+                                        className={`absolute z-50 left-0 right-0 top-full mt-1
+                                                    ${detailsOpen ? 'block pointer-events-auto cursor-pointer' : 'hidden group-hover:block pointer-events-none'}`}
+                                    >
                                         <div className="bg-[#0b0d10] border-2 border-yellow-600 p-3 shadow-2xl text-left space-y-2.5">
                                             {/* 1. What it gives a hero */}
                                             <div>
@@ -302,9 +336,11 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({
                             <Info size={13} />
                         </span>
                     </h3>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 portrait:grid-cols-1 gap-3">
                         {items.map(item => {
                             const affordable = coins >= item.coinCost;
+                            const detailKey = `item-${item.id}`;
+                            const detailsOpen = openDetails === detailKey;
                             return (
                                 <div
                                     key={item.id}
@@ -315,9 +351,14 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <div className="font-bold text-yellow-200 text-sm truncate">{t(item.name)}</div>
-                                        <div className="text-[10px] text-gray-500 flex items-center gap-1 mt-0.5">
-                                            <Info size={10} /> {t('Hover for details')}
-                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setOpenDetails(detailsOpen ? null : detailKey)}
+                                            className={`text-[10px] flex items-center gap-1 mt-0.5 py-1 pr-2 transition-colors
+                                                        ${detailsOpen ? 'text-yellow-400' : 'text-gray-500 hover:text-gray-300'}`}
+                                        >
+                                            <Info size={10} /> {detailsHint}
+                                        </button>
                                     </div>
                                     <button
                                         onClick={() => onBuyItem(item)}
@@ -336,7 +377,11 @@ export const ShopScreen: React.FC<ShopScreenProps> = ({
 
                                     {/* Item description on hover — opens UPWARD: this section sits at
                                         the bottom of the page, downward would leave the viewport. */}
-                                    <div className="pointer-events-none absolute z-50 left-0 right-0 bottom-full mb-1 hidden group-hover:block">
+                                    <div
+                                        onClick={() => setOpenDetails(null)}
+                                        className={`absolute z-50 left-0 right-0 bottom-full mb-1
+                                                    ${detailsOpen ? 'block pointer-events-auto cursor-pointer' : 'hidden group-hover:block pointer-events-none'}`}
+                                    >
                                         <div className="bg-[#0b0d10] border-2 border-yellow-600 p-3 shadow-2xl">
                                             <div className="text-xs text-gray-200 leading-snug">{t(item.description)}</div>
                                         </div>

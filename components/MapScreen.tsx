@@ -387,8 +387,14 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
             document.body,
         )}
 
-        {/* --- MAP TOOLBAR --- */}
-        <div className="h-14 bg-[#111] border-b border-[#333] flex items-center justify-between px-6 z-20 shrink-0 shadow-lg">
+        {/* --- MAP TOOLBAR ---
+             Màn DỌC: cho xuống hàng. Cụm bên phải chở bảy thứ và đo được 401px; trên màn
+             390px nó bắt đầu ở x=117 nên hai nút cuối — CÀI ĐẶT và ĐỘI HÌNH — nằm hẳn ngoài
+             mép phải và KHÔNG CÁCH NÀO BẤM ĐƯỢC. (Nút debug chỉ có ở bản dev, nên bản phát
+             hành vẫn mất nguyên nút Đội Hình.) Đây đúng khuôn `portrait:flex-wrap` mà HUD
+             trong trận đã dùng cho cùng một bài toán: thà cao thêm một hàng còn hơn mất nút. */}
+        <div className="h-14 portrait:h-auto portrait:flex-wrap portrait:justify-center portrait:gap-y-1.5 portrait:py-1.5
+                        bg-[#111] border-b border-[#333] flex items-center justify-between px-6 portrait:px-2 z-20 shrink-0 shadow-lg">
              <div className="flex items-center gap-4">
                  <MapIcon className="text-green-500" />
                  <div>
@@ -402,19 +408,22 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
                  </div>
              </div>
 
-             <div className="flex items-center gap-3">
+             {/* gap-1.5 khi cầm dọc: bảy nút với khoảng cách của desktop là 398px trong khung
+                 390px — vẫn thừa ra 6px ở phải và 2px ở trái ngay cả sau khi đã cho xuống
+                 hàng. Thu khoảng cách là chỗ rẻ nhất để lấy lại 29px đó. */}
+             <div className="flex items-center gap-3 portrait:gap-1.5">
                  {/* Zoom Controls */}
                  <div className="bg-black/50 border border-gray-700 rounded-md flex items-center p-1">
-                     <button onClick={() => handleZoom(-0.2)} className="p-1 hover:text-white text-gray-400 hover:bg-gray-700 rounded" title={t('Zoom Out')}><ZoomOut size={18}/></button>
-                     <span className="text-xs w-12 text-center font-mono text-gray-300 select-none">{Math.round(zoom * 100)}%</span>
-                     <button onClick={() => handleZoom(0.2)} className="p-1 hover:text-white text-gray-400 hover:bg-gray-700 rounded" title={t('Zoom In')}><ZoomIn size={18}/></button>
+                     <button onClick={() => handleZoom(-0.2)} className="p-1 min-w-[40px] min-h-[40px] flex items-center justify-center hover:text-white text-gray-400 hover:bg-gray-700 rounded" title={t('Zoom Out')}><ZoomOut size={18}/></button>
+                     <span className="text-xs w-12 portrait:w-8 text-center font-mono text-gray-300 select-none">{Math.round(zoom * 100)}%</span>
+                     <button onClick={() => handleZoom(0.2)} className="p-1 min-w-[40px] min-h-[40px] flex items-center justify-center hover:text-white text-gray-400 hover:bg-gray-700 rounded" title={t('Zoom In')}><ZoomIn size={18}/></button>
                  </div>
 
                  {/* Dev Travel */}
                  <button
                     onClick={onToggleDebug}
                     title={t('Dev travel: enter any node, no branch is consumed. Shortcut: Ctrl+Shift+D')}
-                    className={`p-2 border rounded transition-colors ${debugMode
+                    className={`p-2 min-w-[40px] min-h-[40px] flex items-center justify-center border rounded transition-colors ${debugMode
                         ? 'bg-fuchsia-900/40 text-fuchsia-300 border-fuchsia-500'
                         : 'border-gray-700 text-gray-400 hover:text-white hover:bg-gray-800'}`}
                  >
@@ -422,7 +431,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
                  </button>
 
                  {/* Center View */}
-                 <button onClick={centerOnActiveNode} className="p-2 border border-gray-700 hover:border-gray-500 hover:bg-gray-800 rounded text-gray-400 hover:text-white" title={t('Center View')}>
+                 <button onClick={centerOnActiveNode} className="p-2 min-w-[40px] min-h-[40px] flex items-center justify-center border border-gray-700 hover:border-gray-500 hover:bg-gray-800 rounded text-gray-400 hover:text-white" title={t('Center View')}>
                      <Crosshair size={18} />
                  </button>
 
@@ -430,7 +439,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
                  <div className="relative">
                      <button
                         onClick={() => setShowLegend(!showLegend)}
-                        className={`p-2 border rounded transition-colors ${legendOpen ? 'bg-blue-900/30 text-blue-400 border-blue-600' : 'border-gray-700 text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                        className={`p-2 min-w-[40px] min-h-[40px] flex items-center justify-center border rounded transition-colors ${legendOpen ? 'bg-blue-900/30 text-blue-400 border-blue-600' : 'border-gray-700 text-gray-400 hover:text-white hover:bg-gray-800'}`}
                         title={t('Map Legend')}
                      >
                          <HelpCircle size={18} />
@@ -450,7 +459,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
                  {onOpenCodex && (
                      <button
                         onClick={onOpenCodex}
-                        className="p-2 border border-gray-700 hover:border-gray-500 hover:bg-gray-800 rounded text-gray-400 hover:text-white"
+                        className="p-2 min-w-[40px] min-h-[40px] flex items-center justify-center border border-gray-700 hover:border-gray-500 hover:bg-gray-800 rounded text-gray-400 hover:text-white"
                         title={t('Tactical Archive')}
                      >
                          <Library size={18} />
@@ -461,7 +470,7 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
                   {onOpenSettings && (
                       <button
                          onClick={onOpenSettings}
-                         className="p-2 border border-gray-700 hover:border-gray-500 hover:bg-gray-800 rounded text-gray-400 hover:text-white"
+                         className="p-2 min-w-[40px] min-h-[40px] flex items-center justify-center border border-gray-700 hover:border-gray-500 hover:bg-gray-800 rounded text-gray-400 hover:text-white"
                          title={t('Cài Đặt')}
                       >
                           <Settings size={18} />
@@ -471,10 +480,10 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
                  {/* SQUAD MODAL TRIGGER */}
                  <button
                     onClick={() => setShowSquadModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-900/30 border border-green-600 hover:bg-green-800/50 text-green-400 hover:text-white rounded transition-all uppercase font-bold text-sm tracking-wider"
+                    className="flex items-center justify-center gap-2 px-4 portrait:px-0 py-2 min-w-[40px] min-h-[40px] bg-green-900/30 border border-green-600 hover:bg-green-800/50 text-green-400 hover:text-white rounded transition-all uppercase font-bold text-sm tracking-wider"
                     title={t('View Squad')}
                  >
-                     <Users size={18} /> {t('Squad')}
+                     <Users size={18} /> <span className="portrait:hidden">{t('Squad')}</span>
                  </button>
              </div>
         </div>

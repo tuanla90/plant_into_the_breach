@@ -77,6 +77,7 @@ export const saveRunState = (gameState: GameState, units: Unit[], mapNodes: MapN
                 digestingTurns: 0,
                 isDying: false,
                 isAttacking: false,
+                isHitFlashing: false,
                 visualOffset: undefined,
                 spawnDelay: undefined,
             }));

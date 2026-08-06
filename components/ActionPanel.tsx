@@ -76,7 +76,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
               disabled={spent || locked || !onResetTurn}
               data-tut="reset-turn"
               title={t('Chrona rewinds the board to the start of this turn. Once per battle.')}
-              className={`flex-1 lg:w-full py-2 px-2 lg:px-4 border rounded-lg flex items-center justify-center gap-1.5 lg:gap-2 transition-all
+              className={`flex-1 lg:w-full py-2 px-2 lg:px-4 min-h-[40px] border rounded-lg flex items-center justify-center gap-1.5 lg:gap-2 transition-all
                   ${spent || locked
                       ? 'border-gray-700 text-gray-600 bg-[#0b0d14] cursor-not-allowed opacity-60'
                       : 'border-cyan-500/60 text-cyan-300 bg-gradient-to-r from-cyan-950 via-slate-900 to-cyan-950 hover:border-cyan-300 hover:text-white shadow-[0_0_12px_rgba(34,211,238,0.15)] active:scale-95 cursor-pointer'}`}
@@ -99,7 +99,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
       <button
           onClick={onEndTurn}
           data-tut="end-turn"
-          className="flex-[2] lg:w-full bg-gradient-to-r from-red-950 via-rose-900 to-red-950 hover:from-red-900 hover:to-rose-800 text-red-200 hover:text-white border border-red-500/60 hover:border-red-400 py-2 lg:py-2.5 px-3 lg:px-4 shadow-[0_0_15px_rgba(239,68,68,0.25)] active:scale-95 transition-all flex items-center justify-center gap-2 rounded-lg group cursor-pointer"
+          className="flex-[2] lg:w-full bg-gradient-to-r from-red-950 via-rose-900 to-red-950 hover:from-red-900 hover:to-rose-800 text-red-200 hover:text-white border border-red-500/60 hover:border-red-400 py-2 lg:py-2.5 min-h-[40px] px-3 lg:px-4 shadow-[0_0_15px_rgba(239,68,68,0.25)] active:scale-95 transition-all flex items-center justify-center gap-2 rounded-lg group cursor-pointer"
       >
           <span className="text-sm lg:text-base font-black uppercase tracking-[0.1em] lg:tracking-[0.2em] group-hover:drop-shadow whitespace-nowrap">{t('End Turn')}</span>
           <span className="keycap text-[10px] text-red-300 border-red-500/40 hidden md:inline">SPACE</span>
@@ -138,19 +138,26 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
             {/* p-3/text-base below lg: at 375px of viewport height the padded header plus
                 the Start Battle footer alone were taller than the panel, and the button's
                 bottom edge left the screen. */}
-            <div className="bg-[#121622] p-3 lg:p-5 border-b border-[#293245] text-center">
-                <h2 className="text-base lg:text-xl text-amber-400 uppercase font-black tracking-widest mb-1.5 lg:mb-2 flex items-center justify-center gap-2">
+            {/* Màn dọc: tiêu đề và bộ đếm nằm CHUNG một hàng thay vì hai tầng. Xếp chồng
+                như desktop thì riêng phần đầu này ăn 86px trong panel cao 321px, và danh
+                sách đội hình — thứ duy nhất phải bấm ở đây — chỉ còn 152px cho ba thẻ. */}
+            <div className="bg-[#121622] p-3 lg:p-5 border-b border-[#293245] text-center
+                            portrait:flex portrait:flex-wrap portrait:items-center portrait:gap-2 portrait:p-2">
+                <h2 className="text-base lg:text-xl text-amber-400 uppercase font-black tracking-widest mb-1.5 lg:mb-2 flex items-center justify-center gap-2
+                               portrait:mb-0 portrait:flex-1 portrait:min-w-0 portrait:justify-start portrait:text-sm portrait:tracking-wide portrait:truncate">
                     <Zap size={20} className="text-amber-400 animate-bounce shrink-0" />
                     {t('Tactical Insertion')}
                 </h2>
-                <div className="flex justify-between items-center text-sm text-gray-300 border border-[#293245] p-2.5 rounded-lg bg-[#0b0d14]/80">
+                <div className="flex justify-between items-center text-sm text-gray-300 border border-[#293245] p-2.5 rounded-lg bg-[#0b0d14]/80
+                                portrait:shrink-0 portrait:gap-2 portrait:p-1.5">
                     <span className="font-bold text-xs uppercase text-gray-400">{t('Deployed:')}</span>
-                    <span className={`font-black text-xl ${deployedCount > MAX_DEPLOY ? 'text-red-400' : 'text-emerald-400'}`}>
+                    <span className={`font-black text-xl portrait:text-base ${deployedCount > MAX_DEPLOY ? 'text-red-400' : 'text-emerald-400'}`}>
                         {deployedCount} / {MAX_DEPLOY}
                     </span>
                 </div>
                 {deployedCount > MAX_DEPLOY && (
-                    <div className="text-xs text-red-400 mt-2 font-bold uppercase flex items-center justify-center gap-1">
+                    <div className="text-xs text-red-400 mt-2 font-bold uppercase flex items-center justify-center gap-1
+                                    portrait:w-full portrait:mt-0">
                         <AlertCircle size={12}/> {t('Max {max} Units Allowed!', { max: MAX_DEPLOY })}
                     </div>
                 )}
@@ -214,7 +221,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                 })}
             </div>
 
-            <div className="p-2 lg:p-3 border-t border-[#293245] bg-[#0b0d14]">
+            <div className="p-2 lg:p-3 portrait:pb-[calc(0.5rem_+_env(safe-area-inset-bottom,0px))] border-t border-[#293245] bg-[#0b0d14]">
                 <StartBattleButton disabled={!canStart} />
             </div>
         </div>
@@ -232,7 +239,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                 <div className="text-lg uppercase tracking-widest font-black text-gray-300">{t('System Idle')}</div>
                 <p className="text-xs text-gray-400">{t('Select a Unit or Tile to view details.')}</p>
             </div>
-            <div className="p-3 border-t border-[#293245] bg-[#0b0d14]">
+            <div className="p-3 portrait:pb-[calc(0.75rem_+_env(safe-area-inset-bottom,0px))] border-t border-[#293245] bg-[#0b0d14]">
                 <EndTurnButton />
             </div>
         </div>
@@ -278,7 +285,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                 )}
             </div>
 
-            <div className="p-3 border-t border-[#293245] bg-[#0b0d14]">
+            <div className="p-3 portrait:pb-[calc(0.75rem_+_env(safe-area-inset-bottom,0px))] border-t border-[#293245] bg-[#0b0d14]">
                 <EndTurnButton />
             </div>
         </div>
@@ -308,7 +315,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
     <div className="w-64 md:w-80 lg:w-96 cyber-panel border-l border-[#293245] flex flex-col h-full shadow-2xl relative z-30 font-pixel shrink-0 portrait:w-full portrait:h-[45%] portrait:border-l-0 portrait:border-t">
       
       {/* A. HEADER: PORTRAIT & BASIC INFO */}
-      <div className={`p-3 lg:p-5 border-b border-[#293245] ${isPlayer ? 'bg-gradient-to-r from-emerald-950/60 to-slate-900/80' : 'bg-gradient-to-r from-red-950/60 to-slate-900/80'} flex gap-3 lg:gap-4 relative`}>
+      <div className={`p-3 portrait:p-2 lg:p-5 border-b border-[#293245] ${isPlayer ? 'bg-gradient-to-r from-emerald-950/60 to-slate-900/80' : 'bg-gradient-to-r from-red-950/60 to-slate-900/80'} flex gap-3 lg:gap-4 relative`}>
           {/* w-18/h-18 are NOT in this Tailwind build's spacing scale — they resolved to
               nothing, the box fell back to auto, and it grew to the sprite's natural 512px
               inside a 384px panel. overflow-hidden keeps any future oversized art contained. */}
@@ -326,15 +333,29 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
               <h2 className={`text-xl font-black uppercase leading-tight truncate ${isPlayer ? 'text-emerald-400' : 'text-red-400'}`}>
                   {t(selectedUnit!.class.replace(/_/g, ' '))}
               </h2>
-              <div className="flex justify-between items-center mt-1">
-                  <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">{t(selectedUnit!.role)}</span>
-                  <span className="text-xs bg-black/60 px-2 py-0.5 rounded-md text-gray-300 border border-gray-700 font-mono">{t('Lv {level}', { level: selectedUnit!.level })}</span>
+              <div className="flex justify-between items-center gap-2 mt-1">
+                  <span className="text-xs text-gray-400 font-bold uppercase tracking-wider truncate">{t(selectedUnit!.role)}</span>
+
+                  {/* MÀN DỌC: máu và bước đi leo lên đây, dải thống kê riêng bên dưới ẩn đi.
+                      Panel chỉ cao 45% màn hình và phần khung (chân dung + thống kê + chân
+                      panel) đã ăn gần một nửa số đó — mỗi dải phụ bỏ được là thêm một kỹ
+                      năng nằm trong tầm nhìn thay vì sau thanh cuộn. */}
+                  <span className="hidden portrait:flex items-center gap-2 shrink-0 font-mono font-black text-[11px] leading-none">
+                      <span className="flex items-center gap-1 text-red-400" title={t('HP')}>
+                          <Shield size={12} />{selectedUnit!.hp}/{selectedUnit!.maxHp}
+                      </span>
+                      <span className="flex items-center gap-1 text-sky-400" title={t('Move')}>
+                          <Move size={12} />{selectedUnit!.moveRange}
+                      </span>
+                  </span>
+
+                  <span className="text-xs bg-black/60 px-2 py-0.5 rounded-md text-gray-300 border border-gray-700 font-mono shrink-0">{t('Lv {level}', { level: selectedUnit!.level })}</span>
               </div>
           </div>
       </div>
 
       {/* B. STATS GRID */}
-      <div className="grid grid-cols-2 border-b border-[#293245] divide-x divide-[#293245] bg-[#121622]">
+      <div className="portrait:hidden grid grid-cols-2 border-b border-[#293245] divide-x divide-[#293245] bg-[#121622]">
           <div className="p-1.5 lg:p-2.5 flex items-center gap-2 lg:gap-3 justify-center">
               <Shield size={18} className="text-red-400" />
               <div className="flex flex-col items-start leading-none">
@@ -446,7 +467,8 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                             if (sunVal) {
                                 badge = <span className="text-black bg-amber-400 font-mono font-bold text-[10px] px-1.5 py-0.5 rounded flex items-center gap-0.5 leading-none shadow border border-amber-600">+{sunVal} <Sun size={9} fill="black"/></span>;
                             } else if (shieldVal) {
-                                badge = <span className="text-white bg-sky-600 font-mono font-bold text-[10px] px-1.5 py-0.5 rounded flex items-center gap-0.5 leading-none shadow border border-sky-700">+{shieldVal} <Shield size={9} fill="white"/></span>;
+                                // A layer, not an amount (§6.0) — icon only, no number.
+                                badge = <span className="text-white bg-sky-600 font-mono font-bold text-[10px] px-1.5 py-0.5 rounded flex items-center gap-0.5 leading-none shadow border border-sky-700"><Shield size={9} fill="white"/></span>;
                             } else if (healVal) {
                                 badge = <span className="text-white bg-emerald-600 font-mono font-bold text-[10px] px-1.5 py-0.5 rounded flex items-center gap-0.5 leading-none shadow border border-emerald-700">+{healVal} <Plus size={9}/></span>;
                             } else if (damageVal > 0) {
@@ -537,7 +559,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                         <button 
                             onClick={onWait}
                             disabled={interactionMode !== 'IDLE'}
-                            className="flex-1 py-2 border border-dashed border-[#293245] text-gray-400 hover:text-white hover:border-sky-400 hover:bg-[#141824] uppercase font-bold text-xs transition-colors rounded-lg cursor-pointer"
+                            className="flex-1 py-2 min-h-[40px] border border-dashed border-[#293245] text-gray-400 hover:text-white hover:border-sky-400 hover:bg-[#141824] uppercase font-bold text-xs transition-colors rounded-lg cursor-pointer"
                         >
                             {t('Wait')}
                         </button>
@@ -557,7 +579,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
       </div>
 
       {/* D. FOOTER ACTIONS (End Turn) */}
-      <div className="p-2 lg:p-3 border-t border-[#293245] bg-[#0b0d14]">
+      <div className="p-2 lg:p-3 portrait:pb-[calc(0.5rem_+_env(safe-area-inset-bottom,0px))] border-t border-[#293245] bg-[#0b0d14]">
           <EndTurnButton />
       </div>
 

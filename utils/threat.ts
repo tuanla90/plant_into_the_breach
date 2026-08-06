@@ -162,7 +162,12 @@ export const computeBrainThreats = (units: Unit[], board: TileData[]): BrainThre
         // this is the player's last chance to kill it or shove it off.
         if (intent.type === 'ATTACK') {
             if (!isValidPos(intent.target)) continue;
-            if (!houses.has(key(intent.target))) continue;
+            const house = houses.get(key(intent.target));
+            if (!house) continue;
+            // A warded house is not "a brain about to go" — the bite will break the layer,
+            // not the house (PLAN-hero-zephyr §6.3). Painting it red anyway would teach the
+            // player that Reinforce does nothing.
+            if (house.shielded) continue;
             threats.push({ pos: { x: intent.target.x, y: intent.target.y }, sourceId: unit.id });
             continue;
         }

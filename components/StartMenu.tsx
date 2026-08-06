@@ -58,12 +58,18 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
                         shape — so it fills edge to edge with effectively no crop, and none of
                         the letterbox/blurred-bar scaffolding the old 4:3 art needed.
                         `object-top` still guards the painted title on windows that are taller
-                        or narrower than 16:9: every crop is taken off the bottom. */}
+                        or narrower than 16:9: every crop is taken off the bottom.
+
+                        Viết base + `md:` chứ KHÔNG dùng `max-md:`: biến thể max-* không sinh
+                        ra CSS nào trong dự án này (screen `short` khai bằng `raw` trong
+                        tailwind.config.js làm hỏng cả họ max-*), nên class `max-md:` cũ nằm
+                        đây mà chưa từng chạy — điện thoại vẫn cắt ảnh từ giữa và ăn mất chữ
+                        tiêu đề vẽ trong tranh. */}
                     <img
                         src={COVER_ART}
                         alt=""
                         onError={() => setHasCover(false)}
-                        className="fixed inset-0 w-full h-full object-cover max-md:object-[30%_top] md:object-top z-0"
+                        className="fixed inset-0 w-full h-full object-cover object-[30%_top] md:object-top z-0"
                     />
 
                     {/* Darken the right side only, where the buttons live. The heroes are on
@@ -96,8 +102,12 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
             <div className="scanlines"></div>
 
             {/* --- MAIN CONTENT CONTAINER --- */}
-            {/* Sized to the darkened band on the right so the stack sits centred in it. */}
-            <div className={`relative z-20 flex flex-col items-center gap-6 w-full max-w-sm px-6 ${hasCover ? 'md:w-[30%] md:max-w-none md:px-7 pb-10 md:pb-0' : 'max-w-2xl gap-12'}`}>
+            {/* Sized to the darkened band on the right so the stack sits centred in it.
+                max-w-sm ĐÈ LÊN CẢ PADDING: cột nút thật ra chỉ rộng 273px giữa màn 375px,
+                hai bên thừa hơn 50px mỗi bên trong khi nhãn "KHO LƯU TRỮ CHIẾN THUẬT" phải
+                xuống ba dòng. Màn dọc lấy gần hết bề ngang; desktop giữ nguyên dải bên phải.
+                pb-safe: cả khối ghim đáy, phải chừa thanh home của iPhone. */}
+            <div className={`relative z-20 flex flex-col items-center gap-6 w-full max-w-sm portrait:max-w-none px-5 md:px-6 ${hasCover ? 'md:w-[30%] md:max-w-none md:px-7 pb-[calc(2.5rem_+_env(safe-area-inset-bottom,0px))] md:pb-0' : 'max-w-2xl gap-12'}`}>
 
                 {/* GAME TITLE — text logo only when the key art (which carries its own
                     painted title) is unavailable. */}
@@ -115,7 +125,11 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
                 )}
 
                 {/* MENU BUTTONS */}
-                <div className="flex flex-col w-full max-w-sm gap-3">
+                {/* Bỏ trần bề ngang KHI CẦM DỌC (chỉ ở đó): trần 24rem cộng padding của khối
+                    cha ép cột nút còn 273px giữa màn 375px — thừa hơn 50px mỗi bên trong khi
+                    nhãn dài phải xuống ba dòng và mọi nút đều hẹp hơn ngón tay cần. Cầm ngang
+                    thì ngược lại, trần chính là thứ giữ cột nút không kéo dài hết 667px. */}
+                <div className="flex flex-col w-full max-w-sm portrait:max-w-none gap-3">
 
                     {/* CONTINUE */}
                     {onContinue && (
@@ -175,13 +189,27 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
                                 {t('Tutorial')}
                             </button>
                         )}
+
+                        {/* CÀI APP — ô thứ tư của lưới, chỉ trên mobile.
+                            Bản ghim ở góc phải dưới là bản cho desktop. Trên màn dọc nó
+                            đứng đúng chỗ dòng "đọc lại truyện mở đầu" và chuỗi phiên bản
+                            cùng tranh nhau 30px cuối màn hình — ba thứ chồng lên nhau ở
+                            đúng nơi ngón cái hay chạm. Ở đây nó lấp ô trống của lưới ba
+                            nút và có cỡ bấm bằng những nút còn lại. */}
+                        <button
+                            onClick={handleInstallClick}
+                            className="md:hidden group relative px-2 py-3 bg-sky-950/70 backdrop-blur-sm border border-sky-500/50 hover:bg-sky-500 hover:text-black text-sky-300 transition-all duration-200 uppercase font-bold tracking-[0.05em] text-[10px] sm:text-xs flex flex-col items-center justify-center gap-1.5 rounded-md"
+                        >
+                            <Download size={16} />
+                            {t('Install App')}
+                        </button>
                     </div>
 
                     {/* READ INTRO COMIC BUTTON */}
                     {onReplayIntro && (
                         <button
                             onClick={onReplayIntro}
-                            className="mt-2 text-slate-500 hover:text-slate-300 transition-colors text-[10px] sm:text-xs uppercase tracking-widest font-bold underline underline-offset-4 decoration-slate-700 mx-auto"
+                            className="mt-2 py-2 min-h-[40px] flex items-center justify-center text-slate-500 hover:text-slate-300 transition-colors text-[10px] sm:text-xs uppercase tracking-widest font-bold underline underline-offset-4 decoration-slate-700 mx-auto"
                         >
                             {t('Read the intro comic')}
                         </button>
@@ -192,19 +220,21 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
             </div>
 
             {/* FOOTER — pinned to the page, not to the button column, so the key-art layout
-                cannot push it off screen. */}
-            <div className="absolute bottom-3 left-4 z-20 text-xs text-gray-500 uppercase tracking-widest opacity-70">
+                cannot push it off screen. Ẩn trên màn dọc: ở đó nó nằm ngay dưới dòng
+                "đọc lại truyện mở đầu" và chỉ tổ làm rối mép dưới, trong khi số phiên bản
+                không phải thứ người chơi cần thấy trên điện thoại. */}
+            <div className="hidden md:block absolute bottom-3 left-4 z-20 text-xs text-gray-500 uppercase tracking-widest opacity-70">
                 {t('System Ready // V1.0.4')}
             </div>
 
-            {/* DOWNLOAD / INSTALL PWA BUTTON - Pinned to bottom right corner */}
+            {/* DOWNLOAD / INSTALL PWA BUTTON — bản desktop, ghim góc phải dưới.
+                Trên mobile nút này là ô thứ tư trong lưới nút phụ ở trên. */}
             <button
                 onClick={handleInstallClick}
-                className="absolute bottom-3 right-4 z-20 group relative px-3 py-2 bg-sky-950/60 backdrop-blur-sm border border-sky-500/50 hover:bg-sky-500 hover:text-black text-sky-300 transition-all duration-200 uppercase font-bold tracking-widest text-[10px] flex items-center gap-2 rounded-md"
+                className="hidden md:flex absolute bottom-3 right-4 z-20 group px-3 py-2 bg-sky-950/60 backdrop-blur-sm border border-sky-500/50 hover:bg-sky-500 hover:text-black text-sky-300 transition-all duration-200 uppercase font-bold tracking-widest text-[10px] items-center gap-2 rounded-md"
             >
                 <Download size={14} />
-                <span className="hidden sm:inline">{t('Install App')}</span>
-                <span className="sm:hidden">{t('App')}</span>
+                {t('Install App')}
             </button>
         </div>
     );

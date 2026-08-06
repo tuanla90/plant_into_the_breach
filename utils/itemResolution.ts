@@ -77,6 +77,13 @@ export const itemTargetInvalid = (item: ItemDefinition, pos: Position, ctx: Reso
             || (!!tile.spikes && tile.spikes.turns > 0);
     }
 
+    // Aloe: needs a wounded ally. Full-health targets are refused for the same reason an
+    // empty magnet zone is — the item is spent unconditionally once resolution starts.
+    if (item.effect === 'HEAL') {
+        const t = getUnitAt(pos, units);
+        return !t || t.isEnemy || t.type === UnitType.OBSTACLE || t.hp >= t.maxHp;
+    }
+
     if (item.effect === 'STRIP_ARMOR') {
         const radius = item.rangeRadius || 1;
         let foundMetal = false;
@@ -132,6 +139,55 @@ export const planItemActions = (
                 updates: { isEnemy: false, statusEffects: [...target.statusEffects, 'HYPNOTIZED'] }
             });
             actions.push({ type: 'APPLY_DAMAGE', targetId: target.id, amount: 0, eventType: 'BUFF', pos });
+        }
+        return actions;
+    }
+
+    if (item.effect === 'HEAL') {
+        // itemTargetInvalid ran first, so the target is a wounded ally.
+        const target = getUnitAt(pos, units)!;
+        actions.push({
+            type: 'UPDATE_UNIT_STATE',
+            unitId: target.id,
+            updates: { hp: Math.min(target.maxHp, target.hp + (item.damage || 3)) },
+        });
+        actions.push({ type: 'APPLY_DAMAGE', targetId: target.id, amount: 0, eventType: 'BUFF', pos });
+        return actions;
+    }
+
+    /**
+     * The Doom-shroom. Everything in the square eats the blast — the horde, the squad,
+     * whoever parked badly — EXCEPT bosses, who take a hard-capped bite instead: this
+     * file's oldest law is that a consumable must never assassinate a boss, and a nuke
+     * is exactly the item that law was written for. Armour means nothing to it (nuclear
+     * fire is environment, not a pea). The inner 3x3 becomes lava: a crater the fight
+     * then has to live with, and a free meal for the one boss that heals on it.
+     */
+    if (item.effect === 'NUKE') {
+        const radius = item.rangeRadius || 2;
+        const BOSS_BITE = 4; // first-pass number — tuning pass pending (2026-08-06)
+        for (let x = pos.x - radius; x <= pos.x + radius; x++) {
+            for (let y = pos.y - radius; y <= pos.y + radius; y++) {
+                if (x < 0 || x >= 8 || y < 0 || y >= 8) continue;
+                const t = { x, y };
+                const u = getSolidUnitAt(t, units);
+                if (u) {
+                    const amount = u.bossId ? Math.min(BOSS_BITE, item.damage) : item.damage;
+                    const result = calculateDamage(u, amount, false, true);
+                    actions.push({ type: 'APPLY_DAMAGE', targetId: u.id, amount: result.finalDamage, eventType: 'DAMAGE', pos: t });
+                    if (result.isFatal) pushKill(actions, u, actor);
+                } else {
+                    actions.push({ type: 'APPLY_DAMAGE', targetId: 'tile', amount: 0, eventType: 'BURN', pos: t });
+                }
+                // The crater: only the inner ring melts. Houses are spared — losing a brain
+                // to your own bomb is a story, losing the HOUSE TILE to it is a softlock.
+                if (Math.abs(x - pos.x) <= 1 && Math.abs(y - pos.y) <= 1) {
+                    const tile = getTileAt(t, board);
+                    if (tile && !tile.isHouse && terrainDefs[tile.terrain]?.isWalkable) {
+                        actions.push({ type: 'MODIFY_TERRAIN', pos: t, terrain: 'LAVA' });
+                    }
+                }
+            }
         }
         return actions;
     }
@@ -242,6 +298,15 @@ export const planItemActions = (
             if (item.effect === 'BURN') {
                 actions.push({ type: 'UPDATE_UNIT_STATE', unitId: u.id, updates: { statusEffects: [...u.statusEffects, 'BURN'] } });
             }
+            /**
+             * The freeze does NOT spare your own side — parking a hero inside a 5x5 you are
+             * about to flash-freeze is a positioning mistake, and those bleed here. The ICE
+             * hero is the exception WITHOUT being a special case: carrying the element
+             * grants the matched immunity at the factory (ELEMENT_IMMUNITY, and blighted
+             * zombies deliberately get none), so the ordinary FREEZE check below already
+             * waves her through. The 1 damage still applies: immunity is to the ice, not
+             * to the blast.
+             */
             if (item.effect === 'FREEZE' && !u.immunities.includes('FREEZE') && !u.immunities.includes('STATUS')) {
                 // Real FREEZE, not the STUN stand-in it used to apply: STUN was a
                 // workaround for FREEZE never expiring, and it made the effect last

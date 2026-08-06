@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { TileData, TerrainDefinition } from '../types';
-import { TriangleAlert, Zap, CloudFog, Flame, Droplets, Snowflake, Crosshair, ChevronsRight, ArrowBigRight, Plus, Brain } from 'lucide-react';
+import { TriangleAlert, Zap, CloudFog, Flame, Droplets, Snowflake, Crosshair, ChevronsRight, ArrowBigRight, Plus, Brain, Shield } from 'lucide-react';
 import { DEFAULT_TERRAIN_DEFS } from '../constants';
 import { formatGridPosition } from '../utils/gameLogic';
 
@@ -170,6 +170,17 @@ const TileBase: React.FC<TileProps> = ({
                               className="text-pink-200 drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]"
                           />
                       </div>
+                      {/* Gourdward's layer on the house (TileData.shielded): the same sky-blue
+                          shell language units wear, so "this bite will break, not take" reads
+                          at a glance. */}
+                      {data.shielded && (
+                          <>
+                              <div className="absolute inset-0 border-2 border-sky-400/80 shadow-[inset_0_0_10px_rgba(56,189,248,0.5)]"></div>
+                              <div className="absolute top-0.5 right-0.5 bg-black/70 rounded-sm p-[2px] border border-sky-400/80">
+                                  <Shield size={9} className="text-sky-400" fill="currentColor" />
+                              </div>
+                          </>
+                      )}
                   </>
               ) : (
                   /* Ransacked district: the lights are out and the frame is broken. No glyph —
@@ -251,7 +262,7 @@ const TileBase: React.FC<TileProps> = ({
           </div>
       )}
 
-      {/* 2.35 SPINE FIELD — Thornquill's Spine Wall, laid across the tiles her shot crossed.
+      {/* 2.35 SPINE FIELD — the Spikeweed item's ground (formerly Thornquill's Spine Wall).
               It hurt everything that walked in from the day it was built and was drawn NOWHERE,
               which in a game that promises perfect information is worse than the damage being
               wrong: a zombie bled crossing an empty-looking square and read as a bug.

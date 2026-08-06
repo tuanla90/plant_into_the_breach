@@ -28,6 +28,26 @@ export const TutorialDialogue: React.FC<TutorialDialogueProps> = ({ lines, onDon
     // the highlight off and on again as the player reads.
     React.useEffect(() => () => onLineChange?.(null, -1), []);
 
+    /**
+     * The backdrop in force right now: the most recent line at or before this one that named
+     * a scene. Scanning backwards rather than storing it means jumping to any line lands on
+     * the right picture, and a scene that never names one simply has none.
+     */
+    const scene = React.useMemo(() => {
+        for (let i = Math.min(index, lines.length - 1); i >= 0; i--) {
+            if (lines[i]?.scene) return lines[i].scene;
+        }
+        return undefined;
+    }, [lines, index]);
+
+    /**
+     * Paintings ship separately from code (art-src/ART-PROMPTS-CUTSCENES.md), so a missing
+     * file drops the backdrop instead of showing a broken frame — the scene then looks exactly
+     * as it did before any of this existed. Tracked per src, because one absent painting must
+     * not blank the scenes that DO have art.
+     */
+    const [failed, setFailed] = useState<Record<string, true>>({});
+
     if (!line) return null;
 
     const advance = () => {
@@ -36,12 +56,27 @@ export const TutorialDialogue: React.FC<TutorialDialogueProps> = ({ lines, onDon
     };
 
     const accent = line.color ?? '#facc15';
+    const sceneSrc = scene && !failed[scene] ? scene : undefined;
 
     return (
         <div
-            className="fixed inset-0 z-[70] bg-black/75 flex flex-col justify-end font-pixel select-none cursor-pointer"
+            // The black/75 that used to live here is now its own layer below, so it can sit
+            // BETWEEN the painting and the dialogue: as the parent's background it would have
+            // been painted first and the image would have covered it.
+            className="fixed inset-0 z-[70] flex flex-col justify-end font-pixel select-none cursor-pointer"
             onClick={advance}
         >
+            {sceneSrc && (
+                <img
+                    src={sceneSrc}
+                    alt=""
+                    onError={() => setFailed(prev => ({ ...prev, [sceneSrc]: true }))}
+                    className="absolute inset-0 w-full h-full object-cover"
+                />
+            )}
+            {/* The dimmer. Over a painting it is what keeps the dialogue box the thing being
+                read; with no painting it is the same wash of black this screen always had. */}
+            <div className="absolute inset-0 bg-black/75 pointer-events-none" />
             {/* No skip button of its own: it sat exactly where the run-wide skip now
                 lives and read as "skip this scene" — TutorialSkipButton (App, top-right)
                 is the single exit. A scene is short enough to click through. */}

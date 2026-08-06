@@ -22,6 +22,14 @@ and the Disco dancer were the last four, and three boss second-states went in wi
 entry: those classes live in `PLANT_DEFINITIONS` but never render, because heroes read
 `HERO_SPRITES` and bench plants read `MATERIAL_SPRITES`.
 
+**No longer true as of 2026-08-06 — five ITEM icons are visible placeholders again.** The
+consumable roster grew (Hypno-shroom, Magnet-shroom, then Aloe and the Doom-shroom with the
+sector-unlock system), and those four render a `public/img/placeholder/*.svg` in the item belt,
+the shop shelf, the Chrono Echo offer and the sector-gift toast; Spikeweed additionally borrows
+the FLOOR TEXTURE (`img/terrain/spikes.svg`) as its inventory icon. Prompts for all five are
+ready in `ART-PROMPTS-ITEMS.md`, written to sit next to `item-cherry-bomb.png` — same
+plant-as-ordnance icon language as the six item icons that already have real art.
+
 The set has three silhouettes so the families stay tellable apart on a crowded board:
 **disc** = a unit on the board, **crest** (peaked shield) = a hero, **cog** = fusion gear.
 

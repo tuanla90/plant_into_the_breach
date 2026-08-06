@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Unit, UnitClass } from '../types';
-import { Zap, Shield, Sun, Utensils, Flame, CloudFog, ArrowRight, Skull, Flag, Brain, Snowflake } from 'lucide-react';
+import { Zap, Shield, Sun, Utensils, Flame, CloudFog, ArrowRight, Skull, Flag, Brain, Snowflake, Droplets } from 'lucide-react';
 import { ANIMATION_CONFIG, BOARD_TILT_DEG } from '../constants';
 import { facingFlip, spriteFor } from '../utils/icons';
 import { willAct } from '../utils/threat';
@@ -29,6 +29,7 @@ const UnitComponentBase: React.FC<UnitComponentProps> = ({ unit, isSelected, isB
   const isDying = unit.isDying;
   
   const hasBurn = unit.statusEffects?.includes('BURN');
+  const isBleeding = unit.statusEffects?.includes('BLEEDING');
   const hasStun = unit.statusEffects?.includes('STUN');
   const hasFreeze = unit.statusEffects?.includes('FREEZE');
   const isDormant = unit.statusEffects?.includes('DORMANT');
@@ -65,13 +66,24 @@ const UnitComponentBase: React.FC<UnitComponentProps> = ({ unit, isSelected, isB
   const baseFlip = facingFlip(unit.class) === ' scaleX(-1)';
   const shouldFlip = unit.flipX ? !baseFlip : baseFlip;
   const flip = shouldFlip ? ' scaleX(-1)' : '';
+
+  /**
+   * SQUASH-AND-STRETCH — the poor man's skeleton. Two scales that make a static sprite
+   * read as a body: the attacker leans INTO its lunge (slight stretch), and the victim of
+   * a big hit crumples (hard squash, driven by the engine's hit-stop window via
+   * isHitFlashing). Anchored at the FEET by the transformOrigin below, so the sprite
+   * compresses into the ground instead of shrinking in mid-air — and the spring-back is
+   * free, because both branches already animate transform changes.
+   */
+  const feel = unit.isHitFlashing ? ' scale(1.16, 0.84)' : (unit.isAttacking ? ' scale(1.07, 0.95)' : '');
+
   const transformStyle: any = { transformOrigin: '50% 100%' };
   if (unit.visualOffset) {
-      transformStyle.transform = `translate(${unit.visualOffset.y * 100}%, ${unit.visualOffset.x * 100}%) ${standUp}${flip}`;
+      transformStyle.transform = `translate(${unit.visualOffset.y * 100}%, ${unit.visualOffset.x * 100}%) ${standUp}${flip}${feel}`;
       // Matches ATTACK_LUNGE_DURATION
       transformStyle.transition = `transform ${ANIMATION_CONFIG.ATTACK_LUNGE_DURATION}ms cubic-bezier(0.175, 0.885, 0.32, 1.275)`;
   } else {
-      transformStyle.transform = (isSelected ? `${standUp} scale(1.1)` : standUp) + flip;
+      transformStyle.transform = (isSelected ? `${standUp} scale(1.1)` : standUp) + flip + feel;
       transformStyle.transition = `transform 100ms ease-out`; // Quick return
   }
 
@@ -165,6 +177,7 @@ const UnitComponentBase: React.FC<UnitComponentProps> = ({ unit, isSelected, isB
                     ${isSelected ? 'drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]' : ''}
                     ${isDigesting ? 'animate-pulse' : ''}
                     ${unit.hasAttacked ? 'grayscale-[0.3]' : ''}
+                    ${unit.isHitFlashing ? 'hit-flash' : ''}
                 `}
                 style={transformStyle}
             >
@@ -261,6 +274,8 @@ const UnitComponentBase: React.FC<UnitComponentProps> = ({ unit, isSelected, isB
                 {/* Status Effects */}
                 <div className="absolute -top-2 left-0 flex flex-col gap-1 z-20">
                     {hasBurn && <Flame size={12} className="text-orange-500 animate-bounce" />}
+                    {/* An open wound: the next hit against this body lands +1 (BLEED_ON_HIT). */}
+                    {isBleeding && <Droplets size={12} className="text-red-400 animate-pulse" />}
                     {hasStun && <CloudFog size={12} className="text-gray-300 animate-pulse" />}
                     {hasFreeze && <Snowflake size={12} className="text-sky-300 animate-pulse" />}
                     {isDormant && <Skull size={12} className="text-gray-400" />}
@@ -295,11 +310,12 @@ const UnitComponentBase: React.FC<UnitComponentProps> = ({ unit, isSelected, isB
                     </div>
                 )}
 
-                {/* Shield / Armor (from Harden-type skills, Pumpkin Shell, fusions) */}
+                {/* Shield LAYER (PLAN-hero-zephyr §6.0) — a binary shell, so no number: the
+                    icon alone says "the next hit against this body is blocked in full". */}
                 {(unit.shield || 0) > 0 && (
-                     <div className="absolute bottom-2 right-0 z-20 flex items-center gap-[1px] bg-black/70 rounded-sm px-[2px] py-[1px] border border-sky-500/60">
+                     <div title={t('Shell layer: the next hit is blocked in full, then it breaks.')}
+                          className="absolute bottom-2 right-0 z-20 flex items-center bg-black/70 rounded-sm px-[2px] py-[1px] border border-sky-400/80 shadow-[0_0_6px_rgba(56,189,248,0.5)]">
                          <Shield size={10} className="text-sky-400" fill="currentColor" />
-                         <span className="text-[9px] font-bold leading-none text-sky-200">{unit.shield}</span>
                      </div>
                 )}
 

@@ -22,7 +22,9 @@ const MAX_LAYERS_BETWEEN_CAMPFIRES = 4;
  * has put down, divided by three — no new counter, and it cannot drift out of sync with the
  * boss table because it IS the boss table.
  */
-const STAGE_SECTORS: WorldType[][] = [
+// Exported for the one consumer outside map generation: persistence derives a legacy
+// save's visited sectors from its beaten bosses (stage+act -> the ground it was fought on).
+export const STAGE_SECTORS: WorldType[][] = [
     ['GRASS', 'DESERT', 'VOLCANO'],  // I  — the Green Belt
     ['COAST', 'THORN', 'ICE'],       // II — the Far Shore
     ['NEON', 'RUIN', 'GRID'],        // III— the City

@@ -1,6 +1,7 @@
 import { BossId, HeroId, MaterialId, UnlockState } from '../types';
 import { HERO_DEFINITIONS } from '../data/heroes';
 import { MATERIAL_DEFINITIONS } from '../data/materials';
+import { SECTOR_ITEM } from '../data/items';
 import {
     heroForBoss, parseRecipeKey, recipeKey, SIGNATURE_MATERIAL, TUTORIAL_RECIPES,
 } from '../data/unlocks';
@@ -29,6 +30,29 @@ const materialUnlockOrder = (): MaterialId[] => Object.keys(MATERIAL_DEFINITIONS
  * roadmap has more than a handful of packages in it.
  */
 export const LAYERS_PER_UNLOCK_PACKAGE = 1;
+
+/**
+ * Which combat items this save may see — in shops, camps, event rewards and Chrono Echo
+ * offers alike. Ground is the teacher: each sector's first footstep unlocks its item
+ * (data/items.ts SECTOR_ITEM), the tutorial's diploma is the Potato Mine, and nothing
+ * else exists yet. Pure and cheap enough to recompute at every shelf roll.
+ */
+export const unlockedItemIds = (state: UnlockState): Set<string> => {
+    const out = new Set<string>();
+    if (state.tutorialDone) out.add('potato_mine');
+    (state.sectorsVisited ?? []).forEach(s => {
+        const item = SECTOR_ITEM[s as keyof typeof SECTOR_ITEM];
+        if (item) out.add(item);
+    });
+    return out;
+};
+
+/** First footstep on new ground: record it. Idempotent, like every transition in this file. */
+export const withSectorVisited = (state: UnlockState, sector: string): UnlockState => {
+    const visited = state.sectorsVisited ?? [];
+    if (visited.includes(sector)) return state;
+    return { ...state, sectorsVisited: [...visited, sector] };
+};
 
 /**
  * Opens the next fusion recipe the player can actually use.

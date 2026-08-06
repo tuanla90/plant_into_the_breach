@@ -38,7 +38,7 @@ export const BASE_MAX_TURNS = 5;            // per battle; events may shift it b
  * Every other battle is "survive the timer", so the timer IS the win condition and five turns
  * is the whole design. A boss node asks "kill this thing", which makes the same five turns a
  * DAMAGE CHECK — and the arithmetic says the squad fails it. Three fully-fused heroes cap out
- * near 10 damage a turn (Cobb 4 + Shadeleaf 3 + Thornquill 3), so five turns buys 50, against
+ * near 10 damage a turn (Cobb 4 + Shadeleaf 3 + both of Zephyr's wings 3+), so five turns buys 50, against
  * bosses at 16-26. That is fine for the nine acts and nowhere near enough for the last one.
  *
  * THE BREACH gets more again: the Blightlord is 36 health AND spends two turns untouchable

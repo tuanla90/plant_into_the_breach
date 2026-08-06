@@ -7,6 +7,23 @@ import { sfx } from '../utils/audio';
 /** Fast-forward multiplier used by the HUD toggle. 1 = authored pacing. */
 export const FAST_SPEED = 4;
 
+/**
+ * HIT-STOP — the freeze-frame on a heavy hit. One class on <body> so a single flag can
+ * pause every looping sprite animation at once (index.css `body.hitstop`); the action loop
+ * pauses itself alongside it in APPLY_DAMAGE. Imperative DOM on purpose, exactly like
+ * sfx(): this is an ~80ms cosmetic pulse, and routing it through React state would
+ * re-render the whole board twice just to pause some pixels.
+ */
+const HIT_STOP_MS = 80;
+let hitStopTimer: ReturnType<typeof setTimeout> | null = null;
+const triggerHitStop = (ms: number) => {
+    try {
+        document.body.classList.add('hitstop');
+        if (hitStopTimer) clearTimeout(hitStopTimer);
+        hitStopTimer = setTimeout(() => document.body.classList.remove('hitstop'), ms);
+    } catch { /* SSR/headless: a missing freeze-frame is not an error */ }
+};
+
 export const useGameEngine = () => {
   const [gameState, setGameState] = useState<GameState>(INITIAL_GAME_STATE);
   const [board, setBoard] = useState<TileData[]>(INITIAL_BOARD);
@@ -281,6 +298,8 @@ export const useGameEngine = () => {
                               flood: action.flood !== undefined
                                   ? (action.flood.turns > 0 ? action.flood : undefined)
                                   : t.flood,
+                              // A house's shell layer (Reinforce): raised true, bitten false.
+                              shielded: action.shielded !== undefined ? action.shielded : t.shielded,
                           };
                       }
                       return t;
@@ -476,6 +495,21 @@ export const useGameEngine = () => {
                       return u;
                   }));
 
+                  /**
+                   * HIT-STOP: a heavy hit (the EXPLOSION tier above, >=4) holds the whole
+                   * frame for one beat while the victim flashes white and crumples
+                   * (UnitComponent reads isHitFlashing). The hold is real on both axes:
+                   * `body.hitstop` pauses every sprite animation (index.css) and the action
+                   * loop itself waits, so the freeze-frame cannot be walked over by the
+                   * next action. Units only — a nuked empty tile has nothing to punch.
+                   */
+                  if (action.eventType === 'DAMAGE' && (action.amount || 0) >= 4 && action.targetId !== 'tile') {
+                      setUnits(prev => prev.map(u => u.id === action.targetId ? { ...u, isHitFlashing: true } : u));
+                      triggerHitStop(HIT_STOP_MS);
+                      await wait(HIT_STOP_MS);
+                      setUnits(prev => prev.map(u => u.id === action.targetId ? { ...u, isHitFlashing: false } : u));
+                  }
+
                   setUnits(prev => prev.map(u => ({ ...u, isAttacking: false })));
                   await wait(100);
                   break;
@@ -558,8 +592,15 @@ export const useGameEngine = () => {
                               addEffect(step.x, step.y, 'EXPLOSION');
                               triggerShake();
                               addDamageEvent(step.x, step.y, trapped.damage, 'DAMAGE');
+                              // The mine detonation bypasses APPLY_DAMAGE (traps are an
+                              // engine rule, not an action), so it buys its hit-stop here —
+                              // a 5-damage boom without the freeze-frame read as weaker
+                              // than a 4-damage skill hit with one.
                               const hpAfter = stepper.hp - trapped.damage;
-                              setUnits(prev => prev.map(u => u.id === action.unitId ? { ...u, hp: hpAfter } : u));
+                              setUnits(prev => prev.map(u => u.id === action.unitId ? { ...u, hp: hpAfter, isHitFlashing: true } : u));
+                              triggerHitStop(HIT_STOP_MS);
+                              await wait(HIT_STOP_MS);
+                              setUnits(prev => prev.map(u => u.id === action.unitId ? { ...u, isHitFlashing: false } : u));
                               await wait(ANIMATION_CONFIG.DEATH_DURATION);
                               if (hpAfter <= 0) {
                                   // The mine ends the walk as well as the walker. Counted like

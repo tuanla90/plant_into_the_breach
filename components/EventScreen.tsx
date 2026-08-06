@@ -157,8 +157,12 @@ export const EventScreen: React.FC<EventScreenProps> = ({
 
                 {/* IMAGE SIDE — art is optional; a missing file must not leave a broken frame.
                     max-h caps the stacked (mobile) variant: a shrink-0 120px band ate a third
-                    of the card on a 360px-tall screen before the first option was visible. */}
-                <div className="w-full md:w-1/3 bg-black relative border-b md:border-b-0 md:border-r border-gray-600 shrink-0 min-h-[96px] max-h-[26dvh] md:max-h-none">
+                    of the card on a 360px-tall screen before the first option was visible.
+                    18dvh chứ không phải 26: cầm dọc, 26dvh là 219px trên màn 844 — hơn một
+                    phần tư thẻ dành cho tranh minh hoạ trong khi bốn lựa chọn (thứ duy nhất
+                    phải bấm ở đây) phải cuộn mới thấy hết. Màn ngang không đổi: sàn
+                    min-h-[96px] đang cao hơn cả hai con số. */}
+                <div className="w-full md:w-1/3 bg-black relative border-b md:border-b-0 md:border-r border-gray-600 shrink-0 min-h-[96px] max-h-[18dvh] md:max-h-none">
                     {imgFailed ? (
                         <div className="w-full h-full flex items-center justify-center text-gray-700">
                             <HelpCircle size={48} />
@@ -183,7 +187,9 @@ export const EventScreen: React.FC<EventScreenProps> = ({
                         </div>
                     </div>
 
-                    <p className="text-gray-300 text-lg leading-relaxed mb-6 border-l-4 border-gray-500 pl-4 italic">
+                    {/* text-base/mb-4 dưới sm (tức điện thoại cầm dọc): câu dẫn là không khí,
+                        lựa chọn mới là việc — nhường chỗ cho chúng. */}
+                    <p className="text-gray-300 text-base sm:text-lg leading-relaxed mb-4 sm:mb-6 border-l-4 border-gray-500 pl-4 italic">
                         "{t(event.description)}"
                     </p>
 
@@ -201,14 +207,14 @@ export const EventScreen: React.FC<EventScreenProps> = ({
                                 disabled={benchCount === 0 || selectedOption !== null}
                                 title={benchCount === 0 ? t('No base plants on the bench to fuse.') : undefined}
                                 className={`
-                                    w-full text-left p-4 border-2 transition-all group
+                                    w-full text-left p-3 sm:p-4 border-2 transition-all group
                                     ${benchCount === 0 || selectedOption !== null
                                         ? 'bg-[#23262f] border-gray-700 opacity-50 cursor-not-allowed grayscale'
                                         : 'bg-[#23262f] border-fuchsia-700 hover:border-fuchsia-400'}
                                 `}
                             >
                                 <div className="flex items-center justify-between gap-3">
-                                    <span className="text-xl font-bold uppercase text-fuchsia-300 flex items-center gap-2">
+                                    <span className="text-lg sm:text-xl font-bold uppercase text-fuchsia-300 flex items-center gap-2">
                                         <Combine size={20} className="shrink-0" />
                                         {t('Fuse Plants')}
                                     </span>
@@ -243,13 +249,13 @@ export const EventScreen: React.FC<EventScreenProps> = ({
                                         disabled={!!reason || isDisabled}
                                         data-tut={`event-option-${idx}`}
                                         className={`
-                                            w-full text-left p-4 border-2 transition-all group relative
+                                            w-full text-left p-3 sm:p-4 border-2 transition-all group relative
                                             ${isSelected || isPicking ? 'bg-green-900/40 border-green-500' : 'bg-[#23262f] border-gray-700 hover:border-white'}
                                             ${reason ? 'opacity-50 cursor-not-allowed grayscale' : ''}
                                         `}
                                     >
                                         <div className="flex items-center justify-between gap-3">
-                                            <span className="text-xl font-bold uppercase text-white">{t(opt.label)}</span>
+                                            <span className="text-lg sm:text-xl font-bold uppercase text-white">{t(opt.label)}</span>
                                             {isSelected && <ArrowRight className="text-green-400 animate-pulse shrink-0" size={24} />}
                                         </div>
 

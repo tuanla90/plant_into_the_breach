@@ -4,6 +4,7 @@ import { ArrowRight, Crown, Skull } from 'lucide-react';
 import { bossById, STAGES } from '../data/unlocks';
 import { BOSS_UNIT_CLASS } from '../data/bosses';
 import { ZOMBIE_DEFINITIONS } from '../data/zombies';
+import { ACT_INTRO_ART } from '../data/cutscenes';
 import { useI18n } from '../i18n';
 
 /**
@@ -22,12 +23,24 @@ import { useI18n } from '../i18n';
  */
 export const ActIntro: React.FC<{ boss: BossId; onContinue: () => void }> = ({ boss, onContinue }) => {
     const { t } = useI18n();
+    /**
+     * The act's painting, behind everything else. Optional in the strongest sense: these are
+     * commissioned separately (art-src/ART-PROMPTS-CUTSCENES.md), so the image removes itself
+     * on error and the screen falls back to the flat gradient it has always had. Same contract
+     * as Cutscene's probe, done inline because there is nothing here to skip — a curtain with
+     * no picture is still a curtain.
+     */
+    const [sceneFailed, setSceneFailed] = React.useState(false);
+    // Reset when the act changes, or one missing painting would blank every later act too.
+    React.useEffect(() => setSceneFailed(false), [boss]);
+
     const act = bossById(boss);
     if (!act) return null;
 
     const stage = STAGES.find(st => st.id === act.stage);
     const cls = BOSS_UNIT_CLASS[boss];
     const art = cls ? (ZOMBIE_DEFINITIONS as any)[cls]?.imgUrl as string | undefined : undefined;
+    const scene = ACT_INTRO_ART[boss];
     const accent = stage?.accent ?? '#facc15';
 
     return (
@@ -35,8 +48,14 @@ export const ActIntro: React.FC<{ boss: BossId; onContinue: () => void }> = ({ b
         // is taller than the viewport, and pure flex centering clipped the Move out button
         // — the only way forward — off the bottom with no way to reach it.
         <div className="fixed inset-0 z-[75] bg-black overflow-y-auto font-pixel text-white animate-in fade-in duration-500">
+            {scene && !sceneFailed && (
+                // Dimmed hard: this is a backdrop for a wall of text, not a picture to look
+                // at. At full brightness the city swallowed the boss sprite standing on it.
+                <img src={scene} alt="" onError={() => setSceneFailed(true)}
+                     className="fixed inset-0 w-full h-full object-cover opacity-40" />
+            )}
             <div className="fixed inset-0 pointer-events-none"
-                 style={{ background: `radial-gradient(ellipse at 50% 60%, ${accent}18 0%, #000 65%)` }} />
+                 style={{ background: `radial-gradient(ellipse at 50% 60%, ${accent}18 0%, #000d 65%)` }} />
 
             <div className="relative z-10 min-h-full w-full max-w-[820px] mx-auto px-8 py-6 flex flex-col items-center justify-center gap-3 sm:gap-5 text-center">
                 <div className="flex flex-col items-center gap-1">

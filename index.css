@@ -26,6 +26,14 @@ html {
   html { font-size: 13px; }
 }
 
+/* --- Vùng lõm của máy (tai thỏ, thanh home) ---
+   index.html khai `viewport-fit=cover`, nghĩa là trang được phép vẽ tràn xuống dưới
+   thanh home và lên dưới tai thỏ — nên thứ nào GHIM vào mép màn hình phải tự chừa lại,
+   không thì nút Kết Thúc Lượt nằm đúng chỗ ngón tay vuốt đóng app. Chỉ có tác dụng ở
+   PWA cầm dọc trên iPhone; mọi nơi khác env() trả 0 và class này là không-làm-gì. */
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+
 body {
   background-color: #0b0d12;
   font-family: 'Be Vietnam Pro', sans-serif;
@@ -154,4 +162,19 @@ img {
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
   }
+}
+
+/* --- HIT-STOP + FLASH (useGameEngine triggerHitStop / Unit.isHitFlashing) ---
+   Cú đánh >=4 sát thương đóng băng cả khung hình ~80ms: body.hitstop tạm dừng MỌI
+   animation sprite (idleBob inline lẫn animate-* của Tailwind) trong khi vòng lặp action
+   tự giữ nhịp chờ. Nạn nhân loé trắng + bẹp xuống (scale trong UnitComponent). Filter đặt
+   ở selector con .hit-flash img để đè lên các filter trạng thái (sepia cháy, xanh băng)
+   đúng một khoảnh khắc va chạm rồi trả lại. */
+body.hitstop img,
+body.hitstop [class*="animate-"] {
+  animation-play-state: paused !important;
+}
+.hit-flash img {
+  filter: brightness(2.4) contrast(1.15) saturate(0.35)
+          drop-shadow(0 0 6px rgba(255, 255, 255, 0.9)) !important;
 }

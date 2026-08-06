@@ -77,30 +77,25 @@ export const MATERIAL_DEFINITIONS: Record<MaterialId, MaterialDefinition> = {
         benchStats: { maxHp: 4, damage: 1, moveRange: 3 },
     },
 
-    MAT_SNOW_PEA: {
-        id: 'MAT_SNOW_PEA',
-        name: 'Snow Pea',
-        description: 'Cold. Buys a turn back from whatever it touches.',
-        coinCost: 175,
-        imgUrl: MATERIAL_SPRITES.MAT_SNOW_PEA,
-        effect: { type: 'ON_HIT_FREEZE' },
-        benchClass: UnitClass.SNOW_PEA,
-        benchStats: { maxHp: 3, damage: 2, moveRange: 3 },
-    },
+    // MAT_SNOW_PEA is retired (PLAN-hero-zephyr §9): it was Frostpod's plant, Frostpod is
+    // retired, and the cold belongs to the ICE element. Nine heroes, nine gears — the Snow
+    // Pea ITEM (data/items.ts) is a different thing and stays.
 
     /**
-     * Spines. Its axis is the GROUND the attack crossed, not the attack itself — the only
-     * material in the pool that leaves something behind after the shot resolves.
+     * Rotors. Zephyr's two traits per the two-item gear rule (PLAN-hero-zephyr §4): speed
+     * for the body (MOVE_BONUS), or her Smoke Pod's dust grafted onto a paid skill
+     * (SKILL_DISARM) — each recipe picks whichever fits the hero. The only material whose
+     * axis is MOVEMENT, which no fusion had ever touched before.
      */
-    MAT_CACTUS: {
-        id: 'MAT_CACTUS',
-        name: 'Cactus',
-        description: 'Spines. Makes the ground an attack crossed dangerous to stand on.',
+    MAT_CATTAIL: {
+        id: 'MAT_CATTAIL',
+        name: 'Cattail',
+        description: 'Rotors. Speed for the legs it is grafted onto, or dust for the skill.',
         coinCost: 100,
-        imgUrl: MATERIAL_SPRITES.MAT_CACTUS,
-        effect: { type: 'SPIKE_TRAIL' },
-        benchClass: UnitClass.CACTUS,
-        benchStats: { maxHp: 3, damage: 1, moveRange: 3 },
+        imgUrl: MATERIAL_SPRITES.MAT_CATTAIL,
+        effect: { type: 'MOVE_BONUS', value: 1 },
+        benchClass: UnitClass.CATTAIL,
+        benchStats: { maxHp: 2, damage: 2, moveRange: 3 },
     },
 
     MAT_ENDURIAN: {
@@ -136,7 +131,7 @@ export const MATERIAL_DEFINITIONS: Record<MaterialId, MaterialDefinition> = {
         description: 'Shell to spare. Damage that never lands is health carried into the next fight.',
         coinCost: 150,
         imgUrl: MATERIAL_SPRITES.MAT_PUMPKIN,
-        effect: { type: 'SHIELD_BONUS', value: 1 },
+        effect: { type: 'SHIELD_ON_KILL', value: 1 },
         benchClass: UnitClass.PUMPKIN,
         benchStats: { maxHp: 4, damage: 0, moveRange: 2 },
     },
@@ -145,23 +140,22 @@ export const MATERIAL_DEFINITIONS: Record<MaterialId, MaterialDefinition> = {
 /**
  * Every material is available from the start. What is gated is the RECIPE — which
  * (hero, material) pairings you have learned — because that is where the depth actually is:
- * ten plants, a hundred authored results.
+ * nine plants, eighty-one authored results.
  *
  * Gating the materials instead was the first attempt and it was worse in two ways: the pool
  * was only a handful deep so it emptied in about three fights, and a locked material made a
  * plant on the bench simply unusable rather than making a *combination* something to chase.
  *
- * This is also why a material ships before its hero does: the four newest plants pay off on
- * the heroes you already own long before Thornquill and company are unlocked.
+ * This is also why a material ships before its hero does: the newest plants pay off on
+ * the heroes you already own long before Zephyr and company are unlocked.
  */
 export const STARTING_MATERIALS: MaterialId[] = [
     'MAT_SUNFLOWER',
     'MAT_PEASHOOTER',
     'MAT_CHOMPER',
     'MAT_WALLNUT',
-    'MAT_SNOW_PEA',
     'MAT_CORN',
-    'MAT_CACTUS',
+    'MAT_CATTAIL',
     'MAT_ENDURIAN',
     'MAT_CHARD',
     'MAT_PUMPKIN',

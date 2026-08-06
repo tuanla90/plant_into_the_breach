@@ -54,16 +54,17 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
             /**
              * THREE PEAS, and pierce is gone.
              *
-             * It pierced, and so does Thornquill's Spine Shot — which is FREE, runs six tiles
-             * instead of four, and is the thing he is named for. Two heroes doing one trick is
-             * one hero too many, and the one charging 50 Sun for it was the one who should
-             * stop. Pierce is his now.
+             * It pierced once, then the trick moved to Thornquill's free Spine Shot and this
+             * skill became a volley — and with Thornquill retired (PLAN-hero-zephyr) the
+             * volley IS the identity, not a consolation: pierce is worth whatever the lane
+             * happens to contain; three shots are worth the same every time and never waste
+             * a pea — anything they overkill, they fly past (utils/skillResolution, VOLLEY).
+             * Shadeleaf is the one who deletes a single dangerous body. Nobody taxes a whole
+             * row any more, and that gap is deliberate: Zephyr answers crowds with position
+             * (two knight-cells a turn), not with a lane sweep.
              *
-             * A volley answers a different question. Pierce is worth whatever the lane happens
-             * to contain; three shots are worth the same every time and never waste a pea —
-             * anything they overkill, they fly past (utils/skillResolution, VOLLEY). So
-             * Shadeleaf becomes the one who deletes a single dangerous body, and Thornquill
-             * stays the one who taxes a whole row.
+             * The volley is also the plant side's LAYER-BREAKER (§6.0, decision 15): each pea
+             * is its own damage instance, so pea one pops a shell and peas two and three land.
              *
              * 2 a shot rather than 3: the same number as her free Pea Shot, so the skill reads
              * as "the same pea, three times" — and her act upgrade lifts all three at once
@@ -132,11 +133,27 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
             // priced for, and it matches the plain Sunflower's own Harvest (data/skills.ts).
             effects: [{ type: 'RESOURCE_GAIN', value: 50, resource: 'SUN' }],
         },
+        /**
+         * PURE BUFF, and the sequencing IS the skill (PLAN-hero-zephyr §6.1). Sun Burn — her
+         * old 4-damage lob and only offence — is retired: the support branch deals no direct
+         * damage at all now, and what she sells instead is TEMPO. The +1 lasts only until
+         * this player turn ends (BLESSED, cleared before the enemy phase), so blessing a
+         * hero who has already swung is 50 Sun thrown away — bless first, then attack.
+         *
+         * The layer is the "máu" half (§6.0: no number, no stacking, no cap needed), and it
+         * is deliberately a LAYER rather than a heal: hp debt is the run's campfire economy,
+         * and an in-battle heal would leak straight into it.
+         *
+         * THE BATTERY: if she carries an element and the ally does not, the ally's attacks
+         * borrow it for the same one-turn window (blessedElement). Fire-Sunspot blesses Maw
+         * → this turn the Bite burns. Own element always wins; the loan carries no immunity
+         * and no resonance weight.
+         */
         heroSkill: {
-            id: 'sf_sunburn', name: 'Sun Burn',
-            description: 'Scorch a nearby tile for heavy damage.',
+            id: 'sf_blessing', name: 'Solar Blessing',
+            description: 'Blesses an ally: a shell layer, +1 damage this turn — and this turn only. Her element rides along.',
             rangeType: 'LOB', rangeValue: 3, sunCost: 50,
-            effects: [{ type: 'DAMAGE', value: 4 }],
+            effects: [{ type: 'SHIELD', value: 1 }, { type: 'BLESS' }],
         },
     },
 
@@ -237,44 +254,54 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
     },
 
     /**
-     * Thornquill — the crowd-clearer. Pierce on the FREE attack is the whole hero, and
-     * 1 damage is what that costs.
+     * Zephyr — the drone pilot (PLAN-hero-zephyr §5). The differentiation is MOVEMENT, not
+     * the bullet: Shadeleaf owns LINE+VOLLEY and Cobb owns LOB, so Zephyr's shot is the
+     * knight's move — and she FLIES, the only body on the plant side that does.
      *
-     * Shadeleaf pays 50 Sun for pierce (Precision Blast). If Thornquill pierced for 2, she
-     * would be Shadeleaf with the paid skill switched on permanently — strictly better on
-     * every tile, and there would be no reason to field the original. At 1 damage the two
-     * answer different boards instead: one 3-hp Conehead is Shadeleaf's problem (2 dmg kills
-     * in two turns; Thornquill needs three), four 2-hp Zombies queued up in a corridor is
-     * Thornquill's (four tiles x 1, clean in two turns).
-     *
-     * The consequence is that she cannot finish anything thick. Her fusion row has to buy
-     * damage or extra shots — see data/fusionRecipes.ts.
+     * The stat line is one trade written three ways: move 4 (highest) and FLYING buy her any
+     * firing position on the board; 4 hp (lowest) is what that freedom costs; and WING_PAIR's
+     * fixed geometry is why the position matters — landing BOTH shots is a formation puzzle
+     * (the two cells sit exactly two tiles apart), and flight is the tool that solves it.
+     * None of the eight knight cells is adjacent to her, so she always fires from just past
+     * arm's reach — but anything that does close the gap kills her fast, flying or not.
      */
-    THORNQUILL: {
-        id: 'THORNQUILL',
-        name: 'Thornquill',
+    ZEPHYR: {
+        id: 'ZEPHYR',
+        name: 'Zephyr',
         role: 'RANGED',
-        baseClass: UnitClass.CACTUS,
-        maxHp: 6, damage: 1, moveRange: 2,
-        imgUrl: HERO_ICONS.THORNQUILL, boardImgUrl: HERO_SPRITES.THORNQUILL,
-        movementType: 'WALKING', immunities: [],
+        baseClass: UnitClass.CATTAIL,
+        maxHp: 4, damage: 2, moveRange: 4,
+        imgUrl: HERO_ICONS.ZEPHYR, boardImgUrl: HERO_SPRITES.ZEPHYR,
+        movementType: 'FLYING', immunities: [],
         basicAttack: {
-            id: 'tq_spine_shot', name: 'Spine Shot',
-            description: 'A spine that runs the whole row, through every body in it. Free.',
-            rangeType: 'LINE', rangeValue: 6,
-            effects: [{ type: 'DAMAGE', value: 1 }, { type: 'PIERCE_ATTACK' }],
+            id: 'zp_wing_guns', name: 'Wing Guns',
+            description: 'Pick a direction: both wing rockets fire at once, two knight\'s-move tiles ahead. Free.',
+            // rangeValue is nominal — WING_PAIR's geometry is fixed (the 8 knight cells).
+            rangeType: 'WING_PAIR', rangeValue: 2,
+            effects: [{ type: 'DAMAGE', value: 2 }],
         },
-        // The only hero attack that leaves TERRAIN behind: the row stays dangerous after the
-        // shot lands, so it also taxes whatever walks in next turn.
         heroSkill: {
-            id: 'tq_spine_wall', name: 'Spine Wall',
-            description: 'A heavier volley that leaves the row bristling with spikes.',
-            rangeType: 'LINE', rangeValue: 6, sunCost: 50,
-            effects: [
-                { type: 'DAMAGE', value: 2 },
-                { type: 'PIERCE_ATTACK' },
-                { type: 'SPIKE_TILE', value: 1 },
-            ],
+            id: 'zp_smoke_pod', name: 'Smoke Pod',
+            /**
+             * The veil is DUST_VEIL's own machinery (turnManager `blinded`): nothing that
+             * ends its turn inside can line up a swing. No damage, no wall — it buys the
+             * TURN she needs to leave the pocket she just flew into, not the fight.
+             *
+             * NARROW AND LONG (2 tiles, 3 turns) rather than wide and brief. The blind rule
+             * is symmetric — the squad's own damage skills are refused inside dust too
+             * (gameLogic `getValidSkillTargets`) — so a five-tile plus walled off her own
+             * line as often as the horde's, and a hero whose price is 4 HP should not also
+             * be the hero who decides where her friends may shoot. Two tiles is a scalpel;
+             * three turns is what makes laying it EARLY worth doing, which is the whole of
+             * the Sandreaver answer (bossBehaviours `pickHole` refuses dusted ground).
+             *
+             * It cancels SWINGS, never summons: the Headliner still calls its dancers out
+             * of the dust (turnManager, the blinded gate). One pod is not the answer to
+             * every act.
+             */
+            description: 'Drops a smoke pod: two tiles of dust for 3 turns. Nothing inside can aim an attack — her squad included.',
+            rangeType: 'LOB', rangeValue: 2, sunCost: 50,
+            effects: [{ type: 'DUST_TILE', value: 3 }],
         },
     },
 
@@ -345,12 +372,21 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
         maxHp: 8, damage: 0, moveRange: 3,
         imgUrl: HERO_ICONS.CHARDWALL, boardImgUrl: HERO_SPRITES.CHARDWALL,
         movementType: 'WALKING', immunities: [],
-        // Deliberately no DAMAGE effect. Where the target lands is the entire payload.
+        /**
+         * VAULT TOSS — ItB's judo throw, as the FREE basic (PLAN-hero-zephyr §6.2). Grab the
+         * adjacent body, hurl it over his head to the mirrored tile. Still no DAMAGE effect:
+         * the 1 the target takes on landing is COLLISION damage dealt by the ground
+         * (armour-bypassing like every fall, and Grand Chard's +2 scales it) — "0 damage is
+         * the hero" survives because gravity, not the swing, does the hurting. The landing
+         * tile must be free (the ItB rule: no throwing into a body), and PUSH immunity
+         * refuses the grab. Backswing retired: push OUT is Sweep's job now, and the toss is
+         * the pull-through — both directions of repositioning live in one kit.
+         */
         basicAttack: {
-            id: 'cw_backswing', name: 'Backswing',
-            description: 'Hurls an adjacent enemy two tiles back. No damage — where it lands is the point. Free.',
+            id: 'cw_vault_toss', name: 'Vault Toss',
+            description: 'Grabs an adjacent enemy and hurls it over his head to the opposite tile — it takes 1 on landing. Free.',
             rangeType: 'MELEE', rangeValue: 1,
-            effects: [{ type: 'PUSH', value: 2 }],
+            effects: [{ type: 'TOSS' }],
         },
         // SELF + PUSH is the radial-push case in utils/skillResolution.ts: it fires at all
         // four neighbouring tiles at once.
@@ -374,33 +410,53 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
      * announced a turn ahead. Blocking a blow the board already showed you is a READ; healing
      * afterwards is just cleanup. Shields reward looking forward.
      *
-     * Alone he wins nothing — 1 damage, no control. He is worth exactly as much as whoever he
-     * is covering.
+     * Alone he wins nothing — no attack at all since the rework. He is worth exactly as much
+     * as whoever (and whatever: the houses are his too now) he is covering.
      */
     GOURDWARD: {
         id: 'GOURDWARD',
         name: 'Gourdward',
         role: 'SUPPORT',
         baseClass: UnitClass.PUMPKIN,
-        maxHp: 8, damage: 1, moveRange: 3,
+        // damage 0: Rind Bash retired with the rework (PLAN-hero-zephyr §6.3) — he has no
+        // attack at all now, which is why `elementSlot: 'NONE'` below is not a nerf but the
+        // removal of a trap (an element would cost 2 max HP and ride nothing).
+        maxHp: 8, damage: 0, moveRange: 3,
         imgUrl: HERO_ICONS.GOURDWARD, boardImgUrl: HERO_SPRITES.GOURDWARD,
-        movementType: 'WALKING', immunities: [],
+        /**
+         * THE WARD, unconditional (decision 9): fire could not cook him at Kiln Row, ice
+         * could not set at Frostgate, and by Old Quarter — one act before Voltmaw — the shell
+         * has learned all three lessons. Static entries in `immunities`, exactly like
+         * Sunspot's BURN: every read site already honours them, including the lightning
+         * arc's hop-selection (bossBehaviours/turnManager read SHOCK), at zero engine cost.
+         */
+        movementType: 'WALKING', immunities: ['BURN', 'FREEZE', 'SHOCK'],
+        elementSlot: 'NONE',
+        /**
+         * Reinforce replaces Rind Bash: the free action is now a LAYER handed to anything
+         * allied standing beside him — hero, seedling, and the NHÀ itself (a house takes the
+         * layer as `TileData.shielded`; the brain bite breaks the layer instead of the
+         * brain, and the tug-of-war with the zombie on the doorstep is the fantasy).
+         */
         basicAttack: {
-            id: 'gw_rind_bash', name: 'Rind Bash',
-            description: 'A blunt shove with a hard rind. Free.',
+            id: 'gw_reinforce', name: 'Reinforce',
+            description: 'Shells an adjacent ally — or a house — in a layer: the next hit against it is blocked in full. Free.',
             rangeType: 'MELEE', rangeValue: 1,
-            effects: [{ type: 'DAMAGE', value: 1 }],
+            effects: [{ type: 'SHIELD', value: 1 }],
         },
+        /**
+         * AoE now — the plus around him, everyone at once (decision 9). Under layers the
+         * value of a shield skill is BREADTH, not size: one layer eats ANY single blow (boss
+         * fist included), what it cannot do is eat two — Clockjaw's double swing takes one
+         * on the shell and lands the second, which is exactly the texture that boss is for.
+         * SELF + SHIELD + a Sun cost is the radial-shield case in skillResolution; the free
+         * bench self-shields (Harden, Iron Stance) stay single-target through the same gate.
+         */
         heroSkill: {
             id: 'gw_encase', name: 'Encase',
-            // 5, not 3. A shield is measured against the body it covers: 3 on a 4 HP hero was
-            // +75% of a life, and the same 3 on the doubled 8 HP body is +37% — the hero's one
-            // axis quietly halving because a number somewhere else moved. 5 is the amount that
-            // eats a whole boss blow (2-5 damage, section 5 of PLAN-boards-bosses.md), which is
-            // the thing he exists to do.
-            description: 'Wraps an ally in shell: 5 shield, soaked before any health is lost.',
-            rangeType: 'LOB', rangeValue: 3, sunCost: 50,
-            effects: [{ type: 'SHIELD', value: 5 }],
+            description: 'Shells himself and every ally beside him in a layer, all at once.',
+            rangeType: 'SELF', rangeValue: 0, sunCost: 50,
+            effects: [{ type: 'SHIELD', value: 1 }],
         },
     },
 };

@@ -22,7 +22,12 @@ export const UNIT_SKILLS: Record<UnitClass, Skill[]> = {
   ],
   [UnitClass.CACTUS]: [
     SkillFactory.createLineAttack('needle_shot', 'Needle Shot', 8, 2, 'Fires a piercing spike.', true),
-    SkillFactory.createBuffSkill('height', 'Stretch', 'SELF', 0, 'BUFF_STAT', 1, 'Gain range bonus.') 
+    SkillFactory.createBuffSkill('height', 'Stretch', 'SELF', 0, 'BUFF_STAT', 1, 'Gain range bonus.')
+  ],
+  // Bench Cattail — the seedling body of MAT_CATTAIL. A plain homing dart, nothing fancy:
+  // the drone tricks belong to Zephyr, the hero grown from it.
+  [UnitClass.CATTAIL]: [
+    SkillFactory.createLineAttack('tail_dart', 'Tail Dart', 4, 2, 'Fires a spiked dart.')
   ],
   [UnitClass.MELON_PULT]: [
     SkillFactory.createLobAttack('melon_lob', 'Melon Lob', 4, 4, 'Heavy lobbed damage + Push.', [{ type: 'PUSH', value: 1 }])
@@ -58,11 +63,12 @@ export const UNIT_SKILLS: Record<UnitClass, Skill[]> = {
     SkillFactory.createLineAttack('spore_shot', 'Spore Shot', 4, 3, 'Deals damage. Cannot use if Enemy is adjacent.')
   ],
   [UnitClass.WALLNUT]: [
-    SkillFactory.createSelfHealOrShield('harden', 'Harden', 'SHIELD', 3, 'Gain 3 Armor.'),
+    // Shields are LAYERS (PLAN-hero-zephyr §6.0): the value only says "this grants one".
+    SkillFactory.createSelfHealOrShield('harden', 'Harden', 'SHIELD', 1, 'Raise a shell layer — the next hit is blocked in full.'),
     SkillFactory.createMeleeAttack('body_slam', 'Body Slam', 1, 'Bash and Push enemy.', [{ type: 'PUSH', value: 1 }])
   ],
   [UnitClass.TALL_NUT]: [
-    SkillFactory.createSelfHealOrShield('iron_stance', 'Iron Stance', 'SHIELD', 5, 'Gain 5 Armor.'),
+    SkillFactory.createSelfHealOrShield('iron_stance', 'Iron Stance', 'SHIELD', 1, 'Raise a shell layer — the next hit is blocked in full.'),
     {
         id: 'seismic_slam', name: 'Seismic Slam', description: 'Push all adjacent enemies.',
         rangeType: 'SELF', rangeValue: 0,
@@ -80,11 +86,11 @@ export const UNIT_SKILLS: Record<UnitClass, Skill[]> = {
     }
   ],
   [UnitClass.IRON_NUT]: [
-    SkillFactory.createSelfHealOrShield('iron_fortress', 'Iron Fortress', 'SHIELD', 5, 'Gain 5 Armor.'),
+    SkillFactory.createSelfHealOrShield('iron_fortress', 'Iron Fortress', 'SHIELD', 1, 'Raise a shell layer — the next hit is blocked in full.'),
     SkillFactory.createMeleeAttack('shield_bash', 'Shield Bash', 3, 'Bash and push enemy.', [{ type: 'PUSH', value: 1 }])
   ],
   [UnitClass.PUMPKIN]: [
-    SkillFactory.createBuffSkill('pumpkin_shell', 'Pumpkin Shell', 'ADJACENT', 1, 'SHIELD', 5, 'Add +5 Shield to target ally.')
+    SkillFactory.createBuffSkill('pumpkin_shell', 'Pumpkin Shell', 'ADJACENT', 1, 'SHIELD', 1, 'Shell an ally in a layer — the next hit against them is blocked in full.')
   ],
   // No damage on purpose — the shove IS the attack. Where the target lands (water, a
   // mountain, another body) is what costs it health, not the swing itself.

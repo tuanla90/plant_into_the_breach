@@ -60,7 +60,7 @@ export interface ReplayResult {
 }
 
 /** The only skill-effect types the executor models. Anything else must fail, not guess. */
-const MODELLED_EFFECTS = new Set(['DAMAGE', 'PIERCE_ATTACK', 'PUSH', 'RESOURCE_GAIN', 'VOLLEY']);
+const MODELLED_EFFECTS = new Set(['DAMAGE', 'PIERCE_ATTACK', 'PUSH', 'RESOURCE_GAIN', 'VOLLEY', 'SHIELD', 'BLESS']);
 
 export const replayScriptedBattle = (
     nodeId: string,
@@ -251,6 +251,29 @@ export const replayScriptedBattle = (
             if (res && isSelf) {
                 sun += res.value ?? 0;
                 log.push(`${caster.heroId} harvests -> ${sun} sun`);
+            }
+            /**
+             * Solar Blessing, mirroring skillResolution's ally branch: the LAYER (shield 1,
+             * never a stack), the BLESSED mark, and the element loan into an empty hand.
+             * The +1 itself needs no modelling here — the executor runs every cast through
+             * applyFusionToSkill (the step processor above), which folds it in exactly as
+             * the live game does, and the real turnManager the engine half runs clears the
+             * mark at the door of the enemy phase.
+             */
+            if (tgt && !tgt.isEnemy && !skill.effects.some(e => e.type === 'DAMAGE')) {
+                if (skill.effects.some(e => e.type === 'SHIELD') && (tgt.shield || 0) === 0) {
+                    tgt.shield = 1;
+                    log.push(`${caster.heroId || caster.class} shells ${tgt.heroId || tgt.class}@${TILE(targetPos.x, targetPos.y)}`);
+                }
+                if (skill.effects.some(e => e.type === 'BLESS')) {
+                    if (!tgt.statusEffects.includes('BLESSED')) {
+                        tgt.statusEffects = [...tgt.statusEffects, 'BLESSED'];
+                    }
+                    if (caster.element && !tgt.element && !tgt.blessedElement) {
+                        tgt.blessedElement = caster.element;
+                    }
+                    log.push(`${caster.heroId || caster.class} blesses ${tgt.heroId || tgt.class} (+1 this turn)`);
+                }
             }
             // Friendly fire, mirroring skillResolution: an ally under a damaging skill is a
             // combat target too (never the caster).

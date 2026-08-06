@@ -5,6 +5,7 @@ import {
     startingRecipes, BOSSES, XP_PER_LAYER, XP_PER_BONUS_OBJECTIVE, XP_PER_ACT,
 } from '../data/unlocks';
 import { MATERIAL_DEFINITIONS, STARTING_MATERIALS } from '../data/materials';
+import { STAGE_SECTORS } from './mapGenerator';
 
 const STORAGE_KEY = 'pitb_config_v1';
 
@@ -156,7 +157,25 @@ export const defaultUnlockState = (): UnlockState => ({
     bonusObjectivesDone: 0,
     bonusObjectivesBanked: 0,
     recipes: startingRecipes(STARTING_HEROES),
+    sectorsVisited: [],
 });
+
+/**
+ * A legacy save carries no footstep list, but a beaten boss PROVES its ground was walked
+ * (stage+act names the sector — utils/mapGenerator.ts), and any boss at all proves GRASS
+ * was. Marking without gifting is the point: the sector item unlocks quietly for ground
+ * already covered, and the "new land" gift moment stays reserved for genuinely new ground.
+ */
+const sectorsFromBosses = (beaten: BossId[]): string[] => {
+    const sectors = new Set<string>();
+    if (beaten.length > 0) sectors.add('GRASS');
+    beaten.forEach(id => {
+        const b = BOSSES.find(x => x.id === id);
+        const world = b ? STAGE_SECTORS[b.stage - 1]?.[b.act - 1] : undefined;
+        if (world) sectors.add(world);
+    });
+    return [...sectors];
+};
 
 /** Keeps only ids that still exist in the data tables, then guarantees the starting set. */
 const mergeIds = <T extends string>(
@@ -191,6 +210,13 @@ export const loadUnlockState = (): UnlockState => {
         if (!json) return defaultUnlockState();
 
         const saved = JSON.parse(json) ?? {};
+        // Saves from before named bosses only counted them. Take the first N off the
+        // table so the heroes they already own line up with a boss that explains them.
+        // Hoisted out of the literal because the sector migration below reads it too.
+        const bossesBeaten = Array.isArray(saved.bossesBeaten)
+            ? (saved.bossesBeaten as unknown[]).filter((id): id is BossId =>
+                  typeof id === 'string' && BOSSES.some(b => b.id === id))
+            : BOSSES.slice(0, toCount(saved.bossesDefeated)).map(b => b.id);
         return {
             heroes: mergeIds<HeroId>(saved.heroes, HERO_DEFINITIONS, STARTING_HEROES),
             materials: mergeIds<MaterialId>(saved.materials, MATERIAL_DEFINITIONS, STARTING_MATERIALS),
@@ -203,31 +229,30 @@ export const loadUnlockState = (): UnlockState => {
                 : toCount(saved.xp),
             deepestChapter: toCount(saved.deepestChapter),
             runsWon: toCount(saved.runsWon),
-            // Saves from before named bosses only counted them. Take the first N off the
-            // table so the heroes they already own line up with a boss that explains them.
-            bossesBeaten: Array.isArray(saved.bossesBeaten)
-                ? (saved.bossesBeaten as unknown[]).filter((id): id is BossId =>
-                      typeof id === 'string' && BOSSES.some(b => b.id === id))
-                : BOSSES.slice(0, toCount(saved.bossesDefeated)).map(b => b.id),
+            bossesBeaten,
             bossesDefeated: toCount(saved.bossesDefeated),
             bonusObjectivesDone: toCount(saved.bonusObjectivesDone),
             bonusObjectivesBanked: toCount(saved.bonusObjectivesBanked),
             // Union with the starting set, same as heroes/materials: a save written before
             // recipes existed keeps its progress and simply gains the signature pairings.
             //
-            // Filtered by living hero, for the same reason mergeIds filters heroes: retiring
-            // Frostpod left saves holding `COLD_SNAP:MAT_*` keys that no longer pair with
-            // anything. They are counted, so the Archive read "34/90 recipes" against a
-            // roster that can only produce 90 — owned drifting past the total, with nothing
-            // on screen to explain it.
+            // Filtered by living hero AND living material, for the same reason mergeIds
+            // filters both lists: retiring Frostpod left saves holding `COLD_SNAP:MAT_*`
+            // keys, and retiring Thornquill + the Cactus/Snow Pea gears left `THORNQUILL:*`
+            // and `*:MAT_CACTUS` / `*:MAT_SNOW_PEA` keys the same way. Dead keys are
+            // counted, so the Archive read "34/90 recipes" against a roster that can only
+            // produce 81 — owned drifting past the total, with nothing on screen to explain.
             recipes: Array.from(new Set([
                 ...startingRecipes(STARTING_HEROES),
                 ...(Array.isArray(saved.recipes) ? saved.recipes.filter((r: unknown) => typeof r === 'string') : []),
             ])).filter(key => {
-                const hero = String(key).split(':')[0] as HeroId;
-                return hero in HERO_DEFINITIONS;
+                const [hero, material] = String(key).split(':');
+                return hero in HERO_DEFINITIONS && material in MATERIAL_DEFINITIONS;
             }) as string[],
             tutorialDone: saved.tutorialDone === true,
+            sectorsVisited: Array.isArray(saved.sectorsVisited)
+                ? (saved.sectorsVisited as unknown[]).filter((s): s is string => typeof s === 'string')
+                : sectorsFromBosses(bossesBeaten),
         };
     } catch (e) {
         console.error("Failed to load progress:", e);
@@ -258,6 +283,9 @@ export const saveUnlockState = (state: UnlockState) => {
             // Was silently stripped here before, which sent every returning player
             // back to the tutorial map after a reload (types.ts marks it persisted).
             tutorialDone: state?.tutorialDone === true,
+            sectorsVisited: Array.isArray(state?.sectorsVisited)
+                ? state.sectorsVisited.filter((s): s is string => typeof s === 'string')
+                : [],
         };
         localStorage.setItem(PROGRESS_KEY, JSON.stringify(clean));
     } catch (e) {
@@ -295,4 +323,51 @@ export const importConfigFromJson = (file: File): Promise<GameConfig> => {
         };
         reader.readAsText(file);
     });
+};
+
+// ---------------------------------------------------------------------------
+// CHRONO ECHO — the one gift a LOST run sends forward to the next one.
+//
+// Its own key, deliberately: it is neither Admin config (wipe-at-will) nor unlock progress
+// (must never be lost) — it is a single pending voucher that a defeat writes and the next
+// new run consumes. Bundling it into pitb_progress_v1 would put a frequently-rewritten
+// flag inside the one blob whose integrity matters most.
+//
+// Written ONLY by recordRunLost — a real defeat. Abandoning a run (confirmQuit) goes
+// straight to the menu without ever showing GAME_OVER, so quitting cannot farm this.
+// Cleared when the player takes the offered item at the start of the next run — NOT when
+// the offer is shown, so a reload between seeing and choosing postpones the gift instead
+// of eating it.
+
+const ECHO_KEY = 'pitb_echo_v1';
+
+export interface ChronoEcho {
+    /** How deep the lost run got (map layer). Sets the value cap of the next run's offer. */
+    layers: number;
+    /**
+     * Written by the tutorial's scripted defeat (once, ever): the graduation gift. Caps the
+     * offer at the starter tier — the tutorial teaches that defeat pays, it does not fund it.
+     */
+    tutorial?: boolean;
+}
+
+export const saveChronoEcho = (echo: ChronoEcho) => {
+    try { localStorage.setItem(ECHO_KEY, JSON.stringify(echo)); } catch {}
+};
+
+export const loadChronoEcho = (): ChronoEcho | null => {
+    try {
+        const raw = localStorage.getItem(ECHO_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        return typeof parsed?.layers === 'number'
+            ? { layers: parsed.layers, tutorial: !!parsed.tutorial }
+            : null;
+    } catch {
+        return null;
+    }
+};
+
+export const clearChronoEcho = () => {
+    try { localStorage.removeItem(ECHO_KEY); } catch {}
 };

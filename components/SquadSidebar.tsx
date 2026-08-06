@@ -52,7 +52,7 @@ export const SquadSidebar = ({ units, selectedUnitId, onSelectUnit }: SquadSideb
                     key={unit.id}
                     type="button"
                     onClick={() => onSelectUnit(unit.id)}
-                    title={`${label} — ${unit.hp}/${unit.maxHp} HP${shield ? ` (+${shield})` : ''}${unit.element ? ` · ${t(ELEMENT_DEFINITIONS[unit.element].name)}` : ''}`}
+                    title={`${label} — ${unit.hp}/${unit.maxHp} HP${shield ? ` · ${t('shielded')}` : ''}${unit.element ? ` · ${t(ELEMENT_DEFINITIONS[unit.element].name)}` : ''}`}
                     aria-label={label}
                     aria-pressed={isSelected}
                     data-tut={unit.heroId ? `hero-${unit.heroId}` : unit.materialId ? `unit-${unit.materialId}` : `unit-${unit.id}`}
@@ -93,11 +93,11 @@ export const SquadSidebar = ({ units, selectedUnitId, onSelectUnit }: SquadSideb
                         </div>
                     </div>
 
-                    {/* Shield badge. Was keyed off `unit.armor`, a field that does not exist,
-                        so it never appeared no matter how much Armor a hero was carrying. */}
+                    {/* Shield LAYER badge — binary, so icon only (§6.0): a layer either
+                        stands or it does not, and a number would imply it can be chewed. */}
                     {shield > 0 && (
-                        <div className="absolute -top-1.5 -right-1.5 min-w-5 h-5 px-1 bg-sky-600 border border-sky-300 rounded-full flex items-center justify-center gap-0.5 text-[9px] font-black text-white shadow-md">
-                            <Shield size={8} fill="white" />{shield}
+                        <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-sky-600 border border-sky-300 rounded-full flex items-center justify-center text-white shadow-md">
+                            <Shield size={9} fill="white" />
                         </div>
                     )}
 

@@ -9,7 +9,8 @@ export enum UnitClass {
   SNOW_PEA = 'SNOW_PEA', 
   REPEATER = 'REPEATER', 
   BLOOMERANG = 'BLOOMERANG',
-  CACTUS = 'CACTUS', 
+  CACTUS = 'CACTUS',
+  CATTAIL = 'CATTAIL',
   MELON_PULT = 'MELON_PULT', 
   CABBAGE_PULT = 'CABBAGE_PULT', 
   KERNEL_PULT = 'KERNEL_PULT', 
@@ -129,7 +130,23 @@ export type StatusEffectType = 'BURN' | 'FREEZE' | 'STUN' | 'HYPNOTIZED' | 'ENRA
      * are one-turn delays. This one is a theft, and it lasts the fight — which is the whole
      * threat of the Blightlord's second phase.
      */
-    | 'SEVERED';
+    | 'SEVERED'
+    /**
+     * An open wound: the NEXT damage instance against this body lands +1, then the wound is
+     * spent. Consumed by being hit, never by the clock, and it does not stack — bitten twice
+     * is still one wound. Deliberately applied outside the STATUS immunity gate (bosses bleed
+     * too): it is flesh, not mind control. The +1 is added after helmet armour in
+     * calculateDamage, or a Buckethead would eat the entire gear.
+     */
+    | 'BLEEDING'
+    /**
+     * Solar Blessing's mark: +1 damage on this body's attacks, and (if it carries no element
+     * of its own) the blesser's element on loan (`Unit.blessedElement`) — both lasting ONLY
+     * until this player turn ends. Cleared at the door of the enemy phase in turnManager,
+     * which is what makes "bless first, then swing" the skill's whole sequencing lesson, and
+     * what makes the buff impossible to bank in the clockless boss fights.
+     */
+    | 'BLESSED';
 export type MovementType = 'WALKING' | 'FLYING' | 'AMPHIBIOUS' | 'TELEPORT'
     /**
      * Rides a rail line and nothing else: it may only ever ENTER a `TerrainType.RAIL` tile.
@@ -149,7 +166,14 @@ export type MovementType = 'WALKING' | 'FLYING' | 'AMPHIBIOUS' | 'TELEPORT'
  * meant the Gargantuar (PUSH + FREEZE immune, Massive) shut off every control tool in the
  * game at once. 'STATUS' is the one that stops everything — that is what it is for.
  */
-export type UnitImmunity = 'BURN' | 'FREEZE' | 'DROWN' | 'PUSH' | 'STATUS';
+export type UnitImmunity = 'BURN' | 'FREEZE' | 'DROWN' | 'PUSH' | 'STATUS'
+    /**
+     * Electricity does not enter this body: SURGE tiles pass under it, and enemy lightning
+     * arcs refuse to pick it as a hop. Exists for the element rule "a hero carrying an
+     * element is immune to that element" (utils/elements.ts ELEMENT_IMMUNITY) — no zombie
+     * grants it natively today.
+     */
+    | 'SHOCK';
 
 /**
  * THE THREE ELEMENTS (PLAN-progression.md section 3).
@@ -206,7 +230,8 @@ export interface TileData {
      */
     trap?: { damage: number; imgUrl: string };
     /**
-     * Spines left across a tile by Thornquill. Unlike `trap` this is NOT consumed by the first
+     * Spines left across a tile (the Spikeweed item; formerly Thornquill's trail). Unlike
+     * `trap` this is NOT consumed by the first
      * body through it — it hurts everything that enters while it lasts, and expires on its own.
      * That difference is the whole point: a trap is one answer to one zombie, spikes are a
      * piece of ground the enemy has to route around.
@@ -226,6 +251,16 @@ export interface TileData {
      * down. Guessing 'GRASS' would quietly pave over sand, bridge and rail.
      */
     flood?: { turns: number; was: TerrainType };
+    /**
+     * A shell LAYER on a HOUSE (Gourdward's Reinforce). Houses are tiles, not units, and a
+     * brain is taken by ARRIVAL/BITE rather than through calculateDamage — so the house's
+     * layer lives here and is consumed at the two doors a brain leaves through: the adjacent
+     * bite (turnManager, BRAIN BITE) and the shove-into-house (gameLogic, planPush). One
+     * layer eats one bite in full, then breaks — the same §6.0 contract units have, which is
+     * what makes "a house is a 1-hp unit wearing one layer" the correct mental model without
+     * the ~40-call-site refactor of making it a real unit.
+     */
+    shielded?: boolean;
 }
 
 export interface Unit {
@@ -331,6 +366,12 @@ export interface Unit {
   visualOffset?: { x: number, y: number };
   isDying?: boolean;
   isAttacking?: boolean;
+  /**
+   * This body is inside a hit-stop frame RIGHT NOW (a >=4 hit landed): the sprite flashes
+   * white and squashes while the engine holds the whole beat for ~80ms. Purely visual,
+   * set and cleared by the engine inside one APPLY_DAMAGE — never saved, never read by rules.
+   */
+  isHitFlashing?: boolean;
   flipX?: boolean;
   isMassive?: boolean;
   /**
@@ -384,11 +425,18 @@ export interface Unit {
    */
   retaliateDamage?: number;
   /**
+   * The element this body's attacks BORROW for the current player turn (Solar Blessing's
+   * loan). Never set when the unit carries its own element — own wins, no stacking — and
+   * cleared together with BLESSED at the start of the enemy phase. Deliberately NOT counted
+   * by resonance and carrying NO immunity: it is a borrowed blade, not borrowed skin.
+   */
+  blessedElement?: ElementId;
+  /**
    * Helmet armour: every WEAPON hit is reduced by this much, and unlike fusion armour it may
    * reduce a hit to ZERO — a pea plinking off a bucket is the whole identity (brainstorm_balance
    * § 2, the one idea from that document worth keeping). Environment ignores it on purpose:
    * burn, lava and ground spikes cook or stab the body inside the helmet, which keeps FIRE and
-   * Thornquill's spike fields as the honest answers to an armoured lane.
+   * the Spikeweed item's fields as the honest answers to an armoured lane.
    */
   armor?: number;
   /**
@@ -717,6 +765,8 @@ export interface TurnAction {
     spikes?: { damage: number; turns: number };
     /** Dust laid (or expiring) on `pos`. `turns: 0` is how the expiry writes "this is over". */
     smoke?: { turns: number };
+    /** A house layer raised (true) or spent by a bite (false) on `pos`. */
+    shielded?: boolean;
     /** Sea laid (or receding) on `pos`. `turns: 0` recedes, and `terrain` carries it back. */
     flood?: { turns: number; was: TerrainType };
     isForced?: boolean;
@@ -781,8 +831,12 @@ export type HeroId =
      * The four heroes that complete the roster of nine (PLAN-heroes-9.md): three ranged,
      * three melee, three support. Each one occupies an axis nothing else in the cast touches.
      */
-    /** Thornquill, the Cactus. Pierces a whole row on the FREE attack, for 1 damage. */
-    | 'THORNQUILL'
+    /**
+     * Zephyr, the Cattail drone pilot. The roster's only FLYING body, and the only knight's-
+     * move attack (WING_PAIR): two shots per turn, four tiles of reach, four hp. Replaced
+     * Thornquill — the row-pierce identity retired with her.
+     */
+    | 'ZEPHYR'
     /** Thornhide, the Endurian. Retaliates innately, and can force enemies to come to it. */
     | 'THORNHIDE'
     /** Chardwall, the Chard Guard. 0 damage: it kills with terrain, by shoving 2 tiles. */
@@ -821,16 +875,18 @@ export type MaterialId =
     | 'MAT_PEASHOOTER'
     | 'MAT_CHOMPER'
     | 'MAT_WALLNUT'
-    | 'MAT_SNOW_PEA'
+    // MAT_SNOW_PEA is retired: it was Frostpod's plant, Frostpod is retired, and the cold
+    // belongs to the ICE element now. Nine heroes, nine gears, no orphan — persistence.ts
+    // filters the id out of old saves so a dead gear can never reach the shop shelf.
     /** Cobb's own plant. Grafts the arc onto somebody else's straight shot. */
     | 'MAT_CORN'
     /**
-     * The four gears belonging to the four new heroes. Every hero's base plant is also a
+     * The four gears belonging to the four newest heroes. Every hero's base plant is also a
      * material: bring it to the field as a bench body, or burn it into a hero. One or the
      * other, never both.
      */
-    /** Cactus. Spines: things that go through, and ground that hurts to cross. */
-    | 'MAT_CACTUS'
+    /** Cattail. Rotors: speed for the body, and dust that takes the swing out of a zombie. */
+    | 'MAT_CATTAIL'
     /** Endurian. Thorns worn outward — being hit becomes a way of dealing damage. */
     | 'MAT_ENDURIAN'
     /** Chard Guard. Leverage: whatever it touches ends up somewhere else. */
@@ -907,13 +963,34 @@ export type FusionEffectType =
     | 'STEADFAST'               // -1 incoming damage, immune to collision damage, plugs spawn holes painlessly
     | 'ON_HIT_SLOW'             // attacks apply SLOW
     // --- The palette for the four new heroes' rows (PLAN-heroes-9.md). ---
-    /** Every tile this hero's attack passes through is left spiked for a turn. */
+    /**
+     * Every tile this hero's attack passes through is left spiked for a turn.
+     * NOTE: data-orphaned since the Cactus gear retired with Thornquill (PLAN-hero-zephyr) —
+     * the engine still resolves it (the Spikeweed ITEM keeps spike fields alive), so a future
+     * recipe can pick it back up, but no recipe grants it today.
+     */
     | 'SPIKE_TRAIL'
     /** Adds tiles to every push this hero causes. The Chard Guard axis. */
     | 'PUSH_DISTANCE'
-    /** Shields this hero hands out are larger by `value`. */
-    | 'SHIELD_BONUS'
-    /** Finishing something off shields this hero for `value`. */
+    // --- The Cattail axes (PLAN-hero-zephyr §4: each gear = two traits of its owner). ---
+    /** +`value` movement. Zephyr's wings, grafted on: the one axis no fusion touched before. */
+    | 'MOVE_BONUS'
+    /**
+     * This hero's PAID skill also drops dust on the tiles it covered — Smoke Pod's veil,
+     * grafted on. Skill-only by construction (the SKILL_SPLASH precedent): a free disarm
+     * every turn would be the exact shape the STUN RULE exists to ban.
+     */
+    | 'SKILL_DISARM'
+    /** Attacks leave the target BLEEDING: the next hit against it lands +1. The Chomper axis. */
+    | 'BLEED_ON_HIT'
+    /**
+     * Shields this hero hands out spill over to whoever stands beside the recipient.
+     * Replaces SHIELD_BONUS ("+2 size"), which stopped meaning anything when shields became
+     * LAYERS (PLAN-hero-zephyr §6.0) — a layer has no size to enlarge, so the pumpkin axis
+     * buys COVERAGE instead.
+     */
+    | 'SHIELD_SPREAD'
+    /** Finishing something off raises a fresh layer on this hero. */
     | 'SHIELD_ON_KILL'
     /** Melee attackers are shoved back as well as hurt. */
     | 'RETALIATE_PUSH'
@@ -927,13 +1004,8 @@ export type FusionEffectType =
 export interface FusionEffect {
     type: FusionEffectType;
     value?: number;
-    /**
-     * Ceiling this effect may take its stat to (today: SHIELD_ON_KILL's shield total). The cap
-     * lives on the EFFECT, not in the resolver, because the recipe card is what promises it —
-     * "up to 3 max" printed on Gourd Sniper must be enforced by the same object that printed it,
-     * or the two drift apart again (they did: five cards promised caps no code applied).
-     */
-    cap?: number;
+    // `cap` is gone with the shield numbers it policed: a LAYER (PLAN-hero-zephyr §6.0) is
+    // its own ceiling — you have one or you don't — so no card promises a total any more.
 }
 
 /**
@@ -967,6 +1039,15 @@ export interface HeroDefinition {
     basicAttack: Skill;
     /** Costs Sun via Skill.sunCost. */
     heroSkill: Skill;
+    /**
+     * 'NONE' hides the element picker for this hero at squad select. An element costs 2 max
+     * HP and rides ATTACKS (rule L1) — a hero whose whole kit targets allies (Gourdward:
+     * Reinforce + Encase) would pay the toll for literally nothing, and his ward passive
+     * already grants all three elemental immunities besides. Sunspot stays element-capable
+     * on purpose: her Blessing LENDS the element (Unit.blessedElement), which is her whole
+     * battery identity.
+     */
+    elementSlot?: 'NONE';
 }
 
 export interface MaterialDefinition {
@@ -1175,6 +1256,14 @@ export interface UnlockState {
     recipes: string[];
     /** Set once the player finishes or skips the scripted opening chain. */
     tutorialDone?: boolean;
+    /**
+     * Every ground this save has ever set foot on: WorldType names plus the 'BREACH'
+     * pseudo-sector. First arrival is the moment — it permanently unlocks that sector's
+     * item (data/items.ts SECTOR_ITEM) and hands one free copy to the run that walked in.
+     * Missing on old saves; utils/persistence.ts derives it from bossesBeaten, because a
+     * beaten boss proves its ground was walked.
+     */
+    sectorsVisited?: string[];
 }
 
 export interface UnitDefinition {
@@ -1197,7 +1286,15 @@ export interface UnitDefinition {
     evolutionCost?: number;
 }
 
-export type SkillRangeType = 'LINE' | 'LOB' | 'MELEE' | 'ADJACENT' | 'SELF' | 'DASH' | 'RADIUS';
+export type SkillRangeType = 'LINE' | 'LOB' | 'MELEE' | 'ADJACENT' | 'SELF' | 'DASH' | 'RADIUS'
+    /**
+     * Zephyr's Wing Guns: the eight knight's-move tiles, read as FOUR DIRECTED PAIRS — pick a
+     * direction, both wing tiles of that direction fire at once (2 ahead, ±1 to each side).
+     * Aiming either tile of a pair selects the pair; resolution strikes both. The only
+     * non-orthogonal reach in the game, which is also why the "diagonal house nook" map rule
+     * (data/maps.ts) is untouched: adjacent diagonals are NOT knight moves.
+     */
+    | 'WING_PAIR';
 export type EffectType = 'DAMAGE' | 'HEAL' | 'SHIELD' | 'STUN' | 'PUSH' | 'PULL' | 'SPAWN' | 'TERRAIN_MOD' | 'PIERCE_ATTACK' |
                          /**
                           * Fires `value` shots instead of one, each rolling on to the next body in the
@@ -1226,6 +1323,40 @@ export type EffectType = 'DAMAGE' | 'HEAL' | 'SHIELD' | 'STUN' | 'PUSH' | 'PULL'
                          'TAUNT' |
                          /** Leaves spikes on each tile the attack covered. `value` = damage. */
                          'SPIKE_TILE' |
+                         /**
+                          * Drops dust on the target tile and its four neighbours — the same
+                          * `TileData.smoke` the DUST_VEIL hazard writes, so `blinded()` in
+                          * turnManager is the one and only reader: whatever ends its turn
+                          * inside cannot line up a swing. `value` = turns it hangs.
+                          */
+                         'DUST_TILE' |
+                         /**
+                          * Marks the target BLEEDING: the next damage instance against it
+                          * lands +1 (added AFTER helmet armour, or armour would eat the whole
+                          * point — see calculateDamage), then the wound is spent. Applied
+                          * OUTSIDE the STATUS immunity gate on purpose: it is a physical
+                          * wound, not mind control, and a gear that goes cold in every boss
+                          * fight is not worth a slot.
+                          */
+                         'APPLY_BLEED' |
+                         /**
+                          * Chardwall's Vault Toss (ItB's judo throw): grab the adjacent body
+                          * and hurl it to the MIRRORED tile (2·caster − target). The landing
+                          * is a fall — COLLISION damage, not a DAMAGE effect, which is what
+                          * keeps "0 damage is the hero" true while Grand Chard's
+                          * COLLISION_BONUS scales the drop for free. Requires the landing
+                          * tile to be free (the ItB rule); PUSH immunity refuses the grab.
+                          */
+                         'TOSS' |
+                         /**
+                          * Solar Blessing's rider: the ally is BLESSED — +1 damage on their
+                          * attacks UNTIL THE END OF THIS PLAYER TURN (bless first, then
+                          * swing), and if the blesser carries an element and the ally does
+                          * not, the ally's attacks borrow it for the same window
+                          * (`Unit.blessedElement`). Turn-scoped by decay in turnManager, so
+                          * the loan can never be banked.
+                          */
+                         'BLESS' |
                          // EVENT EFFECTS
                          // NOTE: GAIN_SUN / HEAL_SQUAD / HEAL_ONE_FULL / LOSE_HP_RANDOM / GAIN_STATS are
                          // retired. Sun still resets to SUN_ON_LEVEL_START every battle. Hero hp used to
@@ -1303,7 +1434,14 @@ export interface ItemDefinition {
         | 'REFRESH'
         | 'SPIKES'
         | 'HYPNO'
-        | 'STRIP_ARMOR';
+        | 'STRIP_ARMOR'
+        /** Restores `damage` health to one wounded ally. The roster's only sustain. */
+        | 'HEAL'
+        /**
+         * The Doom-shroom. `damage` piercing to EVERYTHING in the square — allies included,
+         * bosses capped hard (utils/itemResolution.ts) — and the inner 3x3 becomes lava.
+         */
+        | 'NUKE';
     description: string;
     imgUrl: string;
 }

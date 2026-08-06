@@ -1,9 +1,19 @@
 import {
-    BenchPlant, ElementId, HeroId, Position, Unit, UnitClass, UnitDefinition, UnitType, BossId } from '../types';
+    BenchPlant, ElementId, HeroId, Position, Unit, UnitClass, UnitDefinition, UnitImmunity, UnitType, BossId } from '../types';
 import { UNIT_ROLE_MAP } from '../constants';
 import { HERO_DEFINITIONS } from '../data/heroes';
 import { getMaterial } from '../data/materials';
-import { ELEMENT_HP_COST } from './elements';
+import { ELEMENT_HP_COST, ELEMENT_IMMUNITY } from './elements';
+
+/**
+ * The element's second gift, beside the damage rider: matched immunity (ELEMENT_IMMUNITY —
+ * ice does not freeze, fire does not burn, lightning does not conduct). Computed from the
+ * DEFINITION plus the element actually carried, never trusted from a snapshot — a hero who
+ * swaps element between runs must swap immunity with it, and a stale 'FREEZE' riding in a
+ * saved immunities array would be a free pass she no longer pays for.
+ */
+const elementalImmunities = (base: UnitImmunity[], element?: ElementId): UnitImmunity[] =>
+    element ? Array.from(new Set([...base, ELEMENT_IMMUNITY[element]])) : base;
 
 /**
  * EVERY UNIT THE GAME PUTS ON A BOARD IS BUILT HERE.
@@ -76,7 +86,7 @@ export const freshHero = (heroId: HeroId, id = `revived-${heroId}`, element?: El
         hp: maxHp, maxHp, damage: def.damage, moveRange: def.moveRange,
         cooldownReduction: 0, level: 1, position: { x: -1, y: -1 },
         isEnemy: false, hasMoved: false, hasAttacked: false, statusEffects: [],
-        movementType: def.movementType, immunities: def.immunities,
+        movementType: def.movementType, immunities: elementalImmunities(def.immunities, element),
         // Innate thorns are part of the body, like immunities — not something bought. The
         // Biting Wall fusion adds to this rather than replacing it (turnManager sums them).
         retaliateDamage: def.retaliateDamage,
@@ -132,6 +142,9 @@ export const buildHeroFromSnapshot = (snapshot: Unit, fullHeal = false, element?
     return {
         ...snapshot,
         element: nextElement,
+        // Recomputed from the sheet for the element ACTUALLY carried now — see
+        // elementalImmunities: a snapshot's array may hold the OLD element's immunity.
+        immunities: elementalImmunities(def ? def.immunities : snapshot.immunities, nextElement),
         // Clamped, so taking on an element mid-run trims the wound rather than leaving a hero
         // standing at 7/6. Dropping one never heals: only maxHp moves back up.
         hp: fullHeal ? maxHp : Math.max(1, Math.min(snapshot.hp, maxHp)),

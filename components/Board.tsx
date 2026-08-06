@@ -183,13 +183,17 @@ export const Board: React.FC<BoardProps> = ({
   const activeUnits = units.filter(u => u.position.x >= 0 && u.position.y >= 0);
 
   return (
-    <div ref={boardAreaRef} className={`relative w-full h-full flex items-center justify-center p-2 lg:p-4 ${shake ? 'animate-[shake_0.5s_ease-in-out]' : ''}`}>
+    // portrait:p-1 — trên điện thoại cầm dọc, cạnh bàn cờ do BỀ NGANG quyết định
+    // (availW/1.08 < availH/0.95), nên mỗi px padding ở đây là px trừ thẳng vào ô cờ.
+    // Ba lớp đệm lồng nhau (khung ngoài của App, khung này, thân bàn cờ) đang ăn 39px
+    // trên màn 375px: ô cờ 39px, dưới ngưỡng chạm thoải mái.
+    <div ref={boardAreaRef} className={`relative w-full h-full flex items-center justify-center p-2 portrait:p-1 lg:p-4 ${shake ? 'animate-[shake_0.5s_ease-in-out]' : ''}`}>
 
         {/* Main Board Chassis Wrapper.
             The outer A–H / 1–8 coordinate strips are gone: they sat outside the tilted
             plane so they no longer lined up with the foreshortened columns, and every
             tile already prints its own coordinate. */}
-        <div ref={chassisRef} className="relative p-2 lg:p-4 bg-[#0f131d] border border-[#293245] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] cyber-card flex flex-col items-center justify-center">
+        <div ref={chassisRef} className="relative p-2 portrait:p-1.5 lg:p-4 bg-[#0f131d] border border-[#293245] rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8)] cyber-card flex flex-col items-center justify-center">
 
             {/* Footprint wrapper: reserves the PROJECTED bbox of the tilted board, not the
                 full untilted square — otherwise the chassis shows dead bands above and

@@ -7,6 +7,7 @@ export const UNIT_ROLE_MAP: Record<UnitClass, UnitRole> = {
     [UnitClass.REPEATER]: 'SHOOTER',
     [UnitClass.BLOOMERANG]: 'SHOOTER',
     [UnitClass.CACTUS]: 'SHOOTER',
+    [UnitClass.CATTAIL]: 'SHOOTER',
     [UnitClass.MELON_PULT]: 'SHOOTER',
     [UnitClass.CABBAGE_PULT]: 'SHOOTER', 
     [UnitClass.SCAREDY_SHROOM]: 'SHOOTER',

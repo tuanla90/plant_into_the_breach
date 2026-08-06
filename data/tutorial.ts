@@ -559,7 +559,8 @@ export const TUTORIAL_CHAIN: TutorialNode[] = [
                     // Exactly lethal and no more — the box is a guarantee, not a massacre.
                     // +1 HP each, and it is Sunspot's Harvest that made it necessary. Turn 4
                     // is hers to spend freely, on the promise that nothing she does matters —
-                    // and when Harvest went 25 -> 50 she could suddenly bank a Sun Burn, kill
+                    // and when Harvest went 25 -> 50 she could suddenly bank her paid skill
+                    // (a 4-damage Sun Burn in that era), kill
                     // one of these, and drop the box from 7 damage to 4 against 6 HP. She
                     // rescued the hero the whole arc is built on losing. Behind helmet armour
                     // a 4-damage burn arrives as 3 against these 4 HP (3+1 bonus), so a wall
@@ -615,8 +616,9 @@ export const TUTORIAL_CHAIN: TutorialNode[] = [
                 // --- what the Sun was for. Sunspot is three moves away — the price of
                 // plugging the hole — so she keeps harvesting where she stands. (And the
                 // economy is load-bearing: starting at 25, even with this extra harvest she
-                // holds only 25 on turn 4 — one Sun Burn short of blowing a wall off the
-                // box that kills Shadeleaf.) ---
+                // holds only 25 on turn 4 — one paid skill short of interfering with the
+                // box that kills Shadeleaf. Truer still since the rework: her Blessing
+                // deals nothing, so the scripted death cannot be shot off at all.) ---
                 { turn: 3, note: 'Sunspot kẹt lại rồi. Tiếp tục gom nắng!', focus: 'hero-SOLAR_FLARE' },
                 { turn: 3, note: 'Thu Hoạch năng lượng.', focus: 'skill-sf_harvest' },
                 { turn: 3, note: 'Chạm vào Sunspot.', focus: 'tile-5-2', act: 'ATTACK' },
@@ -717,13 +719,12 @@ export const TUTORIAL_CHAIN: TutorialNode[] = [
                 SOLAR_FLARE: { x: 2, y: 3 },
                 GREEN_SHADOW: { x: 4, y: 2 },
             },
-            // 75 Sun, not 50: Sunspot burns on turn 1 and again on turn 3, with a harvest
-            // between. One burn left her with two turns of nothing to do but watch.
             // The global 50, deliberately. Boards 1 and 2 override this DOWNWARD (0 and 25)
             // to make a lesson bite; overriding it upward hands the player an opening purse
-            // no real fight ever pays, and then teaches an economy that does not exist. Two
-            // Sun Burns still fit inside 50 — they just cannot be on consecutive turns, and
-            // the harvest between them is the lesson.
+            // no real fight ever pays, and then teaches an economy that does not exist. Three
+            // Blessings fit inside 50 only with a Harvest between each pair — bless, gather,
+            // bless, gather, bless is the whole economy lesson, same rhythm the Sun Burns
+            // taught before the rework (PLAN-hero-zephyr §6.1) with the support kit's verbs.
             startingSun: 50,
             scriptedBrainLoss: 1,
             opening: [
@@ -733,10 +734,10 @@ export const TUTORIAL_CHAIN: TutorialNode[] = [
                 { cls: UnitClass.BUCKETHEAD, x: 1, y: 1 },
                 // THE EATERS, and the whole story of this board. The squad does NOT write the
                 // lower house off — turn 1 pours everything that can reach down there into
-                // them: pea 2 + Sun Burn 4, both plants' entire turn, said out loud in the
-                // step notes. It is not enough, and the brain-loss lesson lands as "we tried
-                // with everything and the arithmetic said no", never "the squad stood and
-                // watched".
+                // them: Sunspot's Blessing on the Peashooter and the boosted shot it buys,
+                // both plants' entire turn, said out loud in the step notes. It is not
+                // enough, and the brain-loss lesson lands as "we tried with everything and
+                // the arithmetic said no", never "the squad stood and watched".
                 //
                 // TWO bodies, not one inflated health bar. A single 10 HP zombie made the
                 // point arithmetically but read as a bug — a Screen Door with triple the
@@ -744,16 +745,16 @@ export const TUTORIAL_CHAIN: TutorialNode[] = [
                 // the board already speaks: kill either one and the OTHER one walks in. The
                 // unsavable assertion proves it over their combined health, so neither can
                 // quietly become killable on its own.
-                // hpBonus 3: the door's base body is 2 HP behind metal armour now
+                // hpBonus 1: the door's base body is 2 HP behind metal armour
                 // (data/zombies.ts), and the number is chosen so the script's exact damage
-                // stream — pea 1 + Sun Burn 3 on turn 1 (both shaved by the armour), then
-                // turn 3's bash-collision — kills it on TURN 3 at D1, the same turn the old
-                // 8 HP unarmoured door died there. That death is load-bearing: the Buckethead
-                // behind it re-paths through the freed row-0 lane to C1, which is the tile
-                // turn 4's slam-and-pea close-out clicks on. One point more and the door
-                // outlives its cue, the bucket parks on D1 instead, and the replay desyncs
-                // on the Peashooter's scripted step into that exact tile.
-                { cls: UnitClass.SCREEN_DOOR_ZOMBIE, x: 5, y: 1, hpBonus: 3, unsavable: true },
+                // stream — one BLESSED pea on turn 1 ((2+1) shaved to 2 by the armour), then
+                // turn 3's bash-collision for the 1 it has left — kills it on TURN 3 at D1,
+                // the same cue the old Sun-Burn stream hit. That death is load-bearing: the
+                // eater behind it re-paths through the freed row-0 lane to C1, which is the
+                // tile turn 4's slam-and-pea close-out clicks on. One point more and the door
+                // outlives its cue, the second eater parks on D1 instead, and the replay
+                // desyncs on the Peashooter's scripted step into that exact tile.
+                { cls: UnitClass.SCREEN_DOOR_ZOMBIE, x: 5, y: 1, hpBonus: 1, unsavable: true },
                 // SUNSPOT's turn-3 target, and no longer mere bookkeeping: a GRAVE digs up
                 // a zombie every GRAVE_DIG_PERIOD turns (turnManager), telegraphed on
                 // the unit as a countdown. Its clock strikes at the end of turn 2 — the
@@ -766,12 +767,12 @@ export const TUTORIAL_CHAIN: TutorialNode[] = [
                 // once the brain is gone it turns for the LAST house, and turn 3 is the
                 // squad closing ranks around B1 and finishing the fight.
                 // The second eater, and the reason the brain is gone whatever the player does:
-                // drop the Screen Door and THIS walks the last two tiles instead. A Buckethead
-                // rather than the Conehead it replaced: 3 HP behind armour 1 shrugs the pea to
-                // 1 a shot, which is what keeps the pair worth more than one turn of squad
-                // damage — see the unsavable assertion. Its death on turn 4 is the armour
-                // lesson played back: slam 1 (ignores the helmet) + pea 1 (through it).
-                { cls: UnitClass.BUCKETHEAD, x: 5, y: 4, unsavable: true },
+                // drop the Screen Door and THIS walks the last two tiles instead. Back to a
+                // Conehead now that Blessing replaced the burn: the support kit's whole
+                // output into the pair is one boosted pea, so even a helmetless second body
+                // keeps them beyond saving — see the unsavable assertion — and its 3 HP is
+                // exactly what turn 4's close-out stream (slam 1 + pea 2) removes on cue.
+                { cls: UnitClass.CONEHEAD, x: 5, y: 4, unsavable: true },
             ],
             objective: 'KILL_ALL',
             objectiveText: 'Quét sạch lực lượng quái vật.',
@@ -793,14 +794,17 @@ export const TUTORIAL_CHAIN: TutorialNode[] = [
                 { turn: 1, note: 'Hất văng nó khỏi hiên nhà!', focus: 'tile-1-1', act: 'ATTACK' },
                 { turn: 1, note: 'Gài Mìn Khoai Tây chặn bước nó quay lại.', focus: 'item-potato_mine' },
                 { turn: 1, note: 'Đặt mìn vào đúng ô vừa hất ra.', focus: 'tile-1-1', act: 'ITEM' },
-                { turn: 1, note: 'Nhà dưới: Cửa Lưới 5 máu bọc giáp. Xạ Thủ, bắn!', focus: 'unit-MAT_PEASHOOTER' },
+                { turn: 1, note: 'Nhà dưới: Cửa Lưới bọc giáp. Xạ Thủ, xuống góc bắn!', focus: 'unit-MAT_PEASHOOTER' },
                 { turn: 1, note: 'Di chuyển xuống hàng F lấy góc bắn!', focus: 'tile-5-2', act: 'MOVE' },
-                { turn: 1, note: 'Bắn Đậu!', focus: 'skill-pea_shot' },
-                { turn: 1, note: 'Khai hỏa! Nó mới chỉ trầy da.', focus: 'tile-5-1', act: 'ATTACK' },
+                // Bless BEFORE the shot — the +1 dies at end of turn, so the order IS the
+                // lesson. The blessed pea is (2+1) through armour 1 = 2 into the door's 3.
                 { turn: 1, note: 'Sunspot dồn lực cùng! Bấm chọn cô ấy.', focus: 'hero-SOLAR_FLARE' },
-                { turn: 1, note: 'Tiến sát lại cho đủ tầm thiêu đốt.', focus: 'tile-4-3', act: 'MOVE' },
-                { turn: 1, note: 'Thiêu Đốt — dồn sạch 50 Sun!', focus: 'skill-sf_sunburn' },
-                { turn: 1, note: 'Phun lửa nướng nó!', focus: 'tile-5-1', act: 'ATTACK' },
+                { turn: 1, note: 'Tiến lại gần Xạ Thủ.', focus: 'tile-4-3', act: 'MOVE' },
+                { turn: 1, note: 'Ban Phước — 50 Sun: +1 sát thương TRONG LƯỢT NÀY!', focus: 'skill-sf_blessing' },
+                { turn: 1, note: 'Phước lành cho Xạ Thủ — buff TRƯỚC, bắn SAU!', focus: 'tile-5-2', act: 'ATTACK' },
+                { turn: 1, note: 'Giờ Xạ Thủ khai hỏa. Chọn lại nó!', focus: 'unit-MAT_PEASHOOTER' },
+                { turn: 1, note: 'Bắn Đậu!', focus: 'skill-pea_shot' },
+                { turn: 1, note: 'Đạn được ban phước xuyên giáp sâu hơn!', focus: 'tile-5-1', act: 'ATTACK' },
                 { turn: 1, note: 'Nó còn 1 máu. Kết thúc lượt!', focus: 'end-turn' },
 
                 // --- turn 2: the arithmetic says no. Say it, then hold the second front ---
@@ -826,42 +830,48 @@ export const TUTORIAL_CHAIN: TutorialNode[] = [
                 { turn: 3, note: 'Con cướp não vẫn còn đó! Chọn Ironhusk.', focus: 'hero-WALL_KNIGHT' },
                 { turn: 3, note: 'Đập Khiên.', focus: 'skill-wk_bash' },
                 { turn: 3, note: 'Hất nó vào tường — giáp chặn đập, cú va kết liễu.', focus: 'tile-3-0', act: 'ATTACK' },
-                { turn: 3, note: 'Đội Xô đang tới. Chọn Xạ Thủ.', focus: 'unit-MAT_PEASHOOTER' },
-                { turn: 3, note: 'Sang hàng E cho thẳng đường đạn.', focus: 'tile-4-2', act: 'MOVE' },
-                { turn: 3, note: 'Bắn Đậu.', focus: 'skill-pea_shot' },
-                { turn: 3, note: 'Bào máu nó.', focus: 'tile-4-1', act: 'ATTACK' },
-                { turn: 3, note: 'Nấm mồ đã trồi một con. Dập tận gốc!', focus: 'hero-SOLAR_FLARE' },
-                { turn: 3, note: 'Bước tới cho đủ tầm.', focus: 'tile-3-4', act: 'MOVE' },
-                { turn: 3, note: 'Thiêu Đốt!', focus: 'skill-sf_sunburn' },
-                { turn: 3, note: 'Đốt cái mồ, chặn đợt sau.', focus: 'tile-2-5', act: 'ATTACK' },
-                { turn: 3, note: 'Còn mỗi con Đội Xô. Kết thúc lượt.', focus: 'end-turn' },
+                // The grave's clock is the deadline; the answer is the same one-two from
+                // turn 1 — bless the shooter, then the boosted pea (2+1 = 3) fells the
+                // 3-HP grave in a single shot, on the last turn before its second dig.
+                { turn: 3, note: 'Nấm mồ sắp trồi thêm! Sunspot, ban phước!', focus: 'hero-SOLAR_FLARE' },
+                { turn: 3, note: 'Ban Phước.', focus: 'skill-sf_blessing' },
+                { turn: 3, note: 'Phước cho Xạ Thủ — nó sẽ dập cái mồ.', focus: 'tile-3-2', act: 'ATTACK' },
+                { turn: 3, note: 'Xạ Thủ, lấy đường đạn dọc hàng C!', focus: 'unit-MAT_PEASHOOTER' },
+                { turn: 3, note: 'Sang C4 — thẳng làn tới cái mồ.', focus: 'tile-2-3', act: 'MOVE' },
+                { turn: 3, note: 'Bắn Đậu!', focus: 'skill-pea_shot' },
+                { turn: 3, note: 'Một phát được ban phước — dập tận gốc!', focus: 'tile-2-5', act: 'ATTACK' },
+                { turn: 3, note: 'Còn con Nón Chóp phía dưới. Kết thúc lượt.', focus: 'end-turn' },
 
                 // --- turn 4: the one already on the doorstep dies now ---
                 // Its bite lands at the END of this turn, so chipping it is not an option —
                 // shove and shot together, or the upper house goes the way of the lower one.
-                { turn: 4, note: 'Đội Xô đã kề nhà trên, cắn ngay cuối lượt!', focus: 'hero-WALL_KNIGHT' },
+                // Close-out arithmetic, and the ORDER is the arithmetic: the pea fires
+                // first, down the C column Ironhusk is about to stand in — 2 into the cone's
+                // 3 — and then he steps in and finishes with bash 1 + wall-slam 1. Swap the
+                // two and his own body blocks the shot that sets his kill up.
+                { turn: 4, note: 'Nón Chóp đã kề nhà trên! Xạ Thủ bắn trước!', focus: 'unit-MAT_PEASHOOTER' },
+                { turn: 4, note: 'Bắn Đậu.', focus: 'skill-pea_shot' },
+                { turn: 4, note: 'Xuyên dọc hàng C, bào nó còn 1 máu!', focus: 'tile-2-0', act: 'ATTACK' },
+                { turn: 4, note: 'Ironhusk khoá sổ. Chọn anh ấy!', focus: 'hero-WALL_KNIGHT' },
                 { turn: 4, note: 'Áp sát nó.', focus: 'tile-2-1', act: 'MOVE' },
                 { turn: 4, note: 'Đập Khiên.', focus: 'skill-wk_bash' },
-                // Armour-era arithmetic: the bash itself bounces off the bucket (1 - armour 1
-                // = 0), the SLAM into the wall does not (collisions ignore helmets), and the
-                // pea below finishes through the armour for 1. 0 + 1 + 1 against its 2 left.
-                { turn: 4, note: 'Hất vào tường — giáp chặn đập, cú va thì không.', focus: 'tile-2-0', act: 'ATTACK' },
-                { turn: 4, note: 'Chưa chết. Xạ Thủ dứt điểm!', focus: 'unit-MAT_PEASHOOTER' },
-                { turn: 4, note: 'Xuống cột nhà cho thẳng đường đạn.', focus: 'tile-3-0', act: 'MOVE' },
-                { turn: 4, note: 'Bắn Đậu.', focus: 'skill-pea_shot' },
-                { turn: 4, note: 'Giữ được nhà trên!', focus: 'tile-2-0', act: 'ATTACK' },
+                { turn: 4, note: 'Hất vào tường — cú va kết liễu. Giữ được nhà trên!', focus: 'tile-2-0', act: 'ATTACK' },
                 { turn: 4, note: 'Sunspot gom nắng. Chọn cô ấy.', focus: 'hero-SOLAR_FLARE' },
                 { turn: 4, note: 'Thu Hoạch.', focus: 'skill-sf_harvest' },
-                { turn: 4, note: 'Chạm vào Sunspot.', focus: 'tile-3-4', act: 'ATTACK' },
+                { turn: 4, note: 'Chạm vào Sunspot.', focus: 'tile-4-3', act: 'ATTACK' },
                 { turn: 4, note: 'Còn con chui từ mộ. Kết thúc lượt.', focus: 'end-turn' },
 
                 // --- turn 5: the grave's riser, and the payoff for gathering ---
-                // Sunspot has spent and re-gathered twice by now, so the last one is hers.
-                // That rhythm — burn, harvest, burn, harvest, burn — is the whole economy
-                // lesson, and it fits inside the standard 50 opening exactly.
+                // Sunspot has spent and re-gathered twice by now, so the last blessing is
+                // hers to give. That rhythm — bless, harvest, bless, harvest, bless — is the
+                // whole economy lesson, and it fits inside the standard 50 opening exactly.
+                // The finisher is Ironhusk's blessed bash: (1+1) into the riser's 2.
                 { turn: 5, note: 'Con chui từ mộ đã tới cửa. Sunspot còn 50 nắng!', focus: 'hero-SOLAR_FLARE' },
-                { turn: 5, note: 'Bước tới cho đủ tầm.', focus: 'tile-2-3', act: 'MOVE' },
-                { turn: 5, note: 'Thiêu Đốt.', focus: 'skill-sf_sunburn' },
+                { turn: 5, note: 'Bước tới gần Ironhusk.', focus: 'tile-3-2', act: 'MOVE' },
+                { turn: 5, note: 'Ban Phước.', focus: 'skill-sf_blessing' },
+                { turn: 5, note: 'Phước cuối cho Ironhusk!', focus: 'tile-2-1', act: 'ATTACK' },
+                { turn: 5, note: 'Ironhusk, kết liễu! Chọn anh ấy.', focus: 'hero-WALL_KNIGHT' },
+                { turn: 5, note: 'Đập Khiên.', focus: 'skill-wk_bash' },
                 { turn: 5, note: 'Sạch bóng. Mất một não, giữ được một.', focus: 'tile-1-1', act: 'ATTACK' },
                 { turn: 5, note: 'Kết thúc lượt.', focus: 'end-turn' },
             ],
@@ -977,8 +987,8 @@ export const TUTORIAL_CHAIN: TutorialNode[] = [
                 // simulation missed it by only counting enemies as blockers.)
                 //
                 // Ironhusk now works from row C and Sunspot from row E: he can still reach
-                // the boss diagonally-adjacent to bash it, she is still inside Sun Burn's
-                // three tiles, and her line stays clear all three turns.
+                // the boss diagonally-adjacent to bash it, she is still inside Blessing's
+                // three tiles of him, and her line stays clear all three turns.
                 GREEN_SHADOW: { x: 3, y: 1 },
                 WALL_KNIGHT: { x: 2, y: 2 },
                 SOLAR_FLARE: { x: 4, y: 2 },
@@ -1014,9 +1024,11 @@ export const TUTORIAL_CHAIN: TutorialNode[] = [
                 { type: 'KILL_COUNT', description: 'Diệt 2 zombie', coins: 25, count: 2 },
             ],
             scriptedDefeat: true,
-            // Every turn spends every hero, and the ledger is the lesson: pea 2 + blast 3 +
-            // pea 2 from Shadeleaf, two shield bashes, a 4-damage Sun Burn — 13 into a
-            // 16 HP boss. Measured, so the defeat can never be mistaken for a misplay.
+            // Every turn spends every hero, and the ledger is the lesson: pea 2, the
+            // three-pea blast for 6 and a last pea 2 from Shadeleaf, two shield bashes (the
+            // second one blessed to 2), 13 into a 25 HP boss. Measured, so the defeat can
+            // never be mistaken for a misplay — and the blessing teaches its one rule
+            // (buff first, swing after) in the fight built to be lost.
             steps: [
                 { phase: 'PLACEMENT', turn: 1, note: 'Kẻ hủy diệt xuất hiện. Bắt Đầu Trận!', focus: 'start-battle' },
 
@@ -1063,21 +1075,34 @@ export const TUTORIAL_CHAIN: TutorialNode[] = [
                 // Turn 3 is the whole arsenal into one tile. The boss walks two columns a
                 // turn straight down row D — D8, D6, D4 — so every tile below is measured,
                 // not guessed, and all three heroes can name the same square.
+                // Move first, bless second, bash third: the +1 lives only inside this
+                // turn, so the order the clicks happen in IS the mechanic being taught.
                 { turn: 3, note: 'Nó vào giữa sân. Dốc cạn sức lực!', focus: 'hero-WALL_KNIGHT' },
                 { turn: 3, note: 'Ironhusk áp sát bằng hàng C!', focus: 'tile-2-2', act: 'MOVE' },
+                { turn: 3, note: 'Sunspot dồn 50 Sun cuối. Chọn cô ấy!', focus: 'hero-SOLAR_FLARE' },
+                { turn: 3, note: 'Ban Phước!', focus: 'skill-sf_blessing' },
+                { turn: 3, note: 'Phước cho Ironhusk — buff trước, đập sau!', focus: 'tile-2-2', act: 'ATTACK' },
+                { turn: 3, note: 'Giờ Ironhusk vung đòn. Chọn lại anh ấy!', focus: 'hero-WALL_KNIGHT' },
                 { turn: 3, note: 'Đập Khiên!', focus: 'skill-wk_bash' },
-                { turn: 3, note: 'Vung cú đập cuối!', focus: 'tile-3-2', act: 'ATTACK' },
-                { turn: 3, note: 'Sunspot tung đòn cuối. Chọn cô ấy!', focus: 'hero-SOLAR_FLARE' },
-                { turn: 3, note: 'Thiêu Đốt — 50 Sun!', focus: 'skill-sf_sunburn' },
-                { turn: 3, note: 'Nướng cháy nó!', focus: 'tile-3-2', act: 'ATTACK' },
+                { turn: 3, note: 'Cú đập được ban phước!', focus: 'tile-3-2', act: 'ATTACK' },
                 { turn: 3, note: 'Shadeleaf, trút nốt viên đạn cuối!', focus: 'hero-GREEN_SHADOW' },
                 { turn: 3, note: 'Bắn Đậu!', focus: 'skill-gs_pea' },
                 { turn: 3, note: 'Tất cả đã dốc hết. Nó vẫn đứng!', focus: 'tile-3-2', act: 'ATTACK' },
                 { turn: 3, note: 'Không thể cứu vãn. Thua là trắng tay!', focus: 'end-turn' },
 
                 // Nothing left to spend: no Sun, no Shadeleaf, and the boss is standing on
-                // the last house. The final step exists so the player is never left guessing
-                // what to click while the run ends.
+                // the last house. Before the last click, Chrona overturns turn 3's "losing
+                // is empty-handed" ON PURPOSE — these four note-only beats are where the
+                // Chrono Echo is taught (utils/persistence.ts): a real defeat sends one item
+                // to the next campaign, abandoning sends nothing, and THIS defeat mints the
+                // player's first one. The mechanic must be said here, in the loss it applies
+                // to, or the echo screen that opens their first real campaign reads as a bug.
+                { turn: 4, note: 'Chrona: "Khoan! Thất bại thật sự không trắng tay đâu."' },
+                { turn: 4, note: 'Mỗi lần thua trận, tôi kịp gửi 1 vật phẩm về chiến dịch sau.' },
+                { turn: 4, note: 'Nhưng bỏ chạy giữa chừng thì không có gì nhé!' },
+                { turn: 4, note: 'Trận này là bài học — quà đầu tiên chờ ở chiến dịch thật.' },
+                // The final step exists so the player is never left guessing what to click
+                // while the run ends.
                 { turn: 4, note: 'Hết Sun, hết hy vọng. Nhìn nó tàn phá!', focus: 'end-turn' },
             ],
         },

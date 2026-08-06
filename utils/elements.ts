@@ -1,6 +1,6 @@
 import { HERO_DEFINITIONS } from '../data/heroes';
 import {
-    ElementId, HeroId, Position, SkillEffectDefinition, Skill, StatusEffectType, Unit, WorldType,
+    ElementId, HeroId, Position, SkillEffectDefinition, Skill, StatusEffectType, Unit, UnitImmunity, WorldType,
 } from '../types';
 
 /**
@@ -35,6 +35,26 @@ import {
  * retune this in the same breath, or the element stops being a decision.
  */
 export const ELEMENT_HP_COST = 2;
+
+/**
+ * A HERO CARRYING AN ELEMENT IS IMMUNE TO THAT ELEMENT (design call 2026-08-06): the ice
+ * hero does not freeze, the fire hero does not burn, the lightning hero does not conduct.
+ * Part of what the ELEMENT_HP_COST above buys, and matched — never cross-element: a fire
+ * hero still freezes solid, which is what keeps the pick a personality instead of a
+ * blanket status shield.
+ *
+ * Applied where heroes are BUILT (utils/unitFactory.ts), as a plain UnitImmunity — so every
+ * existing check in the game honours it without knowing elements exist. Deliberately NOT
+ * applied to blighted zombies rolling an element (encounterBuilder/turnManager): the
+ * horde's blight is a weapon, not a shield, and the anti-elemental items are priced
+ * against exactly those waves. (A relic granting these immunities to ordinary heroes is
+ * planned for whenever relics exist.)
+ */
+export const ELEMENT_IMMUNITY: Record<ElementId, UnitImmunity> = {
+    ICE: 'FREEZE',
+    FIRE: 'BURN',
+    LIGHTNING: 'SHOCK',
+};
 
 export interface ElementDefinition {
     id: ElementId;

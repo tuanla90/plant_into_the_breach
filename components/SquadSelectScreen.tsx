@@ -504,7 +504,11 @@ export const SquadSelectScreen: React.FC<SquadSelectScreenProps> = ({
               style={{ flex: '0 0 240px', width: 240 }}
           >
               {card}
-              {isSelected && !locked && (
+              {/* `elementSlot: 'NONE'` (Gourdward): a kit with no enemy-facing action would
+                  pay the element's 2 max HP for literally nothing, and his ward already
+                  grants all three immunities — the picker here would be a shop selling a
+                  trap. Hidden, not disabled: there is no choice to explain. */}
+              {isSelected && !locked && hero.elementSlot !== 'NONE' && (
                   <ElementPicker
                       chosen={element}
                       onChoose={el => handleChooseElement(heroId, el)}
@@ -532,14 +536,19 @@ export const SquadSelectScreen: React.FC<SquadSelectScreenProps> = ({
                     </p>
                 </div>
 
-                <div className="flex items-center gap-3">
+                {/* flex-wrap + justify-end: hàng này chở bốn thứ (quay lại, cài đặt, ba ô
+                    đội hình, nút xuất kích) và ở 375px nó dài 365px trong khung 336px —
+                    XUẤT KÍCH, nút chính của cả màn, bị đẩy một phần ra ngoài mép phải.
+                    Nhãn "Quay lại" rụng đi trên màn dọc là đủ để cả hàng lọt vào. */}
+                <div className="flex flex-wrap justify-end items-center gap-2 lg:gap-3">
                     {onBack && (
                         <button
                             data-sfx="back"
                             onClick={onBack}
-                            className="h-11 px-4 flex items-center gap-2 border border-[#2b303b] rounded text-[11px] uppercase tracking-widest text-gray-400 hover:text-white hover:border-gray-500"
+                            title={t('Back')}
+                            className="h-11 px-4 portrait:px-3 flex items-center gap-2 border border-[#2b303b] rounded text-[11px] uppercase tracking-widest text-gray-400 hover:text-white hover:border-gray-500"
                         >
-                            <ArrowLeft size={14} /> {t('Back')}
+                            <ArrowLeft size={14} /> <span className="portrait:hidden">{t('Back')}</span>
                         </button>
                     )}
 
@@ -568,7 +577,7 @@ export const SquadSelectScreen: React.FC<SquadSelectScreenProps> = ({
                             return (
                                 <div
                                     key={i}
-                                    className="relative w-11 h-11 rounded border flex items-center justify-center overflow-hidden bg-black/50"
+                                    className="relative w-11 h-11 portrait:w-10 portrait:h-10 rounded border flex items-center justify-center overflow-hidden bg-black/50"
                                     style={{ borderColor: accent }}
                                     title={id
                                         ? (elDef
@@ -596,7 +605,7 @@ export const SquadSelectScreen: React.FC<SquadSelectScreenProps> = ({
                         onClick={() => isSquadReady && onStartGame(selectedSquad, heroElements)}
                         disabled={!isSquadReady}
                         className={`
-                            h-11 px-5 uppercase tracking-widest font-bold text-sm transition-all flex items-center gap-2 border-b-4 active:border-b-0 active:translate-y-1 rounded-sm
+                            h-11 px-5 portrait:px-4 uppercase tracking-widest font-bold text-sm transition-all flex items-center gap-2 border-b-4 active:border-b-0 active:translate-y-1 rounded-sm
                             ${isSquadReady
                                 ? 'bg-green-600 border-green-800 text-white hover:bg-green-500 shadow-[0_0_20px_rgba(34,197,94,0.3)]'
                                 : 'bg-gray-800 border-gray-900 text-gray-600 cursor-not-allowed opacity-50'}

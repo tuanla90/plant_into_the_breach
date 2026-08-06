@@ -147,7 +147,10 @@ export const StageSelectScreen: React.FC<StageSelectScreenProps> = ({ unlocks, o
                         <h1 className="text-2xl font-black uppercase tracking-widest">{t('Choose Your Campaign')}</h1>
                         <p className="text-gray-500 text-xs uppercase tracking-widest">
                             {t('Bosses down: {n}/{total}', { n: clearedCount, total: BOSSES.length - 1 })}
-                            <span className="ml-3 text-gray-600 normal-case tracking-normal">
+                            {/* Màn dọc: câu này chiếm ba dòng trên 375px và nói lại đúng thứ
+                                mỗi thẻ Hồi bên dưới đã vẽ ra (chân dung phần thưởng + nhãn
+                                MỞ KHOÁ). Nhường chiều cao đó cho thẻ. */}
+                            <span className="portrait:hidden short:hidden ml-3 text-gray-600 normal-case tracking-normal">
                                 {t('Two acts free a squadmate. The third takes an element off the thing that closes the stage.')}
                             </span>
                         </p>
@@ -155,7 +158,7 @@ export const StageSelectScreen: React.FC<StageSelectScreenProps> = ({ unlocks, o
                     <div className="flex items-center gap-2">
                         <button data-sfx="back"
                             onClick={onBack}
-                            className="h-10 px-4 flex items-center gap-2 border border-[#2b303b] rounded text-[11px] uppercase tracking-widest text-gray-400 hover:text-white hover:border-gray-500"
+                            className="h-10 min-h-[40px] px-4 flex items-center gap-2 border border-[#2b303b] rounded text-[11px] uppercase tracking-widest text-gray-400 hover:text-white hover:border-gray-500"
                         >
                             <ArrowLeft size={14} /> {t('Back')}
                         </button>
@@ -163,7 +166,7 @@ export const StageSelectScreen: React.FC<StageSelectScreenProps> = ({ unlocks, o
                         {onOpenSettings && (
                             <button
                                 onClick={onOpenSettings}
-                                className="h-10 px-3 flex items-center justify-center border border-[#2b303b] rounded text-gray-400 hover:text-sky-400 hover:border-sky-500 transition-colors"
+                                className="h-10 min-h-[40px] min-w-[40px] px-3 flex items-center justify-center border border-[#2b303b] rounded text-gray-400 hover:text-sky-400 hover:border-sky-500 transition-colors"
                                 title={t('Cài Đặt')}
                             >
                                 <Settings size={18} />
@@ -194,8 +197,11 @@ export const StageSelectScreen: React.FC<StageSelectScreenProps> = ({ unlocks, o
                                        destinations is also the truth of the screen — the Breach
                                        is not a footnote under the stages, it is the fourth
                                        place you can go. */
-                                    className={`relative text-left rounded border-l-4 border-y border-r px-3 py-2.5 flex flex-col justify-center gap-1
-                                                flex-1 min-h-[92px]
+                                    /* Màn dọc: tab là Ô LƯỚI chứ không phải hàng trong cột, nên
+                                       92px chỉ để phình cho đủ chỗ phụ đề — mà phụ đề đã ẩn.
+                                       64px giữ đúng ba dòng còn lại (số chặng, tên, pips). */
+                                    className={`relative text-left rounded border-l-4 border-y border-r px-3 py-2.5 portrait:py-1.5 flex flex-col justify-center gap-1
+                                                flex-1 min-h-[92px] portrait:min-h-[64px]
                                                 transition-all ${active ? '' : 'hover:brightness-150 opacity-70 hover:opacity-100'}`}
                                     style={{
                                         borderLeftColor: stage.accent,
@@ -217,7 +223,11 @@ export const StageSelectScreen: React.FC<StageSelectScreenProps> = ({ unlocks, o
                                           style={{ color: active ? stage.accent : '#9ca3af' }}>
                                         {t(stage.name)}
                                     </span>
-                                    <span className="text-[9px] text-gray-500 normal-case tracking-normal leading-snug line-clamp-2">
+                                    {/* Phụ đề là thứ đầu tiên bị cắt khi tab xếp thành lưới 2 cột:
+                                        ở 160px bề ngang nó xuống hai dòng và đẩy bốn tab thành
+                                        gần 200px chiều cao, ăn hết chỗ của ba thẻ Hồi bên dưới.
+                                        Tên chặng + pips vẫn trả lời "đây là đâu, tôi tới đâu rồi". */}
+                                    <span className="portrait:hidden text-[9px] text-gray-500 normal-case tracking-normal leading-snug line-clamp-2">
                                         {t(stage.subtitle)}
                                     </span>
                                     {/* Three pips per tab. An unselected stage still has to answer "how
@@ -234,8 +244,11 @@ export const StageSelectScreen: React.FC<StageSelectScreenProps> = ({ unlocks, o
                                                 }} />
                                         ))}
                                     </span>
+                                    {/* Mũi tên "tab này đang mở, nội dung ở bên phải" chỉ đúng khi
+                                        rail là cột dọc. Xếp lưới 2 cột thì nó chỉ sang tab bên
+                                        cạnh — nền + viền sáng đã đủ nói tab nào đang chọn. */}
                                     {active && (
-                                        <ChevronRight size={16} className="absolute -right-[9px] top-1/2 -translate-y-1/2"
+                                        <ChevronRight size={16} className="portrait:hidden absolute -right-[9px] top-1/2 -translate-y-1/2"
                                                       style={{ color: stage.accent }} />
                                     )}
                                 </button>
@@ -253,8 +266,8 @@ export const StageSelectScreen: React.FC<StageSelectScreenProps> = ({ unlocks, o
                         {breach && (
                             <button
                                 onClick={() => setTab(0)}
-                                className={`relative text-left rounded border-l-4 border-y border-r px-3 py-2.5 flex flex-col justify-center gap-1
-                                    flex-1 min-h-[92px] transition-all
+                                className={`relative text-left rounded border-l-4 border-y border-r px-3 py-2.5 portrait:py-1.5 flex flex-col justify-center gap-1
+                                    flex-1 min-h-[92px] portrait:min-h-[64px] transition-all
                                     ${tab === 0
                                         ? 'border-l-red-500 border-red-800 bg-[#1f1116] shadow-[0_0_18px_rgba(220,38,38,0.22)]'
                                         : allDown
@@ -280,7 +293,7 @@ export const StageSelectScreen: React.FC<StageSelectScreenProps> = ({ unlocks, o
                                     {allDown ? t('The way is open') : t('Beat all nine bosses')}
                                 </span>
                                 {tab === 0 && (
-                                    <ChevronRight size={16} className="absolute -right-[9px] top-1/2 -translate-y-1/2 text-red-500" />
+                                    <ChevronRight size={16} className="portrait:hidden absolute -right-[9px] top-1/2 -translate-y-1/2 text-red-500" />
                                 )}
                             </button>
                         )}
@@ -296,11 +309,14 @@ export const StageSelectScreen: React.FC<StageSelectScreenProps> = ({ unlocks, o
                             get in should still leave this tab knowing exactly which two
                             bosses are standing between them and it. */}
                         {tab === 0 && breach && (
-                            <section className="flex-1 min-h-0 flex flex-col gap-3">
+                            <section className="flex-1 min-h-0 portrait:flex-none portrait:min-h-fit flex flex-col gap-3">
                                 <div className="relative rounded-lg border-2 border-red-900/70 bg-[#150d11] overflow-hidden shrink-0">
                                     <div className="absolute inset-0 pointer-events-none"
                                          style={{ background: 'radial-gradient(120% 100% at 100% 40%, rgba(220,38,38,0.22) 0%, transparent 62%)' }} />
-                                    <div className="relative z-10 flex items-stretch gap-4 p-4">
+                                    {/* Màn dọc: chân dung lên trên, chữ xuống dưới. Cạnh nhau ở 375px
+                                        thì cột chữ còn ~155px và câu dẫn của Vết Nứt vỡ thành tám dòng. */}
+                                    <div className="relative z-10 flex items-stretch gap-4 p-4
+                                                    portrait:flex-col-reverse portrait:items-center portrait:gap-2 portrait:p-3">
                                         <div className="flex-1 min-w-0 flex flex-col justify-center gap-1.5">
                                             <span className="flex items-center gap-2">
                                                 <Crown size={16} className="text-red-400" />
@@ -345,7 +361,12 @@ export const StageSelectScreen: React.FC<StageSelectScreenProps> = ({ unlocks, o
 
                                 {/* THE NINE, by stage. A tick is a boss already down; the rest is
                                     the to-do list this tab exists to hand over. */}
-                                <div className="flex-1 min-h-0 grid grid-cols-3 gap-3">
+                                {/* order-last trong màn dọc: một cột thì danh sách chín trùm dài
+                                    ~675px, và nút vào Vết Nứt nằm sau nó là nút phải cuộn qua cả
+                                    danh sách mới bấm được. Nút lên ngay dưới phần tóm tắt; danh
+                                    sách là thứ để tra, không phải thứ chắn đường. */}
+                                <div className="flex-1 min-h-0 grid grid-cols-3 gap-3
+                                                portrait:order-last portrait:flex-none portrait:min-h-fit portrait:grid-cols-1">
                                     {STAGES.map(stage => (
                                         <div key={stage.id}
                                              className="rounded-lg border bg-[#0f1116] p-2.5 flex flex-col gap-2"
@@ -425,7 +446,7 @@ export const StageSelectScreen: React.FC<StageSelectScreenProps> = ({ unlocks, o
                             const acts = actsOfStage(stage.id);
                             const cleared = acts.filter(b => done(b.id)).length;
                             return (
-                                <section key={stage.id} className="flex-1 min-h-0 flex flex-col gap-3">
+                                <section key={stage.id} className="flex-1 min-h-0 portrait:flex-none portrait:min-h-fit flex flex-col gap-3">
                                     <div
                                         className="flex items-baseline gap-2 px-3 py-2 rounded border shrink-0"
                                         style={{ borderColor: `${stage.accent}55`, backgroundColor: `${stage.accent}10` }}
@@ -464,9 +485,19 @@ export const StageSelectScreen: React.FC<StageSelectScreenProps> = ({ unlocks, o
                                                    leaving a hole, and on a short one they stop at 168 and the
                                                    panel scrolls rather than crushing the art. The ceiling is
                                                    there because past ~300px the pixel sprites are being blown
-                                                   up rather than shown. */
+                                                   up rather than shown.
+
+                                                   MÀN DỌC làm ngược lại: thẻ cao TỰ NHIÊN (flex-none) và panel
+                                                   cuộn. Trước đây thẻ vẫn flex-1 trong khi bên trong xếp thành
+                                                   cột — ba thẻ chia nhau 460px nên mỗi thẻ bị ép còn 168px, mà
+                                                   nội dung xếp dọc cần hơn 800px: overflow-hidden nuốt sạch tên
+                                                   trùm, mô tả VÀ chân dung trùm, chỉ còn trơ mỗi ảnh phần thưởng.
+                                                   Bố cục dọc giờ là WRAP: hai chân dung + mũi tên nằm chung một
+                                                   hàng, chữ xuống hàng dưới ăn hết bề ngang. */
                                                 className={`group relative text-left rounded-lg border-2 overflow-hidden transition-all
-                                                    flex items-stretch portrait:flex-col portrait:max-h-none gap-3 pl-2 pr-2 py-2 flex-1 min-h-[168px] max-h-[300px]
+                                                    flex items-stretch gap-3 pl-2 pr-2 py-2 flex-1 min-h-[168px] max-h-[300px]
+                                                    portrait:flex-wrap portrait:items-center portrait:gap-x-2 portrait:gap-y-1.5
+                                                    portrait:flex-none portrait:max-h-none portrait:min-h-0
                                                     ${!open
                                                         ? 'bg-[#0b0c0f] border-[#1e2128] cursor-not-allowed'
                                                         : cleared
@@ -502,12 +533,12 @@ export const StageSelectScreen: React.FC<StageSelectScreenProps> = ({ unlocks, o
 
                                                     THE REWARD. Heroes have portraits; a stage-closing act pays an
                                                     element instead, so it gets the element's glyph in its colour. */}
-                                                <div className="relative z-10 w-[150px] portrait:w-full shrink-0 flex flex-col items-center justify-center gap-0.5 min-h-0">
+                                                <div className="relative z-10 w-[150px] portrait:w-[96px] portrait:h-[104px] shrink-0 flex flex-col items-center justify-center gap-0.5 min-h-0">
                                                     {portrait ? (
                                                         <img
                                                             src={portrait}
                                                             alt=""
-                                                            className="min-h-0 max-h-full w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+                                                            className="min-h-0 max-h-full w-auto max-w-full object-contain transition-transform duration-200 group-hover:scale-105"
                                                             style={{
                                                                 filter: open
                                                                     ? `drop-shadow(0 3px 6px rgba(0,0,0,0.8)) drop-shadow(0 0 10px ${rewardAccent}66)`
@@ -541,8 +572,11 @@ export const StageSelectScreen: React.FC<StageSelectScreenProps> = ({ unlocks, o
                                                     </span>
                                                     {/* What the element DOES, not just its name. A hero's sprite
                                                         argues for itself; a word like "Fire" does not. */}
+                                                    {/* portrait:hidden — cột phần thưởng chỉ còn 96px, ba dòng chữ
+                                                        8px trong đó là một vệt xám. Luật của nguyên tố đọc được ở
+                                                        màn chọn anh hùng, nơi nó là thứ đang được CHỌN. */}
                                                     {element && (
-                                                        <span className="text-[8px] leading-tight text-center normal-case tracking-normal line-clamp-3 px-0.5"
+                                                        <span className="portrait:hidden text-[8px] leading-tight text-center normal-case tracking-normal line-clamp-3 px-0.5"
                                                               style={{ color: open ? '#9ca3af' : '#3f4653' }}>
                                                             {t(element.description)}
                                                         </span>
@@ -563,7 +597,12 @@ export const StageSelectScreen: React.FC<StageSelectScreenProps> = ({ unlocks, o
                                                         : <ArrowLeft size={16} style={{ color: open ? rewardAccent : '#3f4653' }} />}
                                                 </div>
 
-                                                <div className="relative z-10 flex-1 min-w-0 flex flex-col justify-center gap-0.5">
+                                                {/* order-last: khối chữ là thứ DUY NHẤT xuống hàng dưới trong
+                                                    màn dọc. Trong DOM nó đứng trước chân dung trùm (thứ tự đó
+                                                    đúng cho hàng ngang: thưởng ← mũi tên ← chữ ← trùm), nên
+                                                    phải đảo lại ở đây, không thì chữ kẹp giữa hai bức ảnh. */}
+                                                <div className="relative z-10 flex-1 min-w-0 flex flex-col justify-center gap-0.5
+                                                                portrait:order-last portrait:w-full portrait:flex-none">
                                                     <span className="text-[15px] font-black uppercase tracking-wider truncate"
                                                           style={{ color: open ? '#e5e7eb' : '#4b5563' }}>
                                                         {t(boss.city)}
@@ -581,12 +620,13 @@ export const StageSelectScreen: React.FC<StageSelectScreenProps> = ({ unlocks, o
                                                 {/* Bigger than the reward on the other side, deliberately: the card
                                                     is asking "do you want to fight this", and the thing being fought
                                                     should be the loudest object on it. */}
-                                                <div className="relative z-10 w-[208px] portrait:w-full shrink-0 flex items-center justify-center min-h-0">
+                                                <div className="relative z-10 w-[208px] shrink-0 flex items-center justify-center min-h-0
+                                                                portrait:w-auto portrait:flex-1 portrait:min-w-0 portrait:h-[104px]">
                                                     {bossArt ? (
                                                         <img
                                                             src={bossArt}
                                                             alt=""
-                                                            className="min-h-0 max-h-full w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+                                                            className="min-h-0 max-h-full w-auto max-w-full object-contain transition-transform duration-200 group-hover:scale-105"
                                                             style={{
                                                                 // Same mirror the board applies (utils/icons facingFlip):
                                                                 // the Gargantuar is drawn facing right, and on this card

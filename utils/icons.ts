@@ -35,7 +35,8 @@ export const HERO_ICONS = {
     SOLAR_FLARE: `./img/sprite-solar-flare.png`,
     CHOMPZILLA: `./img/sprite-chompzilla.png`,
     KERNEL_PULT: `./img/sprite-cobb.png`,
-    THORNQUILL: `./img/sprite-thornquill.png`,
+    // Placeholder until the drone art lands (prompt in PLAN-hero-zephyr / the user's brief).
+    ZEPHYR: `./img/placeholder/zephyr.svg`,
     THORNHIDE: `./img/sprite-thornhide.png`,
     CHARDWALL: `./img/sprite-chardwall.png`,
     GOURDWARD: `./img/sprite-gourdward.png`,
@@ -49,7 +50,7 @@ export const HERO_SPRITES = {
     SOLAR_FLARE: `./img/sprite-solar-flare.png`,
     CHOMPZILLA: `./img/sprite-chompzilla.png`,
     KERNEL_PULT: `./img/sprite-cobb.png`,
-    THORNQUILL: `./img/sprite-thornquill.png`,
+    ZEPHYR: `./img/placeholder/zephyr.svg`,
     THORNHIDE: `./img/sprite-thornhide.png`,
     CHARDWALL: `./img/sprite-chardwall.png`,
     GOURDWARD: `./img/sprite-gourdward.png`,
@@ -63,10 +64,9 @@ export const MATERIAL_SPRITES = {
     MAT_SUNFLOWER: `./img/gear-sunflower.png`,
     MAT_WALLNUT: `./img/gear-wallnut.png`,
     MAT_CHOMPER: `./img/gear-chomper.png`,
-    MAT_SNOW_PEA: `./img/gear-snow-pea.png`,
     MAT_CORN: `./img/gear-corn.png`,
-    // The four gears belonging to the four new heroes.
-    MAT_CACTUS: `./img/gear-cactus.png`,
+    // The four gears belonging to the four newest heroes.
+    MAT_CATTAIL: `./img/placeholder/gear-cattail.svg`,
     MAT_ENDURIAN: `./img/gear-endurian.png`,
     MAT_CHARD: `./img/gear-chard.png`,
     MAT_PUMPKIN: `./img/gear-pumpkin.png`,
@@ -84,6 +84,8 @@ export const ITEM_SPRITES = {
     SPIKEWEED: `./img/terrain/spikes.svg`,
     HYPNO_SHROOM: `./img/placeholder/hypno-shroom.svg`,
     MAGNET_SHROOM: `./img/placeholder/magnet-shroom.svg`,
+    ALOE: `./img/placeholder/aloe.svg`,
+    DOOM_SHROOM: `./img/placeholder/doom-shroom.svg`,
 };
 
 // Neon accent per hero — mirrors the accent color baked into each hero's card art.
@@ -94,7 +96,7 @@ export const HERO_ACCENTS: Record<string, string> = {
     SOLAR_FLARE: '#fb923c',
     CHOMPZILLA: '#d946ef',
     KERNEL_PULT: '#eab308',
-    THORNQUILL: '#22c55e',   // cactus green
+    ZEPHYR: '#e879f9',       // cattail magenta
     THORNHIDE: '#b45309',    // durian husk
     CHARDWALL: '#ef4444',    // chard stem red
     GOURDWARD: '#f97316',    // pumpkin orange
@@ -193,6 +195,7 @@ export const ICONS = {
     REPEATER: `./img/placeholder/repeater.svg`,
     BLOOMERANG: `./img/placeholder/bloomerang.svg`,
     CACTUS: `./img/gear-cactus.png`,
+    CATTAIL: `./img/placeholder/cattail.svg`,
     MELON_PULT: `./img/placeholder/melon-pult.svg`,
     CABBAGE_PULT: `./img/placeholder/cabbage-pult.svg`,
     KERNEL_PULT: `./img/gear-corn.png`,

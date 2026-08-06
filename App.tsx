@@ -11,7 +11,10 @@ import {
   coinOnRunStart, COIN_FUSE, COIN_HEAL_PER_HP, COIN_REPAIR_SEEDLING
 } from './constants';
 import { HERO_DEFINITIONS } from './data/heroes';
-import { bossById, elementsUnlocked } from './data/unlocks';
+import { bossById, elementsUnlocked, STAGES } from './data/unlocks';
+import { BOSS_CUTSCENES, STAGE_CUTSCENES } from './data/cutscenes';
+import { ELEMENT_DEFINITIONS } from './utils/elements';
+import { HERO_SPRITES, HERO_ACCENTS } from './utils/icons';
 import { MATERIAL_DEFINITIONS, STARTING_MATERIALS } from './data/materials';
 import { applyFusion, applyFusionToSkill, applyUpgrade, hasFusionEffect, getFusionEffectValue, canFuse } from './utils/fusion';
 import { computeThreatenedTiles, computeThreatDetail } from './utils/threat';
@@ -30,7 +33,9 @@ import { isBattleOnlyUnit } from './utils/unitFactory';
 import { freshHero } from './utils/unitFactory';
 import { itemTargetInvalid, planItemActions } from './utils/itemResolution';
 import { loadConfigFromStorage, loadChronoEcho, clearChronoEcho } from './utils/persistence';
+import { unlockedItemIds } from './utils/unlockLogic';
 import { ChronoEchoModal } from './components/ChronoEchoModal';
+import { SectorGiftToast } from './components/SectorGiftToast';
 import { saveRunState, loadRunState, clearRunState, hasSavedRun } from './utils/runPersistence';
 import { TUTORIAL_DIALOGUES } from './data/tutorialDialogues';
 import { GENERATE_TUTORIAL_MAP } from './data/tutorial';
@@ -55,6 +60,7 @@ import { FusionPanel } from './components/FusionPanel';
 import { CampScreen } from './components/CampScreen';
 import { UpgradePicker } from './components/UpgradePicker';
 import { ActIntro } from './components/ActIntro';
+import { Cutscene, type CutsceneReward } from './components/Cutscene';
 import { SquadViewer } from './components/SquadViewer';
 import { BalanceScreen } from './components/BalanceScreen';
 import { DebugPanel, buildDebugMap, type DebugJump } from './components/DebugPanel';
@@ -74,6 +80,84 @@ import { ScreenFade } from './components/ScreenFade';
 
 /** Shared empty list, so the tutorial index memo does not recompute on every render. */
 const EMPTY_ACK: number[] = [];
+
+/** A cutscene with the payout line filled in — what the queue below actually holds. */
+type QueuedCutscene = {
+    art: string;
+    kicker: string;
+    captions: string[];
+    reward?: CutsceneReward;
+};
+
+/**
+ * WHAT A CLEARED BOSS OWES THE PLAYER IN STORY, as a list rather than as a screen.
+ *
+ * Pure, and at module scope, because it reads nothing but the node it is handed: every fact it
+ * needs is already on the node or in the boss table. Returning a LIST instead of a screen is
+ * what lets act three be two beats — the boss dying, then the chapter closing — without either
+ * one having to know the other exists, and it is also what makes a missing painting harmless:
+ * the queue simply advances past a scene that cannot draw itself.
+ *
+ * `next.length === 0` is the same "is this the end of its map" test `completeLevel` uses to
+ * decide whether an act hands over to the next one, and it is here for the same reason. It is
+ * what keeps these scenes out of the Breach: the gauntlet's nine corridor bosses all have a
+ * camp waiting after them, and re-playing nine cutscenes the player already watched in the
+ * campaign is precisely what the endgame does not need.
+ */
+const cutscenesForClearedNode = (node?: MapNode): QueuedCutscene[] => {
+    if (!node || node.type !== 'BOSS' || node.next.length !== 0 || !node.bossId) return [];
+    const boss = bossById(node.bossId);
+    if (!boss) return [];
+
+    const out: QueuedCutscene[] = [];
+
+    // THE BOSS. Blightlord is deliberately absent from the table — its ending is the outro
+    // comic, and a single panel in front of eight would be an epilogue announcing an epilogue.
+    const scene = BOSS_CUTSCENES[node.bossId];
+    if (scene) {
+        const hero = boss.hero;
+        const element = boss.element;
+        out.push({
+            ...scene,
+            reward: hero
+                ? {
+                    label: 'New hero',
+                    name: HERO_DEFINITIONS[hero]?.name ?? hero,
+                    img: HERO_SPRITES[hero as keyof typeof HERO_SPRITES],
+                    accent: HERO_ACCENTS[hero],
+                }
+                : element
+                    ? {
+                        label: 'New element',
+                        name: ELEMENT_DEFINITIONS[element].name,
+                        accent: ELEMENT_DEFINITIONS[element].accent,
+                    }
+                    : undefined,
+        });
+    }
+
+    /**
+     * THE CHAPTER. `endsRun !== false` is the game's own word for "this boss is the door out"
+     * (types.ts MapNode.endsRun) — which for a campaign map means act three, the act that
+     * closes a stage. Stage 0 is the Breach and has no chapter to close.
+     */
+    if (node.endsRun !== false && boss.stage !== 0) {
+        const closing = STAGE_CUTSCENES[boss.stage as 1 | 2 | 3];
+        const opening = STAGES.find(s => s.id === boss.stage + 1);
+        if (closing) {
+            out.push({
+                ...closing,
+                // After stage III there is no stage IV — what opens is the Breach, and saying
+                // so is better than a chapter screen that quietly stops naming what is next.
+                reward: opening
+                    ? { label: 'Next chapter', name: opening.name, accent: opening.accent }
+                    : { label: 'Now open', name: 'The Breach', accent: '#a855f7' },
+            });
+        }
+    }
+
+    return out;
+};
 
 const App: React.FC = () => {
   const { t } = useI18n();
@@ -131,7 +215,8 @@ const App: React.FC = () => {
       mapNodes, selectNode, completeLevel, previewRewards, performTurnZeroAI, setMapNodes,
       registerSquad, handleHeroFallen, reviveHero, reviveHeroPaid, addBenchPlant, removeBenchPlant,
       brainCost, buyBrain, finishTutorial, previewUnlocks, runPayoutPreview, recordRunLost, fusableHeroes, fuseQueuedHero, upgradeQueuedHero,
-      unlocks, unlockEverything, resetProgress, reviveAllHeroes
+      unlocks, unlockEverything, resetProgress, reviveAllHeroes,
+      sectorGift, clearSectorGift, visitSector
   } = useGameProgression({
       gameState, setGameState, setBoard, units, setUnits, unitDefs, terrainDefs
   });
@@ -265,6 +350,18 @@ const App: React.FC = () => {
       probe.onload = () => setOutroReady(true);
       probe.src = OUTRO_PANELS[0].art;
   }, []);
+
+  /**
+   * The story beats a cleared boss still owes, played one after another before the run is
+   * allowed to move on (`cutscenesForClearedNode` above builds the list).
+   *
+   * A QUEUE rather than a boolean per scene, because act three owes two of them and the second
+   * must survive the first being skipped for missing art. No gate here on purpose: Cutscene
+   * probes its own painting and calls onDone if the file is not there, so an empty-handed
+   * queue and a queue of scenes that cannot draw themselves both end the same way — straight
+   * through to `handleLevelComplete`.
+   */
+  const [cutscenes, setCutscenes] = useState<QueuedCutscene[]>([]);
 
   /**
    * The tutorial is OFFERED, never forced. It used to be the only road into a first run —
@@ -675,14 +772,19 @@ const App: React.FC = () => {
        * Coffee Bean (100) never appears, because "stronger than anything you could have
        * bought yet" stops being consolation and starts being strategy.
        */
+      // The Breach's door is a ground of its own: first entry unlocks the Doom-shroom and
+      // hands one over ('BREACH' is a run mode, not a WorldType, so no map node carries it).
+      if (target?.stage === 0) visitSector('BREACH');
+
       const echo = loadChronoEcho();
       if (echo) {
           // The tutorial's graduation gift is the starter tier alone (25 = the Potato Mine);
-          // real defeats scale with how deep the fallen run got. When items gain per-sector
-          // unlocks, this pool also intersects with what is unlocked — the echo never
-          // previews an item the player has not earned yet (design call, 2026-08-06).
+          // real defeats scale with how deep the fallen run got. The pool is also capped by
+          // what is UNLOCKED — the echo consoles with tools the player has earned, it never
+          // previews locked ones (design call, 2026-08-06).
           const cap = echo.tutorial ? 25 : echo.layers >= 7 ? 75 : echo.layers >= 4 ? 60 : 40;
-          const bag = itemDefs.filter(i => i.coinCost <= cap);
+          const owned = unlockedItemIds(unlocks);
+          const bag = itemDefs.filter(i => i.coinCost <= cap && owned.has(i.id));
           const picks: ItemDefinition[] = [];
           while (picks.length < 3 && bag.length > 0) {
               picks.push(bag.splice(Math.floor(Math.random() * bag.length), 1)[0]);
@@ -728,12 +830,14 @@ const App: React.FC = () => {
       stockedVisitRef.current = visit;
       // A tutorial shop arrives pre-stocked (useGameProgression pins it); only roll for the
       // generated map, and only when the shelf is genuinely bare. The item shelf is
-      // materialised here too: `null` means "the whole catalogue", and it has to become a
+      // materialised here too: `null` means "the whole UNLOCKED catalogue" — ground not yet
+      // walked keeps its tool off the shelf (utils/unlockLogic.ts) — and it has to become a
       // concrete list before a purchase can take anything off it.
       setGameState(prev => ({
           ...prev,
           shopOffers: prev.shopOffers.length === 0 ? rollShopOffers() : prev.shopOffers,
-          shopItemOffers: prev.shopItemOffers ?? itemDefs.map(i => i.id),
+          shopItemOffers: prev.shopItemOffers
+              ?? itemDefs.filter(i => unlockedItemIds(unlocks).has(i.id)).map(i => i.id),
       }));
   }, [gameState.screen, gameState.currentLevelId]);
 
@@ -945,9 +1049,16 @@ const App: React.FC = () => {
       // Using an item costs nothing here — it was already paid for in Coin at the shop.
       // The consumption must live INSIDE the snapshot handed to the engine: a separate
       // setGameState was overwritten when the turn resolved, so used items came back.
+      //
+      // ONE copy, not filter(): duplicates used to be near-impossible, but a sector gift
+      // plus a shop purchase of the same item is now an ordinary Tuesday — and filter()
+      // silently burned every copy at once.
+      const spentInventory = [...gameState.inventory];
+      const spentIdx = spentInventory.indexOf(item.id);
+      if (spentIdx >= 0) spentInventory.splice(spentIdx, 1);
       const stateAfterUse = {
           ...gameState,
-          inventory: gameState.inventory.filter(id => id !== item.id),
+          inventory: spentInventory,
           interactionMode: 'IDLE' as const,
           selectedItemId: null,
       };
@@ -1150,7 +1261,10 @@ const App: React.FC = () => {
                   break;
 
               case 'GAIN_ITEM': {
-                  const potential = itemDefs.filter(i => !gameState.inventory.includes(i.id));
+                  // Events reward from the unlocked catalogue only — a mystery crate must not
+                  // hand over a tool whose ground the run has never walked.
+                  const owned = unlockedItemIds(unlocks);
+                  const potential = itemDefs.filter(i => owned.has(i.id) && !gameState.inventory.includes(i.id));
                   if (potential.length > 0) {
                       const item = potential[Math.floor(Math.random() * potential.length)];
                       setGameState(prev => ({ ...prev, inventory: [...prev.inventory, item.id] }));
@@ -1243,6 +1357,60 @@ const App: React.FC = () => {
       }));
       // After the state above lands, so setupCombat reads the map it is meant to.
       setTimeout(() => selectNode(target, undefined, true), 0);
+  };
+
+  /**
+   * THẮNG LUÔN TRẬN ĐANG ĐÁNH.
+   *
+   * Quét sạch địch RỒI mới lật màn hình, chứ không chỉ đặt `screen`. Bàn cờ là thứ màn
+   * Chiến Thắng và `previewRewards` cùng đọc: để địch đứng nguyên đó thì thắng xong vẫn
+   * còn quân địch trong `units`, và bất kỳ hoạt ảnh nào đang chạy dở sẽ giải quyết tiếp
+   * trên đám xác đó.
+   *
+   * Phần thưởng KHÔNG bịa: `previewRewards`/`completeLevel` vẫn chạy y như thắng thật, nên
+   * mốc mở khoá, tiền công và cả trùm hạ được đều đi đúng đường thường ngày — đó mới là
+   * thứ đáng test. Thưởng phụ nào chưa đạt thì vẫn không được trả.
+   */
+  const debugWinBattle = () => {
+      if (gameState.screen !== 'COMBAT') return;
+      setUnits(prev => prev.filter(u => !u.isEnemy));
+      setGameState(prev => ({
+          ...prev,
+          screen: 'VICTORY',
+          interactionMode: 'IDLE',
+          selectedUnitId: null,
+          selectedSkillId: null,
+          selectedItemId: null,
+          selectedTile: null,
+      }));
+      setShowDebug(false);
+  };
+
+  /**
+   * ĐỔI ĐỘI HÌNH GIỮA CHỪNG, giữ nguyên lượt chơi.
+   *
+   * Không tái sử dụng màn SQUAD_SELECT: `handleStartGame` sinh lại BẢN ĐỒ, tức chọn đội
+   * kiểu đó là bắt đầu lại từ đầu — đúng nghĩa ngược với thứ cần khi đang muốn thử một
+   * đội khác trên đúng chặng đang dở. Đường này đi giống hệt debugJumpToFight: dựng hero
+   * mới, đăng ký đội, và về MAP nếu đang trong trận (đổi người giữa bàn cờ thì quân mới
+   * chưa có chỗ đứng — node sau sẽ triển khai đội mới theo cách bình thường).
+   */
+  const debugSetSquad = (heroIds: HeroId[], elements: HeroElementMap) => {
+      if (heroIds.length === 0) return;
+      const fresh = heroIds.map((heroId, idx) =>
+          freshHero(heroId, `dbg-squad-${idx}-${Date.now()}`, elements[heroId]));
+      setUnits(fresh);
+      registerSquad(heroIds, elements);
+      setGameState(prev => ({
+          ...prev,
+          // Đội mới là đội LÀNH LẶN: giữ lại danh sách hero đã gục của đội cũ thì màn hồi
+          // sinh ở lửa trại sẽ chào bán những cái tên không còn trong biên chế.
+          fallenHeroes: [],
+          screen: prev.screen === 'COMBAT' ? 'MAP' : prev.screen,
+          interactionMode: 'IDLE',
+          selectedUnitId: null,
+      }));
+      setShowDebug(false);
   };
 
   /**
@@ -1811,8 +1979,13 @@ const App: React.FC = () => {
              // payout, because the story is the last word, not a gate in front of the loot.
              onContinue={() => {
                  const node = mapNodes.find(n => n.id === gameState.currentLevelId);
-                 if (node?.bossId === 'BLIGHTLORD' && outroReady) setShowOutro(true);
-                 else handleLevelComplete();
+                 if (node?.bossId === 'BLIGHTLORD' && outroReady) { setShowOutro(true); return; }
+                 // An act boss owes a scene or two before the map comes back — and when it
+                 // owes none (an ordinary battle, the Breach's corridor, art not yet drawn)
+                 // this is empty and nothing changes.
+                 const owed = cutscenesForClearedNode(node);
+                 if (owed.length > 0) { setCutscenes(owed); return; }
+                 handleLevelComplete();
              }}
           />
       )}
@@ -1877,7 +2050,13 @@ const App: React.FC = () => {
                     selectedUnitId={gameState.selectedUnitId}
                     onSelectUnit={(id) => setGameState(prev => ({ ...prev, selectedUnitId: id, selectedTile: null, interactionMode: 'IDLE' }))}
                 />
-                <div className="flex-1 flex items-center justify-center relative p-2 lg:p-4 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] min-w-0">
+                {/* min-h-0 CÙNG với min-w-0: mặc định flex item có min-height:auto, tức ô
+                    này không bao giờ co nhỏ hơn bàn cờ bên trong nó. Xếp cột (màn dọc) thì
+                    đó là bẫy: bàn cờ đo container, container lại phình theo bàn cờ — không
+                    có gì kéo nó xuống lại khi viewport thấp đi (xoay máy, thanh địa chỉ của
+                    trình duyệt trượt ra), nên ActionPanel bị đẩy khỏi mép dưới và nút Kết
+                    Thúc Lượt biến mất. Đo ở 360×640: panel tràn xuống y=727 trên màn cao 640. */}
+                <div className="flex-1 flex items-center justify-center relative p-2 portrait:p-0.5 lg:p-4 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] min-w-0 min-h-0">
                     <Board 
                         boardData={board}
                         units={units}
@@ -1950,6 +2129,29 @@ const App: React.FC = () => {
 
       {showIntro && <IntroComic onDone={closeIntro} />}
       {showOutro && <OutroComic onDone={() => { setShowOutro(false); handleLevelComplete(); }} />}
+
+      {/*
+        THE BOSS'S STORY BEATS, played out before the map returns.
+
+        Keyed by `art` so React remounts between scenes: act three plays two of these back to
+        back, and without the key the second would inherit the first's caption index and open
+        already finished. Draining the queue is what ends the level — the last scene's onDone
+        is the click that was `handleLevelComplete` before any of this existed.
+      */}
+      {cutscenes.length > 0 && (
+          <Cutscene
+            key={cutscenes[0].art}
+            art={cutscenes[0].art}
+            kicker={cutscenes[0].kicker}
+            captions={cutscenes[0].captions}
+            reward={cutscenes[0].reward}
+            onDone={() => {
+                const rest = cutscenes.slice(1);
+                setCutscenes(rest);
+                if (rest.length === 0) handleLevelComplete();
+            }}
+          />
+      )}
 
       {showTutorialPrompt && (
           <TutorialPrompt
@@ -2073,6 +2275,13 @@ const App: React.FC = () => {
             onGrantCoin={debugGrant}
             onGrantSun={() => setGameState(prev => ({ ...prev, sun: prev.sun + 200 }))}
             onHealSquad={reviveAllHeroes}
+            inCombat={gameState.screen === 'COMBAT'}
+            onWinBattle={debugWinBattle}
+            heroElements={gameState.heroElements ?? {}}
+            onSetSquad={debugSetSquad}
+            itemDefs={itemDefs}
+            inventory={gameState.inventory}
+            onSetInventory={ids => setGameState(prev => ({ ...prev, inventory: ids, selectedItemId: null }))}
           />
       )}
 
@@ -2085,6 +2294,11 @@ const App: React.FC = () => {
       {echoOffer && gameState.screen === 'MAP' && (
           <ChronoEchoModal items={echoOffer} onPick={handleEchoPick} />
       )}
+
+      {sectorGift && (() => {
+          const giftDef = itemDefs.find(i => i.id === sectorGift.itemId);
+          return giftDef ? <SectorGiftToast item={giftDef} onClose={clearSectorGift} /> : null;
+      })()}
 
       {showQuitConfirm && (
           <div className="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center font-pixel">

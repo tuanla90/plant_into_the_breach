@@ -44,7 +44,11 @@ export const HUD: React.FC<HUDProps> = ({
     // No fixed height and no absolutely-centred block: every cluster lives in normal flex
     // flow so narrow viewports squeeze (then hide labels) instead of stacking three groups
     // on top of one another. The mission objective drops to its own strip below lg.
-    <header className="w-full bg-[#0b0d14]/90 border-b border-[#293245] z-50 shadow-2xl shrink-0 relative backdrop-blur-md font-pixel select-none">
+    // pt-[env(safe-area-inset-top)] chỉ có tác dụng khi chạy PWA toàn màn hình trên
+    // iPhone cầm dọc: ở đó trang vẽ tràn lên dưới tai thỏ (viewport-fit=cover), và
+    // hàng Mặt Trời / Xu nằm khuất một nửa sau thanh trạng thái. Mọi nơi khác env()
+    // trả 0 nên dòng này không đổi gì.
+    <header className="w-full bg-[#0b0d14]/90 border-b border-[#293245] z-50 shadow-2xl shrink-0 relative backdrop-blur-md font-pixel select-none portrait:pt-[env(safe-area-inset-top,0px)]">
       {/* Glow Accent Line */}
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-sky-400 to-amber-400 opacity-80" />
 
@@ -221,7 +225,7 @@ export const HUD: React.FC<HUDProps> = ({
              onClick={() => onToggleSpeed && onToggleSpeed()}
              disabled={!onToggleSpeed}
              className={`
-                 p-2 border rounded-lg transition-all shadow-lg active:scale-95 cursor-pointer relative flex items-center justify-center
+                 p-2 min-w-[40px] min-h-[40px] flex items-center justify-center border rounded-lg transition-all shadow-lg active:scale-95 cursor-pointer relative
                  ${isFast
                      ? 'bg-amber-950/80 border-amber-400 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.4)]'
                      : 'bg-[#181d2a] border-[#293245] text-gray-400 hover:text-white hover:border-sky-400'}
@@ -242,7 +246,7 @@ export const HUD: React.FC<HUDProps> = ({
              onClick={() => onSkipAnimation && onSkipAnimation()}
              disabled={!onSkipAnimation}
              className={`
-                 bg-[#181d2a] p-2 border border-[#293245] text-gray-400 hover:text-white hover:border-sky-400 transition-all shadow-md active:scale-95 rounded-lg cursor-pointer
+                 bg-[#181d2a] p-2 min-w-[40px] min-h-[40px] flex items-center justify-center border border-[#293245] text-gray-400 hover:text-white hover:border-sky-400 transition-all shadow-md active:scale-95 rounded-lg cursor-pointer
                  ${!onSkipAnimation ? 'opacity-40 cursor-not-allowed' : ''}
              `}
              title={t("Skip the rest of this turn's animation")}
@@ -253,7 +257,7 @@ export const HUD: React.FC<HUDProps> = ({
          {showQuit && (
              <button
                  onClick={onQuitRun}
-                 className="bg-red-950/40 p-2 border border-red-800/60 text-red-400 hover:text-red-200 hover:border-red-500 transition-all shadow-md active:scale-95 rounded-lg cursor-pointer"
+                 className="bg-red-950/40 p-2 min-w-[40px] min-h-[40px] flex items-center justify-center border border-red-800/60 text-red-400 hover:text-red-200 hover:border-red-500 transition-all shadow-md active:scale-95 rounded-lg cursor-pointer"
                  title={t('Abandon Run')}
              >
                  <Flag size={18} />
@@ -262,14 +266,14 @@ export const HUD: React.FC<HUDProps> = ({
 
          <button
              onClick={onOpenSquad}
-             className="bg-[#181d2a] p-2 border border-[#293245] text-emerald-400 hover:text-emerald-300 hover:border-emerald-500 transition-all shadow-md active:scale-95 rounded-lg cursor-pointer"
+             className="bg-[#181d2a] p-2 min-w-[40px] min-h-[40px] flex items-center justify-center border border-[#293245] text-emerald-400 hover:text-emerald-300 hover:border-emerald-500 transition-all shadow-md active:scale-95 rounded-lg cursor-pointer"
              title={t('View Squad')}
          >
              <Users size={18} />
          </button>
          <button
              onClick={() => onOpenSettings ? onOpenSettings() : onToggleAdmin()}
-             className="bg-[#181d2a] p-2 border border-[#293245] text-sky-400 hover:text-white hover:border-sky-400 transition-all shadow-md active:scale-95 rounded-lg cursor-pointer"
+             className="bg-[#181d2a] p-2 min-w-[40px] min-h-[40px] flex items-center justify-center border border-[#293245] text-sky-400 hover:text-white hover:border-sky-400 transition-all shadow-md active:scale-95 rounded-lg cursor-pointer"
              title={t('Cài Đặt')}
          >
              <Settings size={18} />

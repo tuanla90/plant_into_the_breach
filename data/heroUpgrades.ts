@@ -21,9 +21,9 @@ import { FusionEffect, HeroId } from '../types';
  * they have committed the click, in a game whose whole promise is that they can.
  *
  * THE RULE THE ATTACK UPGRADES FOLLOW: a free upgrade must never eat the identity of a skill
- * somebody pays Sun for. Shadeleaf is not offered pierce — pierce is what Precision Blast
- * sells for 50 Sun, and handing it over for nothing would retire her own skill. Same reason
- * Thornquill's is damage rather than range: the long piercing line is already his.
+ * somebody pays Sun for, nor duplicate a generic pick already on the card (that is why no
+ * EDGE is ever +move — STRIDE is +move, and an EDGE that repeats it is not "the hero's own
+ * thing").
  */
 export type UpgradeKind =
     /** +2 max HP, healed on the spot. */
@@ -86,9 +86,13 @@ const EDGE: Record<HeroId, { name: string; description: string; effect: FusionEf
         description: 'The lob reaches one tile further.',
         effect: { type: 'ATTACK_RANGE_BONUS', value: 1 },
     },
-    THORNQUILL: {
-        name: 'Barbed Spines',
-        description: 'Every attack hits one harder — and his run the whole row.',
+    // NOT the plan's first suggestion (MOVE_BONUS): +1 move already exists as STRIDE on every
+    // hero's card, and an EDGE that duplicates a generic pick is not "the hero's own thing".
+    // Damage is honest here: WING_PAIR fires two cells, so +1 lands on both — the same rule
+    // that makes Shadeleaf's identical upgrade lift her whole volley.
+    ZEPHYR: {
+        name: 'Heavier Payload',
+        description: 'Every attack hits one harder — both wings at once.',
         effect: { type: 'BONUS_DAMAGE', value: 1 },
     },
     THORNHIDE: {
@@ -101,10 +105,12 @@ const EDGE: Record<HeroId, { name: string; description: string; effect: FusionEf
         description: 'He throws bodies from a tile away instead of arm\'s length.',
         effect: { type: 'ATTACK_RANGE_BONUS', value: 1 },
     },
+    // BONUS_DAMAGE until the rework took his last attack away (PLAN-hero-zephyr §6.3);
+    // now the rind itself thickens — the one stat a pure guardian actually spends.
     GOURDWARD: {
         name: 'Hard Rind',
-        description: 'Every attack hits one harder.',
-        effect: { type: 'BONUS_DAMAGE', value: 1 },
+        description: 'Takes 1 less damage from every hit.',
+        effect: { type: 'DAMAGE_REDUCTION', value: 1 },
     },
 };
 

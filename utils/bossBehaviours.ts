@@ -353,7 +353,9 @@ const arcLash = (origin: Position, damage: number, playerUnits: Unit[]): AreaHit
     for (let ring = 1; ring <= 2; ring++) {
         const found: Unit[] = [];
         frontier.forEach(from => found.push(
-            ...chainStep(from, unitAt, u => !u.isEnemy, struck, { branching: true })));
+            // SHOCK-immune bodies are not conductors (the lightning hero's element perk):
+            // Voltmaw's lash arcs around her, which is her counter-pick in this fight.
+            ...chainStep(from, unitAt, u => !u.isEnemy && !u.immunities.includes('SHOCK'), struck, { branching: true })));
         if (found.length === 0) break;
         const amount = Math.max(1, damage - ring);
         found.forEach(u => hits.push({ pos: { ...u.position }, damage: amount }));
@@ -766,9 +768,10 @@ const clockjaw: BossBehaviour = ({ enemy, playerUnits, damage }) => {
  * Three gas cells, and the number is a CLOCK rather than a health bar.
  *
  * It loses ONE per turn it is hit, however many times it is hit, and that ceiling is the whole
- * mechanic. Count hits instead and Thornquill — one free piercing shot down a whole row — pops
- * all three in a single action, and the two-problem fight this boss exists to teach (ground it,
- * THEN drown it) collapses back into "shoot the big thing".
+ * mechanic. Count hits instead and any multi-hit action — Shadeleaf's three-pea volley, both
+ * of Zephyr's wing cells, once Thornquill's free row-pierce — pops all three in a single
+ * action, and the two-problem fight this boss exists to teach (ground it, THEN drown it)
+ * collapses back into "shoot the big thing".
  *
  * Three, not two or five. Two is a rounding error against a squad putting out five a turn; five
  * means the flying half outlasts the clock and the player never reaches the half the arena's sea
@@ -1081,6 +1084,24 @@ const pickHole = (
             const tile = getTileAt(p, board);
             if (!tile || tile.isHouse) continue;
             if (!canStopOn({ movementType: 'TELEPORT' } as Unit, tile, terrainDefs)) continue;
+            /**
+             * IT WILL NOT COME UP INSIDE DUST — and this is the one line that makes Zephyr,
+             * the reward of the act before this one, the answer to this one.
+             *
+             * The rest of the counterplay against a burrower is reactive: the hole is
+             * published a full player turn early, so a pod dropped ON it cancels the eruption
+             * (turnManager's `blinded`, which reads the same `TileData.smoke`). This is the
+             * PREVENTIVE half — dust laid before the dive is ground the sand refuses, so the
+             * hole gets pushed out of the middle of the formation and the squad chooses where
+             * this fight happens instead of it.
+             *
+             * No stall is possible: with nowhere legal left, `pickHole` returns null and
+             * `sandreaverMove` leaves it where it stands to erupt from there (and if THAT tile
+             * is dusted, `blinded` cancels the swing and it surfaces into the open anyway).
+             * The pod is two tiles for two turns against a hole chosen from a move-4 diamond,
+             * so denying ground is a scalpel here, never a blanket.
+             */
+            if (tile.smoke && tile.smoke.turns > 0) continue;
             if (occupied.some(u => u.hp > 0 && u.position.x === x && u.position.y === y)) continue;
 
             const caught = ring(p).filter(r =>

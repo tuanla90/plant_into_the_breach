@@ -74,6 +74,7 @@ export const buildMission = (
     // "hold this tile" should not mean "stand in fire for four turns".
     const contested = board.filter(t =>
         !t.isHouse && !t.isDeployZone && !t.isSpawnZone
+        && t.y >= 2 && t.y <= 4
         && HOLDABLE_TERRAIN.includes(t.terrain));
 
     const base = {

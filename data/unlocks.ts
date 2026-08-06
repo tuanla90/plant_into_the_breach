@@ -108,8 +108,8 @@ export const BOSSES: BossEntry[] = [
     // ---- STAGE II — The Far Shore -------------------------------------------------------
     {
         id: 'BALLOON_ARMADA', stage: 2, act: 1, name: 'The Armada',
-        hero: 'CHARDWALL', city: 'Windward',
-        hint: 'A wall means nothing to something that flies over it, so stop building walls. Windward is a coastline: break the Armada and you take the hands that throw them into the sea.',
+        hero: 'ZEPHYR', city: 'Windward',
+        hint: 'It owns the sky over Windward, and nothing that walks can answer it. Shoot the Armada down and the sky changes hands — the drone pilot who takes it joins you.',
     },
     {
         id: 'SANDREAVER', stage: 2, act: 2, name: 'Sandreaver',
@@ -125,8 +125,8 @@ export const BOSSES: BossEntry[] = [
     // ---- STAGE III — The City -----------------------------------------------------------
     {
         id: 'DISCO_ZOMBOSS', stage: 3, act: 1, name: 'The Headliner',
-        hero: 'THORNQUILL', city: 'Neon Rose',
-        hint: 'It never lays a hand on you — it turns the whole crowd into the threat. Neon Rose answers a crowd with one spine that runs through all of them at once.',
+        hero: 'CHARDWALL', city: 'Neon Rose',
+        hint: 'It never lays a hand on you — it turns the whole crowd into the threat. Neon Rose answers a crowd the only way that scales: one sweep that throws all of them somewhere else at once.',
     },
     {
         id: 'CLOCKJAW', stage: 3, act: 2, name: 'Clockjaw',
@@ -328,7 +328,7 @@ export const SIGNATURE_MATERIAL: Record<HeroId, MaterialId> = {
     KERNEL_PULT: 'MAT_CORN',
     // Nine heroes, nine gears: the plant each of the four newest heroes is grown from is also
     // the material that fuses into them, so the pairing below writes itself.
-    THORNQUILL: 'MAT_CACTUS',
+    ZEPHYR: 'MAT_CATTAIL',
     THORNHIDE: 'MAT_ENDURIAN',
     CHARDWALL: 'MAT_CHARD',
     GOURDWARD: 'MAT_PUMPKIN',

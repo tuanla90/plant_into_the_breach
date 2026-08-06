@@ -89,6 +89,13 @@ export const applyPushPlan = (
         }
     }
 
+    // A warded house ate the shove (gameLogic, PushPlan.wardedHouses): the layer breaks, the
+    // brain stays. Cleared here because the plan is pure and someone has to own the write.
+    plan.wardedHouses.forEach(p => {
+        actions.push({ type: 'MODIFY_TERRAIN', pos: { ...p }, shielded: false });
+        actions.push({ type: 'APPLY_DAMAGE', targetId: 'tile', amount: 0, eventType: 'BLOCK', pos: p });
+    });
+
     plan.drowned.forEach(id => {
         const u = sim.get(id);
         if (!u) return;

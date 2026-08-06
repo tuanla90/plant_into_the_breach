@@ -189,6 +189,7 @@ export const buildEncounter = (
             !t.isHouse && !t.isDeployZone && !t.isSpawnZone
             && terrainDefs[t.terrain]?.isWalkable
             && t.terrain !== 'LAVA'
+            && t.y >= 2 && t.y <= 4
             && !occupiedKeys.has(`${t.x},${t.y}`)
             && !board.some(h => h.isHouse && Math.abs(h.x - t.x) + Math.abs(h.y - t.y) <= 1));
         const spot = spots[Math.floor(Math.random() * spots.length)];

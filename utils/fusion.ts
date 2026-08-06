@@ -139,6 +139,12 @@ export const applyFusion = (hero: Unit, materialId: MaterialId): Unit => {
         fused.maxHp = hero.maxHp + bonus;
         fused.hp = hero.hp + bonus;
     }
+    // MOVE_BONUS writes the body directly, exactly as STRIDE does (applyUpgrade below):
+    // nothing anywhere re-derives moveRange, so nothing can wipe it — and the snapshot
+    // rebuild between battles spreads the unit, carrying the faster legs for free.
+    if (effect && effect.type === 'MOVE_BONUS') {
+        fused.moveRange = hero.moveRange + (effect.value ?? 1);
+    }
 
     return fused;
 };
@@ -279,16 +285,31 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
      * hero can perfectly well carry one with no materials fused at all. Under the old test her
      * element was silently dropped for the whole first stretch of the run.
      */
-    const carriesElement = skillCarriesElement(skill, caster);
+    /**
+     * THE LOAN (Solar Blessing): a blessed ally with no element of their own attacks with
+     * the blesser's, for this one player turn. Own element always wins — the loan only fills
+     * an empty hand — and it confers no immunity and no resonance weight: a borrowed blade,
+     * not borrowed skin. Folded HERE so the targeting overlay shows the borrowed rider
+     * before the click, on the same terms as everything else in this function.
+     */
+    const lentCaster = !caster.element && caster.blessedElement && caster.statusEffects?.includes('BLESSED')
+        ? { ...caster, element: caster.blessedElement }
+        : caster;
+    const carriesElement = skillCarriesElement(skill, lentCaster);
     // Third clause, and it arrived the same way the element's did: a hero can carry an ACT
     // UPGRADE with no materials fused at all, and under the two-clause test her Heavier Peas
     // were silently dropped for the whole run — the skill came back with its authored 2 and
     // the +1 existed only in a data file. Measured, not guessed: a fresh Shadeleaf given all
     // three upgrades still handed back `DAMAGE 2, range 8`.
-    if (!caster.fusions?.length && !caster.upgrades?.length && !carriesElement) return skill;
+    // Fourth clause, same story as the other three: a BLESSED hero may carry no fusions, no
+    // upgrades and no element, and her +1 still has to reach the card and the overlay.
+    if (!caster.fusions?.length && !caster.upgrades?.length && !carriesElement
+        && !caster.statusEffects?.includes('BLESSED')) return skill;
 
     const hasDamage = skill.effects.some(e => e.type === 'DAMAGE');
-    const hasShove = skill.effects.some(e => e.type === 'PUSH' || e.type === 'PULL' || e.type === 'GLOBAL_PUSH');
+    // TOSS counts as a shove for every rule here: it is a strike that relocates a body — the
+    // judo grip is Chardwall's Backswing wearing a different trajectory.
+    const hasShove = skill.effects.some(e => e.type === 'PUSH' || e.type === 'PULL' || e.type === 'GLOBAL_PUSH' || e.type === 'TOSS');
     const hasShield = skill.effects.some(e => e.type === 'SHIELD');
     const hasTaunt = skill.effects.some(e => e.type === 'TAUNT');
 
@@ -305,9 +326,11 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
      * actually existed to protect: nobody wants Sunspot freezing herself for banking light.
      *
      * The element rider passes this gate on exactly the same terms, which is rule L1 restated:
-     * Chardwall's Backswing is 0 damage and pure PUSH, and it still comes out slowing what it
-     * throws. Sunspot is the reason the gate must stay: her free action IS the self-buff, so
-     * rule L2 moves her element onto Sun Burn — which does damage and walks straight through.
+     * Chardwall's Vault Toss is 0 damage and pure displacement, and what it throws still lands
+     * carrying his element. Sunspot's free action IS the self-buff, so rule L2 moves her
+     * element onto her PAID skill — Solar Blessing, whose whole point is lending that element
+     * on (the loan itself is applied at resolution, not here: a rider on an ally-buff must
+     * never mean "slow the ally").
      */
     if (!hasDamage && !hasShove && !hasShield && !hasTaunt) return skill;
 
@@ -331,9 +354,31 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
         }
     }
 
-    // Thornquill's row: the attack leaves the ground it crossed bristling. Allowed on a pure
-    // shove as well as on a damaging shot — both are strikes that travel over tiles — but not
-    // on a shield or a taunt, where there is no swing to leave anything behind.
+    // The Chomper axis: the strike leaves an open wound. On shoves as well as damage —
+    // Chardwall's throw is a strike on a body even at 0 damage, and marking what he cannot
+    // finish is his whole cell (Rending Guard) — but never on a shield or a taunt.
+    if ((hasDamage || hasShove)
+        && hasFusionEffect(caster, 'BLEED_ON_HIT')
+        && !skill.effects.some(e => e.type === 'APPLY_BLEED')) {
+        extra.push({ type: 'APPLY_BLEED' });
+    }
+
+    // The Cattail axis, skill-only by construction (the SKILL_SPLASH precedent): the PAID
+    // skill also drops dust where it struck. Free-attack dust would be a free disarm every
+    // turn — the exact shape the STUN RULE bans.
+    if ((skill.sunCost ?? 0) > 0
+        && (hasDamage || hasShove)
+        && hasFusionEffect(caster, 'SKILL_DISARM')
+        && !skill.effects.some(e => e.type === 'DUST_TILE')) {
+        extra.push({ type: 'DUST_TILE', value: 2 });
+    }
+
+    // The retired Cactus gear's axis: the attack leaves the ground it crossed bristling.
+    // Allowed on a pure shove as well as a damaging shot — both are strikes that travel over
+    // tiles — but not on a shield or a taunt, where there is no swing to leave anything
+    // behind. Data-orphaned since Thornquill and her gear retired (PLAN-hero-zephyr); kept
+    // because the Spikeweed item exercises the same spike fields and a future recipe can
+    // pick the trail back up.
     const spikeTrail = getFusionEffectValue(caster, 'SPIKE_TRAIL');
     if ((hasDamage || hasShove)
         && hasFusionEffect(caster, 'SPIKE_TRAIL')
@@ -354,6 +399,14 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
             e.type === 'DAMAGE' ? { ...e, value: (e.value || 0) + bonusDamage } : e);
     }
 
+    // Solar Blessing's +1, this player turn only (BLESSED is cleared before the enemy phase).
+    // MAPS like BONUS_DAMAGE above — on a 0-damage kit the blessing buys the layer and the
+    // element loan, never a damage number the hero was designed not to have.
+    if (caster.statusEffects?.includes('BLESSED')) {
+        effects = effects.map(e =>
+            e.type === 'DAMAGE' ? { ...e, value: (e.value || 0) + 1 } : e);
+    }
+
     // The Chard Guard axis: every shove this hero throws travels further. Applied after the
     // ON_HIT_PUSH rider above so a fusion-granted shove gets the extra distance too. This is
     // the ONLY place the number is grown — skillResolution reads the finished value straight
@@ -364,9 +417,9 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
             (e.type === 'PUSH' || e.type === 'PULL') ? { ...e, value: (e.value ?? 1) + pushBonus } : e);
     }
 
-    // Thornhide's row: the shout carries further. SHIELD_BONUS is the odd one out of this
-    // group and is deliberately NOT here — it is applied in skillResolution instead, so the
-    // skill card keeps showing the authored shield number (see the comment there).
+    // Thornhide's row: the shout carries further. SHIELD_SPREAD is the odd one out of this
+    // group and is deliberately NOT here — it is applied in skillResolution instead, because
+    // it changes who ELSE gets layered, not anything on the skill card itself.
     const tauntBonus = getFusionEffectValue(caster, 'TAUNT_RADIUS');
     if (tauntBonus > 0) {
         effects = effects.map(e =>
@@ -388,9 +441,10 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
      * Blizzard turns EVERY `APPLY_SLOW` on the skill into a `STUN`. Applied before it, the ICE
      * rider would be swept up as well — and any hero holding Blizzard plus ICE would own a free
      * stun on their free attack, every turn, forever. That is the exact ceiling this codebase
-     * has been protecting on purpose for several recipes now: it is why Cobb's Frostbutter,
-     * Thornquill's Frostquill and Thornhide's Chill Thorns are all slows and never freezes (see
-     * the STUN RULE at the top of data/fusionRecipes.ts). Handing the same thing to all nine
+     * has been protecting on purpose for as long as the matrix has existed: it is why every
+     * on-hit chill any recipe has ever granted is a SLOW and never a freeze (the STUN RULE at
+     * the top of data/fusionRecipes.ts — the Snow Pea column that once carried those cards is
+     * retired, the rule is not). Handing the same thing to all nine
      * heroes through the element system would delete Frostpod's entire identity, and the price
      * for it is one max HP — the cheapest lockdown in the game by an order of magnitude.
      *
@@ -401,7 +455,7 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
      * the one hero built around it.
      */
     if (carriesElement) {
-        elementRider(caster.element).forEach(rider => {
+        elementRider(lentCaster.element).forEach(rider => {
             /**
              * No stacking a second copy of what the attack already does. `STUN` counts as an
              * existing slow because it is strictly the better version — Cobb's Butter Splat and
