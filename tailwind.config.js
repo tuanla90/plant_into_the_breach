@@ -18,6 +18,11 @@ export default {
   ],
   theme: {
     extend: {
+      screens: {
+        // Màn THẤP (điện thoại cầm ngang) — bất kể rộng bao nhiêu. Dùng cho các
+        // nhượng bộ kiểu "ẩn thông tin phụ để giữ art to" mà portrait/desktop không cần.
+        'short': { raw: '(max-height: 520px)' },
+      },
       fontFamily: {
         'pixel': ['"Be Vietnam Pro"', 'sans-serif'],
         'display': ['"VT323"', 'monospace'],

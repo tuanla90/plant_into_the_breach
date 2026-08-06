@@ -161,15 +161,17 @@ const ElementPicker: React.FC<{
                     );
                 })}
             </div>
-            {/* Fixed floor so a card does not jump a row taller when an element is picked. */}
-            <p className="text-[9px] leading-snug text-gray-400 normal-case tracking-normal min-h-[26px]">
+            {/* Fixed floor so a card does not jump a row taller when an element is picked.
+                short:hidden — trên màn thấp mỗi px dọc là đất của sprite; chip đã tự nói
+                bằng màu + tên, phần diễn giải đọc ở màn rộng. */}
+            <p className="short:hidden text-[9px] leading-snug text-gray-400 normal-case tracking-normal min-h-[26px]">
                 {def ? t(def.description) : t('Base form. No rider on this hero\'s attacks, and no health paid.')}
             </p>
             {/* Said once, under the row, rather than three times inside it: with nothing unlocked
                 yet the padlocks alone read as "broken", and a player owed an explanation should
                 not have to hover a 9px chip to find one. */}
             {unlocked && unlocked.length < ELEMENTS.length && (
-                <span className="flex items-center gap-1 text-[8px] leading-tight text-gray-600 normal-case tracking-normal">
+                <span className="short:hidden flex items-center gap-1 text-[8px] leading-tight text-gray-600 normal-case tracking-normal">
                     <Lock size={9} className="shrink-0" />
                     {t('Elements are taken from the boss that closes a stage.')}
                 </span>
@@ -464,7 +466,10 @@ export const SquadSelectScreen: React.FC<SquadSelectScreenProps> = ({
                           {t(prettyClass(hero.baseClass))}
                       </span>
                   </div>
-                  <div className="flex items-center gap-3 mt-0.5 text-[11px] font-mono font-bold">
+                  {/* Đã chọn + màn thấp: stats và skills nhường chỗ cho ElementPicker bên
+                      dưới — trước đây SPRITE là thứ bị bóp (flex-1 min-h-0) và trên điện
+                      thoại ngang nó teo còn một mẩu. Bỏ chọn là thông tin hiện lại. */}
+                  <div className={`flex items-center gap-3 mt-0.5 text-[11px] font-mono font-bold ${isSelected ? 'short:hidden' : ''}`}>
                       <span className="flex items-center gap-1 text-red-400">
                           <Heart size={11} fill="currentColor" />
                           {/* Old number kept, struck through: "6 -> 5" is a price, a lone "5" is a mystery. */}
@@ -477,7 +482,7 @@ export const SquadSelectScreen: React.FC<SquadSelectScreenProps> = ({
               </div>
 
               {/* SKILLS */}
-              <div className="relative z-10 flex flex-col gap-1 px-2 pb-2 pt-1.5 shrink-0">
+              <div className={`relative z-10 flex flex-col gap-1 px-2 pb-2 pt-1.5 shrink-0 ${isSelected ? 'short:hidden' : ''}`}>
                   <SkillLine skill={hero.basicAttack} />
                   <SkillLine skill={hero.heroSkill} isSkill />
               </div>
