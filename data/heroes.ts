@@ -346,7 +346,7 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
             id: 'th_provoke', name: 'Provoke',
             description: 'Every enemy within 3 tiles must come for him next turn.',
             rangeType: 'SELF', rangeValue: 0, sunCost: 50,
-            effects: [{ type: 'TAUNT', value: 3 }],
+            effects: [{ type: 'PROVOKE', value: 3 }],
         },
     },
 

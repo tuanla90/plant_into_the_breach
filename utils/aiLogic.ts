@@ -78,46 +78,46 @@ const planIntentCore = (
     const damage = enemy.damage + (enemy.statusEffects.includes('ENRAGED') ? 1 : 0);
 
     /**
-     * TAUNT — the one status that redirects rather than delays, and the reason Thornshell exists.
+     * PROVOKE — the one status that redirects rather than delays, and the reason Thornshell exists.
      *
      * It runs ahead of every rule below, including the Gravehulk's private branch: a provoked
      * Gravehulk swings at the plant that provoked it instead of lobbing an Runt over the wall.
      * That is the whole promise of the skill — the three units built to go AROUND a blocker
      * (Balloon flies, Digger burrows, Catapult outranges) have to come at it instead.
      *
-     * A dead taunter steers nobody: with no living unit behind `tauntedBy` this falls straight
+     * A dead provoker steers nobody: with no living unit behind `provokedBy` this falls straight
      * through to the normal sprout hunt rather than freezing the zombie on an empty tile.
      */
-    const taunter = enemy.statusEffects.includes('TAUNTED') && enemy.tauntedBy
-        ? playerUnits.find(u => u.id === enemy.tauntedBy && u.hp > 0)
+    const provoker = enemy.statusEffects.includes('PROVOKED') && enemy.provokedBy
+        ? playerUnits.find(u => u.id === enemy.provokedBy && u.hp > 0)
         : undefined;
 
-    if (taunter) {
-        const tauntReach = Math.max(1, enemy.attackRange ?? 1);
-        if (manhattan(enemy.position, taunter.position) <= tauntReach) {
-            return { type: 'ATTACK', target: { ...taunter.position }, damage };
+    if (provoker) {
+        const provokeReach = Math.max(1, enemy.attackRange ?? 1);
+        if (manhattan(enemy.position, provoker.position) <= provokeReach) {
+            return { type: 'ATTACK', target: { ...provoker.position }, damage };
         }
 
         // Close the distance. Deliberately NOT subject to the "never turn around to eat what
         // is behind you" rule that governs the blocker search below — making the horde turn
         // around IS the effect being paid for.
-        const tauntRoute = board.length > 0
-            ? findPath(enemy, taunter.position, collisionUnits, board, terrainDefs)
+        const provokeRoute = board.length > 0
+            ? findPath(enemy, provoker.position, collisionUnits, board, terrainDefs)
             : [];
-        const tauntIdeal = board.length > 0 && tauntRoute.length === 0
-            ? findPath(enemy, taunter.position, [], board, terrainDefs)
-            : tauntRoute;
+        const provokeIdeal = board.length > 0 && provokeRoute.length === 0
+            ? findPath(enemy, provoker.position, [], board, terrainDefs)
+            : provokeRoute;
         // moveTo / movePath drive the telegraph, so they must be set on every MOVE intent.
-        const tauntWalk = tauntIdeal.slice(0, Math.max(1, enemy.moveRange));
-        if (tauntWalk.length > 0) {
+        const provokeWalk = provokeIdeal.slice(0, Math.max(1, enemy.moveRange));
+        if (provokeWalk.length > 0) {
             return {
                 type: 'MOVE',
                 description: 'Provoked! Coming for you...',
-                moveTo: tauntWalk[tauntWalk.length - 1],
-                movePath: tauntWalk,
+                moveTo: provokeWalk[provokeWalk.length - 1],
+                movePath: provokeWalk,
             };
         }
-        // Walled off from the taunter: still telegraph that it is straining toward the taunt
+        // Walled off from the provoker: still telegraph that it is straining toward the taunt
         // rather than silently reverting to hunting sprouts, which would read as the skill failing.
         return { type: 'MOVE', description: 'Provoked, but blocked...' };
     }

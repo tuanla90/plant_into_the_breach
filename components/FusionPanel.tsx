@@ -69,14 +69,14 @@ const categoryOf = (type: FusionEffectType): { label: string; color: string } =>
         case 'SKILL_AURA':
         case 'SKILL_REPEL':
         case 'BLEED_ON_HIT':
-        case 'TAUNT_ON_HIT':
+        case 'PROVOKE_ON_HIT':
         case 'STUN_ON_FULL_HP':
         case 'WING_MIDSHOT':
         case 'OVERWATCH_SHOT':
         case 'BLESS_POWER':
         case 'PUSH_DISTANCE':
         case 'COLLISION_BONUS':
-        case 'TAUNT_RADIUS':
+        case 'PROVOKE_RADIUS':
         case 'ADJACENT_STRIKE':
             return { label: 'Attack upgrade', color: '#fb923c' };
         default:

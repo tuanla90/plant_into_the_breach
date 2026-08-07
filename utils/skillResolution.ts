@@ -521,27 +521,27 @@ export const planSkillActions = (
             }
 
             /**
-             * BARBED PEA (TAUNT_ON_HIT) — whatever she hurts turns on her.
+             * BARBED PEA (PROVOKE_ON_HIT) — whatever she hurts turns on her.
              *
-             * The same TAUNTED + `tauntedBy` pair Provoke sets, so aiLogic needs no new case
+             * The same PROVOKED + `provokedBy` pair Provoke sets, so aiLogic needs no new case
              * and the enemy telegraphs "Provoked!" from the shot rather than from a shout. It
              * lasts exactly one enemy turn like every taunt, and STATUS immunity refuses it —
              * which is the honest limit: a Doorbearer still walks past her to the Greenspire.
              */
             if (!isDead && dmgEffect
                 && targetUnit.isEnemy && targetUnit.type !== UnitType.OBSTACLE
-                && hasFusionEffect(caster, 'TAUNT_ON_HIT')) {
+                && hasFusionEffect(caster, 'PROVOKE_ON_HIT')) {
                 if (targetUnit.immunities.includes('STATUS')) {
                     actions.push({ type: 'APPLY_DAMAGE', targetId: targetUnit.id, amount: 0, eventType: 'IMMUNE', pos: targetPos });
                 } else {
-                    const taunted: StatusEffectType[] = targetUnit.statusEffects.includes('TAUNTED')
+                    const taunted: StatusEffectType[] = targetUnit.statusEffects.includes('PROVOKED')
                         ? targetUnit.statusEffects
-                        : [...targetUnit.statusEffects, 'TAUNTED'];
-                    // `tauntedBy` is rewritten even when the status is already set — same rule
+                        : [...targetUnit.statusEffects, 'PROVOKED'];
+                    // `provokedBy` is rewritten even when the status is already set — same rule
                     // as Provoke: whoever touched it last owns it.
-                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: targetUnit.id, updates: { statusEffects: taunted, tauntedBy: caster.id } });
+                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: targetUnit.id, updates: { statusEffects: taunted, provokedBy: caster.id } });
                     targetUnit.statusEffects = taunted;
-                    targetUnit.tauntedBy = caster.id;
+                    targetUnit.provokedBy = caster.id;
                 }
             }
 
@@ -747,16 +747,16 @@ export const planSkillActions = (
     });
 
     /**
-     * TAUNT — resolved OUTSIDE the per-tile loop, on purpose.
+     * PROVOKE — resolved OUTSIDE the per-tile loop, on purpose.
      *
      * Provoke's rangeType is SELF, so `targets` holds nothing but the caster's own tile and
      * resolveTargets would never once look at the enemies this is aimed at. The reach is the
      * effect's `value`, measured from the caster in Manhattan distance like every other range
      * in the game — the geometry is a ring around the shouter, not a shape aimed at a tile.
      */
-    const tauntEffect = skill.effects.find(e => e.type === 'TAUNT');
-    if (tauntEffect) {
-        const radius = tauntEffect.value ?? 1;
+    const provokeEffect = skill.effects.find(e => e.type === 'PROVOKE');
+    if (provokeEffect) {
+        const radius = provokeEffect.value ?? 1;
         units.forEach(u => {
             // Obstacles are excluded even though they are hostile: a rock does not walk, so
             // redirecting it is a wasted 50 Sol and a confusing status icon.
@@ -773,20 +773,20 @@ export const planSkillActions = (
             // function is only allowed to write to its own simulation.
             const sim = tempUnits.get(u.id);
             if (!sim) return;
-            const taunted: StatusEffectType[] = sim.statusEffects.includes('TAUNTED')
+            const taunted: StatusEffectType[] = sim.statusEffects.includes('PROVOKED')
                 ? sim.statusEffects
-                : [...sim.statusEffects, 'TAUNTED'];
-            // `tauntedBy` is rewritten even when the status is already set. Whoever shouted
+                : [...sim.statusEffects, 'PROVOKED'];
+            // `provokedBy` is rewritten even when the status is already set. Whoever shouted
             // last owns the enemy — otherwise a second Provoke would land as a silent no-op
-            // on anything still pointed at a taunter that has since died.
+            // on anything still pointed at a provoker that has since died.
             actions.push({
                 type: 'UPDATE_UNIT_STATE',
                 unitId: u.id,
-                updates: { statusEffects: taunted, tauntedBy: caster.id },
+                updates: { statusEffects: taunted, provokedBy: caster.id },
             });
             actions.push({ type: 'APPLY_DAMAGE', targetId: u.id, amount: 0, eventType: 'BUFF', pos: u.position });
             sim.statusEffects = taunted;
-            sim.tauntedBy = caster.id;
+            sim.provokedBy = caster.id;
         });
     }
 

@@ -1218,14 +1218,14 @@ const sandreaver: BossBehaviour = ({ enemy, playerUnits, board, blocker, damage,
  * destination and nothing else. There are no intervening tiles to truncate at, which is a more
  * honest spelling of "it tunnels" than any flag would be.
  *
- * Returns null when TAUNTED, and that is not an oversight, it is the fight: with no opinion here
+ * Returns null when PROVOKED, and that is not an oversight, it is the fight: with no opinion here
  * the standard taunt walk takes over and drags it at Thornshell, and `planEnemyIntent`'s taunt
  * branch — which runs AHEAD of every boss behaviour — makes it bite him instead of erupting where
  * it chose. Provoke is the only tool in the game that does not care where this thing is, and this
  * null is where that becomes true in code.
  */
 const sandreaverMove: BossHooks['move'] = ({ enemy, playerUnits, board, range }) => {
-    if (enemy.statusEffects.includes('TAUNTED')) return null;
+    if (enemy.statusEffects.includes('PROVOKED')) return null;
     if (!diving(enemy)) return null;   // its above-ground turn: march like anything else
     if (enemy.burrowTarget) return [enemy.burrowTarget];   // a hole already promised, and kept
 

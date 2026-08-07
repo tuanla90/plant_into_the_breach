@@ -1009,7 +1009,7 @@ export const VI: Record<string, string> = {
     "Her rockets shove what they hit a tile back — both cells at once.": "Rocket của cô hất thứ nó trúng lùi một ô — cả hai ô cùng lúc.",
     "Pod Plating": "Giáp Vỏ Pod",
     "A kill raises a fresh layer over her — insurance bought with her own guns.": "Một mạng hạ được dựng cho cô một lớp chắn mới — bảo hiểm mua bằng chính họng súng của mình.",
-    // Cột MAT_CATTAIL trên 8 hero còn lại
+    // Cột MAT_REEDWING trên 8 hero còn lại
     "Ashveil": "Màn Tro",
     "Solar Blessing wraps the tiles around its ally in dust — nothing standing beside them can swing.": "Ban Phước Sol phủ bụi quanh các ô kề người được ban phước — không kẻ nào đứng cạnh vung nổi đòn.",
     "Smokeline": "Lằn Khói",
@@ -1026,7 +1026,7 @@ export const VI: Record<string, string> = {
     "The tiles Sweep clears are left hanging with dust — thrown back, and unable to swing.": "Những ô Cú Quét dọn sạch chìm trong bụi — vừa bị hất văng, vừa không vung nổi đòn.",
     "Rolling Rind": "Vỏ Lăn",
     "+1 move — his shell is worth exactly as much as his ability to reach whoever needs it.": "+1 di chuyển — lớp vỏ của anh đáng giá đúng bằng khả năng anh tới kịp người cần nó.",
-    // Trục chảy máu của MAT_CHOMPER
+    // Trục chảy máu của MAT_SNAPMAW
     "Serrated Pea": "Đạn Đậu Răng Cưa",
     "Her shots leave the target bleeding: the next hit against it lands +1.": "Đạn của cô để lại vết thương hở: đòn kế tiếp vào mục tiêu mạnh thêm 1.",
     "Rending Bash": "Cú Đập Xé Thịt",

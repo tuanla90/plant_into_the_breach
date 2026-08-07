@@ -304,7 +304,7 @@ export const ZOMBIE_DEFINITIONS: Partial<Record<UnitClass, UnitDefinition>> = {
      * it deals across a fight: one skill press erasing a quarter of the boss. A thing whose
      * promise is "you cannot prevent this" must not be preventable twice by one control tool.
      * NOT STATUS-immune, deliberately — SLOW still lands (the FREEZE carve-out on
-     * UnitImmunity), halving its move so it reaches the line a turn later, and TAUNT still
+     * UnitImmunity), halving its move so it reaches the line a turn later, and PROVOKE still
      * lands, which is the real counterplay: dragged onto Thornshell, its own second hand
      * becomes 4 damage a turn against itself.
      */

@@ -204,7 +204,7 @@ export const processTurn = (
             /**
              * The beam picks its people, and the horde looks where it is pointed.
              *
-             * TAUNTED normally names the unit that shouted (`tauntedBy`), because a taunt is a
+             * PROVOKED normally names the unit that shouted (`provokedBy`), because a taunt is a
              * hero making itself the problem. A searchlight has no shouter — so every enemy is
              * pointed at whichever CAUGHT hero is nearest to it, which is the same sentence the
              * hazard says in English: the crowd goes for whoever is lit.
@@ -227,12 +227,12 @@ export const processTurn = (
                                < (Math.abs(best.position.x - u.position.x) + Math.abs(best.position.y - u.position.y))
                             ? c : best, null as Unit | null);
                     if (!lit) return;
-                    const next: typeof u.statusEffects = u.statusEffects.includes('TAUNTED')
+                    const next: typeof u.statusEffects = u.statusEffects.includes('PROVOKED')
                         ? u.statusEffects
-                        : [...u.statusEffects, 'TAUNTED'];
+                        : [...u.statusEffects, 'PROVOKED'];
                     u.statusEffects = next;
-                    u.tauntedBy = lit.id;
-                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: u.id, updates: { statusEffects: [...next], tauntedBy: lit.id } });
+                    u.provokedBy = lit.id;
+                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: u.id, updates: { statusEffects: [...next], provokedBy: lit.id } });
                 });
             }
         } else if (pending.type === 'SURGE') {
@@ -675,7 +675,7 @@ export const processTurn = (
      *   - BEFORE PHASE 3, so an enemy is free to land a fresh stun on the same hero this turn,
      *     and PHASE 4 plans against the new one rather than an expired one.
      *
-     * Cleared here rather than in the reducer for the same reason TAUNTED is: that reset lives
+     * Cleared here rather than in the reducer for the same reason PROVOKED is: that reset lives
      * in the engine and knows nothing about which side of the turn a status came from.
      */
     simUnits.forEach(u => {
@@ -1394,18 +1394,18 @@ export const processTurn = (
          * this zombie will DO next turn, but the walk itself is chosen right here — leave this
          * out and a provoked zombie announces "coming for you" while strolling on to the Greenspire.
          *
-         * Cleared at the end of this same turn (see TAUNT EXPIRY below), so it buys exactly one
-         * enemy turn of the horde walking the wrong way. A dead taunter steers nobody.
+         * Cleared at the end of this same turn (see PROVOKE EXPIRY below), so it buys exactly one
+         * enemy turn of the horde walking the wrong way. A dead provoker steers nobody.
          */
-        const taunter = enemy.statusEffects.includes('TAUNTED') && enemy.tauntedBy
-            ? collisionLayer.find(u => !u.isEnemy && u.id === enemy.tauntedBy)
+        const provoker = enemy.statusEffects.includes('PROVOKED') && enemy.provokedBy
+            ? collisionLayer.find(u => !u.isEnemy && u.id === enemy.provokedBy)
             : undefined;
 
         // Find Target: the nearest Greenspire that still holds a sprout. Plants are just walls on the way.
-        let target: Position | null = taunter ? { x: taunter.position.x, y: taunter.position.y } : null;
+        let target: Position | null = provoker ? { x: provoker.position.x, y: provoker.position.y } : null;
         let minDist = 999;
 
-        if (!taunter) currentBoard.forEach(t => {
+        if (!provoker) currentBoard.forEach(t => {
             if (!t.isHouse || !t.hasBrain || eatenHouses.has(`${t.x},${t.y}`)) return;
             const dist = Math.abs(t.x - enemy.position.x) + Math.abs(t.y - enemy.position.y);
             if (dist < minDist) { minDist = dist; target = { x: t.x, y: t.y }; }
@@ -1421,7 +1421,7 @@ export const processTurn = (
          * simply CLOSER to most of the horde, which splits the march in two without a single
          * special case about which half goes where.
          */
-        if (!taunter) nonEnemies.forEach(u => {
+        if (!provoker) nonEnemies.forEach(u => {
             if (u.hp <= 0 || u.class !== UnitClass.GEAR_CRATE) return;
             const dist = Math.abs(u.position.x - enemy.position.x) + Math.abs(u.position.y - enemy.position.y);
             if (dist < minDist) { minDist = dist; target = { x: u.position.x, y: u.position.y }; }
@@ -1540,8 +1540,8 @@ export const processTurn = (
          */
         const options = reachable();
 
-        // A provoked zombie walks past an open Greenspire: that is the price the taunter paid for.
-        // A provoked zombie walks past an open Greenspire: that is the price the taunter paid for.
+        // A provoked zombie walks past an open Greenspire: that is the price the provoker paid for.
+        // A provoked zombie walks past an open Greenspire: that is the price the provoker paid for.
         //
         // A BOSS walks past for a different reason. A unit that leaves with a sprout is struck
         // off the board entirely (`brainThieves`, filtered out of `survivors` above) — and on
@@ -1567,7 +1567,7 @@ export const processTurn = (
          * Into the Breach's rule instead: stand next to the building, telegraph the hit, and
          * still be standing there afterwards.
          */
-        const brainStrike = (taunter || enemy.bossId) ? undefined : options.find(o =>
+        const brainStrike = (provoker || enemy.bossId) ? undefined : options.find(o =>
             [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }].some(d => {
                 const t = getTileAt({ x: o.pos.x + d.x, y: o.pos.y + d.y }, currentBoard);
                 return !!t?.isHouse && !!t.hasBrain && !eatenHouses.has(`${t.x},${t.y}`);
@@ -1585,10 +1585,10 @@ export const processTurn = (
          * arc has no reason to give up the range advantage that defines it — before this it
          * walked to the front every turn and read as an ordinary biter.
          */
-        // Under a taunt only the taunter counts: holding station because some OTHER plant is in
+        // Under a taunt only the provoker counts: holding station because some OTHER plant is in
         // the arc is precisely the "shoot whatever is convenient" behaviour the taunt overrides.
-        const alreadyInFiringPosition = reach > 1 && !brainGrab && (taunter
-            ? distTo(enemy.position, taunter.position) <= reach
+        const alreadyInFiringPosition = reach > 1 && !brainGrab && (provoker
+            ? distTo(enemy.position, provoker.position) <= reach
             : nonEnemies.some(pl => !eatenZombies.has(pl.id) && distTo(enemy.position, pl.position) <= reach));
 
         // A boss may own its destination. The ladder below asks "which tile is closest to a
@@ -1696,7 +1696,7 @@ export const processTurn = (
         const houseKey = houseBeside ? `${houseBeside.x},${houseBeside.y}` : '';
         // ...unless it was provoked: a taunted zombie standing on a Greenspire is not reaching for
         // the sprout, it is turning around, and planEnemyIntent below says so.
-        if (!taunter && !enemy.bossId && houseBeside) {
+        if (!provoker && !enemy.bossId && houseBeside) {
             const grabIntent: Intent = {
                 type: 'ATTACK',
                 target: { x: houseBeside.x, y: houseBeside.y },
@@ -1761,21 +1761,21 @@ export const processTurn = (
         });
     });
 
-    // --- TAUNT EXPIRY ---
-    // TAUNTED lasts exactly one enemy turn: PHASE 4 above has just spent it, on the walk and on
+    // --- PROVOKE EXPIRY ---
+    // PROVOKED lasts exactly one enemy turn: PHASE 4 above has just spent it, on the walk and on
     // the intent, and it is gone before the next one is planned. It is cleared here rather than
     // in NEW_TURN_RESET because that reset lives in the engine and only knows STUN/BURN/SLOW.
-    // `tauntedBy` goes with it — a taunter that dies three turns later must not still be
+    // `provokedBy` goes with it — a provoker that dies three turns later must not still be
     // steering the horde from the grave.
     simUnits.forEach(u => {
-        if (!u.statusEffects.includes('TAUNTED')) return;
-        const cleared = u.statusEffects.filter(e => e !== 'TAUNTED');
+        if (!u.statusEffects.includes('PROVOKED')) return;
+        const cleared = u.statusEffects.filter(e => e !== 'PROVOKED');
         u.statusEffects = cleared;
-        u.tauntedBy = undefined;
+        u.provokedBy = undefined;
         actions.push({
             type: 'UPDATE_UNIT_STATE',
             unitId: u.id,
-            updates: { statusEffects: cleared, tauntedBy: undefined },
+            updates: { statusEffects: cleared, provokedBy: undefined },
         });
     });
 

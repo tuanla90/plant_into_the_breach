@@ -145,9 +145,9 @@ export const planHazard = (
              * "is my line lying along the beam" — which is a question about formation, the one
              * this sector spends its whole act asking.
              *
-             * No damage and no terrain change. Everything caught is TAUNTED toward the light
+             * No damage and no terrain change. Everything caught is PROVOKED toward the light
              * next turn, so the crowd redirects onto whoever failed to step out. That is why it
-             * had to wait for TAUNT rather than being faked with damage: the hazard's whole
+             * had to wait for PROVOKE rather than being faked with damage: the hazard's whole
              * payload is ATTENTION, and attention already has a status.
              */
             const vertical = Math.random() < 0.5;

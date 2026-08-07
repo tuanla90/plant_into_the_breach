@@ -455,7 +455,7 @@ export const GAME_EVENTS: GameEvent[] = [
                         // ONE roll decides both halves of the prize. Two effects each rolling
                         // 0.55 would let you win the plant and lose the Coin, which is not
                         // what the chip below promises.
-                        type: 'GAIN_BENCH_PLANT', materialId: 'MAT_WALLNUT', chance: 0.55,
+                        type: 'GAIN_BENCH_PLANT', materialId: 'MAT_IRONHUSK', chance: 0.55,
                         then: [{ type: 'GAIN_COIN', value: 90 }],
                         fallback: [],
                     },

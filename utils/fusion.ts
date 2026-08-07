@@ -331,7 +331,7 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
     // judo grip is Chardslam's Backswing wearing a different trajectory.
     const hasShove = skill.effects.some(e => e.type === 'PUSH' || e.type === 'PULL' || e.type === 'GLOBAL_PUSH' || e.type === 'TOSS');
     const hasShield = skill.effects.some(e => e.type === 'SHIELD');
-    const hasTaunt = skill.effects.some(e => e.type === 'TAUNT');
+    const hasTaunt = skill.effects.some(e => e.type === 'PROVOKE');
 
     /**
      * THE GATE. This used to read "no DAMAGE effect, no fusions", which was a fine shorthand
@@ -505,10 +505,10 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
     // Thornshell's row: the shout carries further. SHIELD_SPREAD is the odd one out of this
     // group and is deliberately NOT here — it is applied in skillResolution instead, because
     // it changes who ELSE gets layered, not anything on the skill card itself.
-    const tauntBonus = getFusionEffectValue(caster, 'TAUNT_RADIUS');
-    if (tauntBonus > 0) {
+    const provokeBonus = getFusionEffectValue(caster, 'PROVOKE_RADIUS');
+    if (provokeBonus > 0) {
         effects = effects.map(e =>
-            e.type === 'TAUNT' ? { ...e, value: (e.value ?? 0) + tauntBonus } : e);
+            e.type === 'PROVOKE' ? { ...e, value: (e.value ?? 0) + provokeBonus } : e);
     }
 
     // Blizzard: turns every SLOW this caster deals into a full freeze. No fusion recipe

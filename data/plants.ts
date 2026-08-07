@@ -106,7 +106,7 @@ export const PLANT_DEFINITIONS: Partial<Record<UnitClass, UnitDefinition>> = {
      * của nguyên liệu), mà vì không ai để ý: mọi UI tra `unitDefs[unit.class]` để lấy tên hay
      * chỉ số của một hero đều nhận undefined cho Reedwing, và bảng Đội Hình bỏ qua thẻ của cô
      * ấy trong im lặng (`if (!def) return null`). Chỉ số chép đúng `benchStats` của
-     * MAT_CATTAIL để hai chỗ không nói khác nhau.
+     * MAT_REEDWING để hai chỗ không nói khác nhau.
      */
     [UnitClass.ROTOR_WING]: {
         class: UnitClass.ROTOR_WING, name: 'Rotor Wing', maxHp: 2, damage: 2, moveRange: 3,

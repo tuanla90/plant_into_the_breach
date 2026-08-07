@@ -658,7 +658,7 @@ export const TUTORIAL_CHAIN: TutorialNode[] = [
         title: 'Xe Hàng',
         type: 'SHOP',
         brief: 'Nỗi đau mất mát Peaburst. Mua trang bị lấp khoảng trống.',
-        shopOffers: ['MAT_PEASHOOTER', 'MAT_PEASHOOTER'],
+        shopOffers: ['MAT_PEABURST', 'MAT_PEABURST'],
         // ONE item, the cheapest. Enough to teach that the second shelf exists and is paid
         // for in Coin, without putting the revive at risk — the full shelf is 350 Coin.
         itemOffers: ['seed_mine'],
@@ -668,8 +668,8 @@ export const TUTORIAL_CHAIN: TutorialNode[] = [
         // Armor Plate, and buying out of order left the campfire step pointing at a plant that
         // had already taken the field.
         steps: [
-            { phase: 'SHOP', turn: 1, note: 'Thành hàng trống chỗ. Mua một Súng Hạt!', focus: 'shop-plant-MAT_PEASHOOTER' },
-            { phase: 'SHOP', turn: 1, note: 'Ghế dự bị còn chỗ. Mua thêm một Xạ Thủ!', focus: 'shop-plant-MAT_PEASHOOTER' },
+            { phase: 'SHOP', turn: 1, note: 'Thành hàng trống chỗ. Mua một Súng Hạt!', focus: 'shop-plant-MAT_PEABURST' },
+            { phase: 'SHOP', turn: 1, note: 'Ghế dự bị còn chỗ. Mua thêm một Xạ Thủ!', focus: 'shop-plant-MAT_PEABURST' },
             { phase: 'SHOP', turn: 1, note: 'Kệ dưới là đồ một lần. Mua Mìn Hạt!', focus: 'shop-item-seed_mine' },
             { phase: 'SHOP', turn: 1, note: 'Giữ chặt túi Xu — bạn sẽ cần sau này!', focus: 'shop-leave' },
         ],
@@ -794,7 +794,7 @@ export const TUTORIAL_CHAIN: TutorialNode[] = [
                 { turn: 1, note: 'Hất văng nó khỏi hiên nhà!', focus: 'tile-1-1', act: 'ATTACK' },
                 { turn: 1, note: 'Gài Mìn Hạt chặn bước nó quay lại.', focus: 'item-seed_mine' },
                 { turn: 1, note: 'Đặt mìn vào đúng ô vừa hất ra.', focus: 'tile-1-1', act: 'ITEM' },
-                { turn: 1, note: 'Nhà dưới: Cửa Lưới bọc giáp. Xạ Thủ, xuống góc bắn!', focus: 'unit-MAT_PEASHOOTER' },
+                { turn: 1, note: 'Nhà dưới: Cửa Lưới bọc giáp. Xạ Thủ, xuống góc bắn!', focus: 'unit-MAT_PEABURST' },
                 { turn: 1, note: 'Di chuyển xuống hàng F lấy góc bắn!', focus: 'tile-5-2', act: 'MOVE' },
                 // Bless BEFORE the shot — the +1 dies at end of turn, so the order IS the
                 // lesson. The blessed pea is (2+1) through armour 1 = 2 into the door's 3.
@@ -802,7 +802,7 @@ export const TUTORIAL_CHAIN: TutorialNode[] = [
                 { turn: 1, note: 'Tiến lại gần Xạ Thủ.', focus: 'tile-4-3', act: 'MOVE' },
                 { turn: 1, note: 'Ban Phước — 50 Sol: +1 sát thương TRONG LƯỢT NÀY!', focus: 'skill-sf_blessing' },
                 { turn: 1, note: 'Phước lành cho Xạ Thủ — buff TRƯỚC, bắn SAU!', focus: 'tile-5-2', act: 'ATTACK' },
-                { turn: 1, note: 'Giờ Xạ Thủ khai hỏa. Chọn lại nó!', focus: 'unit-MAT_PEASHOOTER' },
+                { turn: 1, note: 'Giờ Xạ Thủ khai hỏa. Chọn lại nó!', focus: 'unit-MAT_PEABURST' },
                 { turn: 1, note: 'Bắn Đậu!', focus: 'skill-pea_shot' },
                 { turn: 1, note: 'Đạn được ban phước xuyên giáp sâu hơn!', focus: 'tile-5-1', act: 'ATTACK' },
                 { turn: 1, note: 'Nó còn 1 máu. Kết thúc lượt!', focus: 'end-turn' },
@@ -810,7 +810,7 @@ export const TUTORIAL_CHAIN: TutorialNode[] = [
                 // --- turn 2: the arithmetic says no. Say it, then hold the second front ---
                 { turn: 2, note: 'Nó sát cửa rồi, bắn không kịp nữa!' },
                 { turn: 2, note: 'Mất mầm là vĩnh viễn. Mất 5 quả: Thua!' },
-                { turn: 2, note: 'Rút quân nhà dưới! Bấm chọn Xạ Thủ.', focus: 'unit-MAT_PEASHOOTER' },
+                { turn: 2, note: 'Rút quân nhà dưới! Bấm chọn Xạ Thủ.', focus: 'unit-MAT_PEABURST' },
                 { turn: 2, note: 'Về hàng D chặn lối zombie khác!', focus: 'tile-3-2', act: 'MOVE' },
                 { turn: 2, note: 'Bắn Đậu!', focus: 'skill-pea_shot' },
                 { turn: 2, note: 'Bắn gục con hàng D!', focus: 'tile-3-3', act: 'ATTACK' },
@@ -836,7 +836,7 @@ export const TUTORIAL_CHAIN: TutorialNode[] = [
                 { turn: 3, note: 'Nấm mồ sắp trồi thêm! Sunbloom, ban phước!', focus: 'hero-SUNBLOOM' },
                 { turn: 3, note: 'Ban Phước.', focus: 'skill-sf_blessing' },
                 { turn: 3, note: 'Phước cho Xạ Thủ — nó sẽ dập cái mồ.', focus: 'tile-3-2', act: 'ATTACK' },
-                { turn: 3, note: 'Xạ Thủ, lấy đường đạn dọc hàng C!', focus: 'unit-MAT_PEASHOOTER' },
+                { turn: 3, note: 'Xạ Thủ, lấy đường đạn dọc hàng C!', focus: 'unit-MAT_PEABURST' },
                 { turn: 3, note: 'Sang C4 — thẳng làn tới cái mồ.', focus: 'tile-2-3', act: 'MOVE' },
                 { turn: 3, note: 'Bắn Đậu!', focus: 'skill-pea_shot' },
                 { turn: 3, note: 'Một phát được ban phước — dập tận gốc!', focus: 'tile-2-5', act: 'ATTACK' },
@@ -849,7 +849,7 @@ export const TUTORIAL_CHAIN: TutorialNode[] = [
                 // first, down the C column Ironhusk is about to stand in — 2 into the cone's
                 // 3 — and then he steps in and finishes with bash 1 + wall-slam 1. Swap the
                 // two and his own body blocks the shot that sets his kill up.
-                { turn: 4, note: 'Nón Chóp đã kề nhà trên! Xạ Thủ bắn trước!', focus: 'unit-MAT_PEASHOOTER' },
+                { turn: 4, note: 'Nón Chóp đã kề nhà trên! Xạ Thủ bắn trước!', focus: 'unit-MAT_PEABURST' },
                 { turn: 4, note: 'Bắn Đậu.', focus: 'skill-pea_shot' },
                 { turn: 4, note: 'Xuyên dọc hàng C, bào nó còn 1 máu!', focus: 'tile-2-0', act: 'ATTACK' },
                 { turn: 4, note: 'Ironhusk khoá sổ. Chọn anh ấy!', focus: 'hero-IRONHUSK' },
@@ -928,7 +928,7 @@ export const TUTORIAL_CHAIN: TutorialNode[] = [
             // `fusableHeroes()`, which includes pending revives, so the hero the player just
             // paid to bring back is the hero they can fuse.
             { phase: 'CAMPFIRE', turn: 1, note: 'Chọn người nhận sức mạnh: Peaburst tái sinh!', focus: 'fusion-hero-PEABURST' },
-            { phase: 'CAMPFIRE', turn: 1, note: 'Chọn cây dự bị cùng loại để hợp nhất.', focus: 'fusion-plant-MAT_PEASHOOTER' },
+            { phase: 'CAMPFIRE', turn: 1, note: 'Chọn cây dự bị cùng loại để hợp nhất.', focus: 'fusion-plant-MAT_PEABURST' },
             { phase: 'CAMPFIRE', turn: 1, note: 'Ghép! Từ giờ đòn bắn thường nổ đôi!', focus: 'fusion-confirm' },
             // No rest-option step: at the campfire, fusing IS the visit's one choice —
             // closing the bench after a fuse resolves the event (App.closeFusionPanel),

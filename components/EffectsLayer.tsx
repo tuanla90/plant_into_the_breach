@@ -220,7 +220,7 @@ const ShieldGrant: React.FC<{ ms: number }> = ({ ms }) => (
     </>
 );
 
-const TauntBurst: React.FC<{ ms: number }> = ({ ms }) => (
+const ProvokeBurst: React.FC<{ ms: number }> = ({ ms }) => (
     <>
         <div className="absolute inset-[2%] rounded-full border-3 border-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.9)]"
              style={{ animation: `fxShock ${ms}ms ease-out forwards` }} />
@@ -254,7 +254,7 @@ export const EffectsLayer: React.FC<{ effects: VisualEffect[] }> = ({ effects })
                     {fx.type === 'HIT_ELEC' && <HitElec ms={ms} />}
                     {fx.type === 'HEAVY_SHAKE' && <HeavyShake ms={ms} />}
                     {fx.type === 'SHIELD_GRANT' && <ShieldGrant ms={ms} />}
-                    {fx.type === 'TAUNT_BURST' && <TauntBurst ms={ms} />}
+                    {fx.type === 'PROVOKE_BURST' && <ProvokeBurst ms={ms} />}
                 </div>
             );
         })}

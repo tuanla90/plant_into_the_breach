@@ -321,17 +321,17 @@ export const recipeKey = (hero: HeroId, material: MaterialId): string => `${hero
  * portrait you cannot use yet.
  */
 export const SIGNATURE_MATERIAL: Record<HeroId, MaterialId> = {
-    PEABURST: 'MAT_PEASHOOTER',
-    IRONHUSK: 'MAT_WALLNUT',
-    SUNBLOOM: 'MAT_SUNFLOWER',
-    SNAPMAW: 'MAT_CHOMPER',
-    CORNOVA: 'MAT_CORN_MORTAR',
+    PEABURST: 'MAT_PEABURST',
+    IRONHUSK: 'MAT_IRONHUSK',
+    SUNBLOOM: 'MAT_SUNBLOOM',
+    SNAPMAW: 'MAT_SNAPMAW',
+    CORNOVA: 'MAT_CORNOVA',
     // Nine heroes, nine gears: the plant each of the four newest heroes is grown from is also
     // the material that fuses into them, so the pairing below writes itself.
-    REEDWING: 'MAT_CATTAIL',
-    THORNSHELL: 'MAT_ENDURIAN',
-    CHARDSLAM: 'MAT_SPRING_ARM',
-    GOURDWARD: 'MAT_PUMPKIN',
+    REEDWING: 'MAT_REEDWING',
+    THORNSHELL: 'MAT_THORNSHELL',
+    CHARDSLAM: 'MAT_CHARDSLAM',
+    GOURDWARD: 'MAT_GOURDWARD',
 };
 
 /** Recipes a brand-new save knows: the signature pairing of each starting hero. */
@@ -365,8 +365,8 @@ export const TUTORIAL_RECIPES: string[] = [
     // ARMOR_PLATE is kept: an earlier draft of board 6 fused it, and a lent recipe that is no
     // longer demonstrated is harmless, while removing it would silently change what the
     // first two bonus payouts award.
-    'PEABURST:MAT_PEASHOOTER',
-    'SUNBLOOM:MAT_WALLNUT',
+    'PEABURST:MAT_PEABURST',
+    'SUNBLOOM:MAT_IRONHUSK',
 ];
 
 // ---------------------------------------------------------------------------

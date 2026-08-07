@@ -6,7 +6,7 @@ export const UNIT_SKILLS: Record<UnitClass, Skill[]> = {
   [UnitClass.SEED_GUN]: [
     SkillFactory.createLineAttack('pea_shot', 'Seed Shot', 8, 2, 'Fires a seed in a straight line.')
   ],
-  // Bench Rotor Wing — the seedling body of MAT_CATTAIL. A plain homing dart, nothing fancy:
+  // Bench Rotor Wing — the seedling body of MAT_REEDWING. A plain homing dart, nothing fancy:
   // the drone tricks belong to Reedwing, the hero grown from it.
   [UnitClass.ROTOR_WING]: [
     SkillFactory.createLineAttack('tail_dart', 'Rotor Dart', 4, 2, 'Fires a spiked dart.')

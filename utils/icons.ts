@@ -59,16 +59,16 @@ export const HERO_SPRITES = {
 // plant core piloting them). Used by MATERIAL_DEFINITIONS only — the plain plant classes in
 // ICONS below stay untouched because plants.ts shares them.
 export const MATERIAL_SPRITES = {
-    MAT_PEASHOOTER: `./img/gear-seed-gun.png`,
-    MAT_SUNFLOWER: `./img/gear-sol-battery.png`,
-    MAT_WALLNUT: `./img/gear-armor-plate.png`,
-    MAT_CHOMPER: `./img/gear-steel-jaws.png`,
-    MAT_CORN_MORTAR: `./img/gear-corn-mortar.png`,
+    MAT_PEABURST: `./img/gear-seed-gun.png`,
+    MAT_SUNBLOOM: `./img/gear-sol-battery.png`,
+    MAT_IRONHUSK: `./img/gear-armor-plate.png`,
+    MAT_SNAPMAW: `./img/gear-steel-jaws.png`,
+    MAT_CORNOVA: `./img/gear-corn-mortar.png`,
     // The four gears belonging to the four newest heroes.
-    MAT_CATTAIL: `./img/placeholder/gear-rotor-wing.svg`,
-    MAT_ENDURIAN: `./img/gear-spike-armor.png`,
-    MAT_SPRING_ARM: `./img/gear-spring-arm.png`,
-    MAT_PUMPKIN: `./img/gear-bunker-shell.png`,
+    MAT_REEDWING: `./img/placeholder/gear-rotor-wing.svg`,
+    MAT_THORNSHELL: `./img/gear-spike-armor.png`,
+    MAT_CHARDSLAM: `./img/gear-spring-arm.png`,
+    MAT_GOURDWARD: `./img/gear-bunker-shell.png`,
 };
 
 // Combat-item icons: handheld bio-mech consumables (pins, triggers, rip-cords), centered

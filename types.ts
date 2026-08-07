@@ -96,9 +96,9 @@ export type StatusEffectType = 'BURN' | 'FREEZE' | 'STUN' | 'HYPNOTIZED' | 'ENRA
      * This is the only status that redirects an enemy rather than delaying it, and it exists
      * because three unit types are built specifically to walk AROUND a blocker: the Balloon
      * flies, the Digger teleports, the Catapult outranges. A wall answers none of them. The
-     * taunter's id is on `Unit.tauntedBy` — the status alone cannot say who to go after.
+     * provoker's id is on `Unit.provokedBy` — the status alone cannot say who to go after.
      */
-    | 'TAUNTED'
+    | 'PROVOKED'
     /**
      * Cannot act at all, and never recovers on its own. Unlike STUN (one turn) and FREEZE
      * (until hit), nothing clears this — it is set by scripted content for a unit the player
@@ -309,7 +309,7 @@ export interface Unit {
    * unexplained hole in their own move range, on the one tile with nothing on it.
    *
    * The line it draws is "things that name a BODY miss; things that change the GROUND land".
-   * Spikes on the route, a mine on the tile it surfaces through, lava, and a TAUNT (which is a
+   * Spikes on the route, a mine on the tile it surfaces through, lava, and a PROVOKE (which is a
    * radius around the shouter and never asks what it can see) all still reach it. That is what
    * keeps the buried turn a turn spent salting the ground rather than a turn spent watching.
    */
@@ -396,11 +396,11 @@ export interface Unit {
   /** Set on a bench plant deployed to fill a fallen hero's slot. */
   materialId?: MaterialId;
   /**
-   * Id of the unit that taunted this one. Read together with the TAUNTED status: the status
+   * Id of the unit that taunted this one. Read together with the PROVOKED status: the status
    * says "you are not walking to a sprout this turn", this says who to go at instead. Ignored
-   * the moment the taunter is dead — otherwise a corpse would keep steering the enemy line.
+   * the moment the provoker is dead — otherwise a corpse would keep steering the enemy line.
    */
-  tauntedBy?: string;
+  provokedBy?: string;
   /**
    * Damage dealt back to anything that hits this unit in melee, WITHOUT a fusion.
    *
@@ -586,7 +586,7 @@ export interface VisualEffect {
     /** Grid coordinates, same convention as Unit.position: x = row, y = column. */
     x: number;
     y: number;
-    type: 'IMPACT' | 'EXPLOSION' | 'SLASH' | 'MUZZLE' | 'PUSH' | 'EMERGE' | 'DROWN' | 'HIT_FIRE' | 'HIT_ICE' | 'HIT_ELEC' | 'HEAVY_SHAKE' | 'SHIELD_GRANT' | 'TAUNT_BURST';
+    type: 'IMPACT' | 'EXPLOSION' | 'SLASH' | 'MUZZLE' | 'PUSH' | 'EMERGE' | 'DROWN' | 'HIT_FIRE' | 'HIT_ICE' | 'HIT_ELEC' | 'HEAVY_SHAKE' | 'SHIELD_GRANT' | 'PROVOKE_BURST';
     /** Degrees, 0 = pointing right. Only the directional types use it. */
     rotation?: number;
     /** ms. Already scaled by the fast-forward multiplier when it reaches the renderer. */
@@ -876,28 +876,28 @@ export type BossId =
     | 'BLIGHTLORD';
 
 export type MaterialId =
-    | 'MAT_SUNFLOWER'
-    | 'MAT_PEASHOOTER'
-    | 'MAT_CHOMPER'
-    | 'MAT_WALLNUT'
+    | 'MAT_SUNBLOOM'
+    | 'MAT_PEABURST'
+    | 'MAT_SNAPMAW'
+    | 'MAT_IRONHUSK'
     // MAT_SNOW_PEA is retired: it was Frostpod's plant, Frostpod is retired, and the cold
     // belongs to the ICE element now. Nine heroes, nine gears, no orphan — persistence.ts
     // filters the id out of old saves so a dead gear can never reach the shop shelf.
     /** Cornova's own plant. Grafts the arc onto somebody else's straight shot. */
-    | 'MAT_CORN_MORTAR'
+    | 'MAT_CORNOVA'
     /**
      * The four gears belonging to the four newest heroes. Every hero's base plant is also a
      * material: bring it to the field as a bench body, or burn it into a hero. One or the
      * other, never both.
      */
     /** Rotor Wing. Rotors: speed for the body, and dust that takes the swing out of a zombie. */
-    | 'MAT_CATTAIL'
+    | 'MAT_REEDWING'
     /** Spike Armor. Thorns worn outward — being hit becomes a way of dealing damage. */
-    | 'MAT_ENDURIAN'
+    | 'MAT_THORNSHELL'
     /** Spring Arm. Leverage: whatever it touches ends up somewhere else. */
-    | 'MAT_SPRING_ARM'
+    | 'MAT_CHARDSLAM'
     /** Bunker Shell. A shell that goes around somebody other than the wearer. */
-    | 'MAT_PUMPKIN';
+    | 'MAT_GOURDWARD';
 
 export type FusionEffectType =
     | 'BONUS_HP'                // +maxHp
@@ -995,7 +995,7 @@ export type FusionEffectType =
     /** Melee attackers are shoved back as well as hurt. */
     | 'RETALIATE_PUSH'
     /** The taunt reaches `value` tiles further. */
-    | 'TAUNT_RADIUS'
+    | 'PROVOKE_RADIUS'
     /** Bodies slammed by this hero's pushes take `value` extra collision damage. */
     | 'COLLISION_BONUS'
     /**
@@ -1025,8 +1025,8 @@ export type FusionEffectType =
      * turn is not spent: it is the shove that pays. Once per body per cast.
      */
     | 'OVERWATCH_SHOT'
-    /** Anything this hero's shots HURT turns on her: TAUNTED, pointed at her. */
-    | 'TAUNT_ON_HIT'
+    /** Anything this hero's shots HURT turns on her: PROVOKED, pointed at her. */
+    | 'PROVOKE_ON_HIT'
     /** Sol income, but only on the turns the wearer is DIGESTING. Snapmaw's window, monetised. */
     | 'SUN_WHILE_DIGESTING'
     /**
@@ -1095,7 +1095,7 @@ export type FusionEffectType =
     | 'ARMOR_SHRED'
     | 'REACTIVE_SHIELD'
     | 'NEEDLE_BURST'
-    | 'WIND_TAUNT'
+    | 'WIND_PROVOKE'
     | 'PROVOKE_SHIELD'
     | 'FLYER_REPEL'
     | 'ENCASE_RANGE'
@@ -1416,9 +1416,9 @@ export type EffectType = 'DAMAGE' | 'HEAL' | 'SHIELD' | 'STUN' | 'PUSH' | 'PULL'
                          'APPLY_SLOW' |
                          /**
                           * Forces every enemy in range to come at the caster next turn.
-                          * `value` is the radius. Sets TAUNTED + Unit.tauntedBy.
+                          * `value` is the radius. Sets PROVOKED + Unit.provokedBy.
                           */
-                         'TAUNT' |
+                         'PROVOKE' |
                          /** Leaves spikes on each tile the attack covered. `value` = damage. */
                          'SPIKE_TILE' |
                          /**

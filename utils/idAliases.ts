@@ -55,16 +55,41 @@ const BOSS_ID_ALIASES: Record<string, string> = {
     BALLOON_ARMADA: 'ARMADA',
 };
 
+/**
+ * BA thế hệ id, và một lần sửa bug.
+ *
+ * Gen 1 — tên cây PvZ (`MAT_PEASHOOTER`, `MAT_WALLNUT`…).
+ * Gen 2 — tên món đồ (`MAT_SEED_GUN`, `MAT_ARMOR_PLATE`…). **Bảng này từng trỏ Gen 1 → Gen 2
+ *   trong khi CODE chưa bao giờ đổi sang Gen 2.** Hậu quả: `persistence.ts:218` dịch
+ *   `MAT_PEASHOOTER` thành `MAT_SEED_GUN` lúc nạp, `FUSION_RECIPES` không có khoá đó, và bản save
+ *   ghi đè lại bằng id chết — người chơi mất material đã mở khoá và công thức đã học, im lặng.
+ *   Nên Gen 2 CÓ nằm trong save thật dù chưa bao giờ nằm trong code: phải dịch cả nó.
+ * Gen 3 — tên CHỦ NHÂN (`MAT_PEABURST`…), đợt 2026-08-08. Mỗi gear là hai trait của đúng một
+ *   hero, nên id nói thẳng ra điều đó; và nó sạch bản quyền PvZ (MASTER-VISION §1).
+ *
+ * Mọi thế hệ cũ trỏ THẲNG về Gen 3 — không bắc cầu, để không lặp lại đúng lỗi trên.
+ */
 const MATERIAL_ID_ALIASES: Record<string, string> = {
-    MAT_PEASHOOTER: 'MAT_SEED_GUN',
-    MAT_SUNFLOWER: 'MAT_SOL_BATTERY',
-    MAT_WALLNUT: 'MAT_ARMOR_PLATE',
-    MAT_CHOMPER: 'MAT_STEEL_JAWS',
-    MAT_CORN: 'MAT_CORN_MORTAR',
-    MAT_CATTAIL: 'MAT_ROTOR_WING',
-    MAT_ENDURIAN: 'MAT_SPIKE_ARMOR',
-    MAT_CHARD: 'MAT_SPRING_ARM',
-    MAT_PUMPKIN: 'MAT_BUNKER_SHELL',
+    // Gen 1 → Gen 3
+    MAT_SUNFLOWER: 'MAT_SUNBLOOM',
+    MAT_PEASHOOTER: 'MAT_PEABURST',
+    MAT_CHOMPER: 'MAT_SNAPMAW',
+    MAT_WALLNUT: 'MAT_IRONHUSK',
+    MAT_CORN: 'MAT_CORNOVA',
+    MAT_CORN_MORTAR: 'MAT_CORNOVA',
+    MAT_CATTAIL: 'MAT_REEDWING',
+    MAT_ENDURIAN: 'MAT_THORNSHELL',
+    MAT_CHARD: 'MAT_CHARDSLAM',
+    MAT_SPRING_ARM: 'MAT_CHARDSLAM',
+    MAT_PUMPKIN: 'MAT_GOURDWARD',
+    // Gen 2 → Gen 3 — chưa từng có trong code, nhưng CÓ trong save vì bug ở trên
+    MAT_SOL_BATTERY: 'MAT_SUNBLOOM',
+    MAT_SEED_GUN: 'MAT_PEABURST',
+    MAT_STEEL_JAWS: 'MAT_SNAPMAW',
+    MAT_ARMOR_PLATE: 'MAT_IRONHUSK',
+    MAT_ROTOR_WING: 'MAT_REEDWING',
+    MAT_SPIKE_ARMOR: 'MAT_THORNSHELL',
+    MAT_BUNKER_SHELL: 'MAT_GOURDWARD',
 };
 
 const ITEM_ID_ALIASES: Record<string, string> = {

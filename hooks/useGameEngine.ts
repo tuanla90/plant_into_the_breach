@@ -154,7 +154,7 @@ export const useGameEngine = () => {
       // DROWN runs long on purpose: the ripples have to outlive the death animation, or the
       // water closes before the player has registered what went into it.
       IMPACT: 380, EXPLOSION: 620, SLASH: 300, MUZZLE: 220, PUSH: 420, EMERGE: 700, DROWN: 900,
-      HIT_FIRE: 550, HIT_ICE: 500, HIT_ELEC: 480, HEAVY_SHAKE: 600, SHIELD_GRANT: 550, TAUNT_BURST: 600,
+      HIT_FIRE: 550, HIT_ICE: 500, HIT_ELEC: 480, HEAVY_SHAKE: 600, SHIELD_GRANT: 550, PROVOKE_BURST: 600,
   };
 
   const addEffect = (x: number, y: number, type: VisualEffect['type'], rotation = 0) => {
@@ -647,10 +647,10 @@ export const useGameEngine = () => {
                   // bookkeeping action is the only place they exist. Without a sound they are
                   // the quietest things in the game despite being among the loudest decisions.
                   const before = unitsRef.current.find(u => u.id === action.unitId);
-                  if (before && action.updates?.statusEffects?.includes('TAUNTED')
-                      && !before.statusEffects.includes('TAUNTED')) {
+                  if (before && action.updates?.statusEffects?.includes('PROVOKED')
+                      && !before.statusEffects.includes('PROVOKED')) {
                       sfx('taunt');
-                      addEffect(before.position.x, before.position.y, 'TAUNT_BURST');
+                      addEffect(before.position.x, before.position.y, 'PROVOKE_BURST');
                   }
                   if (before && typeof action.updates?.shield === 'number'
                       && action.updates.shield > (before.shield ?? 0)) {
