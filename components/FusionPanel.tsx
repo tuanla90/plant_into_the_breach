@@ -72,6 +72,7 @@ const categoryOf = (type: FusionEffectType): { label: string; color: string } =>
         case 'SKILL_REPEL':
         case 'BLEED_ON_HIT':
         case 'PROVOKE_ON_HIT':
+        case 'PROVOKE_ON_SHOVE':
         case 'STUN_ON_FULL_HP':
         case 'WING_MIDSHOT':
         case 'OVERWATCH_SHOT':

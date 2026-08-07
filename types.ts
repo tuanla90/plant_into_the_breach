@@ -100,6 +100,23 @@ export type StatusEffectType = 'BURN' | 'FREEZE' | 'STUN' | 'HYPNOTIZED' | 'ENRA
      */
     | 'PROVOKED'
     /**
+     * BỊ HÉT VÀO MẶT — vung theo tiếng hét, vào đúng CÁI Ô nơi tiếng hét phát ra.
+     *
+     * Khác `PROVOKED` ở đúng một chữ, và cả cơ chế nằm trong chữ đó: PROVOKED khoá vào một
+     * THÂN (`provokedBy`) và đi theo thân đó khắp bàn cờ; TAUNTED khoá vào một Ô
+     * (`Unit.tauntedTile`), chốt tại khoảnh khắc bị hét, và **không bao giờ cập nhật lại**.
+     *
+     * Hai hệ quả rơi ra từ đó, và chúng chính là lý do status này tồn tại:
+     *   - người hét bước đi chỗ khác  → nó **đấm vào ô trống**;
+     *   - có thân khác bị đẩy vào ô đó → **thân đó ăn đòn**, kể cả một zombie.
+     *
+     * Không cần `Unit.facing`, không cần sửa phân giải đòn đánh: intent tấn công của địch vốn
+     * đã mang một **Position** (`aiLogic`), đòn vốn đã phân giải **theo Ô** và tra bất kỳ ai
+     * đứng đó **không lọc phe** (`turnManager` PHASE 4). Hai cơ chế "đánh hụt" và "đánh lẫn
+     * nhau" rơi ra sẵn từ kiến trúc — không có dòng nào viết riêng cho chúng.
+     */
+    | 'TAUNTED'
+    /**
      * KẸT CHÂN — không đi được, nhưng VẪN ĐÁNH được. Kéo dài đúng một lượt, xoá cùng chỗ STUN.
      *
      * Đây là điểm khác STUN, và là toàn bộ lý do nó tồn tại như một status riêng: STUN RULE cấm
@@ -441,6 +458,14 @@ export interface Unit {
    * the moment the provoker is dead — otherwise a corpse would keep steering the enemy line.
    */
   provokedBy?: string;
+  /**
+   * Ô mà tiếng hét phát ra, chốt tại khoảnh khắc bị hét. Đọc cùng status `TAUNTED`.
+   *
+   * Cố ý là một Position chứ không phải một id, và cố ý KHÔNG cập nhật lại theo từng lượt —
+   * đó là toàn bộ khác biệt với `provokedBy`, và là thứ sinh ra cả "đánh hụt" lẫn "đánh lẫn
+   * nhau". Một bản khoá-theo-thân chỉ là PROVOKE mạnh hơn, không tạo ra nước đi nào mới.
+   */
+  tauntedTile?: Position;
   /**
    * Damage dealt back to anything that hits this unit in melee, WITHOUT a fusion.
    *
@@ -1338,6 +1363,17 @@ export type FusionEffectType =
      * Needles — mot phep hinh hoc, ba o, nguoi choi hoc mot lan.
      */
     | 'SHIELD_BEHIND'
+    /**
+     * PROVOKE CHARD — than bi Chardslam quang di thi GHI HAN: luot sau no bo mam, quay lai
+     * tim anh (PROVOKED + `provokedBy`).
+     *
+     * Trigger la CU NEM chu khong phai cu bi danh — do la cho no khac han `RETALIATE_PUSH` ma
+     * no thay the, va hop hero hon han: anh la nguoi chu dong di tim chuyen, khong phai buc
+     * tuong dung cho bi dam.
+     *
+     * Danh dau moi than anh lam xe dich (`plan.moves`), khong chi nhung than va vao cai gi do.
+     */
+    | 'PROVOKE_ON_SHOVE'
     /** Finishing something off raises a fresh layer on this hero. */
     | 'SHIELD_ON_KILL'
     /** Melee attackers are shoved back as well as hurt. */

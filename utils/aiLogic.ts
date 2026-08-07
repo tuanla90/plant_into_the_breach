@@ -102,6 +102,27 @@ const planIntentCore = (
      */
     const rooted = enemy.statusEffects.includes('ROOTED');
 
+    /**
+     * BỊ HÉT VÀO MẶT (`TAUNTED`) — đọc TRƯỚC cả `PROVOKED`, vì nó là bản mạnh hơn của cùng
+     * một câu và nó không cần ai còn sống ở đầu kia.
+     *
+     * Con zombie vung vào ĐÚNG cái ô nó nhớ, bất kể ai đang đứng đó — hoặc không ai cả. Không
+     * kiểm tầm với, không tìm đường, không kiểm phe: nó không nhắm ai, nó đang phản xạ theo
+     * tiếng hét vừa nổ bên tai. Người hét bước đi thì nó đấm vào không khí; ai bị đẩy vào đó
+     * thì người đó ăn, kể cả đồng loại của nó.
+     *
+     * `damage` vẫn là số của nó, và `turnManager` PHASE 4 vẫn tra unit tại ô mà không lọc phe,
+     * nên không có dòng nào ở đây phải biết chuyện đó có thể thành một cú đấm nhầm.
+     */
+    if (enemy.statusEffects.includes('TAUNTED') && enemy.tauntedTile) {
+        return {
+            type: 'ATTACK',
+            target: { ...enemy.tauntedTile },
+            damage,
+            description: 'Swinging at the shout...',
+        };
+    }
+
     if (provoker) {
         const provokeReach = Math.max(1, enemy.attackRange ?? 1);
         if (manhattan(enemy.position, provoker.position) <= provokeReach) {

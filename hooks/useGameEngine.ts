@@ -694,8 +694,12 @@ export const useGameEngine = () => {
                   // bookkeeping action is the only place they exist. Without a sound they are
                   // the quietest things in the game despite being among the loudest decisions.
                   const before = unitsRef.current.find(u => u.id === action.unitId);
-                  if (before && action.updates?.statusEffects?.includes('PROVOKED')
-                      && !before.statusEffects.includes('PROVOKED')) {
+                  // TAUNTED đi cùng cửa: nó là bản mạnh hơn của cùng một câu, và một thân bị
+                  // khoá vào ô mà không kêu tiếng nào thì người chơi không biết mình vừa mua
+                  // cái gì bằng 50 Sol.
+                  if (before && action.updates?.statusEffects
+                      && (['PROVOKED', 'TAUNTED'] as const).some(s =>
+                          action.updates!.statusEffects!.includes(s) && !before.statusEffects.includes(s))) {
                       sfx('taunt');
                       addEffect(before.position.x, before.position.y, 'PROVOKE_BURST');
                   }

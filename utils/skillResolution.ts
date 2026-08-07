@@ -488,6 +488,45 @@ export const planSkillActions = (
         });
     };
 
+    /**
+     * PROVOKE CHARD (`PROVOKE_ON_SHOVE`) — thân bị anh quăng đi thì GHI HẬN.
+     *
+     * Lượt sau nó bỏ mầm, quay lại tìm anh. Trigger là **cú ném**, không phải cú bị đánh — đó
+     * là chỗ nó khác hẳn `RETALIATE_PUSH` mà nó thay thế, và hợp hero hơn hẳn: Chardslam là
+     * người chủ động đi tìm chuyện, không phải bức tường đứng chờ bị đấm.
+     *
+     * Đánh dấu MỌI thân anh làm xê dịch, không chỉ những thân va vào cái gì đó — `plan.moves`
+     * chứ không phải `plan.collided`. Ném hụt vào bãi đất trống thì con zombie vẫn tức.
+     *
+     * Vì sao ô này có giá trị chiến thuật thật: cú ném của anh vốn đã đưa một thân RA XA mầm;
+     * ghi hận biến quãng đường nó vừa bị đẩy thành quãng đường nó tự nguyện đi ngược lại. Một
+     * cú ném mua hai lượt của con zombie thay vì một.
+     */
+    const markShoveGrudge = (unit: Unit) => {
+        if (!hasFusionEffect(caster, 'PROVOKE_ON_SHOVE')) return;
+        if (unit.hp <= 0 || !unit.isEnemy || unit.type === UnitType.OBSTACLE) return;
+        if (unit.immunities.includes('STATUS')) {
+            actions.push({ type: 'APPLY_DAMAGE', targetId: unit.id, amount: 0, eventType: 'IMMUNE', pos: unit.position });
+            return;
+        }
+        const next: StatusEffectType[] = unit.statusEffects.includes('PROVOKED')
+            ? unit.statusEffects
+            : [...unit.statusEffects, 'PROVOKED'];
+        unit.statusEffects = next;
+        unit.provokedBy = caster.id;
+        actions.push({
+            type: 'UPDATE_UNIT_STATE', unitId: unit.id,
+            updates: { statusEffects: next, provokedBy: caster.id },
+        });
+    };
+    const applyShoveGrudge = (plan: { moves: Array<{ unitId: string }> }) => {
+        if (!hasFusionEffect(caster, 'PROVOKE_ON_SHOVE')) return;
+        new Set(plan.moves.map(m => m.unitId)).forEach(id => {
+            const u = tempUnits.get(id);
+            if (u) markShoveGrudge(u);
+        });
+    };
+
     // `damageOverride` is how the Repeater's second pass lands for less than the
     // first. Passing it here rather than mutating the skill keeps the first pass
     // reading the authored number. `targetList` lets that second pass re-aim (the
@@ -926,6 +965,7 @@ export const planSkillActions = (
                     applyPushPlan(plan, actions, tempUnits, caster);
                     applyCollisionSplash(plan);
                     applyShoveBleed(plan);
+                    applyShoveGrudge(plan);
                 }
             }
 
@@ -994,6 +1034,7 @@ export const planSkillActions = (
                             // Rending Chard: mặt đất cũng là một mặt va chạm, nên cú ném cũng
                             // để lại vết. Sau khối damage ở trên, vì thân chết rồi thì thôi.
                             markShoveBleed(targetUnit);
+                            markShoveGrudge(targetUnit);
                         }
                     }
                 }
@@ -1030,6 +1071,41 @@ export const planSkillActions = (
             // function is only allowed to write to its own simulation.
             const sim = tempUnits.get(u.id);
             if (!sim) return;
+
+            /**
+             * TIẾNG HÉT CÓ HAI TẦM, và khoảng cách quyết định nó là loại nào.
+             *
+             *     kề anh (Manhattan ≤ 1)  →  TAUNTED   khoá vào Ô anh đang đứng
+             *     xa hơn, trong bán kính  →  PROVOKED  đi về phía anh, đánh anh
+             *
+             * Đúng cả nghĩa lẫn flavor: hét vào mặt kẻ đứng sát thì nó vung theo tiếng hét;
+             * hét với kẻ ở xa thì nó chỉ biết lao tới. Và nó mở ra một câu đố thật —
+             *
+             *   Provoke → ba con kề anh khoá vào ô anh đứng → Chardslam đẩy con thứ tư vào
+             *   đúng ô đó rồi hất anh ra → ba con đấm nhau.
+             *
+             * Ô được chốt là ô người hét đứng LÚC HÉT (`caster.position`), và không bao giờ
+             * cập nhật lại. Anh đi chỗ khác thì cả ba đấm vào đất.
+             */
+            const inMelee = Math.abs(u.position.x - caster.position.x)
+                + Math.abs(u.position.y - caster.position.y) <= 1;
+            if (inMelee) {
+                const locked: StatusEffectType[] = sim.statusEffects.includes('TAUNTED')
+                    ? sim.statusEffects
+                    : [...sim.statusEffects, 'TAUNTED'];
+                const tile = { ...caster.position };
+                actions.push({
+                    type: 'UPDATE_UNIT_STATE',
+                    unitId: u.id,
+                    updates: { statusEffects: locked, tauntedTile: tile },
+                });
+                actions.push({ type: 'APPLY_DAMAGE', targetId: u.id, amount: 0, eventType: 'BUFF', pos: u.position });
+                sim.statusEffects = locked;
+                sim.tauntedTile = tile;
+                provoked += 1;
+                return;
+            }
+
             const taunted: StatusEffectType[] = sim.statusEffects.includes('PROVOKED')
                 ? sim.statusEffects
                 : [...sim.statusEffects, 'PROVOKED'];
@@ -1129,6 +1205,7 @@ export const planSkillActions = (
             applyPushPlan(plan, actions, tempUnits, caster);
             applyCollisionSplash(plan);
             applyShoveBleed(plan);
+            applyShoveGrudge(plan);
         });
     }
 

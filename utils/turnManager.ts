@@ -1880,15 +1880,20 @@ export const processTurn = (
     // in NEW_TURN_RESET because that reset lives in the engine and only knows STUN/BURN/SLOW.
     // `provokedBy` goes with it — a provoker that dies three turns later must not still be
     // steering the horde from the grave.
+    // `TAUNTED` hết hạn cùng chỗ, cùng đồng hồ, và `tauntedTile` đi theo nó. Một cái ô nhớ mà
+    // không ai dọn thì con zombie sẽ đấm vào đúng chỗ đó đến hết trận.
     simUnits.forEach(u => {
-        if (!u.statusEffects.includes('PROVOKED')) return;
-        const cleared = u.statusEffects.filter(e => e !== 'PROVOKED');
+        const wasProvoked = u.statusEffects.includes('PROVOKED');
+        const wasTaunted = u.statusEffects.includes('TAUNTED');
+        if (!wasProvoked && !wasTaunted) return;
+        const cleared = u.statusEffects.filter(e => e !== 'PROVOKED' && e !== 'TAUNTED');
         u.statusEffects = cleared;
         u.provokedBy = undefined;
+        u.tauntedTile = undefined;
         actions.push({
             type: 'UPDATE_UNIT_STATE',
             unitId: u.id,
-            updates: { statusEffects: cleared, provokedBy: undefined },
+            updates: { statusEffects: cleared, provokedBy: undefined, tauntedTile: undefined },
         });
     });
 

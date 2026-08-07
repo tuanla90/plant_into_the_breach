@@ -1901,5 +1901,10 @@ export const VI: Record<string, string> = {
     // --- Đợt 16: Twin Sol thành cấp số nhân, Greatrind thành luật hình học. ---
     "Harvest pays double: 100 Sol a turn — or 30 Sol and a layer alongside Dawn Harvest.": "Thu Nắng trả gấp đôi: 100 Sol mỗi lượt — hoặc 30 Sol kèm một lớp chắn khi ghép cùng Vụ Bình Minh.",
     "His shell carries through the ally he shields and layers one more body directly behind them.": "Lớp vỏ của anh xuyên qua đồng minh anh bọc và bọc thêm đúng một thân ngay phía sau.",
+
+    // --- Đợt 17: TAUNTED khoá ô, Provoke hai tầng, Provoke Chard. ---
+    "Provoke Chard": "Cải Khiêu Khích",
+    "Anything he throws holds a grudge: next turn it drops the sprout and comes back for him.": "Thứ gì bị anh quăng đi đều ghi hận: lượt sau nó bỏ mầm, quay lại tìm anh.",
+    "Swinging at the shout...": "Vung theo tiếng hét...",
     "While he stands, EVERY collision on the board hurts 1 more — his shoves, the horde's, and the hole your own wall is plugging.": "Chừng nào anh còn đứng, MỌI cú va chạm trên bàn đều đau thêm 1 — cú đẩy của anh, cú đẩy của địch, và cả cái hố mà tường nhà đang bịt.",
 };

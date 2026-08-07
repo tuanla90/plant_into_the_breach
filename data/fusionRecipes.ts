@@ -548,9 +548,9 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_THORNSHELL: {
-            name: 'Thorned Chard',
-            description: 'Melee attackers are thrown a tile back.',
-            effect: { type: 'RETALIATE_PUSH' },
+            name: 'Provoke Chard',
+            description: 'Anything he throws holds a grudge: next turn it drops the sprout and comes back for him.',
+            effect: { type: 'PROVOKE_ON_SHOVE' },
             live: true,
         },
         MAT_CHARDSLAM: {
