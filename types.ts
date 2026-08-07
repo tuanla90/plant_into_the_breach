@@ -456,6 +456,29 @@ export interface Unit {
    */
   shieldStuns?: boolean;
   /**
+   * Số thân thể unit này đã kết liễu TRONG LƯỢT NÀY. Chỉ `SUN_ON_DOUBLE_KILL` đọc nó, và chỉ
+   * để biết cú kết liễu vừa rồi có phải cú THỨ HAI hay không.
+   *
+   * Reset trong `NEW_TURN_RESET` cùng chỗ với `hasMoved`/`hasAttacked` — nếu quên, "mỗi lượt
+   * một lần" âm thầm biến thành "mỗi TRẬN một lần", đúng loại lỗi mà `lastStandUsed` đã phải
+   * viết hẳn một chú thích để cảnh báo.
+   */
+  killsThisTurn?: number;
+  /**
+   * Số Sol lớp chắn hiện tại hoàn lại khi bị ĐẬP VỠ (Gourdward — Sunlit Rind). Lưu SỐ chứ
+   * không lưu id người phát: lớp chắn phải tự trả được tiền kể cả khi người phát nó đã chết,
+   * cùng lý do `shieldBarbed` nằm trên lớp chứ không tra ngược về ai đứng gần.
+   * 0 / thiếu = lớp thường.
+   */
+  shieldRefund?: number;
+  /**
+   * Lớp chắn hiện tại có gai của người phát (Gourdward — Spined Rind): ai đánh CẬN CHIẾN vào
+   * thân đang mang lớp này thì ăn lại 1. Sống và chết cùng lớp, y như `shieldBarbed`.
+   *
+   * Khác Glass Rind ở chỗ nó trả đòn suốt thời gian lớp còn, chứ không phải lúc lớp vỡ.
+   */
+  shieldSpined?: boolean;
+  /**
    * The LAST_STAND_SHIELD layer has already been spent this battle. Reset by unitFactory when
    * the body is built for a fight, which is also where the flag is cleared between battles —
    * a once-per-fight promise stored on a snapshot that persists between fights would be a
@@ -1033,6 +1056,43 @@ export type FusionEffectType =
      * Melee-only, đồng bộ Glass Rind: hòn đá ném từ ba ô làm vỡ kính mà không hề chạm vào nó.
      */
     | 'SHIELD_BREAK_STUN'
+    /**
+     * Solar Rotor — lượt nào hero này kết liễu **từ hai thân trở lên** thì thu `value` Sol.
+     * MỘT LẦN mỗi lượt: giết ba con vẫn đúng chừng đó. Kết liễu đơn trả **0**.
+     *
+     * Thay `SUN_ON_KILL` ở ô của Reedwing vì ba ô SUN_ON_KILL cũ chỉ khác nhau con số —
+     * engine trả cho mọi cú kết liễu như nhau, nên chúng là một ô viết ba lần. Double-kill là
+     * chuyện hai nòng của cô làm được đều đặn còn ai khác thì hãn hữu: trigger thuần identity,
+     * phần thưởng to hơn nhưng khó hơn.
+     */
+    | 'SUN_ON_DOUBLE_KILL'
+    /**
+     * Sunlit Thorn — Khiêu Khích hoàn `value` Sol cho MỖI thân thực sự dính tiếng gọi.
+     *
+     * Thay `SKILL_DISCOUNT` phẳng: vẫn bán đúng thứ cột Sol Battery bán ("hồi này bấm được bao
+     * nhiêu lần"), nhưng giá theo CHẤT LƯỢNG cú cast. Trúng 3 con hoàn bằng đúng mức discount
+     * cũ; trúng 5 con nhờ Bellowing Thorn thì hoàn hơn; cast trượt thì trả đủ giá. Thân miễn
+     * nhiễm STATUS không tính — hét vào trùm miễn nhiễm là hét không công.
+     */
+    | 'PROVOKE_REFUND'
+    /**
+     * Sunlit Rind — mỗi lớp chắn hero này phát ra, khi bị ĐẬP VỠ, hoàn `value` Sol.
+     *
+     * Thay `SKILL_DISCOUNT` phẳng, và trigger là danh từ riêng của anh: khiên phải LÀM VIỆC
+     * mới được trả. Lớp phát ra rồi hết trận không ai đụng tới thì hoàn 0 — khác hẳn giảm giá,
+     * thứ trả tiền cho việc bấm nút bất kể có ích hay không.
+     */
+    | 'SHIELD_REFUND'
+    /**
+     * Spined Rind — đồng minh đang mang lớp chắn DO HERO NÀY phát ra thì phản 1 khi bị đánh
+     * cận chiến, suốt thời gian lớp còn.
+     *
+     * Trả đòn THAY NGƯỜI ĐƯỢC HỘ — trigger bảo kê là danh từ riêng của Gourdward. Cố ý KHÔNG
+     * gồm việc đánh vào chính anh: muốn gai bản thân thì chọn hero khác, anh là hộ vệ.
+     * Nó vần với `BLESS_RETALIATE` của Sunbloom cùng cột: hai support, hai vehicle (một qua
+     * lời ban phước một lượt, một qua lớp chắn bền), người chơi học một pattern dùng hai nơi.
+     */
+    | 'SHIELD_RETALIATE'
     /**
      * Shields this hero hands out spill over to whoever stands beside the recipient.
      * Replaces SHIELD_BONUS ("+2 size"), which stopped meaning anything when shields became

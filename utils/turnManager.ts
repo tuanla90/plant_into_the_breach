@@ -839,10 +839,19 @@ export const processTurn = (
                     // PAYBACK SHELL (SHIELD_BREAK_STUN): cùng kỷ luật với Glass Rind — cờ nằm
                     // trên LỚP, đọc trước khi lớp vỡ, và chết trong cùng một update với nó.
                     const stuns = !!targetUnit.shieldStuns;
-                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: targetUnit.id, updates: { ...shieldUpdatesFor(result), shieldBarbed: false, shieldStuns: false } });
+                    // SUNLIT RIND (SHIELD_REFUND): khiên phải LÀM VIỆC mới được trả. Đọc trước
+                    // khi lớp vỡ, và số tiền nằm trên LỚP nên nó vẫn hoàn kể cả khi Gourdward
+                    // đã chết — cùng lý do Glass Rind không tra ngược về người phát.
+                    const refund = targetUnit.shieldRefund ?? 0;
+                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: targetUnit.id, updates: { ...shieldUpdatesFor(result), shieldBarbed: false, shieldStuns: false, shieldRefund: 0, shieldSpined: false } });
                     targetUnit.shield = result.remainingShield;
                     targetUnit.shieldBarbed = false;
                     targetUnit.shieldStuns = false;
+                    targetUnit.shieldRefund = 0;
+                    targetUnit.shieldSpined = false;
+                    if (refund > 0) {
+                        actions.push({ type: 'GAIN_SUN', amount: refund, pos: targetUnit.position });
+                    }
                     // Melee only, like every other answer below: a stone lobbed from three
                     // tiles away shatters the glass without ever touching it.
                     if (barbed && inMelee && enemy.hp > 0 && !enemy.statusEffects.includes('BLEEDING')) {
@@ -956,8 +965,13 @@ export const processTurn = (
                 //
                 // ...and only against something IN CONTACT (see `inMelee` above): the thorns
                 // are on the body, so they answer what reached the body.
+                // SPINED RIND (SHIELD_RETALIATE): gai nằm trên LỚP CHẮN, không nằm trên thân —
+                // nên nó đi cùng lớp sang bất kỳ ai Gourdward bọc, và tắt ngay khi lớp vỡ. Đây
+                // là cách anh trả đòn THAY người anh hộ vệ. Cộng vào cùng con số `thorns` để
+                // RETALIATION RULE vẫn chỉ có MỘT nơi cộng, không phải hai đường phản đòn.
+                const shieldThorns = (targetUnit.shield ?? 0) > 0 && targetUnit.shieldSpined ? 1 : 0;
                 const thorns = inMelee
-                    ? (targetUnit.retaliateDamage ?? 0) + getFusionEffectValue(targetUnit, 'RETALIATE_DAMAGE')
+                    ? (targetUnit.retaliateDamage ?? 0) + getFusionEffectValue(targetUnit, 'RETALIATE_DAMAGE') + shieldThorns
                     : 0;
                 if (thorns > 0) {
                     const back = calculateDamage(enemy, thorns, false);

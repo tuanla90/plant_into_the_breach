@@ -42,6 +42,20 @@ export const pushKill = (actions: TurnAction[], victim: Unit, killer?: Unit | nu
         if (bonus > 0) {
             actions.push({ type: 'GAIN_SUN', amount: bonus, pos: victim.position });
         }
+        /**
+         * SOLAR ROTOR (SUN_ON_DOUBLE_KILL) — trả cho cú kết liễu THỨ HAI của lượt, và chỉ nó.
+         *
+         * Đếm ngay tại đây vì `pushKill` là cửa duy nhất mọi cái chết đi qua — đếm ở chỗ khác
+         * là lại đi đếm hai lần. Điều kiện `=== 2` chính là luật "một lần mỗi lượt": cú thứ ba
+         * trở đi vẫn tăng biến đếm nhưng không mở cổng lần nữa.
+         */
+        if (killer) {
+            killer.killsThisTurn = (killer.killsThisTurn ?? 0) + 1;
+            const doubleBonus = getFusionEffectValue(killer, 'SUN_ON_DOUBLE_KILL');
+            if (doubleBonus > 0 && killer.killsThisTurn === 2) {
+                actions.push({ type: 'GAIN_SUN', amount: doubleBonus, pos: victim.position });
+            }
+        }
         // The battle ledger: every kill credit in the game already flows through this
         // function's `killer` — the same identity SUN_ON_KILL is paid to — so the ledger
         // line rides here rather than being re-derived at each call site.

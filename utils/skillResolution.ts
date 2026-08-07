@@ -199,12 +199,16 @@ export const planSkillActions = (
                 // Payback Shell: chi lop do KY NANG TRA PHI phat ra moi ghim duoc - cung cong ma
                 // SKILL_SPLASH dung. Reinforce la don thuong mien phi, cho no ghim la pha STUN RULE.
                 const stunning = hasFusionEffect(caster, 'SHIELD_BREAK_STUN') && (skill.sunCost ?? 0) > 0;
+                const refund = getFusionEffectValue(caster, 'SHIELD_REFUND');
+                const spined = hasFusionEffect(caster, 'SHIELD_RETALIATE');
                 if ((e.value || 0) > 0 && (ally.shield || 0) === 0) {
-                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: ally.id, updates: { shield: 1, shieldBarbed: barbed, shieldStuns: stunning } });
+                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: ally.id, updates: { shield: 1, shieldBarbed: barbed, shieldStuns: stunning, shieldRefund: refund, shieldSpined: spined } });
                     // Keep the simulation in step, so a second pass sees the layer.
                     ally.shield = 1;
                     ally.shieldBarbed = barbed;
                     ally.shieldStuns = stunning;
+                    ally.shieldRefund = refund;
+                    ally.shieldSpined = spined;
                     actions.push({ type: 'APPLY_DAMAGE', targetId: ally.id, amount: 0, eventType: 'BLOCK', pos: at });
                 }
                 if ((e.value || 0) > 0 && hasFusionEffect(caster, 'SHIELD_SPREAD')) {
@@ -214,7 +218,9 @@ export const planSkillActions = (
                             n.shield = 1;
                             n.shieldBarbed = barbed;
                             n.shieldStuns = stunning;
-                            actions.push({ type: 'UPDATE_UNIT_STATE', unitId: n.id, updates: { shield: 1, shieldBarbed: barbed, shieldStuns: stunning } });
+                            n.shieldRefund = refund;
+                            n.shieldSpined = spined;
+                            actions.push({ type: 'UPDATE_UNIT_STATE', unitId: n.id, updates: { shield: 1, shieldBarbed: barbed, shieldStuns: stunning, shieldRefund: refund, shieldSpined: spined } });
                             actions.push({ type: 'APPLY_DAMAGE', targetId: n.id, amount: 0, eventType: 'BLOCK', pos: n.position });
                         }
                     });
@@ -537,10 +543,14 @@ export const planSkillActions = (
                         // Payback Shell: chi lop do KY NANG TRA PHI phat ra moi ghim duoc - cung cong ma
                         // SKILL_SPLASH dung. Reinforce la don thuong mien phi, cho no ghim la pha STUN RULE.
                         const stunning = hasFusionEffect(caster, 'SHIELD_BREAK_STUN') && (skill.sunCost ?? 0) > 0;
+                        const refund = getFusionEffectValue(caster, 'SHIELD_REFUND');
+                        const spined = hasFusionEffect(caster, 'SHIELD_RETALIATE');
                         casterSim.shield = 1;
                         casterSim.shieldBarbed = barbed;
                         casterSim.shieldStuns = stunning;
-                        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: caster.id, updates: { shield: 1, shieldBarbed: barbed, shieldStuns: stunning } });
+                        casterSim.shieldRefund = refund;
+                        casterSim.shieldSpined = spined;
+                        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: caster.id, updates: { shield: 1, shieldBarbed: barbed, shieldStuns: stunning, shieldRefund: refund, shieldSpined: spined } });
                         actions.push({ type: 'APPLY_DAMAGE', targetId: caster.id, amount: 0, eventType: 'BLOCK', pos: casterSim.position });
                     }
                 }
@@ -843,6 +853,8 @@ export const planSkillActions = (
     const provokeEffect = skill.effects.find(e => e.type === 'PROVOKE');
     if (provokeEffect) {
         const radius = provokeEffect.value ?? 1;
+        /** Số thân THỰC SỰ dính tiếng gọi — không tính con miễn nhiễm STATUS. Xem PROVOKE_REFUND. */
+        let provoked = 0;
         units.forEach(u => {
             // Obstacles are excluded even though they are hostile: a rock does not walk, so
             // redirecting it is a wasted 50 Sol and a confusing status icon.
@@ -873,7 +885,22 @@ export const planSkillActions = (
             actions.push({ type: 'APPLY_DAMAGE', targetId: u.id, amount: 0, eventType: 'BUFF', pos: u.position });
             sim.statusEffects = taunted;
             sim.provokedBy = caster.id;
+            provoked += 1;
         });
+        /**
+         * SUNLIT THORN (PROVOKE_REFUND) — hoàn `value` Sol cho MỖI thân thực sự dính tiếng gọi.
+         *
+         * Đếm ở đây chứ không đếm số ô trong bán kính: thân miễn nhiễm STATUS đã `return` phía
+         * trên và không được tính, nên hét vào một con trùm miễn nhiễm là hét không công.
+         *
+         * Vẫn bán đúng thứ cả cột Sol Battery bán — "hồi này bấm được bao nhiêu lần" — nhưng
+         * giá theo CHẤT LƯỢNG cú cast thay vì giảm giá phẳng: cast trúng 3 con hoàn bằng đúng
+         * mức discount cũ, cast trượt thì trả đủ giá.
+         */
+        const refundEach = getFusionEffectValue(caster, 'PROVOKE_REFUND');
+        if (refundEach > 0 && provoked > 0) {
+            actions.push({ type: 'GAIN_SUN', amount: refundEach * provoked, pos: caster.position });
+        }
     }
 
     /**

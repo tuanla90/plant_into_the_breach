@@ -188,6 +188,8 @@ export const buildHeroFromSnapshot = (snapshot: Unit, fullHeal = false, element?
         shield: hasFusionEffect(snapshot, 'START_SHIELDED') ? 1 : 0,
         shieldBarbed: false,
         shieldStuns: false,
+        shieldRefund: 0,
+        shieldSpined: false,
         lastStandUsed: false,
         digestingTurns: 0,
         isDying: false,

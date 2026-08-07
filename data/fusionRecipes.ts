@@ -383,8 +383,8 @@ export const FUSION_RECIPES: Matrix = {
     REEDWING: {
         MAT_SUNBLOOM: {
             name: 'Solar Rotor',
-            description: 'Every zombie her wing guns finish off pays 15 Sol — two barrels, two chances a turn.',
-            effect: { type: 'SUN_ON_KILL', value: 15 },
+            description: 'A turn in which both barrels find a kill pays 30 Sol. One kill pays nothing — she is the only hero who does this reliably.',
+            effect: { type: 'SUN_ON_DOUBLE_KILL', value: 30 },
             live: true,
         },
         MAT_PEABURST: {
@@ -441,8 +441,8 @@ export const FUSION_RECIPES: Matrix = {
     THORNSHELL: {
         MAT_SUNBLOOM: {
             name: 'Sunlit Thorn',
-            description: 'Provoke costs 15 less Sol.',
-            effect: { type: 'SKILL_DISCOUNT', value: 15 },
+            description: 'Provoke refunds 5 Sol for every zombie it actually pulls. A shout that lands on nobody costs full price.',
+            effect: { type: 'PROVOKE_REFUND', value: 5 },
             live: true,
         },
         MAT_PEABURST: {
@@ -566,8 +566,8 @@ export const FUSION_RECIPES: Matrix = {
     GOURDWARD: {
         MAT_SUNBLOOM: {
             name: 'Sunlit Rind',
-            description: 'Encase costs 10 less Sol.',
-            effect: { type: 'SKILL_DISCOUNT', value: 10 },
+            description: 'Every layer he raises pays 10 Sol back the moment something breaks it. A shell nobody ever hits pays nothing.',
+            effect: { type: 'SHIELD_REFUND', value: 10 },
             live: true,
         },
         MAT_PEABURST: {
@@ -608,8 +608,8 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_THORNSHELL: {
             name: 'Spined Rind',
-            description: 'Anything that hits him in melee is impaled for 1 — going through him to reach his ward costs blood.',
-            effect: { type: 'RETALIATE_DAMAGE', value: 1 },
+            description: 'The layers he hands out grow spines: whoever hits the ally wearing one in melee is impaled for 1, for as long as the layer holds.',
+            effect: { type: 'SHIELD_RETALIATE', value: 1 },
             live: true,
         },
         MAT_CHARDSLAM: {

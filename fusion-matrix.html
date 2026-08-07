@@ -722,7 +722,7 @@
         'CORNOVA:MAT_GOURDWARD': { type: '', effect: 'REACTIVE_SHIELD', dead: true, title: 'Reactive Cob Shell', desc: 'After taking her first attack hit in battle, she immediately deploys a reactive 1-layer shield.' },
 
         // REEDWING
-        'REEDWING:MAT_SUNBLOOM': { type: '', effect: 'SUN_ON_KILL', title: 'Cánh Quạt Sol', desc: 'Mỗi zombie bị song pháo kết liễu trả 15 Sol — hai nòng, hai cơ hội mỗi lượt.' },
+        'REEDWING:MAT_SUNBLOOM': { type: '', effect: 'SUN_ON_DOUBLE_KILL', title: 'Cánh Quạt Sol', desc: 'A turn in which both barrels find a kill pays 30 Sol. One kill pays nothing — she is the only hero who does this reliably.' },
         'REEDWING:MAT_PEABURST': { type: '', effect: 'DOUBLE_ATTACK', title: 'Pháo Đôi', desc: 'Cả hai cánh bắn thêm loạt thứ hai, 1 sát thương.' },
         'REEDWING:MAT_SNAPMAW': { type: '', effect: 'BLEED_EXECUTION', dead: true, title: 'Executioner Pods', desc: 'Wing guns deal +2 bonus damage (3 damage total) against targets currently suffering from Bleeding.' },
         'REEDWING:MAT_IRONHUSK': { type: '', effect: 'DAMAGE_REDUCTION', title: 'Thân Máy Bọc Thép', desc: 'Takes 1 less damage from every hit — armored flight frame replaces paper wings.' },
@@ -733,7 +733,7 @@
         'REEDWING:MAT_GOURDWARD': { type: '', effect: 'START_SHIELDED', title: 'Dawn Pod Plating', desc: 'Starts the battle shielded in a layer — aerial unit stays protected on turn one.' },
 
         // THORNSHELL
-        'THORNSHELL:MAT_SUNBLOOM': { type: '', effect: 'SKILL_DISCOUNT', title: 'Gai Nắng Rọi', desc: 'Khiêu Khích tốn ít hơn 15 Sol.' },
+        'THORNSHELL:MAT_SUNBLOOM': { type: '', effect: 'PROVOKE_REFUND', title: 'Gai Nắng Rọi', desc: 'Provoke refunds 5 Sol for every zombie it actually pulls. A shout that lands on nobody costs full price.' },
         'THORNSHELL:MAT_PEABURST': { type: '', effect: 'LASER_NEEDLE', dead: true, title: 'Piercing Needles', desc: 'Thorn Swipe shoots a needle beam piercing up to 2 targets in a row — damage tapers off with distance down to 1.' },
         'THORNSHELL:MAT_SNAPMAW': { type: '', effect: 'RETALIATE_BLEED', title: 'Vỏ Xé Thịt', desc: 'Kẻ nào đánh cận chiến trúng anh đều bị chảy máu: đòn kế tiếp giáng xuống nó cộng thêm 1.' },
         'THORNSHELL:MAT_IRONHUSK': { type: '', effect: 'THORN_LUNGE', dead: true, title: 'Thorn Lunge', desc: 'Basic attack transforms into a 1-tile lunge charge towards the target.' },
@@ -755,13 +755,13 @@
         'CHARDSLAM:MAT_GOURDWARD': { type: '', effect: 'SHIELD_ON_KILL', title: 'Cải Hộ Giáp', desc: 'Mỗi cái xác anh dúi chết đều bọc cho anh một lớp chắn — đòn kế tiếp bị chặn trọn vẹn.' },
 
         // GOURDWARD
-        'GOURDWARD:MAT_SUNBLOOM': { type: '', effect: 'SKILL_DISCOUNT', title: 'Vỏ Nắng Rọi', desc: 'Bọc Giáp tốn ít hơn 10 Sol.' },
+        'GOURDWARD:MAT_SUNBLOOM': { type: '', effect: 'SHIELD_REFUND', title: 'Vỏ Nắng Rọi', desc: 'Every layer he raises pays 10 Sol back the moment something breaks it. A shell nobody ever hits pays nothing.' },
         'GOURDWARD:MAT_PEABURST': { type: '', effect: 'ATTACK_RANGE_BONUS', title: 'Đạn Vỏ Bí', desc: 'Gia Cố được bắn dọc theo hàng: bọc cho đồng minh — hoặc Tháp Xanh — đầu tiên trong vòng 4 ô.' },
         'GOURDWARD:MAT_SNAPMAW': { type: '', effect: 'BARBED_SHIELD', title: 'Vỏ Thuỷ Tinh', desc: 'Lớp chắn của anh là thuỷ tinh nhọn: kẻ nào phá vỡ nó đều bị chảy máu — đòn kế tiếp giáng xuống nó cộng thêm 1.' },
         'GOURDWARD:MAT_IRONHUSK': { type: '', effect: 'DAMAGE_REDUCTION', title: 'Vỏ Sắt', desc: 'Mỗi đòn nhận vào giảm 1 sát thương — lớp vỏ quanh đồng minh chỉ còn chừng nào người mang nó còn.' },
         'GOURDWARD:MAT_CORNOVA': { type: '', effect: 'SHIELD_BREAK_STUN', title: 'Payback Shell', desc: 'The layers Encase raises answer back: whatever shatters one in melee loses its next turn. Once per layer.' },
         'GOURDWARD:MAT_REEDWING': { type: '', effect: 'ENCASE_RANGE', dead: true, title: 'Vỏ Lăn', desc: 'Encase can be cast up to 2 tiles away to protect distant allies.' },
-        'GOURDWARD:MAT_THORNSHELL': { type: '', effect: 'RETALIATE_DAMAGE', title: 'Vỏ Tua Gai', desc: 'Kẻ nào đánh cận chiến trúng anh đều bị gai đâm 1 — muốn vượt qua anh để tới người anh che chở thì phải trả bằng máu.' },
+        'GOURDWARD:MAT_THORNSHELL': { type: '', effect: 'SHIELD_RETALIATE', title: 'Vỏ Tua Gai', desc: 'The layers he hands out grow spines: whoever hits the ally wearing one in melee is impaled for 1, for as long as the layer holds.' },
         'GOURDWARD:MAT_CHARDSLAM': { type: '', effect: 'SKILL_REPEL', title: 'Vỏ Chấn Động', desc: 'Bọc Giáp thổi bật mọi kẻ địch đứng kề anh lùi một ô ngay khi lớp vỏ dựng lên.' },
         'GOURDWARD:MAT_GOURDWARD': { type: 'SIG', effect: 'SHIELD_SPREAD', title: 'Đại Vỏ Bí', desc: 'Mỗi lớp chắn anh trao ra đều tràn sang, bọc luôn những ai đứng kề người nhận.' },
     };

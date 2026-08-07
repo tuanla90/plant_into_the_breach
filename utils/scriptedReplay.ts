@@ -299,7 +299,7 @@ export const replayScriptedBattle = (
         const res = processTurn(units, board, { ...gs, turn, sun }, ZOMBIE_DEFINITIONS as any, DEFAULT_TERRAIN_DEFS);
         for (const a of res.actions as any[]) {
             switch (a.type) {
-                case 'NEW_TURN_RESET': units = units.map(u => ({ ...u, hasMoved: false, hasAttacked: false })); break;
+                case 'NEW_TURN_RESET': units = units.map(u => ({ ...u, hasMoved: false, hasAttacked: false, killsThisTurn: 0 })); break;
                 case 'SPAWN_UNIT': units.push({ ...a.unit }); break;
                 case 'UNIT_MOVE': { const u = living().find(z => z.id === a.unitId); if (u) stepThroughTraps(u, a.path); break; }
                 case 'APPLY_DAMAGE': {

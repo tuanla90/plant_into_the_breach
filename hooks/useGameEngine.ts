@@ -232,6 +232,9 @@ export const useGameEngine = () => {
                       ...u,
                       hasMoved: false,
                       hasAttacked: false,
+                      // Solar Rotor đếm kết liễu THEO LƯỢT. Quên dòng này thì "mỗi lượt một
+                      // lần" âm thầm thành "mỗi trận một lần" — cùng cái bẫy `lastStandUsed`.
+                      killsThisTurn: 0,
                       isAttacking: false,
                       visualOffset: undefined,
                       prevPosition: undefined, // Reset undo history at start of turn
