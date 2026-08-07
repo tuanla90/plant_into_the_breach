@@ -251,3 +251,10 @@ Còn mở:
 - Rewind 1 lần/trận = điện tích tua qua đêm mới kết tinh.
 - Shop reroll giá leo thang = trả phí cho Mulch lục sâu hơn thùng xe.
 - Power Plant = **Pin Nén** (một hơi thở Sol đóng sẵn — một tuyệt kỹ không tốn Sol).
+
+Ghi chú kịch bản hóa (ĐÃ CHỐT): twist chương 7 KHÔNG dùng thú tội — cấu trúc hỏi–đáp:
+Sunbloom hỏi "sao không nói", Chrona trả lời bằng logic máy (lệnh của chủ cũ trước khi
+tha hóa chưa từng được gỡ + "cô chưa bao giờ hỏi đúng câu hỏi"; bí mật tự chết khi mặt
+nạ rơi nên giờ mới nói được; "ba giây im lặng" = thời gian rà mọi cách diễn đạt không
+phạm lệnh). Dạng Q&A này băm vào thoại boss-fight/cutscene được ngay, hết lo
+exposition dump.

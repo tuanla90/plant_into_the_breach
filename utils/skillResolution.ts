@@ -1,5 +1,5 @@
 import { Position, Skill, StatusEffectType, TurnAction, Unit, UnitType } from '../types';
-import { addBleedStack, calculateDamage, getSkillTargetPath, getTileAt, planPush, shieldUpdatesFor, survivesWater, wingMid, wingNear, wingTwin } from './gameLogic';
+import { addBleedStack, grantLayer, calculateDamage, getSkillTargetPath, getTileAt, planPush, shieldUpdatesFor, survivesWater, wingMid, wingNear, wingTwin } from './gameLogic';
 import { getFusionEffects, getFusionEffectValue, hasFusionEffect } from './fusion';
 import { applyPushPlan, applyCollisionDamage, pushKill, type ResolveContext } from './actionBuilders';
 import { chainDamageFor, chainStep, skillCarriesElement } from './elements';
@@ -483,8 +483,34 @@ export const planSkillActions = (
 
         const resEffect = skill.effects.find(e => e.type === 'RESOURCE_GAIN');
         if (resEffect && isSelf) {
-            actions.push({ type: 'RESOURCE_GAIN', amount: resEffect.value, resource: 'SUN' });
-            actions.push({ type: 'APPLY_DAMAGE', targetId: caster.id, amount: resEffect.value || 0, eventType: 'SUN', pos: caster.position });
+            /**
+             * DAWN HARVEST (`HARVEST_SHIELD`) — Harvest đổi sản lượng lấy một lớp chắn.
+             *
+             * Trừ đúng `value` Sol rồi phát layer. Con số nằm trên recipe chứ không hardcode ở
+             * đây, để bảng cân bằng đọc được nó.
+             *
+             * Bốn trạng thái của Sunbloom, cố ý đọc thành bảng — vì Twin Sol Battery nhân đôi
+             * PHẦN CÒN LẠI chứ không nhân sản lượng gốc:
+             *   không gì        50 Sol
+             *   Twin Sol       100 Sol
+             *   Dawn Harvest    15 Sol + 1 lớp
+             *   cả hai          30 Sol + 1 lớp
+             */
+            const toll = getFusionEffectValue(caster, 'HARVEST_SHIELD');
+            if (toll > 0) {
+                const sim = tempUnits.get(caster.id);
+                const upd = sim ? grantLayer(sim) : null;
+                if (upd) {
+                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: caster.id, updates: upd });
+                    actions.push({ type: 'APPLY_DAMAGE', targetId: caster.id, amount: 0, eventType: 'BLOCK', pos: caster.position });
+                }
+            }
+            const yielded = Math.max(0, (resEffect.value ?? 0) - toll);
+            actions.push({ type: 'RESOURCE_GAIN', amount: yielded, resource: 'SUN' });
+            // Con số bay lên phải là số Sol THẬT nhận được, không phải số in trên thẻ: với Dawn
+            // Harvest hai con số đó khác nhau, và một cái +50 bay lên khi ví chỉ tăng 15 là thẻ
+            // bài nói dối ngay trước mắt người chơi.
+            actions.push({ type: 'APPLY_DAMAGE', targetId: caster.id, amount: yielded, eventType: 'SUN', pos: caster.position });
         }
 
         const chargeEffect = skill.effects.find(e => e.type === 'CHARGE_SUN');
@@ -588,6 +614,24 @@ export const planSkillActions = (
                     // are excluded for the same reason SUN_ON_KILL excludes them — a rock is
                     // scenery, and a board with three of them would hand out free armour.
                     const casterSim = tempUnits.get(caster.id);
+                    /**
+                     * PRECISION SHIELD (`SHIELD_ON_SKILL_KILL`) — hẹp hơn hẳn `SHIELD_ON_KILL`
+                     * ngay dưới: chỉ cú kết liễu bằng KỸ NĂNG TRẢ PHÍ mới dựng lớp.
+                     *
+                     * Cùng cổng `sunCost > 0` mọi ô skill-only dùng, và ở đây nó là cả cái giá:
+                     * Peaburst bắn mỗi lượt, nên nếu đòn thường cũng tính thì đây là giáp tự
+                     * mọc lại liên tục — đúng thứ mà chú thích của `LAST_STAND_SHIELD` đã cảnh
+                     * báo ("giáp đội lốt lớp chắn").
+                     */
+                    if (casterSim && targetUnit.isEnemy && targetUnit.type !== UnitType.OBSTACLE
+                        && (skill.sunCost ?? 0) > 0
+                        && hasFusionEffect(caster, 'SHIELD_ON_SKILL_KILL')) {
+                        const upd = grantLayer(casterSim);
+                        if (upd) {
+                            actions.push({ type: 'UPDATE_UNIT_STATE', unitId: caster.id, updates: upd });
+                            actions.push({ type: 'APPLY_DAMAGE', targetId: caster.id, amount: 0, eventType: 'BLOCK', pos: caster.position });
+                        }
+                    }
                     if (casterSim && targetUnit.isEnemy && targetUnit.type !== UnitType.OBSTACLE
                         && (casterSim.shield || 0) === 0
                         && hasFusionEffect(caster, 'SHIELD_ON_KILL')) {
@@ -949,6 +993,21 @@ export const planSkillActions = (
         const refundEach = getFusionEffectValue(caster, 'PROVOKE_REFUND');
         if (refundEach > 0 && provoked > 0) {
             actions.push({ type: 'GAIN_SUN', amount: refundEach * provoked, pos: caster.position });
+        }
+        /**
+         * WARDED PROVOKE (`PROVOKE_SHIELD`) — hét xong thì tự bọc một lớp.
+         *
+         * Không gate theo số con dính: anh vừa tự biến mình thành mục tiêu của cả vùng, và cái
+         * lớp này là thứ trả tiền cho đúng hành động đó. Hét trượt vẫn được lớp — vì cái giá
+         * (50 Sol + trọn một lượt) đã trả rồi.
+         */
+        if (hasFusionEffect(caster, 'PROVOKE_SHIELD')) {
+            const sim = tempUnits.get(caster.id);
+            const upd = sim ? grantLayer(sim) : null;
+            if (upd) {
+                actions.push({ type: 'UPDATE_UNIT_STATE', unitId: caster.id, updates: upd });
+                actions.push({ type: 'APPLY_DAMAGE', targetId: caster.id, amount: 0, eventType: 'BLOCK', pos: caster.position });
+            }
         }
     }
 
@@ -1498,6 +1557,24 @@ export const planSkillActions = (
         // calculateDamage off `digestingTurns` — so there is nothing to grant at this site and
         // it softens EVERY blow of the window instead of the first one.
         actions.push({ type: 'UPDATE_UNIT_STATE', unitId: caster.id, updates: { digestingTurns: digest } });
+        /**
+         * WARDED GUT (`SHIELD_ON_DIGEST`) — nuốt xong thì tự bọc một lớp.
+         *
+         * Đúng luật của cả hàng Snapmaw: mọi ô của anh phải đánh vào CỬA SỔ TIÊU HOÁ, thứ vừa
+         * là sức mạnh vừa là chỗ chết của anh. Lớp này che đúng cú đầu tiên của quãng bất lực.
+         *
+         * Khác `ARMOR_WHILE_DIGESTING` (giảm 1 cho MỌI đòn trong cửa sổ) ở chỗ nó chặn TRỌN một
+         * đòn rồi vỡ — cắm cả hai thì cú đầu bị nuốt sạch, các cú sau nhẹ đi. Hai ô hợp tác chứ
+         * không giẫm chân.
+         */
+        const gut = tempUnits.get(caster.id);
+        if (gut && hasFusionEffect(caster, 'SHIELD_ON_DIGEST')) {
+            const upd = grantLayer(gut);
+            if (upd) {
+                actions.push({ type: 'UPDATE_UNIT_STATE', unitId: caster.id, updates: upd });
+                actions.push({ type: 'APPLY_DAMAGE', targetId: caster.id, amount: 0, eventType: 'BLOCK', pos: caster.position });
+            }
+        }
     }
 
     if (skill.rangeType === 'DASH') {

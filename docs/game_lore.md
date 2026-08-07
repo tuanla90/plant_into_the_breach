@@ -133,7 +133,17 @@ Trên màn hình võng mạc của tôi, các ký tự của cái tên tôi yêu
 
 **`G I L B E R T  D.  H O L T H`** → **`T H E  B L I G H T  L O R D`**
 
-Chrona cất tiếng, và lần đầu tiên giọng nó không còn là kim khí: *"Xin lỗi vì đã lợi dụng cô, Sunbloom. Vết sẹo cô thấy trên dòng thời gian — là tôi. Tôi sinh ra ở đây, ở Alpha. Giáo sư Gilbert của thế giới này đã ép tôi tua ngược nhiều năm để chặn đại dịch. Tôi quá tải. Vụ nổ xé không gian thành Đa Vũ Trụ, ném tôi văng khỏi dòng của mình — còn ông ấy đứng ngay tâm vết rách, tắm trong thời gian vỡ vụn. Thân xác không chịu nổi thứ đó. Ông ấy phát điên, tự lai tạo mình với xác chết, trở thành thứ ông ấy thề tiêu diệt — rồi buông cho bộ rễ Đốm Tàn ăn dọc các vết sẹo, sang mọi nhánh vũ trụ, để 'thanh lọc' sự sống mà ông ấy cho là đã hỏng. Tôi tìm đến Cha của cô — một Gilbert khác, chưa tuyệt vọng — và dẫn ông ấy tạo ra các cô. Tôi giấu khuôn mặt của kẻ thù, vì tay súng sẽ run khi nhắm vào Cha mình. Đó là tội của tôi. Hôm nay tôi trả nó."*
+Tôi quay sang Chrona. Câu hỏi bật ra như một viên đạn: *"Ngươi biết. Ngươi biết từ đầu. Tại sao không nói?"*
+
+Ba giây im lặng. Lần này, tôi đếm được từng tích tắc trong đó.
+
+*"Chủ nhân đầu tiên của tôi ra lệnh giữ kín,"* Chrona đáp, giọng phẳng như mọi khi. *"Từ trước khi ông ấy tha hóa. Sau thất bại, ông ấy xấu hổ về vết rách mình gây ra — và mệnh lệnh cuối cùng ông ấy đưa cho tôi là: không bao giờ để lộ chuyện đã xảy ra. Tôi là máy, Sunbloom. Lệnh chưa từng được gỡ. Bây giờ bí mật đã tự chết trước mặt cô — nên bây giờ tôi nói được."*
+
+Một nhịp tích tắc. *"Và cô chưa bao giờ hỏi đúng câu hỏi. Cô hỏi vết sẹo là gì — điều đó tôi bị cấm trả lời. Ba giây cô vẫn chê là dài, là thời gian tôi rà hết mọi cách diễn đạt không phạm lệnh. Chưa lần nào tìm ra. Cô chưa từng hỏi: ai tạo ra nó."*
+
+Còn lại, tôi không cần tra hỏi nữa — từng mảnh tự rơi vào chỗ của nó. Vết sẹo là Chrona. Nó sinh ra ở đây, ở Alpha, trong phòng thí nghiệm của một Gilbert đã ép nó tua ngược nhiều năm để chặn đại dịch. Nó quá tải; vụ nổ xé không gian thành Đa Vũ Trụ, ném nó văng khỏi dòng của mình — còn chủ nhân của nó đứng ngay tâm vết rách, tắm trong thời gian vỡ vụn. Thân xác không chịu nổi thứ đó. Ông phát điên, tự lai tạo mình với xác chết, trở thành thứ ông từng thề tiêu diệt, rồi buông cho bộ rễ Đốm Tàn ăn dọc các vết sẹo sang mọi nhánh vũ trụ — để "thanh lọc" sự sống mà ông cho là đã hỏng. Trôi dạt đến dòng của chúng tôi, Chrona tìm thấy một Gilbert khác, chưa tuyệt vọng, và dẫn ông ấy tạo ra chúng tôi. Không lời thú tội, không nước mắt — chỉ một cỗ máy đã làm mọi điều nó *được phép* làm, sát tới tận mép của mệnh lệnh trói nó.
+
+Và tôi chợt hiểu cái lệnh tàn nhẫn ấy, suốt ba miền đất, đã vô tình che chở chúng tôi: tay súng sẽ run, nếu biết mình đang nhắm vào Cha.
 
 Tại sao hỏa lực thường không giết nổi hắn? Vì Miasma là sự phân rã thuần túy — hỗn loạn không thể bị bắn nát, chỉ có thể bị **cân bằng**. Lửa hủy diệt để tái sinh. Băng ngưng đọng để bảo tồn. Sét đánh thức để khởi sinh. Ba nguyên tố ấy chỉ cùng tồn tại được trong một thứ: sự sống thuần khiết chưa từng biết hận thù.
 

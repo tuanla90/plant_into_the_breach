@@ -1,6 +1,6 @@
 
 import { Unit, TileData, GameState, UnitClass, UnitType, UnitDefinition, Position, TerrainDefinition, TurnAction, Intent, StatusEffectType, AreaHit, TerrainType } from '../types';
-import { addBleedStack, getTileAt, getUnitAt, findPath, calculateDamage, canStopOn, canCrossBodies, planPush, canRideTo, shieldUpdatesFor, survivesWater } from './gameLogic';
+import { addBleedStack, grantLayer, getTileAt, getUnitAt, findPath, calculateDamage, canStopOn, canCrossBodies, planPush, canRideTo, shieldUpdatesFor, survivesWater } from './gameLogic';
 import { applyPushPlan, applyCollisionDamage } from './actionBuilders';
 import { planEnemyIntent } from './aiLogic';
 import { tutorialBattle } from '../data/tutorial';
@@ -898,6 +898,25 @@ export const processTurn = (
                 if (result.finalDamage > 0) {
                     actions.push({ type: 'APPLY_DAMAGE', targetId: targetUnit.id, amount: result.finalDamage, eventType: 'DAMAGE', pos: at });
                     targetUnit.hp = result.remainingHp;
+
+                    /**
+                     * REACTIVE COB SHELL (`REACTIVE_SHIELD`) — ăn đòn xong thì vỏ bọc lại.
+                     *
+                     * Gate trên `finalDamage > 0`, tức đòn phải thực sự VÀO MÁU: đòn bị lớp
+                     * chắn cũ nuốt hoặc bị giáp mũ clang về 0 không kích — nếu không thì lớp
+                     * này tự tái sinh ngay chính cú đánh nó vừa chặn, tức bất tử.
+                     *
+                     * `grantLayer` từ chối khi thân đã có lớp, nên nó cũng không mọc chồng: một
+                     * lớp, vỡ, đòn sau mới mọc lại. Đúng nhịp "pháo thủ chịu được đúng một cú
+                     * áp sát mỗi lần".
+                     */
+                    if (targetUnit.hp > 0 && hasFusionEffect(targetUnit, 'REACTIVE_SHIELD')) {
+                        const upd = grantLayer(targetUnit);
+                        if (upd) {
+                            actions.push({ type: 'UPDATE_UNIT_STATE', unitId: targetUnit.id, updates: upd });
+                            actions.push({ type: 'APPLY_DAMAGE', targetId: targetUnit.id, amount: 0, eventType: 'BLOCK', pos: at });
+                        }
+                    }
                 }
 
                 /**

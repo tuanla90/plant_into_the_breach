@@ -388,6 +388,30 @@ export interface DamageResult {
 export const BLEED_CAP = 5;
 
 /**
+ * DỰNG MỘT LỚP CHẮN LÊN THÂN NÀY — một cửa cho cả năm ô "phát layer khi X".
+ *
+ * Layer là mô hình §6.0: chặn TRỌN một nguồn rồi vỡ, không có số, không cộng dồn. Nên "đã có
+ * layer thì cấp thêm không được gì" là luật, không phải tối ưu — và nó phải nằm ở đúng một chỗ,
+ * vì năm ô sinh ra layer từ năm trigger khác nhau và bốn trong số đó từng là ô RỖNG (khai type
+ * rồi bỏ). Viết luật ra một lần rồi cắm năm trigger vào là cách duy nhất chúng không trôi.
+ *
+ * Cờ trên lớp (`shieldBarbed` / `shieldStuns` / `shieldRefund` / `shieldSpined`) KHÔNG được đặt
+ * ở đây: chúng thuộc về lớp do GOURDWARD trao ra qua kỹ năng của anh, không thuộc về mọi lớp
+ * mà bất cứ ai tự mọc lên. Một lớp tự mọc là lớp trơn.
+ *
+ * Trả `null` khi thân đã có lớp — caller im lặng bỏ qua.
+ */
+export const grantLayer = (unit: Unit): Partial<Unit> | null => {
+    if ((unit.shield ?? 0) > 0) return null;
+    unit.shield = 1;
+    unit.shieldBarbed = false;
+    unit.shieldStuns = false;
+    unit.shieldRefund = 0;
+    unit.shieldSpined = false;
+    return { shield: 1, shieldBarbed: false, shieldStuns: false, shieldRefund: 0, shieldSpined: false };
+};
+
+/**
  * ĐẶT MỘT VẾT THƯƠNG HỞ — một cửa duy nhất cho cả năm nguồn bleed trong game.
  *
  * Trước đợt này mỗi nguồn tự viết `if (!statusEffects.includes('BLEEDING'))`, và cái chốt đó

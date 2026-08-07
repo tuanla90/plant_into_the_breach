@@ -139,10 +139,15 @@ export const FUSION_RECIPES: Matrix = {
             effect: { type: 'BLESS_SHOCKWAVE' },
             live: true,
         },
+        /**
+         * `value` là MỨC TRỪ, không phải sản lượng: Harvest gốc 50, trừ 35, còn 15 Sol + 1 lớp.
+         * Con số 35 lấy từ chốt [G.8①] — giá của một lớp chắn đắt, và nó đắt vì lớp chặn TRỌN
+         * một nguồn chứ không giảm một chút.
+         */
         MAT_GOURDWARD: {
             name: 'Dawn Harvest',
-            description: 'Harvest yields 15 Sol per turn (-10 Sol penalty) but grants Sunbloom a passive 1-layer shield.',
-            effect: { type: 'HARVEST_SHIELD', value: 15 },
+            description: 'Harvest gathers only 15 Sol instead of 50 — the rest goes into a shell she wears out of it.',
+            effect: { type: 'HARVEST_SHIELD', value: 35 },
             live: true,
         },
     },
