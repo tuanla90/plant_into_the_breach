@@ -1890,6 +1890,7 @@ export const VI: Record<string, string> = {
     "Encase can be centred on a tile beside him instead of on himself — he is still inside the plus.": "Bọc Giáp có thể lấy tâm là một ô kề bên thay vì chính anh — anh vẫn nằm trong dấu cộng.",
     "Devour swallowed it: nothing can push or pull him while he digests. Devour failed: the target cannot move next turn.": "Nuốt Chửng nuốt trúng: không gì đẩy hay kéo anh nổi suốt lúc tiêu hoá. Nuốt Chửng trượt: mục tiêu không đi được ở lượt sau.",
 
-    // --- Đợt 14: Grand Chard thành luật toàn bàn. ---
+    // --- Đợt 14: Grand Chard thành luật toàn bàn, Fanged Blessing thành ngòi nổ bleed. ---
+    "The blessed ally rips every open wound off its target in one blow, instead of one wound.": "Đồng minh được ban phước xé sạch mọi vết thương hở trên mục tiêu chỉ trong một đòn, thay vì đúng một vết.",
     "While he stands, EVERY collision on the board hurts 1 more — his shoves, the horde's, and the hole your own wall is plugging.": "Chừng nào anh còn đứng, MỌI cú va chạm trên bàn đều đau thêm 1 — cú đẩy của anh, cú đẩy của địch, và cả cái hố mà tường nhà đang bịt.",
 };

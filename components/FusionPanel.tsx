@@ -73,7 +73,7 @@ const categoryOf = (type: FusionEffectType): { label: string; color: string } =>
         case 'STUN_ON_FULL_HP':
         case 'WING_MIDSHOT':
         case 'OVERWATCH_SHOT':
-        case 'BLESS_POWER':
+        case 'BLESS_RUPTURE':
         case 'PUSH_DISTANCE':
         case 'COLLISION_BONUS':
         case 'PROVOKE_RADIUS':

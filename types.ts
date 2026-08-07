@@ -475,6 +475,16 @@ export interface Unit {
    */
   blessThorns?: boolean;
   /**
+   * Ơn Trên Sol lần này mang RĂNG NANH (Fanged Blessing): một đòn của thân được ban tiêu sạch
+   * mọi vết thương hở trên mục tiêu thay vì đúng một vết. Đóng dấu lên thân được ban, cùng lý
+   * do với `blessPower`.
+   *
+   * Khác `blessThorns` ở đồng hồ, và lần này là đồng hồ THƯỜNG: vết được tiêu lúc thân này
+   * VUNG ĐÒN, tức trong lượt người chơi, nên nó đọc chung `BLESSED` và chết cùng `BLESSED`.
+   * Ban trước, đánh sau — đúng luật gốc của lời ban phước.
+   */
+  blessRupture?: boolean;
+  /**
    * The LAYER currently worn is spiked (Gourdward's Glass Rind): whatever breaks it starts
    * bleeding. Written at every grant site alongside `shield`, so it can never outlive the
    * layer it describes — a body re-shelled by somebody else is re-flagged false.
@@ -1332,11 +1342,18 @@ export type FusionEffectType =
     // --- The remap pass (DESIGN-fusion-matrix.md §6). One type per cell that could not be
     //     written with the vocabulary that already existed. ---
     /**
-     * Solar Blessing is worth `value` MORE damage than its authored +1. The bonus belongs to
-     * the BLESSER's gear but has to be read off the blessed body at swing time, so the cast
-     * stamps it onto `Unit.blessPower` exactly as it stamps `blessedElement`.
+     * FANGED BLESSING — than duoc ban phuoc XE TOAC muc tieu: mot don cua no tieu SACH moi
+     * vet thuong ho tren than bi danh, thay vi dung mot vet nhu mo hinh chung.
+     *
+     * Ban cu la `BLESS_POWER` ("loi ban phuoc dang them +1 damage") va no la MOT CAI LO:
+     * `applyFusionToSkill` ap con so do bang `effects.map(...)` len MOI effect DAMAGE, nen
+     * tren mot skill 5 o no thanh +10. Cung ho VOLLEY CAP sinh ra de bit, mo o cua khac —
+     * lan thu hai tim thay no. Ban nay khong con con so damage nao de nhan.
+     *
+     * Bi chan cung boi hai luat da co: `BLEED_CAP` (5 vet) va decay 1 vet/vong. Tran that su
+     * cua mot cu xe toac vi the la 5, hoac 10 khi di kem Executioner Pods.
      */
-    | 'BLESS_POWER'
+    | 'BLESS_RUPTURE'
     /**
      * The hero's PAID ally-buff lands on every ally within 2 tiles of where it was aimed,
      * not just the one body. The "move range 2" diamond — the same Manhattan reach every

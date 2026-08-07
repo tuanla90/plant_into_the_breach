@@ -591,8 +591,20 @@ export const calculateDamage = (
          */
         const stacks = target.bleedStacks ?? 1;
         const payout = (attacker ? getFusionEffectValue(attacker, 'BLEED_EXECUTION') : 0) || 1;
-        damageToDeal += payout;
-        const left = Math.max(0, stacks - 1);
+        /**
+         * FANGED BLESSING (`BLESS_RUPTURE`) — ngoại lệ DUY NHẤT của luật "một instance tiêu
+         * đúng một vết", và nó phải mua bằng một lượt của Sunbloom.
+         *
+         * Đọc `BLESSED` chứ không chỉ đọc cờ: lời ban phước tan ở cửa vào lượt địch, nên cú xé
+         * toác chỉ dùng được trong đúng lượt được ban. Ban trước, đánh sau.
+         *
+         * Trần thật của nó là `BLEED_CAP` (5 vết) chứ không phải vô hạn, và vết rụng 1 mỗi
+         * vòng — hai cái phanh đó là lý do một cú rút sạch không thành build rùa gom vô tận.
+         */
+        const rupture = !!attacker?.blessRupture && !!attacker.statusEffects?.includes('BLESSED');
+        const spend = rupture ? Math.max(1, stacks) : 1;
+        damageToDeal += payout * spend;
+        const left = Math.max(0, stacks - spend);
         target.bleedStacks = left;
         if (left === 0) {
             target.statusEffects = target.statusEffects.filter(s => s !== 'BLEEDING');

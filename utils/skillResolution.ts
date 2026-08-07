@@ -326,7 +326,10 @@ export const planSkillActions = (
                  * of scope, so the WORTH of the gift has to travel on the body that got it.
                  */
                 const updates: Partial<Unit> = {};
-                const gift = 1 + getFusionEffectValue(caster, 'BLESS_POWER');
+                // Đúng 1, và không ô nào nâng nó nữa: Fanged Blessing từng cộng vào đây, mà
+                // con số đó được `applyFusionToSkill` áp lên MỌI effect DAMAGE — trên một skill
+                // 5 ô thì +1 thành +10. Ô đó giờ là `BLESS_RUPTURE`, không mang số damage nào.
+                const gift = 1;
                 if (!ally.statusEffects.includes('BLESSED')) {
                     const blessed: StatusEffectType[] = [...ally.statusEffects, 'BLESSED'];
                     updates.statusEffects = blessed;
@@ -355,6 +358,18 @@ export const planSkillActions = (
                 if (hasFusionEffect(caster, 'BLESS_RETALIATE') && !ally.blessThorns) {
                     updates.blessThorns = true;
                     ally.blessThorns = true;
+                }
+                /**
+                 * FANGED BLESSING (`BLESS_RUPTURE`) — lời ban phước mọc răng nanh.
+                 *
+                 * Cũng đóng dấu lên thân được ban, cùng lý do. Nó biến Sunbloom thành người
+                 * BÓP CÒ cho công của cả đội: Rending Husk, Glass Rind, Rending Chard đặt vết,
+                 * cô chọn ai là người rút hết một lượt. Đó là ô hỗ trợ đúng nghĩa — không tự
+                 * sinh ra sát thương nào, chỉ quyết định lúc nào sổ nợ được đòi.
+                 */
+                if (hasFusionEffect(caster, 'BLESS_RUPTURE') && !ally.blessRupture) {
+                    updates.blessRupture = true;
+                    ally.blessRupture = true;
                 }
                 if (Object.keys(updates).length > 0) {
                     actions.push({ type: 'UPDATE_UNIT_STATE', unitId: ally.id, updates });

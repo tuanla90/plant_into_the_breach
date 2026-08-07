@@ -105,8 +105,8 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_SNAPMAW: {
             name: 'Fanged Blessing',
-            description: 'Solar Blessing is worth +2 damage this turn instead of +1.',
-            effect: { type: 'BLESS_POWER', value: 1 },
+            description: 'The blessed ally rips every open wound off its target in one blow, instead of one wound.',
+            effect: { type: 'BLESS_RUPTURE' },
             live: true,
         },
         MAT_IRONHUSK: {
