@@ -136,4 +136,6 @@ export const UNIT_SKILLS: Record<UnitClass, Skill[]> = {
   [UnitClass.RUNT]: [ SkillFactory.createMeleeAttack('bite', 'Bite', 1, 'Small bite.') ],
   [UnitClass.ROCK]: [],
   [UnitClass.GRAVE]: [],
+  // Vật cản: không có đòn nào, như ROCK/GRAVE. Xem chú thích trong data/roles.ts.
+  [UnitClass.BARREL_PROP]: [],
 };

@@ -49,4 +49,8 @@ export const UNIT_ROLE_MAP: Record<UnitClass, UnitRole> = {
     [UnitClass.RUNT]: 'ENEMY', 
     [UnitClass.ROCK]: 'ENEMY',
     [UnitClass.GRAVE]: 'ENEMY',
+    // Vật cản trên bàn, không phải thân biết đánh — cùng cửa với ROCK/GRAVE. Enum
+    // `BARREL_PROP` khai từ trước mà chưa ô nào sinh ra nó; entry này chỉ để bảng phủ đủ
+    // `UnitClass` (thiếu nó là typecheck đỏ). Nếu cuối cùng không dùng, xoá cả enum lẫn đây.
+    [UnitClass.BARREL_PROP]: 'ENEMY',
 };

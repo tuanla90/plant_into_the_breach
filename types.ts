@@ -198,7 +198,23 @@ export type TerrainType = 'GRASS' | 'WATER' | 'CONCRETE' | 'LAVA' | 'ICE' | 'SAN
     /** Walkable crossing over a water lane. */
     | 'BRIDGE'
     /** Wild West minecart track. Terrain today, conveyor behaviour later. */
-    | 'RAIL';
+    | 'RAIL'
+    /**
+     * ĐẤT NỀN CHƯA CÓ HÀNH VI — chín ô dưới đây đã có định nghĩa đầy đủ trong
+     * `data/terrain.ts` (tên, mô tả, màu, texture) nhưng CHƯA có luật nào trong `utils/` đọc
+     * chúng: chúng vẽ ra được, đi lên được, và không làm gì khác một ô cỏ.
+     *
+     * Chúng nằm ở đây vì union thiếu chúng là thứ đã làm `npm run typecheck` đỏ 8 lỗi —
+     * bảng dữ liệu và bảng kiểu phải nói cùng một điều. Nhưng ĐỪNG đọc dòng này là "đã xong":
+     * mô tả trên thẻ đang hứa những thứ engine chưa làm (băng chuyền đẩy thân, băng mỏng nứt,
+     * Blight ăn máu tối đa). Hoặc viết luật cho chúng, hoặc gỡ khỏi `data/terrain.ts` —
+     * đây đúng là bài học `RADIUS` ở dạng địa hình.
+     */
+    | 'GRAVE_DIRT'
+    | 'CONVEYOR_N' | 'CONVEYOR_S' | 'CONVEYOR_E' | 'CONVEYOR_W'
+    | 'SURGE_NODE'
+    | 'BLIGHT'
+    | 'THIN_ICE';
 export type EnvironmentType = 'NONE' | 'POWER_TILE' | 'SMOKE' | 'FIRE';
 
 export interface TileData {
