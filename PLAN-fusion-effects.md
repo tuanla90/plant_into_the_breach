@@ -983,3 +983,136 @@ cap thứ hai cho `BLEED_EXECUTION`, hạ hai ô thụ động, và đo lại to
 
 - **Trạng thái:** ⬜ chờ duyệt — chọn A / B / C / D / E / giữ nguyên
 - **Góp ý:**
+
+---
+
+# Phụ lục F · BLEED CỘNG DỒN (stack) — đề xuất của người chơi, và vì sao nó giải được bài toán
+
+**Đề xuất:** bleed thành **số đếm**. Mỗi lần đặt = +1 stack. **Mỗi instance sát thương tiêu đúng 1
+stack** và ăn +1. Nhiều nguồn bleed → nhiều stack → nhiều đòn liên tiếp cùng được +1. Thân mang 3
+stack ăn một Precision Blast (3 phát) = tiêu sạch 3 stack, +3 damage.
+
+## F.1 · Phát hiện nền — hôm nay bleed đang bị VỨT, và nó KHÔNG "tiêu một lần" như tôi viết ở Phụ lục E
+
+Ba site đặt vết trong repo, **cả ba đều có cùng một cái chốt**:
+
+| Site | Ô | Chốt |
+|---|---|---|
+| `skillResolution.ts:621` | Serrated Pea · Rending Chard · Shrapnel Kernel (mới) | `if (!targetUnit.statusEffects.includes('BLEEDING'))` |
+| `turnManager.ts:847` | Glass Rind (`BARBED_SHIELD`) | `&& !enemy.statusEffects.includes('BLEEDING')` |
+| `turnManager.ts:1134` | Rending Husk (`RETALIATE_BLEED`) | `&& !enemy.statusEffects.includes('BLEEDING')` |
+
+**Đặt vết lên thân đang chảy máu = KHÔNG LÀM GÌ CẢ.** Lần đặt thứ hai bị vứt thẳng.
+
+Hệ quả với build: **hôm nay càng nhiều nguồn bleed càng phản tác dụng.** Cornova rải vết 4 ô, rồi
+Thornshell phản đòn lên đúng con đó → lần thứ hai mất trắng. Đúng thứ ngược với "cảm giác build" bạn
+muốn — người chơi gom ba ô bleed và nhận về giá trị của một.
+
+**Và một chỗ tôi viết sai ở Phụ lục E, sửa ở đây:** bleed **không** phải "tiêu một lần rồi hết". Site
+đặt vết chạy **SAU** khi damage đã phân giải (`skillResolution.ts:620` gate bằng `!isDead`). Nên với
+hero tự mang rider bleed, chu trình là **tiêu → đặt lại**:
+
+> Lượt 1 Peaburst bắn thân sạch: 2 damage, đặt vết. Lượt 2: tiêu vết (+1) = **3 damage**, rồi **đặt
+> lại vết**. Lượt 3: **3 damage**. Mãi mãi.
+
+Tức **"bleed vĩnh viễn" đã tồn tại sẵn cho người tự đặt vết** — cái bị chặn chỉ là việc **người khác**
+hưởng, và việc **nhiều nguồn** cộng lại. Đó mới là bài toán thật.
+
+## F.2 · Vì sao stack KHÔNG phá VOLLEY CAP (khác hẳn "vĩnh viễn")
+
+Đây là điểm quyết định, và bạn đúng khi tách hai thứ ra.
+
+Cap được dựng lên để chặn **NHÂN một buff**: *"+1 dành cho đòn đơn tới nơi thành +3"* (`fusion.ts:474`).
+Một buff, ba phát, ba lần hưởng — người chơi trả tiền **một lần**.
+
+Stack **không nhân gì cả**. Nó là **cái ví**: mỗi stack là một tờ +1 mà ai đó đã **trả tiền để bỏ vào**,
+và mỗi instance rút đúng một tờ. Ba phát rút được ba tờ **chỉ khi ví có ba tờ**.
+
+| | Đội đặt vết 3 lần lên cùng một thân | Precision Blast (3 × 2) lên thân đó |
+|---|---|---|
+| **Hôm nay** | 2 lần sau **bị vứt** | 6 + 1 = **7** |
+| **Vĩnh viễn** (Phụ lục E) | 1 cờ, không bao giờ tiêu | (2+1)×3 = **9** — và **9 mãi mãi**, mọi lần cast sau |
+| **Stack (đề xuất)** | giữ đủ 3 | (2+1)×3 = **9**, rồi **thân sạch vết** |
+
+Con số 9 giống nhau, **bản chất khác hẳn**: vĩnh viễn cho 9 *mỗi lượt, miễn phí*; stack cho 9 *một lần,
+đổi bằng 3 lần đặt vết*. Tổng lợi ích của cả trận bị chặn cứng bằng **tổng số lần đội bỏ công đặt vết** —
+tỷ lệ 1:1, không có số nhân ở đâu cả.
+
+**Nói gọn: stack không tăng sức mạnh mỗi lần đặt vết — nó chỉ thôi VỨT ĐI những lần đặt thừa.**
+
+## F.3 · ƯU ĐIỂM
+
+**① Biến ba ô bleed từ phản-synergy thành synergy.** Đây là lý do mạnh nhất. Hôm nay gom Serrated Pea
++ Rending Husk + Shrapnel Kernel là tự giẫm chân. Sau đổi, đó là một **build**: nhiều nguồn nạp ví,
+một hero rút. Đúng khoảnh khắc bạn đang tìm.
+
+**② Chín trong mười nhược điểm ở Phụ lục E biến mất.** Không lỗ VOLLEY CAP (§F.2). Không snowball
+(ví cạn là hết). Không xoá trục giáp mũ vĩnh viễn (mỗi stack chỉ vá được **một** đòn). Không cần cap
+thứ hai. Bảng cân bằng §9 chỉ dịch chuyển theo lượng bleed **hiện đang bị vứt**, đo được, không phải
+đoán.
+
+**③ Vá bài giáp mũ ĐÚNG LIỀU.** Ba loại zombie `armor: 1` vẫn chặn được Reedwing — trừ đúng số đòn
+bằng số stack đội chịu bỏ ra. Người chơi phải **mua** từng phát xuyên giáp, không được phát không.
+
+**④ Hai ô thụ động hết nguy hiểm.** Rending Husk / Glass Rind vẫn nạp ví, nhưng mỗi stack chỉ đáng
+đúng +1 và phải có người tới rút. Không còn cảnh "cả bàn địch mềm vĩnh viễn miễn phí" như bản A.
+
+**⑤ Thông tin TỐT HƠN hiện nay, không tệ hơn.** Icon đeo số: *"bleed ×3"* = "ba đòn tiếp theo, mỗi
+đòn +1". Đọc chính xác, cộng nhẩm được trước khi bấm, 0% RNG nguyên vẹn. Hôm nay icon chỉ nói được
+"+1 đòn kế".
+
+**⑥ Cho Executioner Pods một identity thật.** Theo luật Phụ lục D (+2 **thay** +1, tiêu một vết), ô
+này thành **"cô rút mỗi tờ được gấp đôi"**: mỗi stack cô tiêu trả 2 thay vì 1. Cornova/Thornshell nạp
+ví, Reedwing rút. Vẫn bị chặn bởi số stack — bounded.
+
+## F.4 · RỦI RO CẦN CHẶN
+
+**① Ví phình vô hạn ở build rùa.** Thornshell tank 5 lượt, đội không đánh, gom 10 stack rồi dump một
+lượt = +10 damage nổ một nhịp. Trong game giải đố thì burst đúng thời điểm là thứ cần đọc trước được.
+→ **Đề xuất trần 5 stack.** Sinh vượt trần thì thừa bị vứt (giống hôm nay, nhưng ngưỡng ở 5 chứ ở 1).
+
+**② Có nên rơi theo lượt như Vulnerable của StS không?** Bạn hỏi đúng chỗ. **Tôi khuyên KHÔNG**, và
+lý do là thể loại: đồng hồ đếm ngược bắt người chơi theo dõi một con số ẩn **cho từng thân địch** —
+đúng thứ nhiễu mà game thông-tin-hoàn-hảo phải tránh. Trần 5 đã chặn được build rùa mà không thêm
+đồng hồ nào. Nếu sau này thấy tempo ì, thêm decay là một dòng.
+
+**③ Ô tự-đặt-vết vẫn tự nuôi.** Chu trình tiêu-rồi-đặt-lại ở §F.1 không đổi: Serrated Pea vẫn +1 mỗi
+đòn lên cùng mục tiêu. Đó là hành vi **đang chạy hôm nay**, không phải cái đề xuất này đẻ ra — nhưng
+nên ghi vào thẻ bài cho đúng, vì hiện thẻ không kể.
+
+**④ Thứ tự trong một đòn nhiều instance.** Phải chốt: instance thứ n tiêu stack thứ n **trước** khi
+rider đặt vết mới chạy (rider chạy sau toàn bộ resolution, `!isDead`). Nếu không sẽ có chuyện phát 1
+đặt vết rồi phát 2 rút ngay chính nó — tự sinh tiền.
+
+## F.5 · GIÁ ENGINE — rẻ hơn tưởng, và có một tin tốt
+
+| Việc | Chỗ | Ghi chú |
+|---|---|---|
+| Đổi cờ thành số | `Unit.bleedStacks?: number` | **Không cần migration save** — `pitb_run_v1` **cố ý không lưu giữa trận** (CLAUDE.md), nên bleed chưa bao giờ sống qua một lần lưu |
+| Tiêu 1 thay vì xoá sạch | `gameLogic.ts:464-466` | `damageToDeal += 1; bleedStacks -= 1` thay cho `filter(...)` |
+| Bỏ chốt `!includes` | 3 site ở §F.1 | đổi thành `bleedStacks = min(cap, bleedStacks + 1)` |
+| Hoàn vết khi Last Stand nuốt đòn | `gameLogic.ts:499` | `bleedStacks += 1` thay vì push lại cờ — logic sẵn có, chỉ đổi phép |
+| UI đeo số | badge trạng thái | việc duy nhất **mới**, không phải sửa |
+
+**Bốn tính chất load-bearing giữ nguyên 100%:** cộng sau giáp mũ · cộng sau lớp chắn · chỉ khi
+`amount > 0` · xuyên miễn nhiễm STATUS. Không đụng cái nào.
+
+Độ khó tổng: **Thấp-Vừa.** Rẻ hơn hẳn bản "vĩnh viễn" (bản đó đòi cap thứ hai + hạ hai ô thụ động +
+đo lại §9).
+
+## F.6 · KẾT LUẬN
+
+Đề xuất này **tốt hơn cả ba phương án tôi đưa ở Phụ lục E**, vì nó đánh trúng nguyên nhân thật: vấn đề
+chưa bao giờ là "vết tan quá nhanh", mà là **những lần đặt vết thừa đang bị vứt thẳng vào thùng rác**,
+khiến build nhiều-nguồn-bleed tự phản mình.
+
+**Chốt đề xuất:**
+- `BLEEDING` thành **stack**, trần **5**, **không** rơi theo lượt.
+- Mỗi instance sát thương tiêu **đúng 1** stack, ăn **+1**.
+- `BLEED_EXECUTION` (Executioner Pods): mỗi stack **cô** tiêu trả **+2** thay vì +1 — giữ nguyên luật
+  Phụ lục D, chỉ nhân theo số stack.
+- Badge hiện **số**.
+- Ba ô đặt vết bỏ chốt `!includes`, thay bằng cộng dồn có trần.
+
+- **Trạng thái:** ⬜ chờ duyệt — trần 5 ổn chưa? có muốn thêm decay theo lượt không?
+- **Góp ý:**
