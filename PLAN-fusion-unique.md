@@ -552,3 +552,203 @@ Vì sao phải đợi và coi là đợt cân bằng:
 
 - **Trạng thái:** ✅ đồng ý — mở `FUSION_SLOTS = 3`, giữ vị trí đợt 8 (sau khi stack trùng chết ở đợt 4).
 - **Góp ý:** okie
+
+---
+
+## F. MA TRẬN CHỐT — 81 ô sau toàn bộ vòng duyệt
+
+> Bảng này là **spec triển khai**. Mọi ô đều đã qua `Final:` của người chơi (trừ 14 ô gắn ⚠ đang chờ
+> [A7]). Tên id gear đã đổi theo [A1v2] — `MAT_<HERO CHỦ NHÂN>`, lấy từ `DESIGN-fusion-matrix.md` §4.
+
+**Bảng đổi tên gear:** `MAT_SUNFLOWER→MAT_SUNBLOOM` · `MAT_PEASHOOTER→MAT_PEABURST` ·
+`MAT_CHOMPER→MAT_SNAPMAW` · `MAT_WALLNUT→MAT_IRONHUSK` · `MAT_CORN_MORTAR→MAT_CORNOVA` ·
+`MAT_CATTAIL→MAT_REEDWING` · `MAT_ENDURIAN→MAT_THORNSHELL` · `MAT_SPRING_ARM→MAT_CHARDSLAM` ·
+`MAT_PUMPKIN→MAT_GOURDWARD`
+
+Ký hiệu: **GIỮ** không đụng · **ĐỔI** viết mới trong pass này · **⚠** ô rỗng, chờ [A7] quyết
+*wire thật* hay *hạ `live: false`*.
+
+### F1 · MAT_SUNBLOOM (Sol Battery) — danh từ: *số lần bấm kỹ năng mỗi trận*
+
+| Hero | Tên | Effect | |
+|---|---|---|---|
+| Sunbloom | Twin Sol Battery | `SUN_PER_TURN` 50 | GIỮ · SIG |
+| Peaburst | Sunbeam Pea | `SUN_ON_KILL` 10 | GIỮ · gốc nhánh A |
+| Snapmaw | Sunlit Gut | `SUN_WHILE_DIGESTING` 10 | GIỮ |
+| Ironhusk | Sunstone Shield | `SUN_ON_BLOCK_SPAWN` 20 | GIỮ |
+| Cornova | Sunlit Cob | `SKILL_DISCOUNT` 15 | GIỮ · gốc nhánh B |
+| Reedwing | Solar Rotor | `SUN_ON_DOUBLE_KILL` 30 | ĐỔI [C5.1] |
+| Thornshell | Sunlit Thorn | `TAUNT_REFUND` 5 | ĐỔI [C5.3] |
+| Chardslam | Sunlit Chard | `SUN_ON_COLLISION_KILL` 20 | ĐỔI [C5.2] |
+| Gourdward | Sunlit Rind | `SHIELD_REFUND` 10 | ĐỔI [C5.4] |
+
+**9/9 · 0 ô rỗng.** Linh hồn A/B của cột giữ nguyên — mọi ô vẫn bán "thêm lượt cast", chỉ khác cách trả tiền.
+
+### F2 · MAT_PEABURST (Seed Gun) — danh từ: *khẩu súng — đòn bắn làm được gì*
+
+| Hero | Tên | Effect | |
+|---|---|---|---|
+| Sunbloom | Gunbloom | `GRANT_ATTACK` | GIỮ |
+| Peaburst | Repeater | `DOUBLE_ATTACK` 1 | GIỮ · SIG |
+| Snapmaw | Rending Claws | `DIGEST_CLAW` | GIỮ |
+| Ironhusk | Lance Bash | `ATTACK_RANGE_BONUS` 1 | GIỮ · gốc |
+| Cornova | Split Shell | `SPLIT_SHOT` 1 | ĐỔI [C6.1] · ô phụ **CỐ ĐỊNH** = ô ngay SAU mục tiêu theo trục bắn, zero random |
+| Reedwing | *(tên chờ)* | `EXTENDED_BARRELS` | ĐỔI [C6.2] · ⚠ **nợ sơ đồ**: `WING_PAIR` là 8 ô knight, không phải hàng dọc — vẽ hình duyệt trước khi code |
+| Thornshell | Piercing Needles | `LASER_NEEDLE` 2 | ⚠ [A7] |
+| Chardslam | Roundhouse Chard | `PLUS_ROTATE` | ĐỔI [C6.3] · action **THAY THẾ** Vault Toss, không cộng thêm |
+| Gourdward | Rind Pellet | `SHIELD_SHOT` | ĐỔI [C6.4] · LINE 4, unit ĐẦU TIÊN nhận layer **bất kể phe** |
+
+**9/9 · 1 ô rỗng.**
+
+### F3 · MAT_SNAPMAW (Steel Jaws) — danh từ: *vết thương hở*
+
+| Hero | Tên | Effect | |
+|---|---|---|---|
+| Sunbloom | Fanged Blessing | `BLESS_POWER` 1 | GIỮ |
+| Peaburst | Serrated Pea | `BLEED_ON_HIT` | GIỮ · gốc |
+| Snapmaw | Double Jaw | `DIGEST_REDUCTION` 1 | GIỮ · SIG |
+| Ironhusk | Fanged Bash | `BONUS_DAMAGE` 1 | GIỮ |
+| Cornova | Shrapnel Kernel | `SKILL_BLEED_SPLASH` | ĐỔI [C2.1] · 4 ô quanh mục tiêu dính BLEED (không phải damage) |
+| Reedwing | Executioner Pods | `BLEED_EXECUTION` 2 | ⚠ [A7] · **chân của combo 2**; khi wire phải chốt "+2 mỗi ô" hay "+2 một lần mỗi đòn" — `WING_PAIR` KHÔNG nằm dưới VOLLEY CAP nên bản mỗi-ô ra 15 damage |
+| Thornshell | Rending Husk | `RETALIATE_BLEED` | GIỮ |
+| Chardslam | Rending Chard | `BLEED_ON_SHOVE` | ĐỔI [C2.2] · mọi enemy nhận damage VA CHẠM từ đẩy/kéo/ném đều bleed; ném ra ô trống = không bleed |
+| Gourdward | Glass Rind | `BARBED_SHIELD` | GIỮ |
+
+**9/9 · 1 ô rỗng.**
+
+### F4 · MAT_IRONHUSK (Armor Plate) — danh từ MỚI: *tấm giáp — sống qua đòn, KHÔNG dây vào khiên*
+
+| Hero | Tên | Effect | |
+|---|---|---|---|
+| Sunbloom | Guarded Bloom | `ESCORTED_REDUCTION` | ĐỔI [C8.v2] · kề ≥1 ally → -1 mọi đòn |
+| Peaburst | Armored Pea | `BONUS_HP` 2 | GIỮ |
+| Snapmaw | Armored Jaws | `ARMOR_WHILE_DIGESTING` 1 | GIỮ |
+| Ironhusk | Iron Bulwark | `STEADFAST` 1 | GIỮ · SIG · bản-đầy-đủ độc quyền sau [C8.1] |
+| Cornova | Dug-in Cob | `EMPLACED_PLATING` | ĐỔI [C8.v3-(iii)] · lượt **KHÔNG** di chuyển → -1 |
+| Reedwing | Airframe | `SLIPSTREAM_PLATING` | ĐỔI [C8.v3-(iii)] · lượt **CÓ** di chuyển → -1 |
+| Thornshell | Thorn Lunge | `THORN_LUNGE` 1 | ⚠ [A7] |
+| Chardslam | Unstoppable Chard | `COLLISION_PLATING` | ĐỔI [C8.1] · miễn damage va chạm + bịt hố + **miễn mọi dịch chuyển cưỡng bức** |
+| Gourdward | Ironrind | `DAMAGE_REDUCTION` 1 | GIỮ · bản phẳng |
+
+**9/9 · 1 ô rỗng.** `START_SHIELDED` đã rời cột này → hết trùng với Dawn Pod Plating; luật melee/ranged
+nhị phân cũ (L5) khai tử, [A6] đóng tại đây. Cặp Cornova/Reedwing đọc bằng **một** predicate có sẵn
+(`target.hasMoved`), 0 thay đổi chữ ký `calculateDamage`.
+
+### F5 · MAT_CORNOVA (Corn Mortar) — danh từ: *phát nổ / chấn động*
+
+| Hero | Tên | Effect | |
+|---|---|---|---|
+| Sunbloom | Solar Corona | `SKILL_AURA` | GIỮ |
+| Peaburst | Mortar Pea | `ARC_ATTACK` | GIỮ |
+| Snapmaw | Stun Fang | `STUN_ON_FULL_HP` | GIỮ · ngoại lệ STUN RULE #3 |
+| Ironhusk | Stun Charge | `SKILL_STUN` | GIỮ · ngoại lệ STUN RULE #1 |
+| Cornova | Cob Howitzer | `SKILL_SPLASH` | GIỮ · SIG |
+| Reedwing | Cluster Load | `WING_MIDSHOT` | GIỮ |
+| Thornshell | Bellowing Thorn | `TAUNT_RADIUS` 2 | GIỮ |
+| Chardslam | Blast Chard | `COLLISION_SPLASH` | ĐỔI [C1.2] · vòng nổ kề TRỰC GIAO hai thân va chạm, **luôn đúng 6 ô**; tường 3 ô; nước 0 ô; chỉ ENEMY dính |
+| Gourdward | Payback Shell | `SHIELD_BREAK_STUN` | ĐỔI [C1.1] · ngoại lệ STUN RULE #2, dời từ "lúc bọc" sang "lúc vỡ" |
+
+**9/9 · 0 ô rỗng.** Cột duy nhất ngoài Sol Battery hoàn toàn sạch.
+
+### F6 · MAT_REEDWING (Rotor Wing) — danh từ: *cơ động / cánh quạt*
+
+| Hero | Tên | Effect | |
+|---|---|---|---|
+| Sunbloom | Sunchaser | `CONVOY_AURA` | ĐỔI [C3.1] · đầu lượt, kề ≥1 ally → cô VÀ mọi ally kề +1 move lượt này |
+| Peaburst | Smokeline | `SKILL_DISARM` | GIỮ |
+| Snapmaw | Prowl Rotor | `DIGEST_MOVE` 1 | ⚠ [A7] |
+| Ironhusk | Overdrive Charge | `DASH_DISTANCE` 1 | ⚠ [A7] |
+| Cornova | Ash Carriage | `SMOKE_ON_HIT` | GIỮ |
+| Reedwing | Overdrive Rotor | `ATTACK_THEN_MOVE` | ĐỔI [C3.2] · SIG · bắn xong bay thêm 1 ô (được bỏ qua) |
+| Thornshell | Windburr | `MOVE_BONUS` 1 | GIỮ · bản +1 phẳng **duy nhất** của cột |
+| Chardslam | Catapult Rotor | `PUSH_DISTANCE` 1 | GIỮ · thành duy nhất sau [C1.2]; desc bỏ chữ "toss" [A4.1] |
+| Gourdward | Rolling Rind | `ENCASE_RANGE` 1 | ⚠ [A7] |
+
+**9/9 · 3 ô rỗng — cột hỏng nặng thứ hai sau Bunker Shell.**
+
+### F7 · MAT_THORNSHELL (Spike Armor) — danh từ: *chạm vào tôi/của tôi là trả giá*
+
+| Hero | Tên | Effect | |
+|---|---|---|---|
+| Sunbloom | Thorned Bloom | `BLESS_RETALIATE` | ⚠ [A7] |
+| Peaburst | Barbed Pea | `TAUNT_ON_HIT` | GIỮ · gốc |
+| Snapmaw | Bristleback | `DIGEST_RETALIATE` | ⚠ [A7] |
+| Ironhusk | Jamming Plate | `RETALIATE_ROOT` | ĐỔI [C7.3] · zombie tấn công cô → lượt kế **không được di chuyển**, vẫn được đánh |
+| Cornova | Caltrop Cob | `SKILL_SPIKE_SCATTER` | ĐỔI [C7.1] · PAID skill rải gai lên ô TRỐNG kề mục tiêu; dẫm 2 damage, tan |
+| Reedwing | Barbed Skids | `WIND_TAUNT` | ĐỔI [C7.2] · tái dùng type đã khai; rời ô kề bằng move của mình → TAUNT |
+| Thornshell | Bristling Armor | `RETALIATE_DAMAGE` (2→3) | GIỮ · SIG · ngoại lệ duy nhất của L3 |
+| Chardslam | Thorned Chard | `RETALIATE_PUSH` | GIỮ |
+| Gourdward | Spined Rind | `SHIELD_RETALIATE` | ĐỔI [C7.4] · ally mang layer DO ANH phát phản 1 khi bị đánh melee |
+
+**9/9 · 2 ô rỗng.**
+
+### F8 · MAT_CHARDSLAM (Spring Arm) — danh từ: *lực bật / xung lực*
+
+| Hero | Tên | Effect | |
+|---|---|---|---|
+| Sunbloom | Kinetic Bloom | `BLESS_SHOCKWAVE` | GIỮ |
+| Peaburst | Overwatch Pea | `OVERWATCH_SHOT` | GIỮ · gốc |
+| Snapmaw | Anchored Gullet | `DIGEST_STEADFAST` | ⚠ [A7] |
+| Ironhusk | Sprung Bash | `PUSH_DISTANCE` 1 | GIỮ |
+| Cornova | Recoil Cob | `ON_HIT_PULL` | ĐỔI [C4.1] · đối xứng `ON_HIT_PUSH`; tự combo với Overwatch Pea, không cần code riêng |
+| Reedwing | Downwash | `FLYER_REPEL` | ĐỔI [C4.2] · tái dùng type đã khai; kết thúc move → enemy kề ô đáp lùi 1. Mũi tên hiện trong overlay chọn ô đáp; xác nhận nước đi có Downwash = **khoá, không hoàn tác** |
+| Thornshell | Sprung Thorn | `ON_HIT_PUSH` 1 | GIỮ |
+| Chardslam | Grand Chard | `COLLISION_BONUS` 2 | GIỮ · SIG |
+| Gourdward | Shockrind | `SKILL_REPEL` | GIỮ |
+
+**9/9 · 1 ô rỗng.**
+
+### F9 · MAT_GOURDWARD (Bunker Shell) — danh từ: *một layer khiên*
+
+| Hero | Tên | Effect | |
+|---|---|---|---|
+| Sunbloom | Dawn Harvest | `HARVEST_SHIELD` 15 | ⚠ [A7] |
+| Peaburst | Precision Shield | `SHIELD_ON_SKILL_KILL` 1 | ⚠ [A7] |
+| Snapmaw | Warded Gut | `SHIELD_ON_DIGEST` 1 | ⚠ [A7] |
+| Ironhusk | Bunker Plating | `LAST_STAND_SHIELD` | GIỮ |
+| Cornova | Reactive Cob Shell | `REACTIVE_SHIELD` | ⚠ [A7] |
+| Reedwing | Dawn Pod Plating | `START_SHIELDED` | GIỮ · hết trùng sau [C8.v2] |
+| Thornshell | Warded Provoke | `PROVOKE_SHIELD` | ⚠ [A7] |
+| Chardslam | Warded Chard | `SHIELD_ON_KILL` 1 | GIỮ |
+| Gourdward | Greatrind | `SHIELD_SPREAD` | GIỮ · SIG |
+
+**9/9 theo tên — nhưng chỉ 4/9 CHẠY.** Đây là cột mà mục 0 khen "9/9, cột chuẩn mực" và cả công thức
+của pass này rút ra từ đó. Con số thật là **4**.
+
+### F10 · Tổng kết
+
+| | Số ô |
+|---|---|
+| GIỮ nguyên | **43** |
+| ĐỔI trong pass này | **24** |
+| ⚠ rỗng, chờ [A7] | **14** |
+| | **81** |
+
+Cả 9 cột đạt **9/9 theo type** — nhưng con số thật chỉ đúng sau khi [A7] xong.
+
+**24 effect type phải viết** — 22 mới + 2 tái dùng type đã khai sẵn (`WIND_TAUNT`, `FLYER_REPEL`):
+
+`SHIELD_BREAK_STUN` · `COLLISION_SPLASH` · `SKILL_BLEED_SPLASH` · `BLEED_ON_SHOVE` · `CONVOY_AURA` ·
+`ATTACK_THEN_MOVE` · `ON_HIT_PULL` · `SUN_ON_DOUBLE_KILL` · `SUN_ON_COLLISION_KILL` · `TAUNT_REFUND` ·
+`SHIELD_REFUND` · `SPLIT_SHOT` · `EXTENDED_BARRELS` · `PLUS_ROTATE` · `SHIELD_SHOT` ·
+`SKILL_SPIKE_SCATTER` · `RETALIATE_ROOT` · `SHIELD_RETALIATE` · `ESCORTED_REDUCTION` ·
+`EMPLACED_PLATING` · `SLIPSTREAM_PLATING` · `COLLISION_PLATING` — cộng `WIND_TAUNT` + `FLYER_REPEL`.
+
+**2 type xoá** ([A5]): `NEEDLE_BURST` · `ARMOR_SHRED`. `RETALIATE_FREEZE` giữ lại cho ICE element
+(engine đang resolve).
+
+**Không type nào mất hết chủ** sau 24 lần đổi — đã rà từng cái: `START_SHIELDED` còn Reedwing,
+`SUN_ON_KILL` còn Peaburst, `SKILL_DISCOUNT` còn Cornova, `DOUBLE_ATTACK` còn Peaburst,
+`ATTACK_RANGE_BONUS` còn Ironhusk, `TAUNT_ON_HIT` còn Peaburst, `RETALIATE_DAMAGE` còn Thornshell,
+`BLEED_ON_HIT` còn Peaburst, `MOVE_BONUS` còn Thornshell, `OVERWATCH_SHOT` còn Peaburst,
+`ON_HIT_PUSH` còn Thornshell, `PUSH_DISTANCE` còn Ironhusk + Chardslam, `SKILL_STUN` còn Ironhusk,
+`STEADFAST` còn Ironhusk, `BONUS_HP` còn Peaburst, `DAMAGE_REDUCTION` còn Gourdward.
+
+### F11 · Ba việc còn nợ trước khi gõ dòng code đầu tiên
+
+1. **[A7]** — 14 ô rỗng: *wire* hay *hạ `live: false`*. Chặn mọi phép đo phía sau.
+2. **Tên + sơ đồ ô Reedwing × MAT_PEABURST** (`EXTENDED_BARRELS`) — `WING_PAIR` là 8 ô knight; tôi nợ bạn hình vẽ duyệt trước.
+3. **Luật cộng dồn của `BLEED_EXECUTION`** — "+2 mỗi ô" (ra 15) hay "+2 một lần mỗi đòn" (ra 7 như bạn tính). Quyết trong cùng đợt [A7].
+
+- **Trạng thái:** ⬜ chờ duyệt
+- **Góp ý:**
