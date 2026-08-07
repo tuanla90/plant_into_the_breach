@@ -588,6 +588,9 @@ export const useGameEngine = () => {
                       }
 
                       // Process each tile in the path sequentially
+                      // Ô XUẤT PHÁT, chụp trước vòng lặp: `from` bên dưới bị gán lại theo từng
+                      // bước nên khi vòng lặp xong nó đã là ô cuối. `tilesMoved` cần điểm đầu.
+                      const origin = { ...unitToMove.position };
                       let from = unitToMove.position;
                       for (const step of action.path) {
                           // Being shoved is not walking. A forced move gets motion streaks and
@@ -657,10 +660,25 @@ export const useGameEngine = () => {
 
                       // Finalize state
                       if (!action.isForced) {
-                          // `tilesMoved` cộng dồn thay vì gán: Overdrive Rotor cho đi LẦN THỨ HAI
-                          // trong cùng một lượt, và ngân sách của lần hai phải trừ cả lần một.
+                          /**
+                           * `tilesMoved` — quãng đường THẬT, không phải số phần tử của `path`.
+                           *
+                           * Nước đi của người chơi được gửi xuống dạng `path: [đích]` — đúng MỘT
+                           * phần tử, bất kể đi xa bao nhiêu (App.tsx). Đếm theo độ dài mảng thì
+                           * mọi cú bay đều tính là 1 ô, và Overdrive Rotor sẽ trả lại gần nguyên
+                           * tầm sau mỗi cú bắn.
+                           *
+                           * Dùng khoảng cách Manhattan từ ô xuất phát tới ô đích. CHÍNH XÁC cho
+                           * thân BAY — hero duy nhất mang ô này, và nó bay nên không vòng vèo
+                           * bao giờ. Với thân đi bộ phải lách quanh vật cản thì con số này THẤP
+                           * hơn quãng thật, tức sai về phía có lợi cho người chơi; muốn tuyệt
+                           * đối đúng thì `getValidMoves` phải trả kèm khoảng cách BFS, và không
+                           * ô nào hôm nay đáng để đổi chữ ký đó.
+                           */
+                          const dest = action.path[action.path.length - 1];
+                          const walked = Math.abs(dest.x - origin.x) + Math.abs(dest.y - origin.y);
                           setUnits(prev => prev.map(u => u.id === action.unitId
-                              ? { ...u, hasMoved: true, tilesMoved: (u.tilesMoved ?? 0) + action.path.length }
+                              ? { ...u, hasMoved: true, tilesMoved: (u.tilesMoved ?? 0) + walked }
                               : u));
                       }
                   }
