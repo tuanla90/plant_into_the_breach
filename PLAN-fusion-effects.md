@@ -1067,9 +1067,19 @@ ví, Reedwing rút. Vẫn bị chặn bởi số stack — bounded.
 
 ## F.4 · RỦI RO CẦN CHẶN
 
-**① Ví phình vô hạn ở build rùa.** Thornshell tank 5 lượt, đội không đánh, gom 10 stack rồi dump một
-lượt = +10 damage nổ một nhịp. Trong game giải đố thì burst đúng thời điểm là thứ cần đọc trước được.
-→ **Đề xuất trần 5 stack.** Sinh vượt trần thì thừa bị vứt (giống hôm nay, nhưng ngưỡng ở 5 chứ ở 1).
+**① ~~Ví phình vô hạn ở build rùa~~ — TÔI SAI, gạch bỏ.** Tôi từng viết: "gom 10 stack rồi dump một
+lượt = +10 damage nổ một nhịp". **Không có nhịp nào cả.** Stack chỉ tiêu được **1 mỗi instance sát
+thương**, mà một đội 3 hero chỉ tạo ra khoảng **1–5 instance mỗi lượt lên CÙNG một thân** (mỗi hero
+một đòn; Reedwing bắn 2 ô nhưng là hai ô khác nhau nên thường chỉ 1 instance chạm mục tiêu đó;
+Precision Blast là 3 instance nhưng tốn Sol và tốn lượt).
+
+Gom 10 stack **không** cho phép dump 10 damage một lúc — nó cho +1 trên mười đòn tiếp theo, trải ra
+2–4 lượt. **Tổng vẫn đúng 1:1 với số lần đặt vết**, chỉ là trả chậm. Đó không phải burst, đó là cái
+kho. Và cái kho không tự sinh lời.
+
+→ **Bỏ lý lẽ cân bằng cho cái trần.** Nếu vẫn muốn một con trần thì lý do duy nhất còn lại là **badge
+giữ một chữ số** — đề xuất **trần 9**, thuần tuý cho gọn mắt. Cân bằng không cần nó: tốc độ tiêu vốn
+đã ngang hoặc hơn tốc độ nạp (nạp tối đa ~2–3/lượt lên một thân, tiêu 1–5/lượt).
 
 **② Có nên rơi theo lượt như Vulnerable của StS không?** Bạn hỏi đúng chỗ. **Tôi khuyên KHÔNG**, và
 lý do là thể loại: đồng hồ đếm ngược bắt người chơi theo dõi một con số ẩn **cho từng thân địch** —
@@ -1107,12 +1117,48 @@ chưa bao giờ là "vết tan quá nhanh", mà là **những lần đặt vết
 khiến build nhiều-nguồn-bleed tự phản mình.
 
 **Chốt đề xuất:**
-- `BLEEDING` thành **stack**, trần **5**, **không** rơi theo lượt.
-- Mỗi instance sát thương tiêu **đúng 1** stack, ăn **+1**.
+- `BLEEDING` thành **stack**. **Không** rơi theo lượt. Trần **9** — và **chỉ để badge giữ một chữ số**,
+  không phải vì cân bằng (xem §F.4① đã gạch).
+- **Mỗi instance sát thương tiêu ĐÚNG 1 stack, ăn +1.** Không có chuyện một cú đánh tiêu sạch ví.
+  Thân mang 3 stack ăn Precision Blast 3 phát: phát 1 tiêu 1 (+1), phát 2 tiêu 1 (+1), phát 3 tiêu 1
+  (+1) → 9. Nếu chỉ có 2 stack: phát 1 và 2 được +1, **phát 3 ăn damage gốc**.
 - `BLEED_EXECUTION` (Executioner Pods): mỗi stack **cô** tiêu trả **+2** thay vì +1 — giữ nguyên luật
   Phụ lục D, chỉ nhân theo số stack.
-- Badge hiện **số**.
-- Ba ô đặt vết bỏ chốt `!includes`, thay bằng cộng dồn có trần.
+- Ba ô đặt vết bỏ chốt `!includes`, thay bằng cộng dồn.
 
-- **Trạng thái:** ⬜ chờ duyệt — trần 5 ổn chưa? có muốn thêm decay theo lượt không?
+## F.7 · UI — hiện ra hết, không giấu gì
+
+Cam kết 0% RNG của game không chỉ là "không có xúc xắc", mà là **người chơi cộng nhẩm được kết quả
+trước khi bấm**. Bleed thành stack thì có một con số mới, và con số đó **phải nhìn thấy được**:
+
+**① Badge trên thân địch đeo SỐ.** Hiện tại `components/UnitComponent.tsx:34` chỉ đọc
+`statusEffects?.includes('BLEEDING')` → ra một icon bật/tắt. Đổi thành icon **kèm số**: `🩸×3`. Đây là
+việc UI **duy nhất thật sự mới** của cả đề xuất.
+
+**② Overlay ngắm phải phân bổ ĐÚNG TỪNG PHÁT.** Đây mới là phần quan trọng, và là phần dễ làm ẩu.
+Với đòn nhiều instance, số hiện trên mỗi ô/mỗi phát phải **đã trừ ví theo thứ tự**:
+
+```
+  Thân mang 2 stack, Peaburst ngắm Precision Blast (3 phát × 2):
+      phát 1 →  3   (2 + 1, tiêu stack 1)
+      phát 2 →  3   (2 + 1, tiêu stack 2)
+      phát 3 →  2   (hết stack — damage gốc)
+      tổng    →  8
+```
+
+Hiện **tổng 8**, không hiện "6 + bleed". Người chơi phải thấy ngay phát thứ ba yếu hơn hai phát đầu —
+nếu không thì stack thứ ba trở thành thông tin ẩn, và đó đúng là thứ bạn nói *"ai lại giấu"*.
+
+**③ Badge giảm dần theo từng phát khi animation chạy**, để mắt nối được số trên badge với số damage.
+
+**④ Ghi vào thẻ bài.** Thẻ Serrated Pea / Rending Husk / Glass Rind / Shrapnel Kernel hiện chỉ nói
+"để lại vết". Sau đổi phải nói rõ **"+1 stack"**, và Executioner Pods nói **"mỗi stack cô tiêu trả 2"**.
+
+*(Ghi chú kỹ thuật: repo hiện **không có** cơ chế preview damage nào — tìm `predictedDamage` /
+`damagePreview` / `forecast` đều ra rỗng. Nên mục ② không phải sửa một thứ có sẵn mà là **dựng mới**;
+phải tính vào giá. Đây là chỗ duy nhất đội giá lên so với ước tính "Thấp-Vừa" ở §F.5 — nhưng nó là
+thứ đằng nào cũng cần, vì `SPLIT_SHOT`, `EXTENDED_BARRELS` và `PLUS_ROTATE` đều đã hứa "overlay tô đủ
+các ô trước khi bấm".)*
+
+- **Trạng thái:** ⬜ chờ duyệt — trần 9 (chỉ để gọn badge) ổn chưa? Còn muốn hiện thêm gì trên overlay?
 - **Góp ý:**
