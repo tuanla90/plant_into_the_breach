@@ -151,6 +151,12 @@ Giữ nguyên: Sunbloom `SKILL_AURA`, Peaburst `ARC_ATTACK`, Snapmaw `STUN_ON_FU
 - **Góp ý:** Nếu ném gây va chạm thì 2 đối tượng mất thêm 1 máu (2 thay vì 1, giống kiểu ném kèm vụ nổ)
 - **v2 (Claude) — phản biện:** Ý "va chạm thì cả hai +1" đụng đúng SIG của anh ấy: **Grand Chard** (`COLLISION_BONUS`, MAT_SPRING_ARM) đã bán trục đó — engine cộng bonus cho MỌI body trong danh sách va chạm (`plan.collided` gồm cả hai bên), tức "cả hai +2" đã tồn tại. Bản corn "cả hai +1" sẽ là bản-nhỏ-của-SIG ngay trong hàng — đúng lỗi PUSH_DISTANCE×2 mình đang diệt, và fuse cả hai thành "+3 mỗi va chạm" trên một trục duy nhất. Giữ fantasy "ném kèm vụ nổ" mà vẫn unique: **vụ nổ văng ra NGOÀI cặp va chạm** — cú ném gây va chạm thì mọi ENEMY đứng kề Ô VA CHẠM (trừ 2 body đã trả tiền va chạm) dính 1. Hai body: Grand Chard lo; đám đứng xem: Blast Chard lo. Overlay tô vùng nổ trước khi ném. Type `COLLISION_SPLASH` giữ, spec đổi thành vòng-kề-điểm-va.
 Final: kịch bản max là 6 ô đúng ko
+- **v3 (Claude) — trả lời:** Đúng, **6**. Và 6 không phải "trần hiếm gặp" — nó là con số CỐ ĐỊNH của mọi ca ném-thân-vào-thân. Hình học: thân bị ném (A) dừng ngay kề thân bị đâm (B), hai ô kề trực giao nhau. Vòng nổ = ô kề trực giao của CẢ HAI thân, trừ chính hai thân. A góp 3, B góp 3, và hai ô kề trực giao **không có hàng xóm chung nào** nên không bao giờ chồng lấn → luôn đúng 6.
+  Ba ca biên chốt luôn cho khỏi hỏi lại lúc code:
+  - **Ném vào TƯỜNG / đá / mép bàn:** chỉ MỘT thân trả tiền va chạm → vòng nổ **3 ô** quanh thân đó. Tường không phát nổ (nó không phải thân, không ăn damage, không có gì để văng).
+  - **Ném xuống NƯỚC / hố:** không có va chạm → **không có nổ**. Nước nuốt gọn.
+  - **Đếm KỀ TRỰC GIAO, không tính chéo.** Tính cả chéo thì con số nhảy lên **10** — quá tay cho một ô của hero 0-damage.
+  Giữ nguyên "chỉ ENEMY dính": ally/Greenspire đứng trong vòng không sao. Đây là ưu đãi CÓ CHỦ ĐÍCH (anh là hero 0-damage, phải xài được trong đội hình chật), cố tình khác `BLESS_SHOCKWAVE` — ô đó đẩy cả người nhà và điều đó là tính năng. Muốn chặt hơn (nổ dính cả ally) thì nói một câu, tôi đổi.
 
 ### C2. MAT_CHOMPER — 7/9 (danh từ cột: "vết cắn / vết thương hở")
 
@@ -426,6 +432,27 @@ Kết quả 9/9 (hoặc 8/9 nếu chọn Reedwing = BONUS_HP). Comment WALL-NUT 
 
 - **Trạng thái:** ⬜ chờ duyệt vòng 2
 - **Góp ý:** Reedwing: giảm dam tầm xa nhận vào. cận chiến vẫn bị
+- **v3 (Claude) — đo roster trước khi chốt, và nó lòi ra lỗi ở ô Cornova:**
+
+  Flavor "máy bay chống đạn, bị tóm thì toi" rất đúng vai. Nhưng bàn cờ không nuôi nổi nó — đếm thẳng trong `data/zombies.ts`: **12 loại zombie thường, đúng 1 con bắn xa** (Lobber, `attackRange: 3`); 11 con còn lại phải bước tới đấm. Trùm khá hơn: **3/10** có tầm (Ironcart 4, Blightlord 2, Armada 2). Nghĩa là `RANGED_PLATING` **ngủ đông gần hết run**, chỉ tỉnh ở vài trận — đúng định nghĩa "ô bẫy-mua" mà mục [E] đang lo.
+
+  Và cùng con số đó tố ngược ô Cornova của chính tôi: nếu ~92% đòn là cận chiến thì `FLANK_PLATING` (-1 từ enemy kề) **giá trị thực gần bằng hệt** `DAMAGE_REDUCTION` phẳng của Gourdward — khác tên type, giống nhau khi chơi. Đó là unique-GIẢ, thứ cả pass này sinh ra để diệt. Nên cặp Cornova/Reedwing phải đổi TRỤC, không chỉ đổi một ô.
+
+  **Ba đường, chọn một:**
+
+  **(i) Giữ nguyên chữ của bạn** — `RANGED_PLATING`: -1 đòn tầm xa. Rẻ nhất về thiết kế, nhưng nhận trước: ô này chết ở 11/12 trận thường.
+
+  **(ii) Giữ chữ, nâng liều** — `FLAK_PLATING`: **miễn HOÀN TOÀN** đòn tầm xa (về 0 — có tiền lệ, giáp mũ `Unit.armor` được phép về 0, xem `gameLogic.ts:416`). Hiếm nhưng QUYẾT ĐỊNH: cô thành đáp án phòng-không, Ironcart/Armada/Blightlord mất bài với cô và phải đổi mục tiêu. Cận chiến vẫn xé cô như giấy — đúng từng chữ bạn viết.
+
+  **(iii) Đổi trục cho CẢ CẶP — khuyến nghị.** Bán "đứng yên hay bay" thay cho "melee hay ranged":
+  - Cornova → `EMPLACED_PLATING` ("Dug-in Cob"): lượt nào cô **KHÔNG di chuyển** thì -1 mọi đòn nhận. Hạ chân chống — thưởng đúng nghề pháo.
+  - Reedwing → `SLIPSTREAM_PLATING` ("Airframe"): lượt nào cô **CÓ di chuyển** thì -1 mọi đòn nhận. Đứng im là ăn đủ. "Cận chiến vẫn bị" giữ nguyên tinh thần, chỉ khác chỗ điều kiện nằm trong tay NGƯỜI CHƠI thay vì nằm ở roster địch.
+
+  Vì sao (iii) mạnh nhất: hai nửa **cân giá trị thật** (cả hai luôn khả dụng, người chơi tự bật/tắt), zero RNG, mỗi nửa thưởng đúng doctrine của hero — pháo cắm chân, máy bay không bao giờ đứng yên. Nó cũng khớp bộ hit & run vừa chốt ([C3.2v2] + [C4.2v2] + [C7.2v2]): Reedwing đằng nào cũng buộc phải bay, giờ bay còn là giáp.
+
+  **Chi phí kỹ thuật chênh hẳn — đây là lý lẽ nặng nhất:** `calculateDamage` (`gameLogic.ts:379`) **chỉ nhận `target`, không hề biết ai đánh**, và có **21 nơi gọi**. Lọc melee/ranged = bơm attacker qua cả 21 chỗ, tức sửa xương sống damage vì một ô. Còn "có/không di chuyển" đọc thẳng `target.hasMoved` **ngay dòng 403, cạnh `DAMAGE_REDUCTION` — 0 thay đổi chữ ký**. Điều kiện này cũng đã là từ vựng THÀNH VĂN của repo: `SUN_PER_TURN` gate đúng `!u.hasMoved` (`turnManager.ts:639`) kèm chú thích "bị đẩy không tính" — cùng một luật, người chơi học một lần dùng được hai chỗ.
+
+  **Một câu hỏi kèm theo (trả lời luôn cho gọn):** sau (iii) thì cột giáp có **5 ô cùng bán "-1"** với 5 trigger khác nhau (Sunbloom kề-ally / Cornova đứng-yên / Reedwing có-bay / Snapmaw đang-tiêu-hoá / Gourdward phẳng), cộng 3 ô lệch danh từ (Peaburst máu, Ironhusk `STEADFAST` gói-ba, Thornshell `THORN_LUNGE`). Theo đúng **công thức Pumpkin** ở đầu file (một danh từ, chín trigger) thì đây là ĐÍCH chứ không phải lười — nhưng nó khác cột Pumpkin ở chỗ có 3 ngoại lệ. Bạn OK với 5+3 đó, hay muốn tôi ép nốt Peaburst/Thornshell về danh từ "-1"?
 
 #### [C8.1] CHARDSLAM × MAT_WALLNUT — "Armored Chard" (nên làm ở CẢ HAI phương án)
 
