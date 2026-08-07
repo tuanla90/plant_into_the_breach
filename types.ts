@@ -22,6 +22,7 @@ export enum UnitClass {
   SPRING_ARM = 'SPRING_ARM',
   STEEL_JAWS = 'STEEL_JAWS',
   SOL_BATTERY = 'SOL_BATTERY',
+  BARREL_PROP = 'BARREL_PROP',
 
   /**
     * A crate of gear left on the board. Not a plant and not a zombie: it cannot move, cannot
@@ -146,7 +147,12 @@ export type MovementType = 'WALKING' | 'FLYING' | 'AMPHIBIOUS' | 'TELEPORT'
      * whatever spawn tile it was placed on — four of arena_ironcart's ten have no rail beside
      * them, and a cart locked to rail from turn one would be a statue on those.
      */
-    | 'RAIL';
+    | 'RAIL'
+    | 'GRAVE_DIRT'
+    | 'CONVEYOR_N' | 'CONVEYOR_S' | 'CONVEYOR_E' | 'CONVEYOR_W'
+    | 'SURGE_NODE'
+    | 'BLIGHT'
+    | 'THIN_ICE';
 /**
  * NOTE: 'FREEZE' covers STUN/FREEZE only — it does NOT stop SLOW. Something too heavy to
  * freeze solid can still be chilled into moving slower, and having one immunity blank both

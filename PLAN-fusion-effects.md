@@ -1162,3 +1162,266 @@ các ô trước khi bấm".)*
 
 - **Trạng thái:** ⬜ chờ duyệt — trần 9 (chỉ để gọn badge) ổn chưa? Còn muốn hiện thêm gì trên overlay?
 - **Góp ý:**
+
+---
+
+# Phụ lục G · VÒNG 3 — 25 góp ý, ghi lại + đối chiếu engine
+
+Ghi ngày 2026-08-08. Đây là bản ghi vòng góp ý lớn nhất tới nay. **Các mục trong F1–F9 phía trên đã
+cũ ở những ô có mặt dưới đây** — mục G là bản mới nhất.
+
+## G.1 · Ba câu hỏi bạn hỏi — trả lời bằng code
+
+### ① `SKILL_SPLASH` có gây mất máu xung quanh không? — **CÓ**
+
+`skillResolution.ts:120-128`: kỹ năng **trả phí** của người mang effect thêm **4 ô trực giao** quanh
+mục tiêu vào danh sách target. Line 308: vành ngoài ăn **nửa sức**, và stun mềm hạ thành chậm. Nên
+Cob Howitzer đang là damage thật ra 4 ô kề, không phải chỉ hiệu ứng.
+
+### ② Rending Chard — TOSS có tính không? Có "va chạm với đất" không? — **CÓ CẢ HAI**
+
+`skillResolution.ts:717-722` có hẳn một khối tên **THE FALL**:
+
+```js
+// THE FALL: collision damage, not a DAMAGE effect — armour is bypassed like every slam,
+// COLLISION_BONUS scales it (Grand Chard turns the 1 into 3), and a layer eats it whole.
+const fall = 1 + getFusionEffectValue(caster, 'COLLISION_BONUS');
+const r = calculateDamage(targetUnit, fall, false, true);   // ignoresArmor = true
+```
+
+Nên: cú ném **có** 1 damage tiếp đất, **là damage va chạm** (xuyên giáp mũ), `COLLISION_BONUS` nhân
+nó lên, layer nuốt trọn, và nó **tiêu vết bleed** (`r.bleedConsumed`). → Theo spec `BLEED_ON_SHOVE`,
+**cú ném CÓ dính bleed**.
+
+**Nhưng một điều quan trọng khác:** cú ném **không bao giờ va vào thân khác**. Code kiểm `occupied` —
+ô đích có người thì **cú ném không xảy ra gì cả**, thân đứng yên. Không có nhánh va-chạm-hai-thân cho
+TOSS. (Điều này ảnh hưởng thẳng tới Blast Chard — xem G.3.)
+
+### ③ (kèm theo) Đứng chặn hố spawn mất bao nhiêu máu? — **1, và `STEADFAST` miễn**
+
+`turnManager.ts:441-447`: `painless = hasFusionEffect(occupant, 'STEADFAST')`, nếu không thì
+`calculateDamage(occupant, 1, false)` — **giáp mũ vẫn áp** (khác damage va chạm).
+
+## G.2 · PROVOKE vs TAUNTED — phát hiện lớn nhất vòng này
+
+**Engine hôm nay chỉ có MỘT khái niệm, và nó đúng bằng định nghĩa PROVOKE của bạn.**
+
+`aiLogic.ts:91-120`: thân mang `TAUNTED` + còn `tauntedBy` sống → **đi về phía người đó và đánh
+người đó**. `heroes.ts:347` Provoke: *"Every enemy within 3 tiles must come for him next turn"*,
+`effects: [{ type: 'TAUNT', value: 3 }]`.
+
+Tức cái repo đang gọi là `TAUNTED` **chính là PROVOKE**. Nên:
+
+**① Việc đổi tên là RENAME THUẦN, gần như miễn phí:**
+
+| Hiện tại | Thành |
+|---|---|
+| status `TAUNTED` | `PROVOKED` |
+| `Unit.tauntedBy` | `provokedBy` |
+| effect `TAUNT` | `PROVOKE` |
+| `TAUNT_ON_HIT` (Barbed Pea) | `PROVOKE_ON_HIT` |
+| `TAUNT_RADIUS` (Bellowing Thorn) | `PROVOKE_RADIUS` |
+| `TAUNT_REFUND` (Sunlit Thorn) | `PROVOKE_REFUND` |
+| `WIND_TAUNT` (Barbed Skids) | `WIND_PROVOKE` ✅ đúng như bạn nói |
+| Thorned Chard | **Provoke Chard** ✅ |
+
+**② `TAUNTED` MỚI của bạn cần HƯỚNG MẶT — engine KHÔNG có.** *"kẻ thù quay mặt (kèm hướng tấn công)
+về phía người đánh → khiến kẻ thù đánh hụt, thậm chí đánh lẫn nhau"* đòi ba thứ chưa tồn tại:
+`Unit.facing`, đòn đánh phân giải **theo hướng mặt** thay vì theo mục tiêu, và AI biết mình đang bị
+xoay. Đây là **khái niệm mới nặng nhất** trong cả pass — đúng lý do tôi đã loại relic *Bắn Lén*
+(Peaburst #7) ở `PLAN-relics-27.md`.
+
+→ **Đề nghị tách hai việc:** rename PROVOKE làm ngay (rẻ, và nó dọn sạch cách nói của cả ma trận);
+`TAUNTED` mới xếp riêng thành một mục thiết kế của nó, đừng ghép vào pass fusion.
+
+- **Trạng thái:** ⬜ chờ duyệt — đồng ý tách không?
+- **Góp ý:**
+
+## G.3 · 25 thay đổi, ghi theo cột
+
+### Cột MAT_SUNBLOOM
+
+**Twin Sol Battery** — đổi: **nhân đôi Sol của hành động tạo Sol** (thay `SUN_PER_TURN` thụ động).
+⚠ **Cần bạn xác nhận một con số:** Harvest gốc là **50 Sol** (`heroes.ts:134`, kèm chú thích dài giải
+thích vì sao 50 chứ không phải 25). Nhân đôi = **100**. Con số **30** bạn viết chỉ khớp nếu **Dawn
+Harvest hạ sản lượng Harvest xuống 15** để đổi lấy layer (15 × 2 = 30). Đúng ý bạn không?
+
+**Sunlit Gut** — đổi: giảm 1 lượt nhai thì **giảm 1 lượt ăn Sol**. Tức Double Jaw (`DIGEST_REDUCTION`)
+và Sunlit Gut là **đánh đổi thật**, không phải cộng dồn. Tốt — hai ô cùng hàng thôi cộng hưởng miễn phí.
+
+**Sunlit Chard** — đổi luật đơn giản hơn: **thân chết ở vị trí KHÁC vị trí ban đầu → +Sol.** Thay cho
+"nguyên nhân là va chạm/nước/hố". Rẻ hơn nhiều: chỉ so hai toạ độ, không cần phân loại nguyên nhân.
+
+### Cột MAT_PEABURST
+
+**Split Shell** — bạn bắt đúng lỗi: Cornova bắn **vòng cung**, không có "trục bắn" nên không định
+nghĩa được "ô sau lưng". Đổi thành: **thêm một viên phụ nếu có địch đứng cùng hàng dọc hoặc hàng
+ngang với mục tiêu.** ⚠ Cần chốt tiếp: cùng hàng **kề** (1 ô) hay **cả hàng**? Nếu cả hàng thì phải
+có luật chọn khi nhiều địch thoả — đề nghị **ô kề gần nhất theo thứ tự cố định (Bắc→Đông→Nam→Tây)**,
+để zero-random và đọc được trên overlay.
+
+**Piercing Needles** — đổi tên type `LASER_NEEDLE` → **`PIERCING_NEEDLE`**. Cơ chế: **bỏ đẩy lùi, thành
+đâm xuyên thấu**. Việc đổi cận chiến → xạ thủ **để cho relic**, không làm ở lớp MAT. ✓ đúng hợp đồng 3 lớp.
+
+**Roundhouse Chard** (`PLUS_ROTATE`) — **rút khỏi ma trận, chuyển sang relic** (đổi cơ chế chiến đấu).
+Thay bằng: **thân bị ném có thêm một lượt NẢY** — di chuyển tiếp + mất thêm 1 máu khi chạm đất; hoặc
+**1-1 máu + dừng lại** khi chạm thân/vật cản khác.
+⚠ Cái này **mở ra đúng nhánh code đang thiếu**: TOSS hiện **không có** nhánh va chạm (G.1②). Cú nảy
+sẽ là lần đầu tiên TOSS chạm được thân khác → phải viết mới, không tái dùng được `planPush`.
+
+### Cột MAT_SNAPMAW
+
+**Executioner Pods** — chốt: **1 điểm bleed đổi 2 máu thay vì 1.** ✓ (đúng luật Phụ lục D/F)
+
+**Fanged Blessing → đổi hẳn cơ chế.** Phân tích của bạn đúng, và tôi xác nhận bằng code:
+`heroes.ts:151` Solar Blessing = **+1 damage**; Fanged Blessing (`BLESS_POWER 1`) cộng thêm 1 → **+2**;
+và `fusion.ts:462-464` áp nó bằng `effects.map(...)` lên **MỌI** effect DAMAGE → trên đòn 5 ô là **+10**.
+**Đây đúng là cái lỗ tôi đã tìm thấy hai lần** (VOLLEY CAP không phủ `WING_PAIR`) — bạn tìm ra nó từ
+hướng ngược lại, qua một hero khác.
+
+| Trường hợp xấu nhất, 5 ô dồn 1 mục tiêu | Tổng |
+|---|---|
+| 5 stack + Fanged Blessing(+2) + Executioner | (1+2+2)×5 = **25** |
+| 1 stack + Fanged Blessing(+2) + Executioner | 5 + 3×4 = **17** |
+| 5 stack, Fanged Blessing đổi cơ chế | (1+2)×5 = **15** |
+
+→ **Fanged Blessing mới: thân được ban phước có thể KÍCH HOẠT TOÀN BỘ bleed của mục tiêu trong một
+đòn.** Không còn con số damage nào → hết nhân.
+
+⚠ **Nhưng nó làm sống lại đúng cái lo "nuôi rùa" mà tôi vừa gạch bỏ ở [F.4①].** Tôi gạch nó vì stack
+chỉ tiêu được 1 mỗi instance nên gom 10 stack không thành burst. **Máy kích hoạt toàn bộ chính là thứ
+bẻ luật đó** — với nó, 10 stack = một cú +10 (hoặc +20 qua Executioner) trong MỘT instance. Bạn cũng
+nhận ra ("là lỗi nuôi rùa..."), và dựa vào **"có limit turn"** để chấp nhận.
+→ **Vấn đề: giới hạn lượt cho bleed CHƯA ĐƯỢC CHỐT.** Ở [F.6] tôi đề nghị **không** decay. Nếu máy
+kích hoạt phụ thuộc vào decay để cân thì phải quyết decay trước. Ba lựa chọn:
+  - **(a)** stack rơi 1 mỗi lượt → ví khó phình, badge phải hiện thêm đồng hồ;
+  - **(b)** không decay, nhưng **máy kích hoạt có trần** (VD tiêu tối đa 3 stack một lần);
+  - **(c)** không decay, không trần — chấp nhận burst như bạn nói.
+  Tôi nghiêng **(b)**: giữ được thông tin sạch (không đồng hồ ẩn), chặn burst, và trần đọc thẳng trên thẻ.
+
+**Anchored Gullet** — mở rộng: khi tung skill, **địch BỊ tiêu hoá → Maw bất động** (miễn push/pull);
+**địch KHÔNG bị tiêu hoá → ĐỊCH bất động**. Hai võ sĩ nắm áo nhau. ✓ hay, và nó biến ô rỗng thành ô
+có hai mặt.
+
+### Cột MAT_IRONHUSK — ba tanker về một mối
+
+**Thorn Lunge** — **rút khỏi ma trận, chuyển sang relic** (đổi cơ chế tấn công). Thay bằng: **miễn mất
+máu khi chặn hố spawn; va chạm thì không mất máu và thân đâm vào MẤT 2 MÁU.**
+
+Kết quả cả ba tanker khi ghép MAT_IRONHUSK — **cùng một nền, ba cái đuôi khác nhau**:
+
+| Hero | Nền chung | Riêng |
+|---|---|---|
+| Ironhusk (`STEADFAST`) | miễn damage va chạm + miễn damage chặn hố | **−1 damage mọi nguồn** |
+| Thornshell (mới) | ↑ | **phản 2 damage vào thứ va chạm vào anh** |
+| Chardslam (`COLLISION_PLATING`) | ↑ | **miễn push/pull/toss** |
+
+Đây là chỗ gọn nhất của cả vòng: vai tanker thành một chữ đọc được, ba biến thể đọc được. Wiring cũng
+rẻ — `turnManager.ts:441` đã có sẵn cửa `painless = hasFusionEffect(occupant, 'STEADFAST')`, chỉ thêm
+hai type nữa vào cùng chỗ.
+
+### Cột MAT_CORNOVA
+
+**Mortar Pea** — đổi: **thêm** khả năng bắn arc 4, **vẫn giữ** bắn thẳng 8. Tức không còn là "đổi hình"
+mà là "thêm chế độ" — người chơi chọn mỗi lượt. ⚠ Cần UI chọn chế độ (2 nút), không phải đổi số.
+
+**Blast Chard** — đơn giản hoá theo hình bạn vẽ:
+
+```
+[  ][oo][oo][  ]
+[oo][xx][xx][oo]        xx = hai thân va chạm
+[  ][oo][oo][  ]        oo = ô dính nổ
+```
+
+- Tâm nổ = **giữa hai thân va chạm**, không phải quanh từng thân.
+- **CHỈ push/pull, KHÔNG toss.** (Khớp engine: TOSS không có nhánh va chạm — G.1②.)
+- **Friendly fire — bom đạn không có mắt.** Đảo ngược spec cũ ("chỉ ENEMY dính"). Nhất quán với
+  `BLESS_SHOCKWAVE`, ô cố ý đẩy cả người nhà.
+- 8 ô dính nổ, hình cố định, zero random.
+
+### Cột MAT_REEDWING
+
+**Smokeline → Smoke Bullet** — bụi sinh ra **tại nơi viên đạn va chạm**, không phải nơi thân đáp.
+⚠ Đây là **sửa lại L6** ("bụi rơi xuống chỗ thân đáp, không phải chỗ đất đi qua"). Luật L6 sinh ra để
+chữa việc Smokeline phủ **cả làn đạn bay qua**. Bản mới phủ **một ô — ô trúng đạn** — nên **không phá
+L6**, chỉ đọc lại: *"bụi ở nơi va chạm, không phải dọc đường bay"*. Cần sửa câu chữ L6 trong DESIGN.
+
+**Ash Carriage** — tích hợp vào **skill**: 4 ô quanh điểm nổ có bụi. (Pháo để lại bụi — hợp lý, và
+skill-only đúng tiền lệ `SKILL_SPLASH`.)
+
+**Overdrive Rotor** — sửa: **không cộng thêm ô**, mà **cho đi nốt số ô CHƯA đi sau khi tấn công**.
+Đi 2 → tấn công → còn 2 ô để đi. ✓ Sạch hơn hẳn bản cũ: không tặng thêm gì, chỉ bỏ luật "đánh xong là
+khoá". Và nó tự cân bằng — muốn bay xa sau khi bắn thì phải bay ít trước khi bắn.
+
+**Downwash** — sửa: chỉ áp dụng ở **ô CUỐI CÙNG** của lượt di chuyển. Nếu fuse cùng Overdrive Rotor
+(đi → bắn → đi tiếp) thì **ô dừng lại để bắn KHÔNG kích Downwash**, chỉ ô cuối cùng mới kích. ✓ đúng,
+nếu không thì hai ô fuse với nhau thành 2 lần đẩy một lượt.
+
+**Rolling Rind** — sửa: Encase từ **SELF → range 1**, cast được lên ô bên cạnh, **vẫn bảo vệ cả
+Gourdward lẫn ô đó**. Kịch bản đổi từ "bảo vệ mình + hàng sau" thành "bảo vệ mình + một tank nữa".
+
+### Cột MAT_THORNSHELL
+
+**Thorned Bloom** (`BLESS_RETALIATE`) — chốt: **cộng dồn phản đòn**. Đang phản 1 mà được ban phước →
+**phản 2**. (Khác bản cũ "trao gai cho người chưa có".)
+
+**Jamming Plate** — mở rộng: địch **vừa bị trói chân VỪA bắt buộc đánh Ironhusk**. Tức `RETALIATE_ROOT`
++ PROVOKE cưỡng bức. ✓ Đúng chữ "kẹt trên giáp": không đi được, và cũng không quay sang đánh ai khác.
+
+**Barbed Skids** — `WIND_TAUNT` → **`WIND_PROVOKE`** ✓
+
+**Thorned Chard → Provoke Chard** — thân bị ném **ghi hận**, lượt sau tìm đến hero trả thù. ✓ Đổi từ
+`RETALIATE_PUSH` (phản đòn khi bị đánh) sang provoke-theo-cú-ném — hợp hero hơn hẳn.
+
+### Cột MAT_CHARDSLAM
+
+**Grand Chard** — đổi hẳn tầm: từ buff cá nhân thành **passive TOÀN BẢN ĐỒ** — mọi damage va chạm và
+damage chặn hố **+1**. Kết quả: ném Zom A vào Zom B → **cả hai mất 2 máu**.
+⚠ Cần biết: hiện `COLLISION_BONUS 2` chỉ áp cho va chạm **do anh gây ra**; bản mới áp cho **mọi** va
+chạm trên bàn — kể cả va chạm địch tự gây, kể cả damage chặn hố mà **hero nhà đang chịu**. Đó có phải
+ý bạn không? Nếu có thì đây là ô đầu tiên trong ma trận **có mặt trái**, cần ghi rõ trên thẻ.
+
+### Cột MAT_GOURDWARD
+
+**Greatrind** — sửa: skill thường **shield thêm một đối tượng nữa đằng sau**. (Thay `SHIELD_SPREAD`
+"tràn sang mọi ai kề người nhận" bằng một luật hình học gọn: thêm đúng 1, ở phía sau.)
+
+## G.4 · Phụ lục A / B / C — chốt của bạn
+
+**Phụ lục A — "làm hết rồi bật".** ✅ Tức **wire cả 14 ô**, không hạ `live:false` ô nào. Ghi nhận. Lưu
+ý: 5 trong số đó đã được vòng này **đổi cơ chế** (Piercing Needles, Thorn Lunge, Anchored Gullet,
+Rolling Rind, Thorned Bloom) nên viết mới luôn, không wire theo mô tả cũ.
+
+**Phụ lục B — bổ sung 3 nhóm việc:**
+
+1. **Làm rõ PROVOKE vs TAUNT** → G.2.
+2. **Bộ đếm bleed** → Phụ lục F + UI ở F.7.
+3. **Dọn từ vựng dịch chuyển — chốt 5 type:**
+
+| Type | Nghĩa |
+|---|---|
+| `push` / `pull` | dời thân theo trục, do hero gây |
+| `toss` | ném qua đầu tới ô đối xứng `2·C − T` |
+| `block_spawn` | đứng bịt hố lúc thân mới trồi lên |
+| **damage va chạm** | = `push`/`pull` vào ô **CÓ thân** + `block_spawn` |
+| **moved** | = `push`/`pull`/`toss` vào ô **KHÔNG có thân** |
+
+⚠ Một chỗ lệch phải xử: theo bảng này thì **TOSS luôn là `moved`** (ô đích bắt buộc trống), nhưng
+engine **vẫn tính 1 damage tiếp đất** cho nó (THE FALL, G.1②) và damage đó **là loại va chạm**
+(`ignoresArmor: true`, `COLLISION_BONUS` nhân nó). Cần chọn: **THE FALL là va chạm** (giữ engine, sửa
+bảng) hay **THE FALL là loại riêng** (sửa engine)? Việc này ảnh hưởng thẳng tới Rending Chard, Sunlit
+Chard, Grand Chard và cú nảy mới của Chardslam.
+
+**Phụ lục C — phương án A** ✅ (lấp 2 ô chéo kề). Chốt, không cần bàn thêm.
+
+## G.5 · Tổng hợp việc phát sinh từ vòng 3
+
+| Loại | Mục |
+|---|---|
+| **Rút khỏi ma trận → relic** | Roundhouse Chard (`PLUS_ROTATE`) · Thorn Lunge (đổi cơ chế đánh) · Piercing Needles nửa "melee→ranged" |
+| **Khái niệm engine MỚI nặng** | `TAUNTED` có hướng mặt (G.2②) · nhánh va chạm cho TOSS (cú nảy) · chế độ bắn kép cho Mortar Pea |
+| **Cần bạn chốt trước khi code** | số Harvest (50 hay 15?) · luật chọn ô của Split Shell · decay/trần cho máy kích hoạt bleed · Grand Chard có mặt trái không · THE FALL thuộc loại nào |
+| **Sửa tài liệu luật** | L6 (bụi tại điểm va chạm) · L5 đã khai tử · rename TAUNT→PROVOKE toàn bộ |
+
+- **Trạng thái:** ⬜ chờ duyệt vòng 3
+- **Góp ý:**

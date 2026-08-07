@@ -17,10 +17,11 @@
  */
 
 export type SfxName =
-    | 'ui-click' | 'ui-select' | 'ui-back' | 'ui-coin' | 'ui-item'
-    | 'step' | 'attack-melee' | 'attack-shot' | 'attack-lob'
+    | 'ui-click' | 'ui-select' | 'ui-back' | 'ui-coin' | 'ui-item' | 'ui-hover' | 'ui-error' | 'ui-text-blip'
+    | 'zombie-groan' | 'env-wind' | 'env-lava'
+    | 'step' | 'attack-melee' | 'attack-shot' | 'attack-lob' | 'attack-claw' | 'attack-bite' | 'attack-throw'
     | 'skill-cast' | 'skill-ult'
-    | 'hit' | 'hit-heavy' | 'hit-freeze' | 'hit-fire' | 'hit-ice' | 'hit-elec' | 'hit-blocked' | 'heal' | 'drown'
+    | 'hit' | 'hit-heavy' | 'hit-collision' | 'hit-freeze' | 'hit-fire' | 'hit-ice' | 'hit-elec' | 'hit-blocked' | 'heal' | 'drown' | 'splash' | 'explosion'
     /** The nine-hero mechanics: shove, taunt, spike field, shield grant, lightning arc. */
     | 'push' | 'taunt' | 'spikes' | 'shield' | 'arc'
     | 'die-enemy' | 'die-plant'
@@ -41,24 +42,37 @@ const SFX: Record<SfxName, { files: string[]; gain: number }> = {
     'ui-back':      { files: ['ui-back.wav'],    gain: 0.45 },
     'ui-coin':      { files: ['ui-coin.mp3'],    gain: 0.70 },
     'ui-item':      { files: ['ui-item.mp3'],    gain: 0.70 },
+    'ui-hover':     { files: ['ui-hover.wav'],   gain: 0.30 },
+    'ui-error':     { files: ['ui-error.wav'],   gain: 0.50 },
+    'ui-text-blip': { files: ['ui-text-blip.wav'], gain: 0.40 },
+
+    'zombie-groan': { files: ['zombie-groan.wav'], gain: 0.65 },
+    'env-wind':     { files: ['env-wind.wav'],     gain: 0.45 },
+    'env-lava':     { files: ['env-lava.wav'],     gain: 0.50 },
 
     'step':         { files: ['step-1.wav', 'step-2.wav', 'step-3.wav'], gain: 0.40 },
 
     'attack-melee': { files: ['attack-melee.wav'], gain: 0.75 },
     'attack-shot':  { files: ['attack-shot.wav'],  gain: 0.55 },
     'attack-lob':   { files: ['attack-lob.wav'],   gain: 0.55 },
+    'attack-claw':  { files: ['attack-claw.wav'],  gain: 0.70 },
+    'attack-bite':  { files: ['attack-bite.wav'],  gain: 0.75 },
+    'attack-throw': { files: ['attack-throw.wav'], gain: 0.70 },
     'skill-cast':   { files: ['skill-cast.wav'],   gain: 0.60 },
     'skill-ult':    { files: ['skill-ult.wav'],    gain: 0.80 },
 
-    'hit':          { files: ['hit-1.wav', 'hit-2.wav', 'hit-3.wav'], gain: 0.65 },
-    'hit-heavy':    { files: ['hit-heavy.wav'],   gain: 0.75 },
-    'hit-freeze':   { files: ['hit-freeze.wav'],  gain: 0.60 },
-    'hit-fire':     { files: ['hit-fire.wav'],    gain: 0.75 },
-    'hit-ice':      { files: ['hit-freeze.wav'],  gain: 0.65 },
-    'hit-elec':     { files: ['arc.wav'],         gain: 0.70 },
-    'hit-blocked':  { files: ['hit-blocked.wav'], gain: 0.50 },
-    'heal':         { files: ['heal.wav'],        gain: 0.55 },
-    'drown':        { files: ['drown.wav'],       gain: 0.70 },
+    'hit':           { files: ['hit-1.wav', 'hit-2.wav', 'hit-3.wav'], gain: 0.65 },
+    'hit-heavy':     { files: ['hit-heavy.wav'],   gain: 0.75 },
+    'hit-collision': { files: ['hit-collision.wav'], gain: 0.80 },
+    'hit-freeze':    { files: ['hit-freeze.wav'],  gain: 0.60 },
+    'hit-fire':      { files: ['hit-fire.wav'],    gain: 0.75 },
+    'hit-ice':       { files: ['hit-freeze.wav'],  gain: 0.65 },
+    'hit-elec':      { files: ['arc.wav'],         gain: 0.70 },
+    'hit-blocked':   { files: ['hit-blocked.wav'], gain: 0.50 },
+    'heal':          { files: ['heal.wav'],        gain: 0.55 },
+    'drown':         { files: ['drown.wav'],       gain: 0.70 },
+    'splash':        { files: ['splash.wav'],      gain: 0.65 },
+    'explosion':     { files: ['explosion.wav'],   gain: 0.85 },
 
     // A shove happens several times in one Sweep, so it sits UNDER the impact layer —
     // loud enough to feel, quiet enough that four of them are not four hits.

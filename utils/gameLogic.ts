@@ -890,7 +890,8 @@ export const getValidSkillTargets = (
             e.type === 'BUFF_STAT' ||
             e.type === 'HEAL' ||
             e.type === 'SHIELD' ||
-            e.type === 'REFRESH_ACTION'
+            e.type === 'REFRESH_ACTION' ||
+            e.type === 'BLESS'
         );
 
         if (isAllyTargeting) {

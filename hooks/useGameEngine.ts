@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { BattleHeroStats, GameState, HeroId, Unit, TileData, DamageEvent, Position, TurnAction, Projectile, UnitClass, VisualEffect } from '../types';
 import { INITIAL_GAME_STATE, INITIAL_BOARD, ANIMATION_CONFIG } from '../constants';
-import { sfx } from '../utils/audio';
+import { sfx, SfxName } from '../utils/audio';
 
 /** Fast-forward multiplier used by the HUD toggle. 1 = authored pacing. */
 export const FAST_SPEED = 4;
@@ -322,12 +322,27 @@ export const useGameEngine = () => {
                           const isMelee = !range || range === 'MELEE' || range === 'ADJACENT' || range === 'SELF' || range === 'DASH';
                           const isLob = range === 'LOB';
 
-                          // The swing/shot, not the landing — 'hit' fires later on APPLY_DAMAGE,
-                          // so a projectile gets both a launch and an impact.
-                          // An arc keeps the shot's ANIMATION but not its voice: it is the same
-                          // hero firing twice in one tick, and hearing the identical shot again
-                          // reads as a stutter rather than as the current jumping onward.
-                          sfx(action.isArc ? 'arc' : isMelee ? 'attack-melee' : isLob ? 'attack-lob' : 'attack-shot');
+                          // Determine exact sound for specific attack types (bite, claw, throw, lob, shot, arc, explosion)
+                          let attackSfx: SfxName = 'attack-shot';
+                          const actAny = action as Record<string, any>;
+                          const skillId = String(actAny.skillId || '');
+                          const effectType = String(actAny.effectType || '');
+                          if (action.isArc) {
+                              attackSfx = 'arc';
+                          } else if (skillId === 'cw_vault_toss' || effectType === 'TOSS') {
+                              attackSfx = 'attack-throw';
+                          } else if (skillId.includes('bite') || skillId.includes('devour') || skillId === 'cz_bite') {
+                              attackSfx = 'attack-bite';
+                          } else if (skillId.includes('claw') || skillId.includes('swipe')) {
+                              attackSfx = 'attack-claw';
+                          } else if (skillId === 'sf_sunburn' || skillId === 'nuke') {
+                              attackSfx = 'explosion';
+                          } else if (isLob) {
+                              attackSfx = 'attack-lob';
+                          } else if (isMelee) {
+                              attackSfx = 'attack-melee';
+                          }
+                          sfx(attackSfx);
 
                           // A swing lands on the target; a shot flashes at the muzzle. Both
                           // point along the line of attack, which is what sells the direction
@@ -446,7 +461,7 @@ export const useGameEngine = () => {
                       case 'BLOCK':
                       case 'BLOCKED':
                       case 'IMMUNE': sfx('hit-blocked'); break;
-                      case 'DROWN': sfx('drown'); break;
+                      case 'DROWN': sfx('splash'); sfx('drown'); break;
                       case 'BURN': sfx('hit-fire'); break;
                       case 'MISS':
                       case 'SUN': case 'COIN': case 'DIAMOND': case 'BUFF': case 'EMERGE': break;
@@ -586,7 +601,7 @@ export const useGameEngine = () => {
                           if (trapped && stepper && stepper.isEnemy && stepper.movementType !== 'FLYING') {
                               setBoard(prev => prev.map(t =>
                                   t.x === step.x && t.y === step.y ? { ...t, trap: undefined } : t));
-                              sfx('hit-heavy');
+                              sfx('explosion');
                               addEffect(step.x, step.y, 'EXPLOSION');
                               triggerShake();
                               addDamageEvent(step.x, step.y, trapped.damage, 'DAMAGE');

@@ -141,7 +141,7 @@ export const TUTORIAL_DIALOGUES: Record<string, DialogueLine[]> = {
     tut_6: [
         { ...WK, side: 'left', scene: SCENE.CAMPFIRE, text: '(Đặt tảng đá lớn chặn gió, đốt lên đống lửa) Tạm nghỉ tại đây. Đống lửa này sẽ giữ ấm và xua đuổi bóng tối.' },
         { ...GS, side: 'right', text: '(Từ trong bước ra, xoa cổ tay) ...Tôi... tôi đã bỏ lỡ điều gì sao?' },
-        { ...SF, side: 'left', text: '(Oà khóc chạy đến) SHADELEAF!! Cậu... cậu thực sự đã trở về từ cõi chết!' },
+        { ...SF, side: 'left', text: '(Oà khóc chạy đến) PEABURST!! Cậu... cậu thực sự đã trở về từ cõi chết!' },
         { ...PENNY, side: 'right', text: 'Ghi chú kỹ thuật: Các chiến sĩ dự bị chỉ có thể HỢP NHẤT năng lượng tại những điểm nghỉ an toàn như thế này. Không ai có thể ghép tế bào giữa mưa đạn.' },
         { ...GS, side: 'left', text: 'Hợp nhất... nghĩa là linh hồn cây dự bị sẽ hòa làm một với tôi?' },
         { ...PENNY, side: 'right', text: 'Chính xác. Nhưng ghép cần một cơ thể LÀNH LẶN. Cây bị thương phải ngủ một đêm bên lửa hồng mới đủ sức tiếp nhận sức mạnh mới.' },

@@ -54,6 +54,38 @@ export const DEFAULT_TERRAIN_DEFS: Record<string, TerrainDefinition> = {
         type: 'RAIL', name: 'Minecart Track', description: 'Walkable rail line.', isWalkable: true, isFlyingOnly: false,
         baseColor: '#57534e', textureUrl: './img/terrain/rail.svg'
     },
+    'GRAVE_DIRT': {
+        type: 'GRAVE_DIRT', name: 'Grave Dirt', description: 'Slows units when unkempt.', isWalkable: true, isFlyingOnly: false,
+        baseColor: '#78350f', textureUrl: './img/terrain/grave_dirt.svg'
+    },
+    'CONVEYOR_N': {
+        type: 'CONVEYOR_N', name: 'Conveyor (North)', description: 'Moves units North automatically.', isWalkable: true, isFlyingOnly: false,
+        baseColor: '#10b981', textureUrl: './img/terrain/conveyor_n.svg'
+    },
+    'CONVEYOR_S': {
+        type: 'CONVEYOR_S', name: 'Conveyor (South)', description: 'Moves units South automatically.', isWalkable: true, isFlyingOnly: false,
+        baseColor: '#10b981', textureUrl: './img/terrain/conveyor_s.svg'
+    },
+    'CONVEYOR_E': {
+        type: 'CONVEYOR_E', name: 'Conveyor (East)', description: 'Moves units East automatically.', isWalkable: true, isFlyingOnly: false,
+        baseColor: '#10b981', textureUrl: './img/terrain/conveyor_e.svg'
+    },
+    'CONVEYOR_W': {
+        type: 'CONVEYOR_W', name: 'Conveyor (West)', description: 'Moves units West automatically.', isWalkable: true, isFlyingOnly: false,
+        baseColor: '#10b981', textureUrl: './img/terrain/conveyor_w.svg'
+    },
+    'SURGE_NODE': {
+        type: 'SURGE_NODE', name: 'Surge Node', description: 'Conducts electricity to adjacent tiles.', isWalkable: true, isFlyingOnly: false,
+        baseColor: '#facc15', textureUrl: './img/terrain/surge_node.svg'
+    },
+    'BLIGHT': {
+        type: 'BLIGHT', name: 'Blight', description: 'Corrupts land. Steals MAX HP.', isWalkable: true, isFlyingOnly: false,
+        baseColor: '#14b8a6', textureUrl: './img/terrain/blight.svg'
+    },
+    'THIN_ICE': {
+        type: 'THIN_ICE', name: 'Thin Ice', description: 'Cracks when stepped on.', isWalkable: true, isFlyingOnly: false,
+        baseColor: '#7dd3fc', textureUrl: './img/terrain/thin_ice.svg'
+    },
     'NONE': {
         type: 'NONE', name: '', description: '', isWalkable: true, isFlyingOnly: false,
         baseColor: 'transparent'
