@@ -111,6 +111,40 @@ Không sửa ngay — đây là đầu vào cho quyết định [C8]. Nêu ở �
 - **Góp ý:**
 - **v2 (Claude):** Gộp vào [C8.v2] — luật cột được viết lại ở đó, mục này đóng theo.
 
+### [A7] 14/81 Ô BÁN CHO NGƯỜI CHƠI MÀ ENGINE KHÔNG ĐỌC — phát hiện 2026-08-07, nặng nhất file này
+
+Quét toàn repo: 56 `FusionEffectType` được `data/fusionRecipes.ts` cấp; **14 cái chỉ tồn tại ở đúng hai nơi — `types.ts` (khai) và `fusionRecipes.ts` (cấp). Không một dòng nào trong `utils/`, `hooks/`, `components/`, `App.tsx` đọc chúng.** Cả 14 ô đều gắn `live: true`, tức đang được bày bán, mua được, hiện trên thẻ bài — và **không làm gì cả**.
+
+| Effect type | Ô | Hero × Gear |
+|---|---|---|
+| `BLEED_EXECUTION` | Executioner Pods | Reedwing × Chomper |
+| `BLESS_RETALIATE` | Thorned Bloom | Sunbloom × Endurian |
+| `DASH_DISTANCE` | Overdrive Charge | Ironhusk × Cattail |
+| `DIGEST_MOVE` | Prowl Rotor | Snapmaw × Cattail |
+| `DIGEST_RETALIATE` | Bristleback | Snapmaw × Endurian |
+| `DIGEST_STEADFAST` | Anchored Gullet | Snapmaw × Spring Arm |
+| `ENCASE_RANGE` | Rolling Rind | Gourdward × Cattail |
+| `HARVEST_SHIELD` | Dawn Harvest | Sunbloom × Pumpkin |
+| `LASER_NEEDLE` | Piercing Needles | Thornshell × Peashooter |
+| `PROVOKE_SHIELD` | Warded Provoke | Thornshell × Pumpkin |
+| `REACTIVE_SHIELD` | Reactive Cob Shell | Cornova × Pumpkin |
+| `SHIELD_ON_DIGEST` | Warded Gut | Snapmaw × Pumpkin |
+| `SHIELD_ON_SKILL_KILL` | Precision Shield | Peaburst × Pumpkin |
+| `THORN_LUNGE` | Thorn Lunge | Thornshell × Wallnut |
+
+**Không có dispatch chung để cứu.** `utils/fusion.ts:147` `applyFusion` chỉ special-case đúng `BONUS_HP` và `MOVE_BONUS`; mọi effect khác bắt buộc phải có một điểm đọc viết tay bằng `hasFusionEffect('LITERAL')` / `getFusionEffectValue('LITERAL')`. Không tồn tại bảng type→handler nào.
+
+**Ba hệ quả phải chỉnh ngay trong file này:**
+
+1. **Bảng "unique" ở mục 0 đang đếm TÊN, không đếm HÀNH VI.** Cột MAT_PUMPKIN được khen 9/9 — nhưng 5/9 ô của nó nằm trong bảng trên (Dawn Harvest, Warded Provoke, Reactive Cob Shell, Warded Gut, Precision Shield). Cột "chuẩn mực" mà cả pass này lấy làm công thức thực chất chỉ có 4 ô chạy thật.
+2. **Mục C đang bảo vệ ô không tồn tại.** Các dòng "Giữ nguyên:" đã kê `THORN_LUNGE`, `DASH_DISTANCE`, `DIGEST_MOVE`, `DIGEST_RETALIATE`, `DIGEST_STEADFAST`, `ENCASE_RANGE`, `BLESS_RETALIATE`, `LASER_NEEDLE`, `BLEED_EXECUTION` như "ô đã ổn, đừng đụng". Chúng không ổn — chúng rỗng.
+3. **Đây đúng là luật mục B bị phá 14 lần:** *"Không khai type trước khi wire (bài học RADIUS) — dùng `live: false` nếu cần land data trước."* Cả 14 ô đều `live: true`.
+
+**Đề xuất:** tách thành **đợt 0 — làm TRƯỚC mọi thứ khác**, vì mọi đo đạc unique/cân bằng phía sau đều đứng trên số liệu sai chừng nào 14 ô này còn rỗng. Mỗi ô hai đường: **wire thật**, hoặc **hạ `live: false`** để nó biến khỏi shop cho tới khi có người viết. Không có đường thứ ba (giữ `live: true` không wire = bán hàng không có hàng).
+
+- **Trạng thái:** ⬜ chờ duyệt
+- **Góp ý:**
+
 ---
 
 ## B. Quy ước chung cho mọi đề xuất ở mục C
@@ -304,6 +338,8 @@ Giữ nguyên: Sunbloom `GRANT_ATTACK`, Snapmaw `DIGEST_CLAW`, Thornshell `LASER
 - **Góp ý:** cần có cách để giảm tính random hoặc tăng tính minh bạch không thì vỡ cam kết của game
 - **v2 (Claude):** Chốt zero-random: ô phụ CỐ ĐỊNH = ô ngay SAU mục tiêu theo trục bắn (không dò enemy, không ưu tiên, không đổi theo bàn cờ); overlay tô cả hai ô trước khi bắn; chỉ enemy đứng đó mới ăn 1, ally an toàn. Đọc được 100% trước khi click — cam kết perfect-information giữ nguyên.
 
+Final: okie
+
 #### [C6.2] REEDWING × MAT_PEASHOOTER — "Twin Pods"
 
 - **Hiện tại:** `DOUBLE_ATTACK 1` — cả hai cánh bắn thêm loạt 1 damage (fusionRecipes.ts:390).
@@ -316,6 +352,8 @@ Giữ nguyên: Sunbloom `GRANT_ATTACK`, Snapmaw `DIGEST_CLAW`, Thornshell `LASER
 - **Góp ý:** Đang trùng với relic độc bản, nếu là bắn thêm 2 ô chéo (ngay dưới 2 ô cuối của chữ L giống kiểu súng 2 bên bắn thành 1 hàng dọc thì sao)
 - **v2 (Claude):** Bỏ FOCUS_BARRELS (đè relic độc bản như bạn nói). Theo hướng góp ý: **`EXTENDED_BARRELS`** — mỗi nòng bắn dài thêm 1 ô NGAY SAU ô gốc của nó theo trục bắn (mỗi bên thành cột 2 ô, tổng 4 ô; 2 ô mới ăn 1 damage). Hình học chính xác ("2 ô chéo dưới 2 ô cuối chữ L") tôi sẽ đối chiếu pattern thật của wing guns trong `data/heroes.ts` lúc implement — nếu khác hình dung, tôi vẽ sơ đồ ô đưa bạn duyệt TRƯỚC khi code. Overlay tô đủ 4 ô, không gì ẩn.
 
+Final: okie
+
 #### [C6.3] CHARDSLAM × MAT_PEASHOOTER — "Longarm Chard" (2 phương án, cần bạn chọn)
 
 - **Hiện tại:** `ATTACK_RANGE_BONUS 1` — Vault Toss túm từ 2 ô (fusionRecipes.ts:506).
@@ -327,6 +365,8 @@ Giữ nguyên: Sunbloom `GRANT_ATTACK`, Snapmaw `DIGEST_CLAW`, Thornshell `LASER
 - **Góp ý:** thêm hẳn 1 đòn để dịch chuyển 4 đối tượng ở dấu cộng sang 1 chiều (thuận/ngược kim đồng hồ) để thành chữ X thì sao?
 - **v2 (Claude):** Ý xoay dấu cộng RẤT hay — judo thuần, displacement thuần, đúng "0 damage là hero". Đánh giá thẳng: (1) đây là ô ít "súng" nhất cột Seed Gun — chấp nhận được vì hàng Chardslam vốn là ngoại lệ của mọi cột; (2) power: xoay cả ally lẫn enemy quanh mình, free → đề xuất là ACTION THAY THẾ (lượt đó chọn Vault Toss HOẶC Xoay, không phải cả hai); (3) chi phí CAO nhất danh sách: action mới + UI chọn chiều (2 nút thuận/ngược, tiền lệ granted-skill: `DIGEST_CLAW`) + resolve 4 body đồng thời. Spec: **`PLUS_ROTATE`** ("Roundhouse Chard") — 4 unit trên 4 ô kề (N/E/S/W) xoay 45° sang ô chéo theo chiều chọn; đích bị chiếm/không hợp lệ → unit đó đứng yên; xoay là DI CHUYỂN sạch, không phải đẩy → không collision damage; unit miễn PUSH (boss massive) không xoay. Xếp đợt cuối của pass.
 
+Final: okie
+
 #### [C6.4] GOURDWARD × MAT_PEASHOOTER — "Rind Pellet" (data honesty)
 
 - **Hiện tại:** `ATTACK_RANGE_BONUS 3` — nhưng desc hứa hành vi line-seek: "fired down a row: shells the FIRST ally up to 4 tiles" (fusionRecipes.ts:564). Reinforce gốc là `MELEE 1` (heroes.ts:457) — +3 range trên MELEE nhiều khả năng cho chọn tự do trong tầm 4, KHÔNG phải bắn dọc hàng như lời hứa (cần đối chiếu targeting lúc implement).
@@ -336,6 +376,8 @@ Giữ nguyên: Sunbloom `GRANT_ATTACK`, Snapmaw `DIGEST_CLAW`, Thornshell `LASER
 - **Trạng thái:** ✅ đồng ý 1 phần
 - **Góp ý:** Gặp nhà hay gặp kẻ địch cũng phải tạo khiên (phạt cho hành vi làm sai)
 - **v2 (Claude):** Chốt bản phạt theo góp ý: LINE 4, unit ĐẦU TIÊN trên đường NHẬN LAYER **bất kể phe** — ally/Greenspire: cứu đúng người; ENEMY chắn hàng: bạn vừa bọc giáp cho zombie, đội nhà phải đập vỡ lớp đó trước. Phạt sai tầm nhìn, zero random, đúng vị Into the Breach. Việc kỹ thuật kiểm lúc implement: layer trên unit ĐỊCH — `shield` là field generic trên Unit nên đường damage sẵn có, nhưng phải rà chỗ nào đang ngầm coi shield là của-ally (badge UI, AI intent tính damage).
+
+Final: okie
 
 ### C7. MAT_ENDURIAN — 5/9 (danh từ cột: "chạm vào tôi/của tôi là trả giá")
 
@@ -430,7 +472,7 @@ Góp ý của bạn trúng một lỗi xuyên-cột tôi bỏ sót: `START_SHIEL
 
 Kết quả 9/9 (hoặc 8/9 nếu chọn Reedwing = BONUS_HP). Comment WALL-NUT COLUMN RULE viết lại thành "cột giáp đọc theo CÁCH từng hero bị đánh" — luật melee/ranged nhị phân cũ khai tử ([A6] đóng luôn tại đây).
 
-- **Trạng thái:** ⬜ chờ duyệt vòng 2
+- **Trạng thái:** ✅ CHỐT phương án **(iii)** — đổi trục cả cặp: Cornova `EMPLACED_PLATING` (không di chuyển → -1) / Reedwing `SLIPSTREAM_PLATING` (có di chuyển → -1). Câu hỏi "ép nốt Peaburst/Thornshell về danh từ -1" — **người chơi để nghĩ thêm, chưa chốt**.
 - **Góp ý:** Reedwing: giảm dam tầm xa nhận vào. cận chiến vẫn bị
 - **v3 (Claude) — đo roster trước khi chốt, và nó lòi ra lỗi ở ô Cornova:**
 
@@ -508,5 +550,5 @@ Vì sao phải đợi và coi là đợt cân bằng:
 3. **+50% passive mỗi hero cuối run** — curve địch acts cuối có thể cần nhích; không đoán trước, mở rồi chơi vài run, chỉnh qua bảng balance (`pitb_balance_v1`) theo quy trình sẵn có.
 4. Tiện thể: `DESIGN-fusion-matrix.md` §9.2 đang đếm trên MA TRẬN CŨ (Rotor Wing ×5 MOVE_BONUS…) — số hiện hành là bảng mục 0 file này; đợt 11 cập nhật §9 luôn cho khỏi hai-sổ-hai-số.
 
-- **Trạng thái:** ⬜ chờ duyệt
-- **Góp ý:**
+- **Trạng thái:** ✅ đồng ý — mở `FUSION_SLOTS = 3`, giữ vị trí đợt 8 (sau khi stack trùng chết ở đợt 4).
+- **Góp ý:** okie
