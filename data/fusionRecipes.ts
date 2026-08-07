@@ -330,9 +330,9 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_PEABURST: {
-            name: 'Twin Cob',
-            description: 'The kernel is followed by a second, lighter one for 1 damage.',
-            effect: { type: 'DOUBLE_ATTACK', value: 1 },
+            name: 'Split Shell',
+            description: 'The kernel splits: a second fragment carries one tile further along the line she fired down, for 1 damage. Line yourself up and it lands where you want it.',
+            effect: { type: 'SPLIT_SHOT', value: 1 },
             live: true,
         },
         MAT_SNAPMAW: {

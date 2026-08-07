@@ -1123,6 +1123,18 @@ export type FusionEffectType =
      */
     | 'EXTENDED_BARRELS'
     /**
+     * Split Shell — mỗi đòn bắn thêm MỘT viên phụ, rơi tiếp một ô theo đường kẻ từ hero tới
+     * mục tiêu. Viên phụ luôn đúng 1 sát thương, không đọc số của viên chính.
+     *
+     * Trục là đường HÌNH HỌC caster → target chứ không phải đường bay: đạn cối bay vòng cung
+     * nên nó không có "phía sau" nào để đọc. Bước hướng = dấu của hiệu toạ độ, ra một trong
+     * tám hướng, hoàn toàn xác định — không dò địch, không chọn, không hoà, không random.
+     *
+     * Con số 1 cứng là có lý do: để nó ăn theo `damage` thì mọi buff của cô sẽ nhân đôi qua ô
+     * này, đúng cái lỗ mà VOLLEY CAP tồn tại để bịt, chỉ mở ở một cửa khác.
+     */
+    | 'SPLIT_SHOT'
+    /**
      * Shields this hero hands out spill over to whoever stands beside the recipient.
      * Replaces SHIELD_BONUS ("+2 size"), which stopped meaning anything when shields became
      * LAYERS (PLAN-hero-zephyr §6.0) — a layer has no size to enlarge, so the pumpkin axis

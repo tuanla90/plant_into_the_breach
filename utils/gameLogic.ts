@@ -1154,5 +1154,20 @@ export const getSkillTargetPath = (
     } else {
         path.push(targetPos);
     }
+
+    /**
+     * Split Shell: ô viên phụ sáng cùng ô chính. Nằm NGOÀI mọi nhánh rangeType vì nó đọc đường
+     * hình học caster → target, không đọc hình dạng đòn — và vì cam kết của game là người chơi
+     * cộng nhẩm được kết quả TRƯỚC khi bấm, nên một ô có sát thương mà không sáng là vi phạm.
+     */
+    if (hasFusionEffect(unit, 'SPLIT_SHOT')) {
+        const dx = Math.sign(targetPos.x - unit.position.x);
+        const dy = Math.sign(targetPos.y - unit.position.y);
+        if (dx !== 0 || dy !== 0) {
+            const t = { x: targetPos.x + dx, y: targetPos.y + dy };
+            if (t.x >= 0 && t.x < 8 && t.y >= 0 && t.y < 8
+                && !path.some(p => p.x === t.x && p.y === t.y)) path.push(t);
+        }
+    }
     return path;
 };

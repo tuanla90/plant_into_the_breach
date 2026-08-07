@@ -65,44 +65,40 @@ Những chiến binh kiên cường đâm xuyên qua hàng ngũ Zombie để să
 
 ---
 
-## CHƯƠNG 6: ĐẠI LỤC NGUYÊN TỐ VÀ SỰ RA ĐỜI CỦA TÂN ANH HÙNG
+## CHƯƠNG 6: ĐẠI LỤC NGUYÊN TỐ VÀ CỖ TÀU ĐỒNG HÓA
 
-Ba Lõi Nguyên Tố (Lửa, Băng, Sét) bị văng ra và chôn vùi tại ba **Châu Lục (Stages)** cách biệt hàng ngàn dặm đại dương. Ở mỗi Châu Lục, năng lượng Nguyên tố rỉ ra từ lõi đã đột biến những con Zombie lảng vảng gần đó thành những **Boss khổng lồ** mang sức mạnh Lửa, Băng, hoặc Sét.
+Ba Lõi Nguyên Tố (Lửa, Băng, Sét) bị văng ra và chôn vùi tại ba **Châu Lục (Stages)** cách biệt hàng ngàn dặm đại dương nước đen. Để di chuyển giữa các Đại lục này, chúng tôi phải dùng đến một **Cỗ Tàu** vượt biển khổng lồ.
 
-Để đối phó với chúng, sau khi đập nát một tên Boss, tôi đặt một cỗ máy **Material** cạnh cái xác **Zombie Boss**. Ở giữa chúng, tôi cấy xuống một **Mầm Sống**. Kén quang hợp hút trọn DNA kỹ năng từ xác quái vật để sinh ra một **Tân Anh Hùng (Bio-Hero mới)**. 
-Tân Anh Hùng này **mặc định mang sẵn một bậc sức mạnh Hợp Trái (Fuse)**. Hỏa lực kế thừa từ Boss vùng này lại chính là vũ khí khắc chế chí mạng cho con Boss ở Châu Lục tiếp theo.
+Ở mỗi Châu Lục, năng lượng Nguyên tố rỉ ra từ lõi đã tác động lên môi trường xung quanh. Những con Zombie lảng vảng gần Lõi nhất bị đột biến thành những **Boss khổng lồ** mang sức mạnh Lửa, Băng, hoặc Sét.
+Để đối phó với chúng, sau khi đập nát một tên Boss, tôi đặt một cỗ máy **Material** cạnh cái xác **Zombie Boss**, cấy **Mầm Sống** vào giữa để sinh ra một **Tân Anh Hùng (Bio-Hero mới)**. Nhưng quan trọng hơn cả, khi Lãnh chúa Boss gục ngã, Lò phản ứng Sol của tôi sẽ Hấp thụ cặn năng lượng Nguyên Tố của hắn và mang khối năng lượng đó lên Cỗ Tàu.
 
-Đồng thời, khi Boss gục ngã, Lò phản ứng Sol của tôi sẽ tự động **Hấp thụ cặn năng lượng Nguyên Tố (Lửa/Băng/Sét)**. Quyền năng này cho phép tôi ở các Campfire sau này có thể truyền thuộc tính Lửa/Băng/Sét cho toàn bộ đội hình khi thực hiện Hợp Trái (Fuse).
+Chuyến hải trình vượt đại dương để sang Châu lục tiếp theo kéo dài ròng rã hàng tháng trời. Trong khoảng không gian khép kín của Cỗ Tàu, cơ thể sinh học của toàn bộ đội quân Bio-Mechs bị phơi nhiễm liên tục với mảnh Nguyên Tố mà tôi vừa thu thập được. Giống hệt như lũ Zombie, cơ thể thực vật của chúng tôi tự động biến đổi để thích nghi với nguồn năng lượng mới.
+Ngay khi Cỗ Tàu cập bến ở Châu Lục mới, hệ thống lập tức cho phép tôi chọn lựa Quyền năng Nguyên Tố (Lửa/Băng/Sét) để kích hoạt và Hợp Trái (Fuse) cho đội hình ngay từ điểm khởi đầu.
 
-Nếu chúng tôi thất bại và hết Mầm Sống, AI Chrona đưa ra 2 lựa chọn:
-1. **Lùi lại Vùng Đất Hiện Tại (Retry Arc):** Quay lại bờ biển của Châu Lục vừa thất bại.
-2. **Lùi về Vạch Xuất Phát (Retry from Arc 1):** Quay lại điểm bắt đầu của Đa vũ trụ, cho phép cày cuốc lại từ đầu để tối ưu hóa đội hình.
+Tuy nhiên, có một giới hạn tàn nhẫn về mặt vật lý: **Sức ép năng lượng của mỗi Nguyên Tố là quá lớn đối với một cá thể Bio-Mech.** Mỗi cái cây, mỗi cỗ xe chỉ có thể gánh chịu và dung hợp (Fuse) với **duy nhất một Nguyên Tố**. 
+Nếu tôi cố gắng nhồi nhét cả Lửa và Băng vào cùng một chiến binh, sự xung đột nhiệt động học sẽ xé toạc cấu trúc DNA và làm nổ tung lõi cơ khí của họ ngay lập tức. Điều này buộc tôi phải tính toán chiến thuật cực kỳ kỹ lưỡng: Ai sẽ nhận sức mạnh của Lửa để thiêu rụi đội hình địch? Ai sẽ nhận Băng để làm chậm bước tiến của bầy đàn? Tôi không thể tạo ra một siêu chiến binh sở hữu mọi sức mạnh, mà phải rải đều chúng ra thành một đội quân đa dạng.
 
 ---
 
 ## CHƯƠNG 7: KẾT THÚC CỦA SỰ THA HÓA VÀ BÌNH MINH XANH
 
-Cuối cùng, sau khi thu thập đủ 3 mảnh Lõi (Lửa, Băng, Sét), đội quân của tôi trở về dòng thời gian gốc và khoan thẳng xuống **Tâm Trái Đất (The Core)**. 
+Cuối cùng, sau khi thu thập đủ 3 mảnh Lõi Nguyên Tố, chúng tôi trở về dòng thời gian gốc và khoan thẳng xuống **Tâm Trái Đất (The Core)**. 
 
-Không gian tại buồng lõi vỡ nát. **The Blight Lord** đã đợi sẵn ở đó. Hắn giơ cao quyền trượng, xé rách không thời gian, triệu hồi toàn bộ các Lãnh chúa Boss từ mọi dòng thời gian tàn lụi đến đây tạo thành một vòng vây tuyệt vọng. Đội quân Bio-Mechs do tôi tạo ra dàn trận. Từ kênh radio, tôi nghe thấy giọng nói run rẩy nhưng đầy quyết tâm của Giáo sư Gilbert ở Tháp Xanh.
+Không gian tại buồng lõi vỡ nát. **The Blight Lord** đã đợi sẵn ở đó. Khi vỏ giáp nứt nẻ và năng lượng cạn kiệt, loạt hỏa lực tập trung của đội quân Bio-Mechs đã bắn tung chiếc mặt nạ phòng độc của hắn. Kẻ thù tối thượng... mang khuôn mặt giống hệt người Cha ở nhà, chỉ là già hơn, mang đầy vết sẹo của máy móc và sự thối rữa.
+Chrona cất tiếng: *"Xin lỗi vì đã lợi dụng cô, Sunbloom. Tôi đến từ Dòng thời gian Alpha. Ở thế giới đó, Giáo sư Gilbert đã cố ép tôi quay về quá khứ nhưng thất bại. Tuyệt vọng, ông ta phát điên và tự lai tạo bản thân với xác chết, trở thành thứ mà ông ta thề sẽ tiêu diệt. Ông ta muốn thanh lọc sự sống để tạo ra một chủng loài bất tử từ Miasma."*
 
-Khi vỏ giáp nứt nẻ và năng lượng cạn kiệt, loạt hỏa lực tập trung của đội quân Bio-Mechs đã bắn tung chiếc mặt nạ phòng độc của The Blight Lord. Hắn khụy gối.
-Chrona - quả cầu thời gian luôn im lặng - đột ngột tắt lớp mã hóa bảo mật và phát loa cảnh báo đỏ:
-**`Xác nhận mã Gen mục tiêu: G I L B E R T  D.  H O L T H`**
+Trên màn hình võng mạc của tôi, ký tự tên của kẻ đang khụy gối tự động xáo trộn thành: **`T H E  B L I G H T  L O R D`**
 
-Kẻ thù tối thượng... mang khuôn mặt giống hệt người Cha ở nhà, chỉ là già hơn, mang đầy vết sẹo của máy móc và sự thối rữa.
-Chrona cất tiếng: *"Xin lỗi vì đã lợi dụng cô, Sunbloom. Tôi đến từ Dòng thời gian đầu tiên (Timeline Alpha). Ở thế giới đó, Giáo sư Gilbert đã cố ép tôi quay về quá khứ nhưng thất bại. Bị dồn vào đường cùng và ám ảnh về một sinh vật hoàn hảo chống lại Miasma, ông ta đã phát điên. Ông ta tự lai tạo bản thân với xác chết, trở thành thứ mà ông ta thề sẽ tiêu diệt. Tôi đã bỏ trốn, tìm đến dòng thời gian này để cảnh báo phiên bản chưa bị tha hóa của ông ấy."*
+Tại sao mọi hỏa lực thông thường không thể giết chết hắn? Tại sao hắn có thể nhân bản bầy đàn bất tận trên mọi Đa vũ trụ? 
+Bởi vì Miasma của Blight Lord bản chất là một dạng phóng xạ phân rã sinh học cực kỳ hỗn loạn (Entropy). Không một hỏa lực vật lý nào có thể triệt tiêu nó. Cách duy nhất để vô hiệu hóa hỗn mang là tạo ra **Sự Cộng Hưởng Cân Bằng Tuyệt Đối**. 
 
-Trên màn hình võng mạc của tôi, các ký tự tên của kẻ đang khụy gối bắt đầu bị nhiễu sóng (glitch). Chúng tự động xáo trộn, vỡ vụn và xếp lại thành một dòng chữ đỏ máu:
-**`T H E  B L I G H T  L O R D`**
+Đó là lý do hành trình đi tìm 3 Lõi Nguyên Tố là chìa khóa duy nhất: Lửa (Sự hủy diệt để Tái sinh), Băng (Sự ngưng đọng, Bảo tồn thực tại), và Sét (Chất xúc tác kích hoạt sự sống). Khi 3 nguyên tố này hợp nhất, chúng triệt tiêu sự phân rã của Miasma ở cấp độ phân tử.
 
-Ông ta không phải là một con quái vật vô tri. Ông ta chỉ là một nhà khoa học đã bị sự tuyệt vọng nuốt chửng. Đứng trước cơ thể tàn tạ của kẻ mang khuôn mặt Cha mình, tôi không dùng hỏa lực để kết liễu ông. Hận thù chỉ đẻ ra hận thù, và cái chết không thể vãn hồi được Miasma.
-
-Tôi thu hồi mọi vũ khí của các Bio-Mechs. Bằng đôi bàn tay ấm áp của mình, tôi lấy ra **Mầm Sống Tối Thượng** mang năng lượng của Lửa, Băng và Sét. Tôi bước tới, quỳ xuống trước mặt Blight Lord, và cắm Mầm Sống đó vào giữa lồng ngực đang mục nát của ông ta, ghim thẳng xuống Tâm Trái Đất.
+Tôi hạ vũ khí xuống. Tôi lấy ra **Mầm Sống Tối Thượng** - chiếc mầm duy nhất mang trọn vẹn cả 3 nguyên tố Lửa, Băng và Sét đang cộng hưởng mãnh liệt. Tôi bước tới, quỳ xuống trước mặt Blight Lord, và cắm Mầm Sống đó vào giữa lồng ngực đang mục nát của ông ta, ghim thẳng xuống Tâm Trái Đất.
 
 *"Hãy nghỉ ngơi đi, thưa Cha."* Tôi nhẹ nhàng nói.
 
-Mầm Sống bừng sáng. Nó cắm rễ thật sâu vào Trái Đất, biến xác thịt thối rữa của Blight Lord thành lớp phù sa đầu tiên. Một làn sóng xung kích màu xanh lục bảo bùng nổ từ Tâm Trái Đất, quét dọc theo các mạch ngầm, lan tỏa lên bề mặt hành tinh. 
-Miasma tan biến. Bầu trời đen kịt nứt nẻ, nhường chỗ cho những tia nắng đầu tiên sau hàng thập kỷ tăm tối chiếu rọi xuống mặt đất. Khắp nơi trên thế giới, những chồi non vươn mình khỏi lớp tro tàn rỉ sét. 
+Mầm Sống bừng sáng. Nó dùng xác thịt của Blight Lord làm vật dẫn. Ba nguyên tố Lửa, Băng, Sét xoắn lại thành một chuỗi DNA rực rỡ, đảo ngược hoàn toàn sự phân rã của Miasma. Một làn sóng xung kích màu xanh lục bảo bùng nổ từ Tâm Trái Đất, quét dọc theo các mạch ngầm, lan tỏa lên bề mặt hành tinh. 
+Bầu trời đen kịt nứt nẻ, nhường chỗ cho những tia nắng đầu tiên. Khắp nơi trên thế giới, những chồi non vươn mình khỏi lớp tro tàn rỉ sét. 
 
-Tôi đứng đó, giữa Tâm Trái Đất rực sáng, nhẹ nhàng cởi bỏ chiếc mặt nạ phòng độc đã nứt vỡ và kéo chiếc áo choàng xuống. Ánh mặt trời cuối cùng cũng đã chạm được tới Đa Vũ Trụ. Bằng sự sống, chứ không phải sự hủy diệt, chúng tôi đã mang thế giới trở về.
+Tôi đứng đó, giữa Tâm Trái Đất rực sáng, cởi bỏ chiếc mặt nạ phòng độc và kéo chiếc áo choàng xuống. Ánh mặt trời cuối cùng cũng chạm được tới Đa Vũ Trụ. Bằng sự sống, chúng tôi đã mang thế giới trở về.

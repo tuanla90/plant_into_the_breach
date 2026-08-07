@@ -138,6 +138,33 @@ export const planSkillActions = (
         });
     }
 
+    /**
+     * SPLIT SHELL (SPLIT_SHOT) — viên phụ bay tiếp MỘT ô theo đường kẻ từ Cornova tới mục tiêu.
+     *
+     * Trục là đường HÌNH HỌC caster → target, không phải đường bay của viên đạn: đạn cối bay
+     * vòng cung nên nó không có "phía sau" nào để đọc. Bước hướng lấy bằng dấu của hiệu toạ độ,
+     * ra đúng một trong tám hướng — hoàn toàn xác định, không dò địch, không chọn, không hoà.
+     *
+     * Cơ chế chạy ở cả tám hướng, nhưng chỉ khi cô đứng THẲNG HÀNG hoặc THẲNG CỘT với mục tiêu
+     * thì ô phụ mới nằm chỗ xếp đội hình được — nên người chơi tự học rằng đứng thẳng là đứng
+     * đúng, mà không cần một luật nào nói thế.
+     *
+     * Trúng gì thì trúng, kể cả người nhà: viên đạn không biết ai đứng sau lưng con nó bắn.
+     */
+    const splitTiles = new Set<string>();
+    if (hasFusionEffect(caster, 'SPLIT_SHOT')) {
+        const sign = (n: number) => (n > 0 ? 1 : n < 0 ? -1 : 0);
+        const d = { x: sign(pos.x - caster.position.x), y: sign(pos.y - caster.position.y) };
+        if (d.x !== 0 || d.y !== 0) {
+            const t = { x: pos.x + d.x, y: pos.y + d.y };
+            if (t.x >= 0 && t.x < 8 && t.y >= 0 && t.y < 8
+                && !targets.some(p => p.x === t.x && p.y === t.y)) {
+                targets.push(t);
+                splitTiles.add(`${t.x},${t.y}`);
+            }
+        }
+    }
+
     // ADJACENT_STRIKE: the free melee swing lands on everything beside the hero, not only the
     // body it was aimed at. Built on SKILL_SPLASH above, with both of its lessons inverted:
     //
@@ -500,6 +527,10 @@ export const planSkillActions = (
                 // The splash ring lands at half strength, floored — Needle Bloom's 4 bursts
                 // for 2, and Nova Shell's ring (1 damage) grazes for 0 and only chills.
                 if (isSplash) rawDmg = Math.floor(rawDmg / 2);
+                // SPLIT SHELL: viên phụ luôn đúng 1, không đọc số của viên chính. Nếu để nó
+                // ăn theo `damage` thì mọi buff của cô sẽ nhân đôi qua ô này — đúng cái lỗ
+                // mà VOLLEY CAP tồn tại để bịt, chỉ khác là mở ở một cửa khác.
+                if (splitTiles.has(`${targetPos.x},${targetPos.y}`)) rawDmg = 1;
                 const totalDmg = rawDmg;
                 // Use tempUnit for calculation (safe)
                 const result = calculateDamage(targetUnit, totalDmg, hasPierce);
