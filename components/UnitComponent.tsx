@@ -7,6 +7,7 @@ import { facingFlip, spriteFor } from '../utils/icons';
 import { willAct } from '../utils/threat';
 import { ElementBadge } from './ElementBadge';
 import { useI18n } from '../i18n';
+import { IS_COARSE_POINTER } from '../utils/platform';
 
 interface UnitComponentProps {
   unit: Unit;
@@ -202,9 +203,9 @@ const UnitComponentBase: React.FC<UnitComponentProps> = ({ unit, isSelected, isB
                             ${unit.isEnemy ? 'grayscale-[0.1]' : ''}
                             ${hasBurn ? 'sepia hue-rotate-[-30deg] saturate-200' : ''}
                             ${hasStun ? 'brightness-150 contrast-50 opacity-80' : ''}
-                            ${hasFreeze ? 'brightness-125 saturate-50 hue-rotate-[170deg] drop-shadow-[0_0_5px_rgba(56,189,248,0.9)]' : ''}
+                            ${hasFreeze ? `brightness-125 saturate-50 hue-rotate-[170deg] ${IS_COARSE_POINTER ? '' : 'drop-shadow-[0_0_5px_rgba(56,189,248,0.9)]'}` : ''}
                             ${isDormant ? 'grayscale brightness-75' : ''}
-                            ${isEnraged ? 'saturate-150 drop-shadow-[0_0_4px_rgba(239,68,68,0.9)]' : ''}
+                            ${isEnraged ? `saturate-150 ${IS_COARSE_POINTER ? '' : 'drop-shadow-[0_0_4px_rgba(239,68,68,0.9)]'}` : ''}
                         `}
                     />
                 )}
@@ -239,7 +240,7 @@ const UnitComponentBase: React.FC<UnitComponentProps> = ({ unit, isSelected, isB
             </div>
         )}
         {!isDying && hasFreeze && (
-            <div className="absolute inset-0 pointer-events-none z-15 rounded-md bg-sky-400/30 border-2 border-sky-300/80 shadow-[0_0_10px_rgba(56,189,248,0.8)] backdrop-blur-[1px]">
+            <div className="absolute inset-0 pointer-events-none z-15 rounded-md bg-sky-400/30 border-2 border-sky-300/80 shadow-[0_0_10px_rgba(56,189,248,0.8)]">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
                     <Snowflake size={20} className="text-sky-100 animate-spin opacity-90 drop-shadow-[0_0_6px_rgba(56,189,248,1)]" />
                 </div>

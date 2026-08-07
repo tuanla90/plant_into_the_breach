@@ -522,19 +522,21 @@ export const MapScreen: React.FC<MapScreenProps> = ({ nodes, onSelectNode, units
                             style={horizontal ? {
                                 width: `${MAP_HEIGHT_BASE}px`,
                                 height: '100%',
-                                transform: `scale(${zoom})`,
+                                transform: `scale(${zoom}) translateZ(0)`,
                                 transformOrigin: 'left center',
                                 position: 'absolute',
                                 top: 0,
-                                left: 0
+                                left: 0,
+                                willChange: 'transform'
                             } : {
                                 width: '100%',
                                 height: `${MAP_HEIGHT_BASE}px`,
-                                transform: `scale(${zoom})`,
+                                transform: `scale(${zoom}) translateZ(0)`,
                                 transformOrigin: 'top center',
                                 position: 'absolute',
                                 top: 0,
-                                left: 0
+                                left: 0,
+                                willChange: 'transform'
                             }}
                         >
                             {/* SECTOR BANDS. Inside the transform wrapper, not outside it, so a

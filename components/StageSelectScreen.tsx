@@ -494,7 +494,7 @@ export const StageSelectScreen: React.FC<StageSelectScreenProps> = ({ unlocks, o
                                                    trùm, mô tả VÀ chân dung trùm, chỉ còn trơ mỗi ảnh phần thưởng.
                                                    Bố cục dọc giờ là WRAP: hai chân dung + mũi tên nằm chung một
                                                    hàng, chữ xuống hàng dưới ăn hết bề ngang. */
-                                                className={`group relative text-left rounded-lg border-2 overflow-hidden transition-all
+                                                className={`group relative text-left rounded-lg border-2 overflow-hidden transition-all transform-gpu
                                                     flex items-stretch gap-3 pl-2 pr-2 py-2 flex-1 min-h-[168px] max-h-[300px]
                                                     portrait:flex-wrap portrait:items-center portrait:gap-x-2 portrait:gap-y-1.5
                                                     portrait:flex-none portrait:max-h-none portrait:min-h-0
