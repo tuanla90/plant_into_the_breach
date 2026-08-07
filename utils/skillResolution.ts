@@ -294,8 +294,25 @@ export const planSkillActions = (
                     ally.shieldSpined = spined;
                     actions.push({ type: 'APPLY_DAMAGE', targetId: ally.id, amount: 0, eventType: 'BLOCK', pos: at });
                 }
-                if ((e.value || 0) > 0 && hasFusionEffect(caster, 'SHIELD_SPREAD')) {
-                    [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }].forEach(d => {
+                /**
+                 * GREATRIND (`SHIELD_BEHIND`) — lớp vỏ XUYÊN QUA người nhận, bọc thêm đúng MỘT
+                 * thân: ô kế tiếp trên đường kẻ từ Gourdward tới người nhận.
+                 *
+                 * Cùng phép hình học với Split Shell và Piercing Needles — `sign` của hiệu toạ
+                 * độ, tám hướng, hoàn toàn xác định. Ba ô khác hàng khác cột dùng chung một
+                 * luật "ô kế tiếp trên đường kéo dài", nên người chơi học một lần dùng ba chỗ.
+                 *
+                 * Bản cũ (`SHIELD_SPREAD`) tràn sang MỌI ai kề người nhận: một con số không đọc
+                 * được trước khi bấm, đổi theo đội hình, và ở gần chùm thì phát 5 lớp một lượt.
+                 * "Thêm đúng 1, ở phía sau" đọc được thẳng trên thẻ.
+                 *
+                 * Chỉ bọc người nhà, và chỉ khi thân đó chưa có lớp — cùng luật với người nhận
+                 * đứng trước (§6.0: có lớp rồi thì cấp thêm không được gì).
+                 */
+                if ((e.value || 0) > 0 && hasFusionEffect(caster, 'SHIELD_BEHIND')) {
+                    const sign = (n: number) => (n > 0 ? 1 : n < 0 ? -1 : 0);
+                    const d = { x: sign(at.x - caster.position.x), y: sign(at.y - caster.position.y) };
+                    if (d.x !== 0 || d.y !== 0) {
                         const n = getTempUnit({ x: at.x + d.x, y: at.y + d.y });
                         if (n && !n.isEnemy && (n.shield || 0) === 0) {
                             n.shield = 1;
@@ -306,7 +323,7 @@ export const planSkillActions = (
                             actions.push({ type: 'UPDATE_UNIT_STATE', unitId: n.id, updates: { shield: 1, shieldBarbed: barbed, shieldStuns: stunning, shieldRefund: refund, shieldSpined: spined } });
                             actions.push({ type: 'APPLY_DAMAGE', targetId: n.id, amount: 0, eventType: 'BLOCK', pos: n.position });
                         }
-                    });
+                    }
                 }
             }
             if (e.type === 'REFRESH_ACTION') {
@@ -552,7 +569,10 @@ export const planSkillActions = (
                     actions.push({ type: 'APPLY_DAMAGE', targetId: caster.id, amount: 0, eventType: 'BLOCK', pos: caster.position });
                 }
             }
-            const yielded = Math.max(0, (resEffect.value ?? 0) - toll);
+            // TWIN SOL BATTERY: nhân PHẦN CÒN LẠI, sau khi Dawn Harvest đã trừ. Thứ tự này là
+            // toàn bộ bảng bốn trạng thái ở trên — đảo lại thì cắm cả hai ra 65 chứ không phải 30.
+            const doubler = hasFusionEffect(caster, 'HARVEST_DOUBLE') ? 2 : 1;
+            const yielded = Math.max(0, (resEffect.value ?? 0) - toll) * doubler;
             actions.push({ type: 'RESOURCE_GAIN', amount: yielded, resource: 'SUN' });
             // Con số bay lên phải là số Sol THẬT nhận được, không phải số in trên thẻ: với Dawn
             // Harvest hai con số đó khác nhau, và một cái +50 bay lên khi ví chỉ tăng 15 là thẻ

@@ -1897,5 +1897,9 @@ export const VI: Record<string, string> = {
     "Smoke Bullet": "Đạn Khói",
     "Precision Blast bursts into dust where it hits — whatever ends its turn in the cloud cannot swing.": "Phát Bắn Chuẩn Xác nổ tung thành bụi ngay chỗ nó trúng — thứ gì kết thúc lượt trong đám mây đều không vung nổi đòn.",
     "Nova Shell throws ash onto the four tiles around the blast — anything ending its turn there cannot swing.": "Vỏ Tân Tinh hất tro lên bốn ô quanh điểm nổ — thứ gì kết thúc lượt ở đó đều không vung nổi đòn.",
+
+    // --- Đợt 16: Twin Sol thành cấp số nhân, Greatrind thành luật hình học. ---
+    "Harvest pays double: 100 Sol a turn — or 30 Sol and a layer alongside Dawn Harvest.": "Thu Nắng trả gấp đôi: 100 Sol mỗi lượt — hoặc 30 Sol kèm một lớp chắn khi ghép cùng Vụ Bình Minh.",
+    "His shell carries through the ally he shields and layers one more body directly behind them.": "Lớp vỏ của anh xuyên qua đồng minh anh bọc và bọc thêm đúng một thân ngay phía sau.",
     "While he stands, EVERY collision on the board hurts 1 more — his shoves, the horde's, and the hole your own wall is plugging.": "Chừng nào anh còn đứng, MỌI cú va chạm trên bàn đều đau thêm 1 — cú đẩy của anh, cú đẩy của địch, và cả cái hố mà tường nhà đang bịt.",
 };

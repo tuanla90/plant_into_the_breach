@@ -1034,6 +1034,19 @@ export type MaterialId =
 export type FusionEffectType =
     | 'BONUS_HP'                // +maxHp
     | 'SUN_PER_TURN'            // passive Sol income each turn
+    /**
+     * TWIN SOL BATTERY — nhan doi so Sol cua chinh HANH DONG tao Sol (Harvest), sau khi moi
+     * khoan tru da tinh xong.
+     *
+     * Ban cu la `SUN_PER_TURN 50`: tien tu chay ve moi luot mien co dung yen. No bien hero
+     * "phai tieu ca luot de kiem tien" thanh hero "duoc tra tien vi khong lam gi", tuc xoa
+     * chinh cai danh doi la ban sac cua co. Ban nay bat co PHAI bam Harvest.
+     *
+     * Nhan PHAN CON LAI chu khong nhan san luong goc — do la ly do bang bon trang thai
+     * (50 / 100 / 15+lop / 30+lop) doc duoc thanh mot cau: Dawn Harvest tru truoc, Twin Sol
+     * nhan sau.
+     */
+    | 'HARVEST_DOUBLE'
     | 'SUN_ON_KILL'             // Sol when this unit finishes something off
     | 'DAMAGE_REDUCTION'        // flat reduction on incoming damage
     | 'ON_HIT_PUSH'             // attacks push the target 1 tile
@@ -1315,7 +1328,16 @@ export type FusionEffectType =
      * LAYERS (PLAN-hero-zephyr §6.0) — a layer has no size to enlarge, so the pumpkin axis
      * buys COVERAGE instead.
      */
-    | 'SHIELD_SPREAD'
+    /**
+     * GREATRIND — cu Reinforce xuyen qua nguoi nhan, boc them DUNG MOT than nua: o nam ke tiep
+     * tren duong ke tu Gourdward toi nguoi nhan.
+     *
+     * Ban cu (`SHIELD_SPREAD`) tran sang MOI ai dung ke nguoi nhan — mot con so khong doc duoc
+     * truoc khi bam, thay doi theo doi hinh, va o gan chum thi phat 5 lop mot luot. Ban nay la
+     * mot luat hinh hoc gon: them dung 1, o phia sau. Cung truc voi Split Shell va Piercing
+     * Needles — mot phep hinh hoc, ba o, nguoi choi hoc mot lan.
+     */
+    | 'SHIELD_BEHIND'
     /** Finishing something off raises a fresh layer on this hero. */
     | 'SHIELD_ON_KILL'
     /** Melee attackers are shoved back as well as hurt. */

@@ -93,8 +93,8 @@ export const FUSION_RECIPES: Matrix = {
     SUNBLOOM: {
         MAT_SUNBLOOM: {
             name: 'Twin Sol Battery',
-            description: 'Harvest yields double Sol per turn — 50 Sol base, or 30 Sol if combined with Dawn Harvest.',
-            effect: { type: 'SUN_PER_TURN', value: 50 },
+            description: 'Harvest pays double: 100 Sol a turn — or 30 Sol and a layer alongside Dawn Harvest.',
+            effect: { type: 'HARVEST_DOUBLE' },
             live: true,
         },
         MAT_PEABURST: {
@@ -625,8 +625,8 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_GOURDWARD: {
             name: 'Greatrind',
-            description: 'Every shield he hands out spills over, layering whoever stands beside the recipient too.',
-            effect: { type: 'SHIELD_SPREAD' },
+            description: 'His shell carries through the ally he shields and layers one more body directly behind them.',
+            effect: { type: 'SHIELD_BEHIND' },
             live: true,
         },
     },

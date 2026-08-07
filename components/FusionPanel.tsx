@@ -49,6 +49,7 @@ const categoryOf = (type: FusionEffectType): { label: string; color: string } =>
         case 'MOVE_BONUS':
             return { label: 'Stats', color: '#f59e0b' };
         case 'SUN_PER_TURN':
+        case 'HARVEST_DOUBLE':
         case 'SUN_WHILE_DIGESTING':
         case 'SUN_ON_KILL':
         case 'SUN_ON_BLOCK_SPAWN':
