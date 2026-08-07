@@ -419,14 +419,14 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_THORNSHELL: {
             name: 'Barbed Skids',
-            description: 'Anything her rockets hurt turns on her — and she flies away before it arrives.',
-            effect: { type: 'PROVOKE_ON_HIT' },
+            description: 'Anything she was standing beside when she takes off is left fixated on her — it must come for her, and she is already elsewhere.',
+            effect: { type: 'WIND_PROVOKE' },
             live: true,
         },
         MAT_CHARDSLAM: {
             name: 'Downwash',
-            description: 'Her rockets shove what they hit a tile back — both cells at once.',
-            effect: { type: 'ON_HIT_PUSH', value: 1 },
+            description: 'The rotor wash lands with her: every zombie beside the tile she sets down on is blown a tile back. A landing that shoves cannot be taken back.',
+            effect: { type: 'FLYER_REPEL' },
             live: true,
         },
         MAT_GOURDWARD: {

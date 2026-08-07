@@ -82,15 +82,55 @@ Hiện trạng: 1 level chỉ huy = 1 công thức; XP từ layer/objective/act
 File: `data/unlocks.ts`, `utils/persistence.ts` (migration), `hooks/useGameProgression.ts`,
 màn hình hiển thị level (App/Codex), i18n, DESIGN.md §7.
 
-## §4. Relic qua mission của Tàn Cơ
+## §4. Tàn Cơ — MỘT họ máy, hai kiếp (thống nhất mission-NPC với material/cây hoang)
 
-- Bonus objective / mission trong trận (`data/missions.ts`) được đóng khung lore là
-  **Tàn Cơ giao việc** (xe cơ giới hỏng, AI tàn dư — tên EN đề xuất: **Derelict**).
-- Hoàn thành mission → mở khoang chứa → **+1 Relic** (pool `PLAN-relics-27.md`).
-- KHÔNG dùng chữ "Materials" cho các NPC này — Material là 9 thân cây nguyên liệu,
-  thuật ngữ đã chiếm (`data/materials.ts`).
+Lore chương 5: **Tàn Cơ (Derelict)** = mọi khí tài cơ giới gãy nát còn sót AI/lõi.
+Hai kiếp:
 
-File: `data/missions.ts`, hệ relic (theo PLAN-relics-27), i18n.
+- **Niêm phong (giao việc):** mission trong trận (`data/missions.ts`) = Tàn Cơ ra bài thử.
+  Hoàn thành → mở khoang → **+1 Relic** (pool `PLAN-relics-27.md`). Bonus objective thôi
+  trả recipe (chuyển cho §3).
+- **Ngủ đông (thân máy nguyên sơ):** chính là Material/cây hoang DORMANT. Xem §4b.
+
+Thuật ngữ: "Material" (9 thân cây nguyên liệu) là tên hệ thống trong code — giữ; tên
+hiển thị lore của cả họ là Tàn Cơ, trạng thái quyết định công dụng.
+
+## §4b. Nguyên sơ vs Nhiễm bẩn — luật mới cho Material/cây hoang (lore ch.5)
+
+Luật lore: lõi **ngủ đông = nguyên sơ** (làm nôi hồi sinh + nguyên liệu Hợp Trái);
+**đã nổ máy = phơi nhiễm Miasma vĩnh viễn** (thiêu rụi Mầm cấy vào — chỉ còn chiến đấu
+như máy vô hồn tới khi vỡ). Cơ chế tương ứng:
+
+1. **Cây hoang DORMANT giữ được ngủ tới hết trận** (không hero nào đứng cạnh đánh thức)
+   → sau trận **thu về bench như một material nguyên sơ** (mới — hiện tại cây hoang chưa
+   thức thì đơn giản biến mất). Ràng buộc: bench còn chỗ (`BENCH_CAPACITY`).
+2. **Cây hoang đã thức** → chiến đấu, hết trận thì hỏng — giữ nguyên hành vi
+   `isBattleOnlyUnit` hiện tại, lore đã giải thích hộ ("đốt nốt phần đời còn lại").
+3. **Bench plant đã từng ra sân** (lấp chỗ hero ngã) → gắn cờ "đã nổ máy": vĩnh viễn
+   **mất tư cách nguyên liệu fusion + nôi hồi sinh**, chỉ còn dùng làm dự bị chiến đấu.
+   Đây là bản cứng hóa của luật DESIGN §2 "hai đường dùng loại trừ nhau" — trước đây
+   loại trừ tại thời điểm tiêu, giờ loại trừ vĩnh viễn kể từ lần ra sân đầu.
+4. Hệ quả UI: bench hiển thị trạng thái nguyên sơ/nhiễm bẩn (icon lá xanh / khói tím);
+   màn fusion và màn hồi sinh lọc bỏ thân máy nhiễm bẩn, tooltip nói lý do.
+
+**Cân bằng cần canh:** (1) nhặt cây hoang miễn phí ~25% trận thường = nguồn material
+mới, có thể phải giảm tỉ lệ spawn cây hoang hoặc cho zombie ưu tiên phá cây DORMANT
+để "giữ được nó ngủ yên" là một thử thách thật chứ không phải quà; (2) luật nhiễm bẩn
+làm dự bị rẻ giá trị hơn — đúng chủ đích (bảo hiểm có giá thật), nhưng cần xem lại giá
+mua material 25–225 coin.
+
+File: `types.ts` (BenchPlant + Unit.isWild flow), `utils/encounterBuilder.ts`,
+`utils/turnManager.ts` (AI có phá DORMANT không), `hooks/useGameProgression.ts`,
+`components/CampScreen.tsx`/`FusionScreen`, i18n, DESIGN.md §2.
+
+## §4c. Nghi thức Phổ Hệ — flavor cho hero unlock (KHÔNG đổi luật)
+
+Hero vẫn unlock đúng như `data/unlocks.ts` (defeat boss → hero). Chỉ thay khung kể:
+không phải "giải vây người trấn thủ" mà là **thân máy ngủ đông + xác boss + Mầm →
+người anh em mới mang sức mạnh (hoặc khắc tinh) của boss** — chi tiết từng cặp ở
+game_lore.md Phụ lục B. Hint text trong `unlocks.ts` ("changes hands", "take the fire
+from it") vốn đã đúng giọng này, gần như không phải sửa. Việc cần làm: cutscene/codex
+mô tả nghi thức + 6 đoạn phả hệ (Phụ lục B đã viết sẵn), i18n.
 
 ## §5. Tutorial — dựng lại theo mạch lore chương 2
 
@@ -104,7 +144,7 @@ chỉ đổi vai và bối cảnh:
 | 1 | Peaburst bảo vệ Sunbloom kiệt sức | Giữ nguyên gameplay; thoại đổi: hai chị em vừa rơi xuống rìa Vành Đai Xanh, Sunbloom choáng sau cú vượt khe nứt, **Ironhusk mất tích** |
 | 2 | Peaburst tử trận (ép chết) | Giữ — đây chính là "Peaburst đỡ đạn cho Sunbloom" của lore; thoại nói rõ: *không kịp hồi sinh vì đang bị săn đuổi, phải tới được Tháp Xanh* |
 | 3 | Mua Súng Hạt ở xe Mulch làm dự bị | Giữ — Mulch xuất hiện lần đầu, giọng "lão thu gom" |
-| 4 | Cây dự bị lấp chỗ Peaburst | Giữ + **Ironhusk trở lại tại bàn này**, tử thủ cạnh một **xe pháo đậu DORMANT** (cây hoang tỉnh khi hero đứng cạnh — dạy luôn cơ chế cây hoang) |
+| 4 | Cây dự bị lấp chỗ Peaburst | Giữ + **Ironhusk trở lại tại bàn này**, tử thủ cạnh một **xe pháo đậu DORMANT**; sau trận cỗ xe **cháy tản nhiệt rồi hỏng** — dạy cả cơ chế cây hoang lẫn luật "nổ máy = mất nguyên sơ" (§4b) |
 | 5 | Chrona hồi sinh Peaburst | **Sunbloom** thực hiện nghi thức tại Tháp Xanh đầu tiên (node nghỉ), Chrona chỉ *hướng dẫn*; chi phí 1 sprout hiển thị rõ |
 | 6 | Dạy fusion | Giữ; đóng khung "trang Bản Thiết Kế đầu tiên chép được từ tháp" |
 | 7 | Thua dàn dựng trước Gravehulk → timeline jump | Giữ nguyên — khớp lore sẵn; đặt tên màn: **Khu Khai Quật Hài Cốt** (act 1, đất của Gravehulk) |
@@ -160,3 +200,10 @@ Mỗi bước: `npm run typecheck` + mở dev cho `tutorial.assert.ts` tự ch�
 - Sàn giá sprout ở shop: 100 coin? (§2)
 - Blueprint có nguồn phụ (event/Tàn Cơ) không, hay chỉ node nghỉ? (§3)
 - Node nghỉ đổi icon lều → tháp: có cần art mới không (`art-src/ART-TODO.md`)?
+- "Quà của người đi trước" (lore ch.2): run sau game-over nhận vài item khởi đầu, run
+  đầu tiên của save thì không — cần xác nhận cơ chế hiện tại đã có hay phải viết mới
+  (chưa thấy trong code; nếu viết mới: 1–2 item thường, roll từ pool shop, hiện ở
+  màn bắt đầu run kèm câu "Đồ của người đi trước để lại").
+- Zombie có chủ động phá cây hoang DORMANT không (§4b — để "giữ ngủ yên" thành thử thách)?
+- Nghi thức Phổ Hệ trong lore dùng 1 Mầm — có bắt trả 1 sprout tại trận boss unlock hero
+  không, hay để nguyên miễn phí (đề xuất: miễn phí, nghi thức diễn ra ngoài khung run)?

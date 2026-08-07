@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Position, UnitClass, Skill, UnitType, Unit,
-  HeroId, ItemDefinition, MaterialId, EventEffect, GameState, MapNode
+  HeroId, ItemDefinition, MaterialId, EventEffect, GameState, MapNode, TurnAction
 } from './types';
 import {
   INITIAL_GAME_STATE, UNIT_SKILLS as INITIAL_SKILLS, DEFAULT_UNIT_DEFINITIONS,
@@ -24,7 +24,9 @@ import { useGameProgression, RunPayout } from './hooks/useGameProgression';
 import { processTurn } from './utils/turnManager';
 import {
   getValidMoves, getValidSkillTargets, getSkillGeometry,
-  getSkillTargetPath, getUnitAt, getTileAt, isSunProducingSkill, gustDirection, getSolidUnitAt } from './utils/gameLogic';
+  getSkillTargetPath, getUnitAt, getTileAt, isSunProducingSkill, gustDirection, getSolidUnitAt,
+  planPush } from './utils/gameLogic';
+import { applyPushPlan } from './utils/actionBuilders';
 // Combat resolution used to live in this file, as ~500 lines inside handleTileClick.
 // It is pure — units in, TurnAction[] out — so it belongs beside the rest of the rules.
 import { planSkillActions } from './utils/skillResolution';
@@ -993,6 +995,59 @@ const App: React.FC = () => {
    * Every click on the board. Four modes, and each one now delegates the rules to a pure
    * planner in utils/ — this function's job is React state, not combat.
    */
+  /**
+   * HAI Ô ĂN THEO CÚ BAY của Reedwing, tính ngay lúc người chơi chốt ô đáp.
+   *
+   *  - `WIND_PROVOKE` (Barbed Skids): con nào cô ĐANG kề mà sau cú bay thì KHÔNG còn kề nữa
+   *    thì bị khoá vào cô. Taunt sinh ra từ cú CẤT CÁNH — sà vào chọc rồi bay đi, kéo con mồi
+   *    rời khỏi ally. Con vẫn kề sau khi bay thì không tính: cô có bỏ đi đâu.
+   *  - `FLYER_REPEL` (Downwash): gió ép của rotor thổi mọi địch kề Ô ĐÁP lùi một ô.
+   *
+   * Cả hai đọc Ô ĐÁP, tức ô CUỐI CÙNG của lượt đi. Điều đó thành bắt buộc từ khi Overdrive
+   * Rotor cho cô đi HAI LẦN một lượt: nếu tính theo mỗi lần đi thì fuse cả hai ô là hai lần
+   * đẩy mỗi lượt, gấp đôi thứ thẻ bài hứa. Ở đây mỗi lần dừng chân đều là một "ô đáp", nên
+   * luật đọc đúng: cú bay nào chạm địch thì cú đó trả tiền.
+   *
+   * Đẩy đi qua `planPush`/`applyPushPlan` như mọi cú đẩy khác trong game, nên nó chết đuối,
+   * va chạm và giao mầm theo đúng luật đã có — không có đường đẩy thứ hai.
+   */
+  const planMoveRiders = (mover: Unit, dest: Position): TurnAction[] => {
+      const acts: TurnAction[] = [];
+      const adj = (a: Position, b: Position) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y) === 1;
+      const enemies = units.filter(u => u.isEnemy && u.hp > 0 && !u.isBurrowed);
+
+      if (hasFusionEffect(mover, 'WIND_PROVOKE')) {
+          enemies.forEach(e => {
+              if (!adj(e.position, mover.position)) return;   // vốn đã không kề
+              if (adj(e.position, dest)) return;              // vẫn kề sau khi bay
+              if (e.immunities.includes('STATUS')) return;
+              if (e.statusEffects.includes('PROVOKED') && e.provokedBy === mover.id) return;
+              const next = e.statusEffects.includes('PROVOKED')
+                  ? e.statusEffects
+                  : [...e.statusEffects, 'PROVOKED' as const];
+              acts.push({ type: 'UPDATE_UNIT_STATE', unitId: e.id, updates: { statusEffects: next, provokedBy: mover.id } });
+          });
+      }
+
+      if (hasFusionEffect(mover, 'FLYER_REPEL')) {
+          // Mô phỏng bàn cờ SAU cú bay: cô đã ở ô đáp rồi thì cú đẩy mới đọc đúng vật cản.
+          const after: Unit[] = units.map(u => u.id === mover.id ? { ...u, position: { ...dest } } : { ...u });
+          const sim = new Map<string, Unit>(after.map(u => [u.id, u] as const));
+          after.filter(u => u.isEnemy && u.hp > 0 && !u.isBurrowed && adj(u.position, dest)).forEach(e => {
+              const dx = Math.sign(e.position.x - dest.x);
+              const dy = Math.sign(e.position.y - dest.y);
+              const plan = planPush(sim.get(e.id)!, dx, dy, [...sim.values()], board, terrainDefs, 3, new Set(), 1);
+              applyPushPlan(plan, acts, sim, mover);
+          });
+          // Nước đi đã dời thân địch thì không rút lại được — cùng luật đã áp cho cast skill.
+          if (acts.some(a => a.type === 'UNIT_MOVE' || a.type === 'APPLY_DAMAGE')) {
+              acts.push({ type: 'UPDATE_UNIT_STATE', unitId: mover.id, updates: { moveLocked: true } });
+          }
+      }
+
+      return acts;
+  };
+
   const handleTileClick = (pos: Position) => {
       // The board is still resolving. A click now can start a SECOND executeTurnActions
       // against state the first one has not finished writing — the same overwrite
@@ -1162,7 +1217,10 @@ const App: React.FC = () => {
           if (u && !u.isEnemy && !u.hasMoved) {
               const moves = getValidMoves(u, units, board, terrainDefs);
               if (moves.some(m => m.x === pos.x && m.y === pos.y)) {
-                  executeTurnActions([{ type: 'UNIT_MOVE', unitId: u.id, path: [pos] }], gameState);
+                  executeTurnActions([
+                      { type: 'UNIT_MOVE', unitId: u.id, path: [pos] },
+                      ...planMoveRiders(u, pos),
+                  ], gameState);
                   return;
               }
           }

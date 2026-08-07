@@ -237,6 +237,7 @@ export const useGameEngine = () => {
                       // lần" âm thầm thành "mỗi trận một lần" — cùng cái bẫy `lastStandUsed`.
                       killsThisTurn: 0,
                       tilesMoved: 0,
+                      moveLocked: false,
                       isAttacking: false,
                       visualOffset: undefined,
                       prevPosition: undefined, // Reset undo history at start of turn

@@ -313,7 +313,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
       : isDone ? t('Already acted this turn.')
       : null;
   
-  const canUndo = isPlayer && selectedUnit!.hasMoved && !selectedUnit!.hasAttacked && selectedUnit!.prevPosition !== undefined && interactionMode !== 'MOVING' && interactionMode !== 'EXECUTING';
+  const canUndo = isPlayer && selectedUnit!.hasMoved && !selectedUnit!.hasAttacked && !selectedUnit!.moveLocked && selectedUnit!.prevPosition !== undefined && interactionMode !== 'MOVING' && interactionMode !== 'EXECUTING';
 
   return (
     <div className="w-64 md:w-80 lg:w-96 cyber-panel border-l border-[#293245] flex flex-col h-full shadow-2xl relative z-30 font-pixel shrink-0 portrait:w-full portrait:h-[45%] portrait:border-l-0 portrait:border-t">

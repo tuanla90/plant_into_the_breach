@@ -496,6 +496,13 @@ export interface Unit {
    */
   tilesMoved?: number;
   /**
+   * Nuoc di nay da doi than khac tren ban co (Downwash), nen khong hoan tac duoc nua - ke ca
+   * khi hero chua tan cong. Nut Hoan Tac von chi doc `hasMoved && !hasAttacked`, va do la du
+   * cho moi o khac; day la o DUY NHAT trong ca pass sinh ra hau qua len than khac NGAY TRONG
+   * pha di chuyen. Reset cung cho voi hasMoved.
+   */
+  moveLocked?: boolean;
+  /**
    * Số Sol lớp chắn hiện tại hoàn lại khi bị ĐẬP VỠ (Gourdward — Sunlit Rind). Lưu SỐ chứ
    * không lưu id người phát: lớp chắn phải tự trả được tiền kể cả khi người phát nó đã chết,
    * cùng lý do `shieldBarbed` nằm trên lớp chứ không tra ngược về ai đứng gần.
@@ -1342,8 +1349,19 @@ export type FusionEffectType =
     | 'ARMOR_SHRED'
     | 'REACTIVE_SHIELD'
     | 'NEEDLE_BURST'
+    /**
+     * Barbed Skids - con nao hero nay DANG ke ma sau cu bay thi KHONG con ke nua bi PROVOKED
+     * khoa vao co. Taunt sinh ra tu cu CAT CANH chu khong tu vien dan: the bai cu chi la mot
+     * cau dua ("no ghet co nhung co da bay mat"), o nay bien cau dua thanh co che. Con van ke
+     * sau khi bay thi khong tinh - co co bo di dau.
+     */
     | 'WIND_PROVOKE'
     | 'PROVOKE_SHIELD'
+    /**
+     * Downwash - ket thuc mot luot di, gio ep cua rotor thoi moi dich ke O DAP lui mot o.
+     * Di qua planPush nhu moi cu day khac nen chet duoi, va cham va giao mam theo dung luat da
+     * co. Vi no doi than dich NGAY TRONG pha di chuyen, nuoc di do bi KHOA (Unit.moveLocked).
+     */
     | 'FLYER_REPEL'
     | 'ENCASE_RANGE'
     | 'LASER_NEEDLE'
