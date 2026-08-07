@@ -1,5 +1,5 @@
 import { Position, Skill, StatusEffectType, TurnAction, Unit, UnitType } from '../types';
-import { calculateDamage, getSkillTargetPath, getTileAt, planPush, shieldUpdatesFor, survivesWater, wingMid, wingTwin } from './gameLogic';
+import { calculateDamage, getSkillTargetPath, getTileAt, planPush, shieldUpdatesFor, survivesWater, wingMid, wingNear, wingTwin } from './gameLogic';
 import { getFusionEffects, getFusionEffectValue, hasFusionEffect } from './fusion';
 import { applyPushPlan, applyCollisionDamage, pushKill, type ResolveContext } from './actionBuilders';
 import { chainDamageFor, chainStep, skillCarriesElement } from './elements';
@@ -93,6 +93,17 @@ export const planSkillActions = (
                 && !targets.some(t => t.x === mid.x && t.y === mid.y)) {
                 targets.push(mid);
             }
+        }
+        // Underslung Pods: mỗi nòng kéo xuống một ô chéo kề cô. Cũng là instance đầy đủ như
+        // twin và midshot — nên một lớp chắn đứng đó bị nó bóc, không phải chỉ nhìn thấy.
+        if (hasFusionEffect(caster, 'EXTENDED_BARRELS')) {
+            [pos, tw].forEach(c => {
+                const near = wingNear(caster.position, c);
+                if (near.x >= 0 && near.x < 8 && near.y >= 0 && near.y < 8
+                    && !targets.some(t => t.x === near.x && t.y === near.y)) {
+                    targets.push(near);
+                }
+            });
         }
     } else if (hasRadialShield) {
         // Self plus the four beside him, allies filtered by the SHIELD branch itself.

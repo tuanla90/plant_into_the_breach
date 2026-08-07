@@ -388,9 +388,9 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_PEABURST: {
-            name: 'Twin Pods',
-            description: 'Both wings fire a second volley for 1 damage.',
-            effect: { type: 'DOUBLE_ATTACK', value: 1 },
+            name: 'Underslung Pods',
+            description: 'A second pod hangs under each wing, covering the diagonal beside her — the blind spot the knight pattern always left open. Four tiles instead of two.',
+            effect: { type: 'EXTENDED_BARRELS' },
             live: true,
         },
         MAT_SNAPMAW: {

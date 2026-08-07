@@ -782,6 +782,29 @@ export const wingMid = (origin: Position, cell: Position): Position => {
     return { x: (cell.x + tw.x) / 2, y: (cell.y + tw.y) / 2 };
 };
 
+/**
+ * Ô KỀ CHÉO nằm ngay trong ô knight, về phía Reedwing — thứ Underslung Pods (EXTENDED_BARRELS)
+ * thêm vào. Lùi đúng một bước trên trục "2" của nước mã:
+ *
+ *      . X . X .        X = cặp knight của hướng LÊN
+ *      . n . n .        n = hai ô hàm này trả về
+ *      . . Z . .
+ *
+ * Mỗi bên thành một cột dọc 2 ô — "súng hai bên bắn thành một hàng dọc".
+ *
+ * Vì sao lấp vào TRONG chứ không kéo ra ngoài: hình knight có một vùng chết ngay quanh thân cô,
+ * nên thứ đứng sát là thứ nguy hiểm nhất mà cô lại bó tay. Và vì `inMelee` là Manhattan ≤ 1,
+ * ĐƯỜNG CHÉO KHÔNG TÍNH LÀ KỀ — một zombie đứng chéo cô thì nó không đánh cô được, mà sau ô này
+ * thì cô bắn được nó. Một ô bắn-mà-không-bị-bắn-lại, hợp đúng thân 4 máu.
+ */
+export const wingNear = (origin: Position, cell: Position): Position => {
+    const dx = cell.x - origin.x;
+    const dy = cell.y - origin.y;
+    return Math.abs(dx) === 2
+        ? { x: origin.x + dx / 2, y: cell.y }
+        : { x: cell.x, y: origin.y + dy / 2 };
+};
+
 /** On the 8x8 board. */
 const onBoard = (p: Position): boolean => p.x >= 0 && p.x < 8 && p.y >= 0 && p.y < 8;
 
@@ -833,9 +856,16 @@ export const getSkillGeometry = (
     }
     else if (skill.rangeType === 'WING_PAIR') {
         const midshot = hasFusionEffect(unit, 'WING_MIDSHOT');
+        const extended = hasFusionEffect(unit, 'EXTENDED_BARRELS');
         WING_OFFSETS.forEach(o => {
             const cell = { x: unit.position.x + o.x, y: unit.position.y + o.y };
             if (onBoard(cell)) tiles.push(cell);
+            // Underslung Pods: ô chéo kề, tô cùng lúc với ô knight — người chơi phải thấy đủ
+            // vùng bắn trước khi bấm, đúng luật "không giấu gì" của cả game.
+            if (extended) {
+                const near = wingNear(unit.position, cell);
+                if (onBoard(near) && !tiles.some(t => t.x === near.x && t.y === near.y)) tiles.push(near);
+            }
             // Cluster Load's belly rocket. Shown in the overlay too, or the fusion would be
             // invisible until the moment it resolved.
             if (midshot) {
@@ -1045,6 +1075,7 @@ export const getValidSkillTargets = (
         // valid target — the player picks a heading, not a tile, and the twin fires with it.
         // No line of sight and no mountain check, like LOB: the rockets drop in from above.
         const midshot = hasFusionEffect(unit, 'WING_MIDSHOT');
+        const extended = hasFusionEffect(unit, 'EXTENDED_BARRELS');
         WING_OFFSETS.forEach(o => {
             const t = { x: unit.position.x + o.x, y: unit.position.y + o.y };
             if (!onBoard(t)) return;
@@ -1055,9 +1086,14 @@ export const getValidSkillTargets = (
             };
             // With Cluster Load the belly tile counts as well: a lone zombie standing in the
             // gap is a legal heading, or the third rocket could never be the reason to fire.
+            //
+            // Underslung Pods joins on the same terms: một con đứng CHÉO kề cô cũng làm hướng
+            // đó bắn được, nếu không thì hai ô mới sẽ không bao giờ là lý do để nổ súng.
             const anyValid = holdsTarget(t)
                 || holdsTarget(wingTwin(unit.position, t))
-                || (midshot && holdsTarget(wingMid(unit.position, t)));
+                || (midshot && holdsTarget(wingMid(unit.position, t)))
+                || (extended && (holdsTarget(wingNear(unit.position, t))
+                    || holdsTarget(wingNear(unit.position, wingTwin(unit.position, t)))));
             if (anyValid) targets.push(t);
         });
     }
@@ -1107,6 +1143,14 @@ export const getSkillTargetPath = (
         path.push(targetPos);
         const tw = wingTwin(unit.position, targetPos);
         if (tw.x >= 0 && tw.x < 8 && tw.y >= 0 && tw.y < 8) path.push(tw);
+        // Underslung Pods: preview phải sáng đủ 4 ô, không thì hai ô mới thành thông tin ẩn.
+        if (hasFusionEffect(unit, 'EXTENDED_BARRELS')) {
+            [targetPos, tw].forEach(c => {
+                const near = wingNear(unit.position, c);
+                if (near.x >= 0 && near.x < 8 && near.y >= 0 && near.y < 8
+                    && !path.some(p => p.x === near.x && p.y === near.y)) path.push(near);
+            });
+        }
     } else {
         path.push(targetPos);
     }

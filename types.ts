@@ -1112,6 +1112,17 @@ export type FusionEffectType =
      */
     | 'SKILL_SPIKE_SCATTER'
     /**
+     * Underslung Pods — mỗi nòng của `WING_PAIR` kéo thêm một ô CHÉO KỀ thân cô (`wingNear`).
+     * Bốn ô thay vì hai; ô mới là instance đầy đủ, không phải hiệu ứng trang trí.
+     *
+     * Lấp đúng vùng chết của hình knight: thứ đứng sát cô là thứ nguy hiểm nhất mà cô lại bó
+     * tay. Và vì `inMelee` là Manhattan ≤ 1, đường chéo KHÔNG tính là kề — nên đây là ô cô bắn
+     * được mà thứ đứng đó không đánh lại được.
+     *
+     * Không đụng VOLLEY CAP: nó thêm Ô, không nhân số trên mỗi phát.
+     */
+    | 'EXTENDED_BARRELS'
+    /**
      * Shields this hero hands out spill over to whoever stands beside the recipient.
      * Replaces SHIELD_BONUS ("+2 size"), which stopped meaning anything when shields became
      * LAYERS (PLAN-hero-zephyr §6.0) — a layer has no size to enlarge, so the pumpkin axis
