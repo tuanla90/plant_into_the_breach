@@ -1906,5 +1906,10 @@ export const VI: Record<string, string> = {
     "Provoke Chard": "Cải Khiêu Khích",
     "Anything he throws holds a grudge: next turn it drops the sprout and comes back for him.": "Thứ gì bị anh quăng đi đều ghi hận: lượt sau nó bỏ mầm, quay lại tìm anh.",
     "Swinging at the shout...": "Vung theo tiếng hét...",
+
+    // --- Đợt 18: Mortar Pea thành chế độ bắn thứ hai. ---
+    "Mortar Shot": "Phát Cối",
+    "Lobs the same shot over anything in the way — half the reach. Free.": "Bắn chính viên đạn đó theo hình cầu vồng, qua mọi thứ chắn đường — đổi lại nửa tầm. Miễn phí.",
+    "A second firing mode: Mortar Shot lobs over anything in the way, 4 tiles. Her straight shot is untouched.": "Thêm một chế độ bắn: Phát Cối bay vòng qua mọi thứ chắn đường, tầm 4 ô. Phát bắn thẳng của cô giữ nguyên.",
     "While he stands, EVERY collision on the board hurts 1 more — his shoves, the horde's, and the hole your own wall is plugging.": "Chừng nào anh còn đứng, MỌI cú va chạm trên bàn đều đau thêm 1 — cú đẩy của anh, cú đẩy của địch, và cả cái hố mà tường nhà đang bịt.",
 };

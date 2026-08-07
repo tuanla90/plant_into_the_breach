@@ -64,6 +64,7 @@ const categoryOf = (type: FusionEffectType): { label: string; color: string } =>
         case 'MELEE_REACH_TRADE':
         case 'ATTACK_RANGE_BONUS':
         case 'ARC_ATTACK':
+        case 'ARC_MODE':
         case 'SKILL_SPLASH':
         case 'SKILL_STUN':
         case 'SKILL_DISARM':

@@ -1374,6 +1374,19 @@ export type FusionEffectType =
      * Danh dau moi than anh lam xe dich (`plan.moves`), khong chi nhung than va vao cai gi do.
      */
     | 'PROVOKE_ON_SHOVE'
+    /**
+     * MORTAR PEA — THEM mot che do ban, khong doi che do dang co. Co giu nguyen phat ban
+     * thang tam 8, va co them mot phat CAU VONG tam 4 bay qua moi thu chan duong.
+     *
+     * Khac `ARC_ATTACK` (van con, va van dung cho cay bench Corn Mortar) o dung cho do:
+     * ARC_ATTACK DOI duong dan — mua do cong bang nua tam, mot chieu, khong lay lai duoc.
+     * ARC_MODE them mot nut thu hai, va nguoi choi chon moi luot.
+     *
+     * Cai dat bang mot skill duoc TRAO them (cung pattern `DIGEST_CLAW` / `GRANT_ATTACK`), vi
+     * do la cach duy nhat "hai nut" ton tai duoc trong kien truc nay ma khong phai bia ra mot
+     * he thong toggle rieng — va nut thu hai thi telegraph, overlay, phim tat deu co san.
+     */
+    | 'ARC_MODE'
     /** Finishing something off raises a fresh layer on this hero. */
     | 'SHIELD_ON_KILL'
     /** Melee attackers are shoved back as well as hurt. */

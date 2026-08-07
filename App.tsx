@@ -276,7 +276,41 @@ const App: React.FC = () => {
               description: t(DIGEST_CLAW_SKILL.description),
           }]
           : base;
-      if (!hasFusionEffect(unit, 'GRANT_ATTACK')) return withClaw;
+      /**
+       * MORTAR PEA (`ARC_MODE`) — nút thứ HAI, không phải một con số bị đổi.
+       *
+       * Cùng khẩu súng, hai quỹ đạo: phát thẳng giữ nguyên tầm 8 và vẫn dừng ở thân đầu tiên;
+       * phát cầu vồng bay qua tất cả nhưng chỉ tới 4 ô. Người chơi chọn mỗi lượt, và cái phải
+       * chọn chính là nội dung của ô này.
+       *
+       * Dựng bằng skill được TRAO thêm, cùng pattern Rending Claws và Fused Shot ngay dưới,
+       * vì đó là cách "hai nút" tồn tại được ở đây mà không phải bịa ra hệ thống toggle riêng
+       * — và một skill thật thì telegraph, overlay ngắm và phím tắt đều có sẵn.
+       *
+       * Sao chép từ đòn thường MIỄN PHÍ của chính hero (không phải skill trả phí): đây là chế
+       * độ bắn thứ hai của cùng khẩu súng, nên nó phải mang đúng viên đạn đó — và mọi fusion
+       * khác của cô vẫn dán lên nó qua `applyFusionToSkill` như dán lên bản gốc.
+       */
+      const MORTAR_ID = 'fusion_mortar_shot';
+      const withMortar = (() => {
+          if (!hasFusionEffect(unit, 'ARC_MODE')) return withClaw;
+          if (withClaw.some(sk => sk.id === MORTAR_ID)) return withClaw;
+          const straight = withClaw.find(sk => sk.rangeType === 'LINE'
+              && !(sk.sunCost ?? 0)
+              && sk.effects.some(e => e.type === 'DAMAGE'));
+          if (!straight) return withClaw;
+          return [...withClaw, {
+              ...straight,
+              id: MORTAR_ID,
+              name: t('Mortar Shot'),
+              description: t('Lobs the same shot over anything in the way — half the reach. Free.'),
+              rangeType: 'LOB' as const,
+              // Cùng phép chia với ARC_ATTACK: cung mua bằng tầm, không phải quà tặng.
+              rangeValue: Math.max(2, Math.ceil((straight.rangeValue ?? 2) / 2)),
+          }];
+      })();
+
+      if (!hasFusionEffect(unit, 'GRANT_ATTACK')) return withMortar;
 
       const cost = getFusionEffectValue(unit, 'GRANT_ATTACK');
       const granted: Skill = {
@@ -290,7 +324,7 @@ const App: React.FC = () => {
           sunCost: cost,
           effects: [{ type: 'DAMAGE', value: 2 }],
       };
-      return withClaw.some(sk => sk.id === granted.id) ? withClaw : [...withClaw, granted];
+      return withMortar.some(sk => sk.id === granted.id) ? withMortar : [...withMortar, granted];
   }, [heroSkillDefs, skillDefs, t]);
 
   const [showSquadViewer, setShowSquadViewer] = useState(false);

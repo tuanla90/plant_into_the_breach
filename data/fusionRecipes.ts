@@ -180,8 +180,8 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_CORNOVA: {
             name: 'Mortar Pea',
-            description: 'Her shot arcs over anything in the way — with a range of 4 tiles.',
-            effect: { type: 'ARC_ATTACK' },
+            description: 'A second firing mode: Mortar Shot lobs over anything in the way, 4 tiles. Her straight shot is untouched.',
+            effect: { type: 'ARC_MODE' },
             live: true,
         },
         MAT_REEDWING: {
