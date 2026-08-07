@@ -559,6 +559,10 @@ Vì sao phải đợi và coi là đợt cân bằng:
 
 > Bảng này là **spec triển khai**. Mọi ô đều đã qua `Final:` của người chơi (trừ 14 ô gắn ⚠ đang chờ
 > [A7]). Tên id gear đã đổi theo [A1v2] — `MAT_<HERO CHỦ NHÂN>`, lấy từ `DESIGN-fusion-matrix.md` §4.
+>
+> **§F là bảng TRA NHANH.** Định nghĩa đầy đủ từng ô — trigger, hiệu ứng chính xác, ca biên, điểm móc —
+> nằm ở **`PLAN-fusion-effects.md`** (81/81 ô, cộng 2 phụ lục: bảng quyết định [A7] và 24 type gom
+> theo vùng wiring).
 
 **Bảng đổi tên gear:** `MAT_SUNFLOWER→MAT_SUNBLOOM` · `MAT_PEASHOOTER→MAT_PEABURST` ·
 `MAT_CHOMPER→MAT_SNAPMAW` · `MAT_WALLNUT→MAT_IRONHUSK` · `MAT_CORN_MORTAR→MAT_CORNOVA` ·
