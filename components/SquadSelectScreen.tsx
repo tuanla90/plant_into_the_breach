@@ -500,8 +500,8 @@ export const SquadSelectScreen: React.FC<SquadSelectScreenProps> = ({
       return (
           <div
               key={heroId}
-              className="h-full flex flex-col gap-1.5"
-              style={{ flex: '0 0 240px', width: 240 }}
+              className="h-full flex flex-col gap-1.5 shrink-0"
+              style={{ flex: '0 0 240px', width: 240, transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
           >
               {card}
               {/* Every hero picks. Gourdward used to be hidden here (`elementSlot: 'NONE'`)
