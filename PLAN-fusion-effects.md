@@ -1117,8 +1117,9 @@ chưa bao giờ là "vết tan quá nhanh", mà là **những lần đặt vết
 khiến build nhiều-nguồn-bleed tự phản mình.
 
 **Chốt đề xuất:**
-- `BLEEDING` thành **stack**. **Không** rơi theo lượt. Trần **9** — và **chỉ để badge giữ một chữ số**,
-  không phải vì cân bằng (xem §F.4① đã gạch).
+- ~~`BLEEDING` thành **stack**, **không** rơi theo lượt, trần **9**~~ → **GHI ĐÈ Ở [G.6③]:** trần **5**,
+  **rơi 1 mỗi lượt**. Người chơi chốt vòng 3. Decay làm luôn việc chặn burst của máy kích hoạt bleed,
+  nên đề nghị "trần cho máy kích hoạt" ở [G.3] rút lại.
 - **Mỗi instance sát thương tiêu ĐÚNG 1 stack, ăn +1.** Không có chuyện một cú đánh tiêu sạch ví.
   Thân mang 3 stack ăn Precision Blast 3 phát: phát 1 tiêu 1 (+1), phát 2 tiêu 1 (+1), phát 3 tiêu 1
   (+1) → 9. Nếu chỉ có 2 stack: phát 1 và 2 được +1, **phát 3 ăn damage gốc**.
@@ -1424,4 +1425,122 @@ Chard, Grand Chard và cú nảy mới của Chardslam.
 | **Sửa tài liệu luật** | L6 (bụi tại điểm va chạm) · L5 đã khai tử · rename TAUNT→PROVOKE toàn bộ |
 
 - **Trạng thái:** ⬜ chờ duyệt vòng 3
+- **Góp ý:**
+
+## G.6 · Năm chốt của vòng 3 — và hệ quả từng cái
+
+### ① Twin Sol × Dawn Harvest — ⚠ CÒN LỆCH MỘT SỐ, cần bạn xác nhận
+
+Bạn viết `(25 − 10) × 2`. Cấu trúc thì chốt rồi: **Dawn Harvest trừ bớt sản lượng Harvest để đổi lấy
+layer, rồi Twin Sol nhân đôi phần còn lại.** Nhưng con số gốc lệch:
+
+**Harvest trong code là 50, không phải 25** (`heroes.ts:134`) — và nó có một chú thích dài giải thích
+vì sao **đã từng là 25 rồi bị đổi lên 50**:
+
+> *"50, not 25. At 25 she handed the squad exactly what `SUN_PER_TURN_INCOME` already pays it for
+> free, so spending her whole turn bought nothing — the one hero who cannot attack was also the one
+> whose action was worth nothing."*
+
+Ba cách khớp, chọn một:
+
+| | Cách | Kết quả |
+|---|---|---|
+| **(a)** | Giữ Harvest 50, Dawn Harvest trừ 10 | `(50−10)×2` = **80** Sol/lượt |
+| **(b)** | Giữ Harvest 50, Dawn Harvest trừ **35** | `(50−35)×2` = **30** Sol/lượt — khớp con số 30 bạn nói ở vòng trước |
+| **(c)** | Hạ Harvest về 25 (đảo lại quyết định cũ), trừ 10 | `(25−10)×2` = **30** |
+
+⚠ **(c) đụng vào lý do đã thành văn.** Nếu hạ về 25 thì Harvest trần trụi lại trở về đúng chỗ mà chú
+thích trên nói là hỏng — trừ khi `SUN_PER_TURN_INCOME` cũng đổi. **(b)** cho đúng con số 30 mà không
+đụng gì cả: giá của cái layer đơn giản là đắt (35 Sol), điều đó hợp lý vì layer chặn TRỌN một nguồn.
+
+**Tôi khuyến nghị (b).** Bạn chốt giúp.
+
+### ② Split Shell — cùng hàng VÀ cột, tầm như Peaburst ✅
+
+Viên phụ kích khi có địch đứng **cùng hàng hoặc cùng cột với mục tiêu**, trong tầm kiểu `LINE` của
+Peaburst. Hình là một dấu cộng mọc ra từ **mục tiêu**, không phải từ Cornova:
+
+```
+            [ ? ]
+            [ ? ]
+    [?][?][ X ][?][?]        X = mục tiêu chính
+            [ ? ]            ? = ô viên phụ có thể rơi
+            [ ? ]
+```
+
+⚠ **Còn một luật phải chốt: nhiều địch cùng thoả thì bắn con nào?** Bắt buộc phải cố định để giữ
+zero-random. Đề nghị: **con GẦN mục tiêu nhất; hoà thì theo thứ tự cố định Bắc → Đông → Nam → Tây.**
+Overlay tô ô đó trước khi bấm. Nếu bạn muốn luật khác (VD: con máu thấp nhất) thì nói, nhưng phải là
+một luật đọc được, không phải "gần nhất theo cảm giác".
+
+### ③ Bleed — trần 5 + decay 1 mỗi lượt ✅ (thay quyết định cũ ở F.6)
+
+Chốt: **trần 5**, **rơi 1 mỗi lượt**. Ghi đè khuyến nghị "trần 9, không decay" của tôi ở [F.6].
+
+**Hệ quả — và tôi thấy chốt này giải quyết luôn cái tôi lo:**
+
+- **Máy kích hoạt bleed (Fanged Blessing mới) hết nguy hiểm.** Với decay + trần 5, ví không phình
+  được: burst tối đa là 5 stack = +5 (hoặc +10 qua Executioner), và muốn có 5 stack thì phải nạp
+  nhanh hơn tốc độ rơi. **Không cần thêm trần cho máy kích hoạt nữa** — phương án (b) tôi đề nghị ở
+  G.3 rút lại, decay đã làm việc đó.
+- **Bleed thành cơ chế TEMPO.** Nạp rồi phải tiêu ngay, không để dành. Hợp nhịp một game giải đố
+  theo lượt hơn hẳn bản không-decay.
+- **Badge phải hiện SỐ** (đã có ở F.7) — và vì số tự giảm mỗi lượt, người chơi đọc được "còn mấy lượt
+  nữa là mất", không cần thêm đồng hồ riêng. Decay **là** đồng hồ, và nó hiện ngay trên con số.
+- ⚠ **Phải chốt decay rơi lúc nào:** cuối lượt người chơi, hay cuối lượt địch (tức cuối vòng)? Đề nghị
+  **cuối vòng** — để một vết đặt trong lượt địch (Rending Husk, Glass Rind) còn nguyên giá trị cho
+  lượt người chơi kế tiếp. Nếu rơi cuối lượt người chơi thì hai ô thụ động đó bị thiệt một nhịp.
+
+### ④ Grand Chard toàn bản đồ — chấp nhận mặt trái ✅
+
+Chốt: passive **toàn bàn**, mọi damage va chạm và damage chặn hố **+1**, kể cả khi hero nhà chịu.
+Lý lẽ của bạn đứng vững: ba tanker ghép MAT_IRONHUSK đều **miễn** hai loại damage đó, mà ba tanker
+cũng đúng là người hay đi dẫm hố và hay bị làm thân push/pull nhất.
+
+⚠ **Một việc wiring phải để ý:** hiện `COLLISION_BONUS` đọc từ **người gây ra cú đẩy**
+(`skillResolution.ts:720`: `getFusionEffectValue(caster, 'COLLISION_BONUS')`). Thành passive toàn bàn
+thì giá trị phải chuyển từ **per-caster** sang **per-board** — tức mọi site tính damage va chạm phải
+hỏi "trong đội có ai mang ô này không", không hỏi "người đẩy có mang không". Đó là 4–5 điểm đọc chứ
+không phải 1. Vẫn Thấp-Vừa, nhưng khác hình so với ô cũ.
+
+**Mặt lợi ít ai để ý:** địch tự tông vào nhau cũng +1. Với một đội xoay quanh push/pull thì đây là
+buff hai chiều, không chỉ một chiều.
+
+### ⑤ THE FALL — sửa engine, mặt đất tính là va chạm ✅
+
+Chốt: **mặt đất là một mặt va chạm.** Bảng 5 type ở G.4 cập nhật thành:
+
+| Type | Nghĩa |
+|---|---|
+| `push` / `pull` | dời thân theo trục, do hero gây |
+| `toss` | ném qua đầu tới ô đối xứng `2·C − T` |
+| `block_spawn` | đứng bịt hố lúc thân mới trồi lên |
+| **damage va chạm** | `push`/`pull` vào ô **CÓ thân** · `block_spawn` · **`toss` tiếp đất** |
+| **moved** | `push`/`pull` vào ô **KHÔNG có thân** |
+
+Engine vốn đã đối xử THE FALL như va chạm (`ignoresArmor: true`, `COLLISION_BONUS` nhân nó) — nên
+đây là **hợp thức hoá cái đang chạy**, không phải viết mới. Việc thật chỉ là đặt tên và gom nó vào
+cùng một cửa với hai loại kia.
+
+**Hệ quả dây chuyền, đã rà:**
+
+| Ô | Hệ quả |
+|---|---|
+| Rending Chard (`BLEED_ON_SHOVE`) | cú ném **có** dính bleed lúc tiếp đất ✓ |
+| Sunlit Chard | thân chết vì tiếp đất tính là "chết ở vị trí khác" ✓ |
+| Grand Chard | fall damage 1 → **2** (và toàn bàn) |
+| Thornshell/Chardslam/Ironhusk × MAT_IRONHUSK | miễn luôn damage tiếp đất — **không ném được hero nhà cho đau nữa** |
+| **Blast Chard** | **vẫn KHÔNG nổ khi toss** — không mâu thuẫn: tâm nổ định nghĩa là **điểm giữa HAI thân**, mà cú ném chỉ có một thân và mặt đất. Không có điểm giữa → không có nổ. |
+
+## G.7 · Việc còn treo sau vòng 3
+
+| # | Việc | Ai quyết |
+|---|---|---|
+| 1 | Số Harvest — chọn (a)/(b)/(c) ở G.6① | bạn |
+| 2 | Split Shell — luật chọn ô khi nhiều địch thoả | bạn |
+| 3 | Bleed decay rơi cuối lượt người chơi hay cuối vòng | bạn (tôi đề nghị cuối vòng) |
+| 4 | `TAUNTED` có hướng mặt — tách ra khỏi pass fusion? | bạn (G.2②) |
+| 5 | Rename `TAUNT` → `PROVOKE` toàn bộ — làm luôn hay đợt riêng | bạn |
+
+- **Trạng thái:** ⬜ chờ duyệt
 - **Góp ý:**
