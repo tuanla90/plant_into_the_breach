@@ -809,3 +809,177 @@ Kiểm lại ca **không có relic focus** (chơi thường, 2 ô, một zombie 
 
 - **Trạng thái:** ⬜ chờ duyệt
 - **Góp ý:**
+
+---
+
+# Phụ lục E · BLEED VĨNH VIỄN — phân tích ưu / nhược / ảnh hưởng
+
+Câu hỏi: **nếu vết bleed KHÔNG tiêu — mọi đòn sau đó đều +1, cho tới khi thân chết — thì sao?**
+
+## E.1 · Cơ chế hiện tại, nguyên văn từ code
+
+`utils/gameLogic.ts:460-467`:
+
+```js
+let bleedConsumed = false;
+if (amount > 0
+    && shieldDmg === 0 && currentShield === 0   // không có layer chắn giữa đòn và vết
+    && target.statusEffects?.includes('BLEEDING')) {
+    damageToDeal += 1;
+    target.statusEffects = ...bỏ 'BLEEDING'...;
+    bleedConsumed = true;
+}
+```
+
+**Bốn tính chất, mỗi cái đều gánh việc** (comment trong code tự ghi ba, cái thứ tư ở §3 DESIGN):
+
+1. **Cộng SAU giáp mũ** — "vết nằm dưới lớp giáp". Một cú đánh bị Pothelm clang về 0 vẫn ăn +1.
+2. **Cộng SAU lớp chắn** — đòn bị layer nuốt thì không mang gì vào và **không tiêu vết**.
+3. **Chỉ tính khi `amount > 0`** — sự kiện đánh dấu 0 damage (MISS, EMERGE) không kích, không tiêu.
+4. **Xuyên miễn nhiễm STATUS** → **trùm vẫn chảy máu**. Và **không cộng dồn** (đánh dấu hai lần vẫn là một vết).
+
+Tính chất 1 và 4 là thứ khiến "vĩnh viễn" nguy hiểm hơn nhiều so với cảm giác ban đầu.
+
+## E.2 · ƯU ĐIỂM
+
+**① Vá đúng lỗ §9.4 — bức tường giáp mũ.** Ba loại zombie có `armor: 1` (Pothelm, Doorbearer,
+Linebreaker) và giáp mũ **được phép đưa một đòn về 0**. Reedwing damage 1 → cô vô hiệu hoàn toàn
+trước chúng. Vì bleed cộng SAU giáp, một vết vĩnh viễn biến mọi phát của cô thành 1 damage thật,
+mãi mãi. Đây là ưu điểm thật và lớn.
+
+**② Biến bleed thành TÀI NGUYÊN ĐỘI, không phải rider cá nhân.** Một hero đánh dấu, cả đội hưởng, cả
+trận. Đây đúng là loại "khoảnh khắc build" mà bạn muốn: Cornova rải vết → Reedwing kết liễu →
+Peaburst dọn. Bản tiêu-một-lần hiện tại không tạo được cảm giác đó vì vết tan ngay sau đòn đầu.
+
+**③ Cho ba hero 0-damage một cách đóng góp đọc được.** Chardslam (`BLEED_ON_SHOVE`) và Gourdward
+(`BARBED_SHIELD`) không gây damage, nhưng vết họ đặt sẽ cộng dồn giá trị suốt trận thay vì bốc hơi.
+
+**④ Trực giác hơn.** "Vết thương hở thì cứ chảy" dễ hiểu hơn "chảy đúng một đòn rồi tự lành".
+
+## E.3 · NHƯỢC ĐIỂM
+
+### ⚠ ① VOLLEY CAP KHÔNG NHÌN THẤY BLEED — đây là điểm nặng nhất
+
+Hai con số nằm ở **hai tầng khác nhau của engine**:
+
+- **VOLLEY CAP** chạy trong `applyFusionToSkill` (`fusion.ts:488`) — nó kẹp **giá trị `DAMAGE` trên
+  effect của skill**, trước khi đòn được phát.
+- **BLEED +1** cộng trong `calculateDamage` (`gameLogic.ts:464`) — **tại thời điểm gây damage, cho
+  TỪNG instance**.
+
+Cap **không bao giờ chạm tới** bleed. Hôm nay điều đó vô hại vì vết chỉ tiêu được một lần. Bỏ tiêu
+hao đi thì bleed **lái xe tải qua đúng cái lỗ mà cap được dựng lên để bịt**:
+
+| Precision Blast của Peaburst (VOLLEY 3 phát × 2) | Hôm nay | Bleed vĩnh viễn |
+|---|---|---|
+| Mục tiêu sạch | 6 | 6 |
+| Mục tiêu đang bleed | 6 + 1 = **7** | (2+1) × 3 = **9** |
+
+Cap được sinh ra chính vì "+1 dành cho đòn đơn tới nơi thành +3" (§9.3). Bleed vĩnh viễn tái tạo
+đúng lỗi đó, ở một tầng cap không với tới.
+
+### ⚠ ② Sập nguyên luật cộng dồn vừa chốt ở Phụ lục D
+
+Luật "tầng 3 — bonus có điều kiện tiêu hao chỉ tính MỘT LẦN mỗi đòn" **không phải một quy tắc tôi
+đặt ra** — nó là **hệ quả** của việc vết tự tiêu. Bỏ tiêu hao thì hệ quả biến mất, và
+`BLEED_EXECUTION` (+2) nổ trên **mọi** instance:
+
+| Reedwing 5 ô dồn vào 1 mục tiêu đang bleed | Tổng |
+|---|---|
+| Hôm nay (khuyến nghị Phụ lục D) | **7** |
+| Bleed vĩnh viễn, không cap mới | 5 × (1+1+2) = **20** |
+
+Muốn giữ 7 thì phải **viết một cap thứ hai bằng tay** — đúng thứ Phụ lục D vừa tránh được.
+
+### ③ Xoá vĩnh viễn một trục thiết kế địch
+
+Comment trong `calculateDamage` nói rõ giáp mũ **cố ý** được phép về 0: *"một Pothelm chặn đứng viên
+đậu về ZERO là chủ đích — người chơi đang được bảo 'mang câu trả lời to hơn': đẩy nó, đốt nó, rải gai
+đường nó'"*. Bleed vĩnh viễn **là** câu trả lời to hơn — nhưng là câu trả lời **một-lần-xong-mãi-mãi**,
+mua bằng một ô fusion rẻ. Sau lượt 1, bài toán triage đó biến mất khỏi trận.
+
+### ④ Toán trùm
+
+Trùm 16–36 máu, và bleed **xuyên miễn nhiễm STATUS** nên trùm không chống được. Chỉ riêng Peaburst
+dùng Precision Blast là +3/lượt. Trận trùm 6 lượt, cả đội đánh trúng ~4–5 instance/lượt →
+**+24 tới +30 damage miễn phí**, tức gần trọn thanh máu của Blightlord (36), từ **một** vết đặt một lần.
+
+### ⚠ ⑤ Hai ô THỤ ĐỘNG sẽ tự rải vết khắp bàn, miễn phí
+
+Đây là chỗ tôi nghĩ dễ vỡ nhất và ít ai để ý:
+
+- **Rending Husk** (Thornshell, `RETALIATE_BLEED`) — **mọi** zombie đánh anh bằng cận chiến đều dính
+  vết. Không tốn action, tự chạy trong lượt địch. Mà **11/12 loại zombie thường đều là cận chiến**.
+- **Glass Rind** (Gourdward, `BARBED_SHIELD`) — mọi kẻ đập vỡ layer đều dính vết. Cũng thụ động.
+
+Với bleed tiêu-một-lần, hai ô này là "đánh dấu cho người khác kết liễu" — đúng liều. Với bleed vĩnh
+viễn, tới lượt 3 **gần như cả bàn địch mang vết vĩnh viễn**, người chơi không tốn một action nào.
+Đó không còn là một quyết định, đó là một trạng thái mặc định.
+
+### ⑥ Snowball, không phải câu đố
+
+Into the Breach bán **câu đố giải được trong một lượt với thông tin hoàn hảo**. Một dấu tích luỹ
+vĩnh viễn đẩy trận về hình dạng "lượt 1 đặt dấu, các lượt sau bấm damage". Nói thẳng ra:
+**bleed vĩnh viễn chính là Vulnerable của Slay the Spire.** Đó là cơ chế của thể loại
+deckbuilder-scaling, không phải của tactics-puzzle. Không sai — nhưng phải chọn có ý thức.
+
+### ⑦ Bảng cân bằng hiện có mất hiệu lực
+
+Toàn bộ §9 của `DESIGN-fusion-matrix.md`, đường cong độ khó encounter, giá Sol — đều đo trên tiền đề
+bleed tiêu một lần.
+
+### ⑧ Nhiễu bảng (nhẹ nhưng thật)
+
+Icon bleed hiện tại mang một thông tin **hành động được**: "đòn TIẾP THEO vào nó +1". Vĩnh viễn thì
+icon thành "thứ này hơi mềm hơn, mãi mãi" — tới lượt 4 gần như con nào cũng đeo, và icon hết mang tin.
+
+### ⑨ Làm HẸP build chứ không mở rộng
+
+Với chính hai build Reedwing bạn thiết kế: bleed vĩnh viễn bơm thẳng cho **combo 2** (burst) và
+không cho combo 1 (hit & run) gì cả. Kết quả là một build trội hẳn — ngược với mục tiêu "2 build khác
+nhau cho một nhân vật".
+
+## E.4 · Ảnh hưởng dây chuyền — từng ô cụ thể
+
+| Ô | Vai | Ảnh hưởng nếu bleed vĩnh viễn |
+|---|---|---|
+| Serrated Pea (Peaburst) | đặt vết | mỗi phát của Repeater/Precision Blast đều +1 → **lỗ VOLLEY CAP** |
+| Rending Husk (Thornshell) | đặt vết, **thụ động** | rải vết cả bàn miễn phí, 0 action — **hỏng nặng nhất** |
+| Glass Rind (Gourdward) | đặt vết, **thụ động** | như trên, qua layer |
+| Rending Chard (Chardslam) | đặt vết theo va chạm | ném 2 con vào nhau = 2 vết vĩnh viễn, mỗi lượt |
+| Shrapnel Kernel (Cornova, MỚI) | đặt vết **4 ô một lúc** | một cú cast = tối đa 4 vết vĩnh viễn |
+| **Executioner Pods (Reedwing, MỚI)** | **tiêu thụ vết** | +2 nổ trên **mọi** instance → 7 thành 20 |
+| Underslung Pods / Split Shell / Repeater | tăng số instance | mỗi ô thêm vào là một lần +1 nữa |
+
+Ba ô mới của pass này (Shrapnel Kernel, Executioner Pods, Underslung Pods) đều **khuếch đại** vấn đề —
+chúng được thiết kế trên tiền đề vết tiêu một lần.
+
+## E.5 · Năm biến thể — không phải chỉ có "có" hoặc "không"
+
+| | Cơ chế | Giữ được gì | Mất gì |
+|---|---|---|---|
+| **A · Vĩnh viễn toàn cục** | mọi vết không tiêu | trọn ưu điểm §E.2 | trọn nhược điểm §E.3 |
+| **B · Vĩnh viễn theo NGUỒN** | chỉ vết của **một** ô không tiêu (bản `BLEED_PERSIST` gốc ở [C2.1]) | cảm giác "đánh dấu mục tiêu lớn"; bán kính nổ gọn trong 1 ô | không vá được bức tường giáp cho cả đội |
+| **C · Vĩnh viễn, nhưng MỘT LẦN mỗi đòn** | vết ở lại, nhưng chỉ **một instance** của mỗi đòn được +1 | ưu ①②③, **và giữ nguyên luật Phụ lục D** | vẫn có §E.3 ③④⑤ (thụ động, trùm, trục giáp) |
+| **D · Vĩnh viễn CHỈ trên trùm / thân massive** | trash mob giữ luật cũ | trận trùm dài đúng chỗ cần dấu bền | không giải §9.4 (giáp mũ nằm ở trash mob) |
+| **E · Bleed thành DoT** (1 HP/lượt) | không dính số instance | tự giới hạn, không đụng VOLLEY CAP | đè lên `BURN`/FIRE đã có; đổi bleed từ "khuếch đại" thành "đồng hồ" |
+
+## E.6 · Khuyến nghị
+
+**Nếu mục tiêu là cảm giác build:** chọn **C** (vĩnh viễn, một-lần-mỗi-đòn) **và** đồng thời hạ hai ô
+thụ động xuống — `RETALIATE_BLEED` và `BARBED_SHIELD` đặt vết **tiêu-một-lần** như hôm nay, chỉ vết do
+**hành động chủ động** mới vĩnh viễn. Như vậy:
+- vết vĩnh viễn phải **trả bằng một action** → vẫn là quyết định;
+- không đụng VOLLEY CAP (một lần mỗi đòn);
+- luật Phụ lục D còn nguyên;
+- giáp mũ vẫn bị vá, nhưng người chơi phải chủ động vá.
+
+**Nếu muốn giữ trận đấu ở hình dạng câu đố ITB:** giữ nguyên bản tiêu-một-lần, và giải bài giáp mũ ở
+chỗ khác — **Phá Boong-ke** (Cornova #8 trong `PLAN-relics-27.md`) dùng cờ `ignoresArmor` đã có sẵn,
+là câu trả lời rẻ hơn và đúng lớp relic hơn.
+
+**Không khuyến nghị A** — không phải vì nó yếu, mà vì nó **đòi ba việc sửa kèm** mà chưa ai tính giá:
+cap thứ hai cho `BLEED_EXECUTION`, hạ hai ô thụ động, và đo lại toàn bộ §9.
+
+- **Trạng thái:** ⬜ chờ duyệt — chọn A / B / C / D / E / giữ nguyên
+- **Góp ý:**
