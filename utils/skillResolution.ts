@@ -1,7 +1,7 @@
 import { Position, Skill, StatusEffectType, TurnAction, Unit, UnitType } from '../types';
 import { calculateDamage, getSkillTargetPath, getTileAt, planPush, shieldUpdatesFor, survivesWater, wingMid, wingTwin } from './gameLogic';
 import { getFusionEffects, getFusionEffectValue, hasFusionEffect } from './fusion';
-import { applyPushPlan, pushKill, type ResolveContext } from './actionBuilders';
+import { applyPushPlan, applyCollisionDamage, pushKill, type ResolveContext } from './actionBuilders';
 import { chainDamageFor, chainStep, skillCarriesElement } from './elements';
 import { HERO_DEFINITIONS } from '../data/heroes';
 
@@ -295,6 +295,52 @@ export const planSkillActions = (
             u.hp = r.remainingHp;
             u.shield = r.remainingShield;
             if (r.isFatal) pushKill(actions, u, caster);
+        });
+    };
+
+    /**
+     * COLLISION_SPLASH — Blast Chard. Cú đẩy của anh biến thân địch thành quả lựu đạn.
+     *
+     * Tâm nổ là ĐIỂM GIỮA hai thân va chạm, nên vùng nổ là các ô kề trực giao của cả hai, trừ
+     * chính hai thân (chúng đã trả tiền va chạm rồi). Hai ô kề trực giao không có hàng xóm
+     * chung nào, nên con số luôn là 3 + 3 = 6 ô:
+     *
+     *      [  ][oo][oo][  ]
+     *      [oo][xx][xx][oo]        xx = hai thân va chạm
+     *      [  ][oo][oo][  ]        oo = 6 ô dính nổ
+     *
+     * BOM ĐẠN KHÔNG CÓ MẮT: đồng minh đứng trong vùng cũng dính. Cố ý — cùng tinh thần với
+     * `BLESS_SHOCKWAVE`, ô cũng đẩy cả người nhà và điều đó là tính năng, không phải rò rỉ.
+     *
+     * Đi qua `applyCollisionDamage` chứ không phải một đường damage riêng, vì mảnh văng ra TỪ
+     * cú va chạm: nó bỏ qua giáp mũ như mọi cú slam (nếu không thì ô này chết trước ba loại
+     * zombie giáp, mà đây là sát thương DUY NHẤT của một hero 0-damage), nó vỡ lớp chắn, và ba
+     * tanker ghép Tấm Giáp miễn nó — đúng một luật, không phải luật thứ hai.
+     *
+     * Chỉ đẩy/kéo mới nổ. Cú ném (TOSS) không đi qua `planPush` nên không sinh `impacts` — và
+     * đúng về nghĩa: ném chỉ va với mặt đất, một thân thì không có điểm giữa.
+     */
+    const applyCollisionSplash = (plan: { impacts: Array<{ a: Position; b: Position }> }) => {
+        if (!hasFusionEffect(caster, 'COLLISION_SPLASH')) return;
+        // Một thân đứng cạnh HAI vụ nổ trong cùng cú đẩy vẫn chỉ ăn một mảnh — cùng luật với
+        // `bumped`, nơi một thân bị slam hai lần vẫn chỉ chảy máu một lần.
+        const hit = new Set<string>();
+        plan.impacts.forEach(({ a, b }) => {
+            const bodies = [a, b];
+            for (const origin of bodies) {
+                for (const o of [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }]) {
+                    const t = { x: origin.x + o.x, y: origin.y + o.y };
+                    if (t.x < 0 || t.x > 7 || t.y < 0 || t.y > 7) continue;
+                    // Trừ chính hai thân va chạm.
+                    if (bodies.some(p => p.x === t.x && p.y === t.y)) continue;
+                    const victim = [...tempUnits.values()].find(
+                        u => u.hp > 0 && !u.isBurrowed && u.position.x === t.x && u.position.y === t.y);
+                    if (!victim || hit.has(victim.id)) continue;
+                    hit.add(victim.id);
+                    const r = applyCollisionDamage(victim, 1, actions);
+                    if (r?.isFatal) pushKill(actions, victim, caster);
+                }
+            }
         });
     };
 
@@ -675,6 +721,7 @@ export const planSkillActions = (
                     const plan = planPush(targetUnit, dx, dy, livingSim, board, terrainDefs, 3, new Set(), pushTiles);
                     applyPushPlan(plan, actions, tempUnits, caster);
                     applyCollisionBonus(plan);
+                    applyCollisionSplash(plan);
                 }
             }
 
@@ -837,6 +884,7 @@ export const planSkillActions = (
             const plan = planPush(body, d.x, d.y, living, board, terrainDefs, 3, new Set(), 1);
             applyPushPlan(plan, actions, tempUnits, caster);
             applyCollisionBonus(plan);
+            applyCollisionSplash(plan);
         });
     }
 

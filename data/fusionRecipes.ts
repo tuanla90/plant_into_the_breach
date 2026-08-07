@@ -521,10 +521,19 @@ export const FUSION_RECIPES: Matrix = {
             effect: { type: 'STEADFAST', value: 1 },
             live: true,
         },
+        /**
+         * [C1.2] Trước đây ô này là `PUSH_DISTANCE 1` — GIỐNG HỆT Catapult Rotor ngay dưới nó.
+         * Một hero, hai món đồ, một hiệu ứng; và vì `getFusionEffectValue` cộng dồn, cắm cả hai
+         * là +2 trên đúng một trục. Đó là ô trùng-HÀNG duy nhất của cả ma trận.
+         *
+         * Bản mới nổ RA NGOÀI cặp va chạm, nên không giẫm chân Grand Chard (`COLLISION_BONUS`,
+         * ô đã bán "hai thân va chạm ăn thêm"): hai thân do Grand Chard lo, đám đứng xem do ô
+         * này lo. Ném (TOSS) không nổ — chỉ va với mặt đất thì không có điểm giữa.
+         */
         MAT_CORNOVA: {
-            name: 'Catapult Chard',
-            description: 'Sweep throws 3 tiles instead of 2 — far enough to find the water from the middle of the board.',
-            effect: { type: 'PUSH_DISTANCE', value: 1 },
+            name: 'Blast Chard',
+            description: 'Every body he shoves into another detonates: the six tiles around the impact take 1 damage. Friendly fire included.',
+            effect: { type: 'COLLISION_SPLASH', value: 1 },
             live: true,
         },
         MAT_REEDWING: {

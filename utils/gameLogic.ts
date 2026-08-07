@@ -81,6 +81,17 @@ export interface PushPlan {
     /** Units that slammed into something. One point each, per the collision rule. */
     collided: string[];
     /**
+     * Các cú va chạm THÂN-VÀO-THÂN, giữ nguyên CẶP và VỊ TRÍ.
+     *
+     * `collided` ở trên là một mảng ID phẳng — đủ để tính "ai ăn một điểm", nhưng đã mất thông
+     * tin "ai đâm vào ai". Blast Chard (`COLLISION_SPLASH`) cần đúng thông tin đó: tâm nổ là
+     * điểm giữa HAI thân, nên phải biết chúng là cặp nào và đứng ở đâu.
+     *
+     * Va chạm vào TƯỜNG / mép bàn / Greenspire KHÔNG sinh entry ở đây — chỉ có một thân, không
+     * có điểm giữa, nên không có vụ nổ. Cùng lý do cú ném (TOSS) không nổ: nó chỉ va với mặt đất.
+     */
+    impacts: Array<{ a: Position; b: Position }>;
+    /**
      * Enemies shoved into a Greenspire that still held a sprout. They take it and leave, exactly as
      * if they had walked in — so a careless shove toward your own side feeds them. This is
      * what stops PUSH from being a free "get it away from me" button.
@@ -154,6 +165,8 @@ const planPushStep = (
     maxChain: number,
     brainlessHouses: Set<string>,
     bumped: Set<string>,
+    /** Cặp thân-vào-thân, kèm vị trí — xem `PushPlan.impacts`. Chỉ ca có HAI thân mới ghi. */
+    impacts: Array<{ a: Position; b: Position }>,
 ): PushStep => {
     const step: PushStep = { moves: [], drowned: [], doused: [], tookBrain: [], wardedHouses: [], advanced: false };
     // Solid, not merely present: without this a burrowed body JAMS an entire shove chain, and
@@ -176,6 +189,8 @@ const planPushStep = (
     if (blocker) {
         bumped.add(mover.id);
         bumped.add(blocker.id);
+        // Hai thân, hai ô kề nhau — đây là ca DUY NHẤT có điểm giữa để đặt tâm nổ.
+        impacts.push({ a: { ...mover.position }, b: { ...blocker.position } });
         return step;
     }
 
@@ -266,7 +281,7 @@ export const planPush = (
      */
     distance: number = 1,
 ): PushPlan => {
-    const plan: PushPlan = { moves: [], drowned: [], doused: [], collided: [], tookBrain: [], wardedHouses: [] };
+    const plan: PushPlan = { moves: [], drowned: [], doused: [], collided: [], impacts: [], tookBrain: [], wardedHouses: [] };
     // PUSH immunity as a STATE rather than a stat. Sandreaver is not push-immune — it is
     // push-immune while it is under the board, and an entry in `immunities` could never be
     // turned back off when it surfaces.
@@ -294,7 +309,7 @@ export const planPush = (
         if (!current) break;
 
         const step = planPushStep(
-            current, dx, dy, [...working.values()], board, terrainDefs, maxChain, claimedHouses, bumped,
+            current, dx, dy, [...working.values()], board, terrainDefs, maxChain, claimedHouses, bumped, plan.impacts,
         );
         plan.moves.push(...step.moves);
         plan.drowned.push(...step.drowned);

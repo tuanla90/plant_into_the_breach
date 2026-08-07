@@ -1015,6 +1015,15 @@ export type FusionEffectType =
     /** Bodies slammed by this hero's pushes take `value` extra collision damage. */
     | 'COLLISION_BONUS'
     /**
+     * Blast Chard — cú đẩy của hero này biến thân địch thành quả lựu đạn: khi hai thân va vào
+     * nhau, SÁU ô kề trực giao quanh cặp đó (trừ chính hai thân) ăn 1 sát thương va chạm.
+     *
+     * Khác `COLLISION_BONUS` ở chỗ nó nổ RA NGOÀI cặp va chạm: hai thân đã trả tiền va chạm rồi,
+     * ô này lo đám đứng xem. Bom đạn không có mắt — đồng minh trong vùng cũng dính.
+     * Chỉ đẩy/kéo; cú ném chỉ va với mặt đất nên không có điểm giữa để đặt tâm nổ.
+     */
+    | 'COLLISION_SPLASH'
+    /**
      * The melee basic attack lands on EVERY adjacent enemy, not just the one aimed at.
      * NOTE: data-orphaned by the remap pass — no recipe grants it today. Kept for the same
      * reason SPIKE_TRAIL is: the engine resolves it, so a future cell can pick it back up.
