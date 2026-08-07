@@ -579,6 +579,20 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
     const reach = getFusionEffectValue(caster, 'ATTACK_RANGE_BONUS');
     let rangeValue = reach > 0 ? skill.rangeValue + reach : skill.rangeValue;
 
+    /**
+     * RIND PELLET (SHIELD_SHOT) — viên khiên bay dọc hàng tới 4 ô.
+     *
+     * Con số nằm ở đây chứ không mượn `ATTACK_RANGE_BONUS` để ô này TỰ CHỨA: tầm với và luật
+     * "đậu vào thân đầu tiên bất kể phe" là một món, không phải hai thứ tình cờ đi cùng nhau.
+     *
+     * Không cần đổi `rangeType`: nhánh MELEE trong `getValidSkillTargets` vốn đã đi ra bốn
+     * hướng và DỪNG ở thân đầu tiên mỗi hướng — đúng "bắn dọc hàng" mà thẻ bài vẫn hứa. Nghi
+     * ngờ trong [C6.4] rằng +3 tầm sẽ cho "chọn tự do trong vùng 4" là sai; đã đối chiếu.
+     */
+    if (hasFusionEffect(caster, 'SHIELD_SHOT') && skill.effects.some(e => e.type === 'SHIELD')) {
+        rangeValue = Math.max(rangeValue, 4);
+    }
+
     // Pea Lance: the melee swing reaches further, but the shove is gone — reach
     // is bought with the push, not stacked on top of it.
     //

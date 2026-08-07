@@ -216,6 +216,13 @@ export const planSkillActions = (
      */
     const applyAllyEffects = (ally: Unit, at: Position) => {
         skill.effects.forEach(e => {
+            /**
+             * Rind Pellet có thể đưa thân này tới đây với `isEnemy === true`. Khi đó CHỈ lớp
+             * chắn được phép đậu: hồi máu, ban phước, cho thêm hành động cho zombie thì không
+             * phải hình phạt nữa, đó là một ô hỏng. Hình phạt đúng liều là "bạn vừa bọc giáp
+             * cho nó" — không hơn.
+             */
+            if (ally.isEnemy && e.type !== 'SHIELD') return;
             if (e.type === 'HEAL') actions.push({ type: 'APPLY_DAMAGE', targetId: ally.id, amount: e.value || 0, eventType: 'HEAL', pos: at });
             if (e.type === 'SHIELD') {
                 /**
@@ -448,7 +455,12 @@ export const planSkillActions = (
             }
         }
 
-        if (targetUnit && !targetUnit.isEnemy) {
+        // Cổng phe thứ hai của Rind Pellet. `applyAllyEffects` tự lọc để chỉ lớp chắn đậu được
+        // lên thân địch, nên mở cổng ở đây là an toàn.
+        const shieldShotHere = !!targetUnit && targetUnit.isEnemy
+            && hasFusionEffect(caster, 'SHIELD_SHOT')
+            && skill.effects.some(e => e.type === 'SHIELD');
+        if (targetUnit && (!targetUnit.isEnemy || shieldShotHere)) {
             applyAllyEffects(targetUnit, targetPos);
             /**
              * SKILL_AURA (Solar Corona) — the same gift, to everyone standing within 2 tiles

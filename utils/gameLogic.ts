@@ -940,6 +940,17 @@ export const getValidSkillTargets = (
         );
 
         if (isAllyTargeting) {
+            /**
+             * RIND PELLET (SHIELD_SHOT) — viên khiên bay dọc hàng và đậu vào thân ĐẦU TIÊN nó
+             * gặp, BẤT KỂ PHE. Là người nhà thì cứu đúng người; là zombie chắn hàng thì bạn vừa
+             * bọc giáp cho nó, và đội nhà phải đập vỡ lớp đó trước.
+             *
+             * Đây là hình phạt cho việc ngắm ẩu, và nó chỉ nới đúng một cửa: `SHIELD`. HEAL,
+             * BLESS, BUFF_STAT vẫn ally-only — chỉ lớp chắn mới bay lạc được.
+             */
+            const shieldShot = skill.effects.some(e => e.type === 'SHIELD')
+                && hasFusionEffect(unit, 'SHIELD_SHOT');
+            if (shieldShot) return u.id !== unit.id;
             return !u.isEnemy && u.id !== unit.id;
         }
         // FRIENDLY FIRE: a damaging skill may be aimed at whatever stands in its geometry,

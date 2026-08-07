@@ -572,8 +572,8 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_PEABURST: {
             name: 'Rind Pellet',
-            description: 'Reinforce is fired down a row: it shells the first ally — or Greenspire — up to 4 tiles away.',
-            effect: { type: 'ATTACK_RANGE_BONUS', value: 3 },
+            description: 'Reinforce is fired down a row and shells the FIRST body it meets, up to 4 tiles — ally, Greenspire, or the zombie standing in the way. Aim badly and you have just armoured it.',
+            effect: { type: 'SHIELD_SHOT' },
             live: true,
         },
         MAT_SNAPMAW: {

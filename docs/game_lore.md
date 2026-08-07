@@ -70,12 +70,16 @@ Những chiến binh kiên cường đâm xuyên qua hàng ngũ Zombie để să
 Ba Lõi Nguyên Tố (Lửa, Băng, Sét) bị văng ra và chôn vùi tại ba **Châu Lục (Stages)** cách biệt hàng ngàn dặm đại dương nước đen. Để di chuyển giữa các Đại lục này, chúng tôi phải dùng đến một **Cỗ Tàu** vượt biển khổng lồ.
 
 Ở mỗi Châu Lục, năng lượng Nguyên tố rỉ ra từ lõi đã tác động lên môi trường xung quanh. Những con Zombie lảng vảng gần Lõi nhất bị đột biến thành những **Boss khổng lồ** mang sức mạnh Lửa, Băng, hoặc Sét.
-Để đối phó với chúng, sau khi đập nát một tên Boss, tôi đặt một cỗ máy **Material** cạnh cái xác **Zombie Boss**, cấy **Mầm Sống** vào giữa để sinh ra một **Tân Anh Hùng (Bio-Hero mới)**. Nhưng quan trọng hơn cả, khi Lãnh chúa Boss gục ngã, Lò phản ứng Sol của tôi sẽ Hấp thụ cặn năng lượng Nguyên Tố của hắn và mang khối năng lượng đó lên Cỗ Tàu.
+Để đối phó với chúng, sau khi đập nát một tên Boss, tôi sẽ lấy một **Material** (vật liệu cơ khí) để làm bộ khung, đặt cạnh cái xác **Zombie Boss**, rồi cấy **Mầm Sống** vào giữa để sinh ra một **Tân Anh Hùng (Bio-Hero mới)**. 
+
+Tuy nhiên, có một giới hạn vật lý cực kỳ nghiêm ngặt: **Các Material chỉ có thể dùng để Hợp Trái (Fuse) khi chúng đang ở trạng thái Ngủ Đông (Dormant).** Nếu một Material đã được kích hoạt hệ thống và mang ra tiền tuyến chiến đấu, bộ tản nhiệt của nó sẽ phải hoạt động hết công suất, đồng thời các van xả sẽ mở ra khiến cấu trúc lõi bị phơi nhiễm vĩnh viễn với bụi Miasma. Một cỗ máy "bẩn" và "quá nhiệt" như vậy sẽ ngay lập tức thiêu rụi bất cứ Mầm Sống nào được cấy vào. Do đó, một khi Material đã bước ra chiến trường, nó vĩnh viễn mất đi khả năng dung hợp và chỉ có thể chiến đấu như một đơn vị độc lập cho đến khi vỡ vụn.
+
+Nhưng quan trọng hơn cả, khi Lãnh chúa Boss gục ngã, Lò phản ứng Sol của tôi sẽ Hấp thụ cặn năng lượng Nguyên Tố của hắn và mang khối năng lượng đó lên Cỗ Tàu.
 
 Chuyến hải trình vượt đại dương để sang Châu lục tiếp theo kéo dài ròng rã hàng tháng trời. Trong khoảng không gian khép kín của Cỗ Tàu, cơ thể sinh học của toàn bộ đội quân Bio-Mechs bị phơi nhiễm liên tục với mảnh Nguyên Tố mà tôi vừa thu thập được. Giống hệt như lũ Zombie, cơ thể thực vật của chúng tôi tự động biến đổi để thích nghi với nguồn năng lượng mới.
 Ngay khi Cỗ Tàu cập bến ở Châu Lục mới, hệ thống lập tức cho phép tôi chọn lựa Quyền năng Nguyên Tố (Lửa/Băng/Sét) để kích hoạt và Hợp Trái (Fuse) cho đội hình ngay từ điểm khởi đầu.
 
-Tuy nhiên, có một giới hạn tàn nhẫn về mặt vật lý: **Sức ép năng lượng của mỗi Nguyên Tố là quá lớn đối với một cá thể Bio-Mech.** Mỗi cái cây, mỗi cỗ xe chỉ có thể gánh chịu và dung hợp (Fuse) với **duy nhất một Nguyên Tố**. 
+Tuy nhiên, sức ép năng lượng của mỗi Nguyên Tố là quá lớn đối với một cá thể Bio-Mech. Mỗi cái cây, mỗi cỗ xe chỉ có thể gánh chịu và dung hợp (Fuse) với **duy nhất một Nguyên Tố**. 
 Nếu tôi cố gắng nhồi nhét cả Lửa và Băng vào cùng một chiến binh, sự xung đột nhiệt động học sẽ xé toạc cấu trúc DNA và làm nổ tung lõi cơ khí của họ ngay lập tức. Điều này buộc tôi phải tính toán chiến thuật cực kỳ kỹ lưỡng: Ai sẽ nhận sức mạnh của Lửa để thiêu rụi đội hình địch? Ai sẽ nhận Băng để làm chậm bước tiến của bầy đàn? Tôi không thể tạo ra một siêu chiến binh sở hữu mọi sức mạnh, mà phải rải đều chúng ra thành một đội quân đa dạng.
 
 ---

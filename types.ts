@@ -1135,6 +1135,18 @@ export type FusionEffectType =
      */
     | 'SPLIT_SHOT'
     /**
+     * Rind Pellet — kỹ năng lớp chắn của hero này bắn dọc hàng tới 4 ô, và đậu vào thân ĐẦU
+     * TIÊN nó gặp, **bất kể phe**.
+     *
+     * Là người nhà thì cứu đúng người; là zombie chắn hàng thì bạn vừa bọc giáp cho nó và đội
+     * nhà phải đập vỡ lớp đó trước. Hình phạt cho việc ngắm ẩu, zero random, đọc được hết
+     * trước khi bấm.
+     *
+     * Chỉ nới đúng một cửa: `SHIELD`. Hồi máu / ban phước / cho thêm hành động vẫn ally-only —
+     * bọc giáp nhầm cho địch là một sai lầm, hồi máu cho địch là một ô hỏng.
+     */
+    | 'SHIELD_SHOT'
+    /**
      * Shields this hero hands out spill over to whoever stands beside the recipient.
      * Replaces SHIELD_BONUS ("+2 size"), which stopped meaning anything when shields became
      * LAYERS (PLAN-hero-zephyr §6.0) — a layer has no size to enlarge, so the pumpkin axis
