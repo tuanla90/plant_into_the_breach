@@ -1029,8 +1029,12 @@ export const processTurn = (
                  */
                 const digestThorns = (targetUnit.digestingTurns ?? 0) > 0
                     && hasFusionEffect(targetUnit, 'DIGEST_RETALIATE') ? 1 : 0;
+                // THORNED BLOOM (`BLESS_RETALIATE`): gai Sunbloom gửi kèm lời ban phước. Cộng
+                // vào cùng chỗ với ba nguồn trên — RETALIATION RULE có MỘT nơi cộng, và ô này
+                // là ô CỘNG DỒN nên nó phải nằm đúng trong phép cộng đó chứ không đứng riêng.
+                const blessThorns = targetUnit.blessThorns ? 1 : 0;
                 const thorns = inMelee
-                    ? (targetUnit.retaliateDamage ?? 0) + getFusionEffectValue(targetUnit, 'RETALIATE_DAMAGE') + shieldThorns + digestThorns
+                    ? (targetUnit.retaliateDamage ?? 0) + getFusionEffectValue(targetUnit, 'RETALIATE_DAMAGE') + shieldThorns + digestThorns + blessThorns
                     : 0;
                 if (thorns > 0) {
                     const back = calculateDamage(enemy, thorns, false);
@@ -2132,6 +2136,22 @@ export const processTurn = (
             actions.push({ type: 'UPDATE_UNIT_STATE', unitId: u.id, updates: { statusEffects: next } });
         });
     }
+
+    /**
+     * GAI CỦA LỜI BAN PHƯỚC TÀN Ở ĐÂY (Thorned Bloom) — muộn hơn `BLESSED` đúng một pha.
+     *
+     * `BLESSED` chết ở cửa VÀO lượt địch (dòng ~180) vì nửa +1 sát thương của nó là chuyện
+     * của lượt người chơi. Gai thì chỉ có việc để làm trong pha vừa chạy xong, nên nó phải
+     * sống qua pha đó rồi mới tắt — dọn ở cửa vào thì ô này rỗng y như lúc chưa wire.
+     *
+     * Dọn ở đây, không dựa vào NEW_TURN_RESET: một buff một-lượt mà không tự dọn thì lượt sau
+     * vẫn còn, và "một lượt" âm thầm thành "vĩnh viễn" — cùng cái bẫy `CONVOYED` ngay trên.
+     */
+    remainingUnits.forEach(u => {
+        if (!u.blessThorns) return;
+        u.blessThorns = false;
+        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: u.id, updates: { blessThorns: false } });
+    });
 
     /**
      * VẾT THƯƠNG SE LẠI — mỗi thân rụng MỘT vết mỗi vòng, tính ở cuối lượt địch.

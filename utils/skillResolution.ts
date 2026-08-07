@@ -106,11 +106,20 @@ export const planSkillActions = (
             });
         }
     } else if (hasRadialShield) {
-        // Self plus the four beside him, allies filtered by the SHIELD branch itself.
+        /**
+         * Tâm dấu cộng là ô người chơi BẤM, không phải ô Gourdward đứng.
+         *
+         * Với Encase trần hai thứ đó là một (SELF chỉ ngắm được chính mình), nên dòng này
+         * không đổi gì. Với Rolling Rind (`ENCASE_RANGE`) thì tâm dời sang ô kề — và anh vẫn
+         * được bọc, tự động, vì anh vẫn kề cái tâm mới. Không cần một luật đặc biệt nào để
+         * "vẫn bảo vệ cả Gourdward": hình học đã lo.
+         *
+         * Ally được lọc bởi chính nhánh SHIELD phía dưới.
+         */
         targets.length = 0;
-        targets.push(caster.position);
+        targets.push(pos);
         [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }].forEach(o => {
-            const t = { x: caster.position.x + o.x, y: caster.position.y + o.y };
+            const t = { x: pos.x + o.x, y: pos.y + o.y };
             if (t.x >= 0 && t.x < 8 && t.y >= 0 && t.y < 8) targets.push(t);
         });
     }
@@ -151,16 +160,45 @@ export const planSkillActions = (
      *
      * Trúng gì thì trúng, kể cả người nhà: viên đạn không biết ai đứng sau lưng con nó bắn.
      */
-    const splitTiles = new Set<string>();
-    if (hasFusionEffect(caster, 'SPLIT_SHOT')) {
-        const sign = (n: number) => (n > 0 ? 1 : n < 0 ? -1 : 0);
-        const d = { x: sign(pos.x - caster.position.x), y: sign(pos.y - caster.position.y) };
-        if (d.x !== 0 || d.y !== 0) {
-            const t = { x: pos.x + d.x, y: pos.y + d.y };
-            if (t.x >= 0 && t.x < 8 && t.y >= 0 && t.y < 8
-                && !targets.some(p => p.x === t.x && p.y === t.y)) {
-                targets.push(t);
-                splitTiles.add(`${t.x},${t.y}`);
+    /**
+     * Ô PHỤ — ô thứ hai nằm THÊM một bước trên đường kẻ caster → mục tiêu, và **luôn đúng 1
+     * sát thương**. Hai ô khác hàng khác cột dùng chung đúng một hình học và đúng một con số:
+     * Split Shell (`SPLIT_SHOT`, viên đạn phụ của Cornova) và Piercing Needles
+     * (`PIERCING_NEEDLE`, cú quét xuyên của Thornshell).
+     *
+     * Ghim ở 1 chứ không đọc `damage` của chủ thể: nếu để nó ăn theo thì mọi buff đều nhân
+     * đôi qua cửa này — đúng cái lỗ VOLLEY CAP tồn tại để bịt, chỉ mở ở chỗ khác. Với Piercing
+     * Needles con số này còn là lời hứa gốc trên thẻ ("giảm dần xuống 1").
+     */
+    const secondaryTiles = new Set<string>();
+    {
+        /**
+         * SPLIT SHELL: trục là đường HÌNH HỌC caster → target, không phải đường bay của viên
+         * đạn — đạn cối bay vòng cung nên nó không có "phía sau" nào để đọc. Bước hướng lấy
+         * bằng dấu của hiệu toạ độ, ra đúng một trong tám hướng: xác định, không dò địch,
+         * không chọn, không hoà. Chỉ khi cô đứng thẳng hàng/thẳng cột thì ô phụ mới nằm chỗ
+         * xếp đội hình được — người chơi tự học rằng đứng thẳng là đứng đúng.
+         *
+         * PIERCING NEEDLES: cùng hình học, nhưng chỉ trên đòn CẬN CHIẾN có sát thương — nên
+         * hướng luôn là một trong bốn trục, và "ô ngay sau" đọc đúng nghĩa đen. Không đụng
+         * `PIERCE_ATTACK` (thứ chỉ LINE/DASH sinh đường đi mới dùng được).
+         *
+         * Trúng gì thì trúng, kể cả người nhà: lưỡi gai không biết ai đứng sau lưng con nó đâm.
+         */
+        const split = hasFusionEffect(caster, 'SPLIT_SHOT');
+        const pierce = hasFusionEffect(caster, 'PIERCING_NEEDLE')
+            && skill.rangeType === 'MELEE'
+            && skill.effects.some(e => e.type === 'DAMAGE');
+        if (split || pierce) {
+            const sign = (n: number) => (n > 0 ? 1 : n < 0 ? -1 : 0);
+            const d = { x: sign(pos.x - caster.position.x), y: sign(pos.y - caster.position.y) };
+            if (d.x !== 0 || d.y !== 0) {
+                const t = { x: pos.x + d.x, y: pos.y + d.y };
+                if (t.x >= 0 && t.x < 8 && t.y >= 0 && t.y < 8
+                    && !targets.some(p => p.x === t.x && p.y === t.y)) {
+                    targets.push(t);
+                    secondaryTiles.add(`${t.x},${t.y}`);
+                }
             }
         }
     }
@@ -301,6 +339,22 @@ export const planSkillActions = (
                 if (caster.element && !ally.element && !ally.blessedElement) {
                     updates.blessedElement = caster.element;
                     ally.blessedElement = caster.element;
+                }
+                /**
+                 * THORNED BLOOM (`BLESS_RETALIATE`) — lời ban phước mọc gai.
+                 *
+                 * CỘNG DỒN, không phải "trao gai cho ai chưa có": đang phản 1 mà được ban thì
+                 * phản 2. Nên nó đắt nhất trên đúng người đã có gai — Thornshell, Ironhusk
+                 * Jamming Plate, ally đang đeo lớp Spined Rind — và vẫn có nghĩa trên một thân
+                 * trơn (0 → 1). Ô hỗ trợ đọc được cả hai chiều.
+                 *
+                 * Đóng dấu ở đây vì lúc con zombie cắn thì Sunbloom và đồ của cô đã ngoài tầm,
+                 * y hệt `blessPower`. Đồng hồ của nó dài hơn `BLESSED` một pha — lý do viết
+                 * trong types.ts.
+                 */
+                if (hasFusionEffect(caster, 'BLESS_RETALIATE') && !ally.blessThorns) {
+                    updates.blessThorns = true;
+                    ally.blessThorns = true;
                 }
                 if (Object.keys(updates).length > 0) {
                     actions.push({ type: 'UPDATE_UNIT_STATE', unitId: ally.id, updates });
@@ -563,10 +617,9 @@ export const planSkillActions = (
                 // The splash ring lands at half strength, floored — Needle Bloom's 4 bursts
                 // for 2, and Nova Shell's ring (1 damage) grazes for 0 and only chills.
                 if (isSplash) rawDmg = Math.floor(rawDmg / 2);
-                // SPLIT SHELL: viên phụ luôn đúng 1, không đọc số của viên chính. Nếu để nó
-                // ăn theo `damage` thì mọi buff của cô sẽ nhân đôi qua ô này — đúng cái lỗ
-                // mà VOLLEY CAP tồn tại để bịt, chỉ khác là mở ở một cửa khác.
-                if (splitTiles.has(`${targetPos.x},${targetPos.y}`)) rawDmg = 1;
+                // Ô PHỤ (Split Shell / Piercing Needles) luôn đúng 1 — lý do ở chỗ khai báo
+                // `secondaryTiles` phía trên.
+                if (secondaryTiles.has(`${targetPos.x},${targetPos.y}`)) rawDmg = 1;
                 const totalDmg = rawDmg;
                 // Use tempUnit for calculation (safe)
                 const result = calculateDamage(targetUnit, totalDmg, hasPierce, false, caster);

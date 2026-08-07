@@ -1879,5 +1879,15 @@ export const VI: Record<string, string> = {
     "He can crawl 1 tile a turn while digesting. Still no attack, still no skill.": "Đang tiêu hoá anh vẫn bò được 1 ô mỗi lượt. Vẫn không đánh, vẫn không dùng skill.",
     "While digesting, anything that hits him in melee takes 1 back.": "Trong lúc anh tiêu hoá, kẻ nào đánh cận chiến trúng anh đều ăn lại 1.",
     "Anchored Gullet": "Họng Neo Chặt",
+
+    // --- Đợt 13: 4 ô rỗng cuối cùng ([A7] khép lại). ---
+    "Thorned Bloom": "Đoá Hoa Gai",
+    "The blessed ally retaliates for 1 more through the coming enemy turn — on top of whatever thorns it already has.": "Đồng minh được ban phước phản đòn thêm 1 suốt lượt địch kế tiếp — cộng lên phần gai nó vốn đã có.",
+    "Overdrive Charge": "Cú Húc Vượt Ngưỡng",
+    "Rolling Charge travels a tile further than it otherwise would.": "Cú Lăn Húc lao xa thêm một ô so với bình thường.",
+    "Piercing Needles": "Kim Xuyên Thấu",
+    "Thorn Swipe runs straight through: whatever stands directly behind the target takes 1 as well.": "Cú Quét Gai đâm xuyên thẳng: thứ đứng ngay sau mục tiêu cũng ăn 1.",
+    "Rolling Rind": "Vỏ Bí Lăn",
+    "Encase can be centred on a tile beside him instead of on himself — he is still inside the plus.": "Bọc Giáp có thể lấy tâm là một ô kề bên thay vì chính anh — anh vẫn nằm trong dấu cộng.",
     "Devour swallowed it: nothing can push or pull him while he digests. Devour failed: the target cannot move next turn.": "Nuốt Chửng nuốt trúng: không gì đẩy hay kéo anh nổi suốt lúc tiêu hoá. Nuốt Chửng trượt: mục tiêu không đi được ở lượt sau.",
 };

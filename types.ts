@@ -464,6 +464,17 @@ export interface Unit {
    */
   blessPower?: number;
   /**
+   * Ơn Trên Sol lần này có mang GAI theo (Sunbloom's Thorned Bloom): thân được ban phản đòn
+   * thêm 1. Đóng dấu lên thân được ban, cùng lý do với `blessPower`.
+   *
+   * Nhưng ĐỒNG HỒ thì khác — và đó là chỗ dễ viết sai nhất của ô này. Nửa +1 sát thương của
+   * lời ban phước là chuyện của LƯỢT NGƯỜI CHƠI (ban trước, vung sau) nên `BLESSED` hết hạn
+   * ngay cửa vào lượt địch. Phản đòn thì ngược lại: nó chỉ xảy ra TRONG lượt địch. Đọc chung
+   * `BLESSED` thì cái gai này không bao giờ nổ được lấy một lần. Vì thế nó là cờ riêng, sống
+   * thêm đúng một pha địch rồi bị dọn ở cuối processTurn.
+   */
+  blessThorns?: boolean;
+  /**
    * The LAYER currently worn is spiked (Gourdward's Glass Rind): whatever breaks it starts
    * bleeding. Written at every grant site alongside `shield`, so it can never outlive the
    * layer it describes — a body re-shelled by somebody else is re-flagged false.
@@ -1424,7 +1435,15 @@ export type FusionEffectType =
      */
     | 'FLYER_REPEL'
     | 'ENCASE_RANGE'
-    | 'LASER_NEEDLE'
+    /**
+     * Piercing Needles — cu quet cua Thornshell dam XUYEN qua than no danh, trung not than
+     * dung ngay sau theo duong ke tu anh toi muc tieu. Doi ten tu `LASER_NEEDLE`: khong co
+     * tia laser nao ca, va nua "cham cham -> xa thu" da duoc chuyen sang lop relic.
+     *
+     * Than bi xuyen an dung 1, khong doc so cua nhat dao chinh — cung ly do SPLIT_SHOT ghim
+     * vien phu o 1: de moi buff cua chu the khoi nhan doi qua mot cua thu hai (VOLLEY CAP).
+     */
+    | 'PIERCING_NEEDLE'
     | 'BLEED_EXECUTION'
     | 'HARVEST_SHIELD'
     | 'SHIELD_ON_SKILL_KILL'

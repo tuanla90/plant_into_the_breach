@@ -625,6 +625,33 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
         rangeValue = Math.max(rangeValue, 4);
     }
 
+    /**
+     * OVERDRIVE CHARGE (`DASH_DISTANCE`) — Rolling Charge lao xa thêm một ô.
+     *
+     * Tách khỏi `ATTACK_RANGE_BONUS` ngay trên chứ không mượn nó, vì hai thứ khác nghĩa: cái
+     * kia nới TẦM VỚI của mọi đòn (đứng yên mà với xa hơn), cái này nới QUÃNG LAO của đúng
+     * cú húc (thân thể đi xa hơn). Ironhusk mang cả hai thì cộng dồn, và đó là điều đúng —
+     * hai ô, hai chuyện.
+     */
+    if (skill.rangeType === 'DASH') {
+        rangeValue += getFusionEffectValue(caster, 'DASH_DISTANCE');
+    }
+
+    /**
+     * ROLLING RIND (`ENCASE_RANGE`) — dấu cộng của Encase được đặt lệch đi một ô.
+     *
+     * KHÔNG phải "bọc xa hơn": nó cho phép **dời TÂM** của dấu cộng sang một ô kề, và vì
+     * Gourdward vẫn kề cái tâm mới nên anh vẫn nằm trong vùng. Kịch bản đổi từ "mình + hàng
+     * sau" thành "mình + một tank nữa ở phía trước" mà không thêm một mục tiêu nào — bề rộng
+     * vẫn đúng 5 ô, chỉ là 5 ô đó nằm chỗ khác.
+     *
+     * Viết bằng `rangeValue` trên `SELF` thay vì đổi `rangeType`: ba nơi (overlay hình học, ô
+     * ngắm hợp lệ, và bộ phân giải) đều đọc chung một con số, nên không nơi nào lệch được.
+     */
+    if (skill.rangeType === 'SELF' && (skill.sunCost ?? 0) > 0 && hasShield) {
+        rangeValue += getFusionEffectValue(caster, 'ENCASE_RANGE');
+    }
+
     // Pea Lance: the melee swing reaches further, but the shove is gone — reach
     // is bought with the push, not stacked on top of it.
     //

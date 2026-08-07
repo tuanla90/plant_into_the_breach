@@ -129,7 +129,7 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_THORNSHELL: {
             name: 'Thorned Bloom',
-            description: 'Solar Blessing grants retaliate 1 damage to the blessed ally.',
+            description: 'The blessed ally retaliates for 1 more through the coming enemy turn — on top of whatever thorns it already has.',
             effect: { type: 'BLESS_RETALIATE' },
             live: true,
         },
@@ -302,7 +302,7 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_REEDWING: {
             name: 'Overdrive Charge',
-            description: 'Rolling Charge travels 4 tiles instead of 3, allowing long-distance engagements.',
+            description: 'Rolling Charge travels a tile further than it otherwise would.',
             effect: { type: 'DASH_DISTANCE', value: 1 },
             live: true,
         },
@@ -452,8 +452,8 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_PEABURST: {
             name: 'Piercing Needles',
-            description: 'Thorn Swipe shoots a needle beam piercing up to 2 targets in a row — damage tapers off with distance down to 1.',
-            effect: { type: 'LASER_NEEDLE', value: 2 },
+            description: 'Thorn Swipe runs straight through: whatever stands directly behind the target takes 1 as well.',
+            effect: { type: 'PIERCING_NEEDLE', value: 2 },
             live: true,
         },
         MAT_SNAPMAW: {
@@ -607,7 +607,7 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_REEDWING: {
             name: 'Rolling Rind',
-            description: 'Encase can be cast up to 2 tiles away to protect distant allies.',
+            description: 'Encase can be centred on a tile beside him instead of on himself — he is still inside the plus.',
             effect: { type: 'ENCASE_RANGE', value: 1 },
             live: true,
         },

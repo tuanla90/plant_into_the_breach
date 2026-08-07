@@ -950,6 +950,27 @@ export const wingNear = (origin: Position, cell: Position): Position => {
 const onBoard = (p: Position): boolean => p.x >= 0 && p.x < 8 && p.y >= 0 && p.y < 8;
 
 // --- SKILL GEOMETRY ---
+/**
+ * Các ô mà một skill `SELF` được phép dời tâm sang, tính theo Manhattan. Trả mảng rỗng khi
+ * `reach <= 0`, tức là với mọi skill SELF của game trừ Encase-có-Rolling-Rind.
+ *
+ * Một hàm, ba nơi gọi (overlay hình học, ô ngắm hợp lệ, và bộ phân giải qua chính `pos` người
+ * chơi bấm) — cùng kỷ luật mà `wingTwin` giữ, và vì cùng lý do: ba nơi đó mà lệch nhau thì
+ * người chơi bấm được một ô rồi lớp chắn mọc ở chỗ khác.
+ */
+export const selfOffsets = (reach: number | undefined): Position[] => {
+    const r = Math.floor(reach ?? 0);
+    if (r <= 0) return [];
+    const out: Position[] = [];
+    for (let dx = -r; dx <= r; dx++) {
+        for (let dy = -r; dy <= r; dy++) {
+            if (dx === 0 && dy === 0) continue;
+            if (Math.abs(dx) + Math.abs(dy) <= r) out.push({ x: dx, y: dy });
+        }
+    }
+    return out;
+};
+
 export const getSkillGeometry = (
     unit: Unit,
     skill: Skill
@@ -994,6 +1015,12 @@ export const getSkillGeometry = (
     }
     else if (skill.rangeType === 'SELF') {
         tiles.push(unit.position);
+        // Rolling Rind: một SELF có `rangeValue` là một SELF được phép dời tâm (utils/fusion,
+        // ENCASE_RANGE). Mọi skill SELF khác vẫn mang rangeValue 0 nên vòng này không chạy.
+        selfOffsets(skill.rangeValue).forEach(o => {
+            const t = { x: unit.position.x + o.x, y: unit.position.y + o.y };
+            if (t.x >= 0 && t.x < 8 && t.y >= 0 && t.y < 8) tiles.push(t);
+        });
     }
     else if (skill.rangeType === 'WING_PAIR') {
         const midshot = hasFusionEffect(unit, 'WING_MIDSHOT');
@@ -1222,6 +1249,14 @@ export const getValidSkillTargets = (
         });
     } else if (skill.rangeType === 'SELF') {
         targets.push(unit.position);
+        // Rolling Rind — xem selfOffsets. Ô kề phải là ô CÓ THẬT trên bảng (không phải mép
+        // bàn, không phải lỗ) vì nó sắp thành tâm của một dấu cộng.
+        selfOffsets(skill.rangeValue).forEach(o => {
+            const t = { x: unit.position.x + o.x, y: unit.position.y + o.y };
+            if (t.x < 0 || t.x >= 8 || t.y < 0 || t.y >= 8) return;
+            if (!getTileAt(t, board)) return;
+            targets.push(t);
+        });
     } else if (skill.rangeType === 'WING_PAIR') {
         // Either cell of a direction is aimable when EITHER cell of that direction holds a
         // valid target — the player picks a heading, not a tile, and the twin fires with it.
