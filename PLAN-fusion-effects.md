@@ -1455,7 +1455,7 @@ thích trên nói là hỏng — trừ khi `SUN_PER_TURN_INCOME` cũng đổi. *
 
 **Tôi khuyến nghị (b).** Bạn chốt giúp.
 
-### ② Split Shell — cùng hàng VÀ cột, tầm như Peaburst ✅
+### ② Split Shell — ~~cùng hàng VÀ cột~~ ⚠ **ĐÃ GHI ĐÈ Ở [G.8②]** — bản chốt là MỘT viên theo hướng C→T
 
 Viên phụ kích khi có địch đứng **cùng hàng hoặc cùng cột với mục tiêu**, trong tầm kiểu `LINE` của
 Peaburst. Hình là một dấu cộng mọc ra từ **mục tiêu**, không phải từ Cornova:
@@ -1543,4 +1543,121 @@ cùng một cửa với hai loại kia.
 | 5 | Rename `TAUNT` → `PROVOKE` toàn bộ — làm luôn hay đợt riêng | bạn |
 
 - **Trạng thái:** ⬜ chờ duyệt
+- **Góp ý:**
+
+## G.8 · Chốt vòng 3b — và một ước tính của tôi bị lật ngược
+
+### ① Twin Sol × Dawn Harvest — phương án (b) ✅ CHỐT
+
+Harvest giữ **50**. Dawn Harvest trừ **35** để đổi lấy layer. Twin Sol nhân đôi phần còn lại:
+`(50 − 35) × 2` = **30 Sol/lượt + 1 layer**. Không đụng chú thích 25→50 đã thành văn.
+
+Ba trạng thái của Sunbloom, đọc thành bảng cho rõ:
+
+| Cắm gì | Một lượt Harvest cho |
+|---|---|
+| không gì | 50 Sol |
+| Twin Sol Battery | **100** Sol |
+| Dawn Harvest | 15 Sol + **1 layer** |
+| cả hai | **30** Sol + **1 layer** |
+
+### ② Split Shell — ⚠ GHI ĐÈ [G.6②] ✅ CHỐT
+
+Bỏ bản "dấu cộng quanh mục tiêu". Bản mới, đơn giản hơn hẳn: **đúng MỘT viên phụ, bay tiếp theo hướng
+kẻ từ Cornova tới mục tiêu.**
+
+- Bước hướng `d = ( sign(T.x − C.x), sign(T.y − C.y) )` — tám hướng, hoàn toàn xác định.
+- Ô phụ = `T + d`.
+- Không dò địch, không chọn, không hoà. Trúng gì thì trúng, ô trống thì thôi.
+
+```
+    C . . . . .          C = Cornova
+    . . . . . .          T = mục tiêu chính
+    . . T P . .          P = ô viên phụ (thẳng hàng → P nằm ngay sau T)
+    . . . . . .
+
+    C . . . . .          Lệch hàng → d là hướng chéo,
+    . . . . . .          P vẫn nằm đúng trên đường kéo dài C→T
+    . . T . . .
+    . . . P . .
+```
+
+*"Có thể bắn chéo nhưng ủng hộ bắn thẳng"* — đúng như bạn nói: cơ chế chạy ở cả tám hướng, nhưng chỉ
+khi Cornova đứng thẳng hàng/thẳng cột với mục tiêu thì ô phụ mới nằm ở chỗ đọc được và xếp đội hình
+được. Người chơi tự học rằng đứng thẳng hàng là đứng đúng.
+
+Và nó **giải luôn phản đối cũ của bạn**: trục không phải đường bay của viên đạn (vốn cong), mà là
+đường hình học Cornova → mục tiêu. Đạn vẫn bay vòng cung, ô phụ vẫn xác định.
+
+### ③ Bleed decay rơi **cuối vòng** ✅ CHỐT
+
+Trần 5, rơi 1 mỗi vòng, rơi sau khi lượt địch kết thúc. Vết đặt trong lượt địch (Rending Husk, Glass
+Rind) còn nguyên giá trị cho lượt người chơi kế tiếp.
+
+### ④ TAUNTED — ⚠ TÔI ƯỚC TÍNH SAI Ở [G.2②], RẺ HƠN NHIỀU
+
+Tôi từng viết TAUNTED mới là *"khái niệm mới nặng nhất trong cả pass"* vì cần `Unit.facing`, cần đòn
+đánh phân giải theo hướng mặt. **Sai — engine đã có sẵn đúng cái cần.** Ba dòng code:
+
+| Bằng chứng | Nghĩa |
+|---|---|
+| `aiLogic.ts:98` — `{ type: 'ATTACK', target: { ...taunter.position } }` | intent tấn công của địch mang một **Position**, không mang một unit |
+| `turnManager.ts:809` — `blows = [{ pos: intent.target, ... }]` | đòn phân giải **theo Ô** |
+| `turnManager.ts:814` — `const targetUnit = getUnitAt(at, simUnits);` | tra **bất kỳ unit nào** ở ô đó — **không lọc phe** |
+
+Tức **địch đánh vào một Ô, và trúng bất cứ ai đang đứng đó, kể cả zombie khác.** Cơ chế "đánh hụt" và
+"đánh lẫn nhau" **không cần viết mới** — chúng rơi ra sẵn từ kiến trúc.
+
+**Spec `TAUNTED` mới:**
+- Lúc dính taunt, thân địch **ghi nhớ Ô** người taunt đang đứng (`Unit.tauntedTile: Position`).
+- Lượt sau, intent của nó bị ép thành `ATTACK` **vào đúng ô đó**, bất kể ai đang ở đó.
+- Người taunt đã đi chỗ khác → đánh vào ô trống, **hụt**.
+- Có zombie khác bị đẩy vào ô đó → **nó ăn đòn**.
+- Không cần `Unit.facing`, không cần sửa phân giải đòn đánh, telegraph vốn đã vẽ ô mục tiêu.
+
+**Giá: Thấp-Vừa**, không phải Cao. Không cần migration save (bleed/taunt chỉ sống trong trận,
+`pitb_run_v1` cố ý không lưu giữa trận).
+
+**Cách test bạn đề xuất — nhận, và nó là bài test hoàn hảo:** Provoke của Thornshell thành **hai
+tầng**:
+
+```
+  kề anh (Manhattan ≤ 1)  →  TAUNTED  (khoá vào Ô anh đang đứng)
+  xa hơn, trong tầm 3     →  PROVOKED (đi về phía anh, đánh anh)
+```
+
+Đúng cả về nghĩa lẫn về flavor: hét vào mặt kẻ đứng sát thì nó vung theo tiếng hét; hét với kẻ ở xa
+thì nó chỉ biết lao tới. Và nó mở ra một câu đố thật:
+
+> Thornshell Provoke → ba con kề anh khoá vào ô anh đứng → Chardslam đẩy một con thứ tư vào đúng ô
+> đó rồi hất Thornshell ra → ba con đấm nhau.
+
+Đó chính là loại nước đi Into the Breach tồn tại để bán. **Tách khỏi pass fusion như bạn nói, nhưng
+xếp ngay sau nó, không phải "để sau" vô hạn** — vì nó rẻ và vì nó là nền cho `WIND_PROVOKE`,
+`PROVOKE_ON_HIT`, Provoke Chard.
+
+⚠ **Một câu phải chốt khi làm:** khoá vào **Ô** (chốt lúc taunt, đây là bản tôi vừa spec) hay khoá
+vào **THÂN** (bám theo người taunt mỗi lượt)? Bản khoá-Ô mới tạo ra "đánh hụt / đánh lẫn nhau"; bản
+khoá-Thân chỉ là PROVOKE mạnh hơn. **Khoá Ô** mới là thứ bạn mô tả.
+
+### ⑤ Rename `TAUNT` → `PROVOKE` toàn bộ ✅ CHỐT, làm luôn
+
+Đổi đồng loạt, và **`TAUNTED` được giải phóng để mang nghĩa mới ở ④**:
+
+| Cũ | Mới |
+|---|---|
+| status `TAUNTED` | `PROVOKED` |
+| `Unit.tauntedBy` | `provokedBy` |
+| effect `TAUNT` | `PROVOKE` |
+| `TAUNT_ON_HIT` (Barbed Pea) | `PROVOKE_ON_HIT` |
+| `TAUNT_RADIUS` (Bellowing Thorn) | `PROVOKE_RADIUS` |
+| `TAUNT_REFUND` (Sunlit Thorn) | `PROVOKE_REFUND` |
+| `WIND_TAUNT` (Barbed Skids) | `WIND_PROVOKE` |
+| Thorned Chard | **Provoke Chard** |
+| *(để trống)* | **`TAUNTED` mới** = khoá ô, xem ④ |
+
+Làm rename **trước**, rồi mới thêm `TAUNTED` mới — nếu làm ngược thì có một quãng hai chữ TAUNTED
+mang hai nghĩa trong cùng một cây code, đúng loại lẫn lộn đã sinh ra pass này.
+
+- **Trạng thái:** ⬜ chờ duyệt — chỉ còn câu "khoá Ô hay khoá Thân" ở ④
 - **Góp ý:**
