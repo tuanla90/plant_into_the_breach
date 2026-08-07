@@ -123,8 +123,8 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_REEDWING: {
             name: 'Sunchaser',
-            description: '+1 move — the battery keeps up with the squad it is powering.',
-            effect: { type: 'MOVE_BONUS', value: 1 },
+            description: 'Start a turn touching an ally and the whole huddle moves +1 this turn — her included. Stand apart and the battery powers nobody.',
+            effect: { type: 'CONVOY_AURA' },
             live: true,
         },
         MAT_THORNSHELL: {

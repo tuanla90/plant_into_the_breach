@@ -2036,6 +2036,46 @@ export const processTurn = (
         pos: stipendAnchor ? stipendAnchor.position : undefined,
     });
 
+    /**
+     * SUNCHASER (CONVOY_AURA) — trạm sạc cấp điện cho đoàn xe.
+     *
+     * Đầu lượt người chơi, nếu Sunbloom đứng kề ít nhất một ally thì CÔ và MỌI ally đang kề cô
+     * được +1 ô đi trong lượt đó. Buff tạm, đi qua status `CONVOYED` — đúng đường mà `BLESSED`
+     * đã dùng để cộng move (`gameLogic.ts`), nên không có phép cộng move thứ hai nào.
+     *
+     * Tính ở ĐÂY, sau khi địch đã đi xong, vì adjacency phải đọc trên bàn cờ mà người chơi sắp
+     * nhìn thấy — tính sớm hơn thì một zombie chen vào giữa đội sau đó sẽ làm cái aura nói dối.
+     *
+     * Quét sạch trước rồi mới dán lại: buff một lượt mà không tự dọn thì lượt sau nó vẫn còn,
+     * và "một lượt" âm thầm thành "vĩnh viễn" — cùng cái bẫy `lastStandUsed` và `killsThisTurn`.
+     *
+     * Giá của nó tự cân: muốn ăn aura thì phải đứng dính chùm, đúng thứ mà AoE, tia lan điện và
+     * Blast Chard trừng phạt.
+     */
+    {
+        const allies = remainingUnits.filter(u => !u.isEnemy && u.hp > 0);
+        const adjacent = (a: Unit, b: Unit) =>
+            Math.abs(a.position.x - b.position.x) + Math.abs(a.position.y - b.position.y) === 1;
+        const convoyed = new Set<string>();
+        allies.forEach(src => {
+            if (!hasFusionEffect(src, 'CONVOY_AURA')) return;
+            const neighbours = allies.filter(u => u.id !== src.id && adjacent(u, src));
+            if (neighbours.length === 0) return;
+            convoyed.add(src.id);
+            neighbours.forEach(n => convoyed.add(n.id));
+        });
+        allies.forEach(u => {
+            const had = u.statusEffects.includes('CONVOYED');
+            const should = convoyed.has(u.id);
+            if (had === should) return;
+            const next = should
+                ? [...u.statusEffects, 'CONVOYED' as const]
+                : u.statusEffects.filter(e => e !== 'CONVOYED');
+            u.statusEffects = next;
+            actions.push({ type: 'UPDATE_UNIT_STATE', unitId: u.id, updates: { statusEffects: next } });
+        });
+    }
+
     actions.push({ type: 'NEW_TURN_RESET' });
 
     return { actions, finalGameState: nextState };

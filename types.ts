@@ -112,6 +112,13 @@ export type StatusEffectType = 'BURN' | 'FREEZE' | 'STUN' | 'HYPNOTIZED' | 'ENRA
      */
     | 'ROOTED'
     /**
+     * ĐANG ĐI THEO ĐOÀN — +1 ô di chuyển cho ĐÚNG lượt này (Sunbloom, Sunchaser).
+     *
+     * Cùng đường mà `BLESSED` dùng để cộng move, không phải một phép cộng thứ hai. Dán và quét
+     * lại mỗi lượt ở cuối `processTurn`, nên nó không bao giờ sống quá một lượt.
+     */
+    | 'CONVOYED'
+    /**
      * Cannot act at all, and never recovers on its own. Unlike STUN (one turn) and FREEZE
      * (until hit), nothing clears this — it is set by scripted content for a unit the player
      * has to protect rather than command.
@@ -1182,6 +1189,15 @@ export type FusionEffectType =
      * Melee-only như mọi phản đòn khác (L4), và thân miễn nhiễm STATUS thì không dính.
      */
     | 'RETALIATE_ROOT'
+    /**
+     * Sunchaser — đầu lượt người chơi, nếu hero này kề ≥1 ally thì CÔ và mọi ally đang kề cô
+     * được +1 ô đi trong lượt đó (status `CONVOYED`).
+     *
+     * Thay `MOVE_BONUS` +1 phẳng — ô cũ trùng trục với hai hero khác trong cùng cột. Bản mới
+     * biến "trạm sạc đi kịp đội hình" từ một con số thành một ĐIỀU KIỆN đội hình: muốn ăn aura
+     * thì phải đứng dính chùm, đúng thứ mà AoE, tia lan điện và Blast Chard trừng phạt.
+     */
+    | 'CONVOY_AURA'
     /**
      * Shields this hero hands out spill over to whoever stands beside the recipient.
      * Replaces SHIELD_BONUS ("+2 size"), which stopped meaning anything when shields became

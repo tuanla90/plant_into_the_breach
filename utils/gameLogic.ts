@@ -710,7 +710,10 @@ export const getValidMoves = (
     const visited = new Set<string>();
     visited.add(`${unit.position.x},${unit.position.y}`);
     const blessedBonus = unit.statusEffects?.includes('BLESSED') ? 1 : 0;
-    const baseRange = (unit.moveRange || 2) + blessedBonus;
+    // Sunchaser: cùng phép cộng với BLESSED, không phải đường thứ hai. Hai buff CỘNG DỒN được
+    // — được ban phước rồi lại đi trong đoàn thì đi nhanh gấp đôi, và cả hai đều tan sau lượt.
+    const convoyBonus = unit.statusEffects?.includes('CONVOYED') ? 1 : 0;
+    const baseRange = (unit.moveRange || 2) + blessedBonus + convoyBonus;
     const moveRange = slowed ? Math.max(1, Math.floor(baseRange / 2)) : baseRange;
 
     while (queue.length > 0) {
