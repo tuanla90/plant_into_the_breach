@@ -342,6 +342,8 @@
         .tag-sig { background: rgba(245, 158, 11, 0.25); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
         .tag-a { background: rgba(6, 182, 212, 0.25); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.4); }
         .tag-b { background: rgba(236, 72, 153, 0.25); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.4); }
+        /* Ô bán cho người chơi mà engine không đọc effect — xem [A7]. Đỏ để đập vào mắt. */
+        .tag-dead { background: rgba(239, 68, 68, 0.3); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.6); }
 
         .recipe-title {
             font-weight: 700;
@@ -651,117 +653,117 @@
     ];
 
     const GEARS = [
-        { id: 'MAT_SUNFLOWER', name: 'Sol Battery', owner: 'Sunbloom', icon: '☀️' },
-        { id: 'MAT_PEASHOOTER', name: 'Seed Gun', owner: 'Peaburst', icon: '🌱' },
-        { id: 'MAT_CHOMPER', name: 'Steel Jaws', owner: 'Snapmaw', icon: '🦷' },
-        { id: 'MAT_WALLNUT', name: 'Armor Plate', owner: 'Ironhusk', icon: '🛡️' },
-        { id: 'MAT_CORN_MORTAR', name: 'Corn Mortar', owner: 'Cornova', icon: '🌽' },
-        { id: 'MAT_CATTAIL', name: 'Rotor Wing', owner: 'Reedwing', icon: '🪶' },
-        { id: 'MAT_ENDURIAN', name: 'Spike Armor', owner: 'Thornshell', icon: '🌵' },
-        { id: 'MAT_SPRING_ARM', name: 'Spring Arm', owner: 'Chardslam', icon: '🦾' },
-        { id: 'MAT_PUMPKIN', name: 'Bunker Shell', owner: 'Gourdward', icon: '🎃' },
+        { id: 'MAT_SUNBLOOM', name: 'Pin Sol', owner: 'Sunbloom', icon: '☀️' },
+        { id: 'MAT_PEABURST', name: 'Súng Hạt', owner: 'Peaburst', icon: '🌱' },
+        { id: 'MAT_SNAPMAW', name: 'Hàm Thép', owner: 'Snapmaw', icon: '🦷' },
+        { id: 'MAT_IRONHUSK', name: 'Tấm Giáp', owner: 'Ironhusk', icon: '🛡️' },
+        { id: 'MAT_CORNOVA', name: 'Cối Bắp', owner: 'Cornova', icon: '🌽' },
+        { id: 'MAT_REEDWING', name: 'Cánh Quạt', owner: 'Reedwing', icon: '🪶' },
+        { id: 'MAT_THORNSHELL', name: 'Giáp Gai', owner: 'Thornshell', icon: '🌵' },
+        { id: 'MAT_CHARDSLAM', name: 'Tay Lò Xo', owner: 'Chardslam', icon: '🦾' },
+        { id: 'MAT_GOURDWARD', name: 'Vỏ Boong-ke', owner: 'Gourdward', icon: '🎃' },
     ];
 
     // AUTHENTIC 81 RECIPES MATRIX SYNCED 100% WITH data/fusionRecipes.ts
     const RECIPES = {
-        // SUNBLOOM (Support)
-        'SUNBLOOM:MAT_SUNFLOWER': { type: 'SIG', title: 'Twin Sol Battery', desc: 'Harvest thu hoạch gấp đôi nắng: +50 Sol gốc (hoặc +30 Sol nếu đi cùng Dawn Harvest).' },
-        'SUNBLOOM:MAT_PEASHOOTER': { type: 'B', title: 'Gunbloom', desc: 'Gains đòn bắn 1 Dmg tầm xa + thu thập 10 Sol khi trúng.' },
-        'SUNBLOOM:MAT_CHOMPER': { type: 'B', title: 'Fanged Blessing', desc: 'Solar Blessing tăng sát thương cho đồng minh thành +2 Dmg.' },
-        'SUNBLOOM:MAT_WALLNUT': { type: 'A', title: 'Armored Bloom', desc: 'Khởi đầu trận đấu nhận ngay 1 Layer Shield bảo vệ.' },
-        'SUNBLOOM:MAT_CORN_MORTAR': { type: 'B', title: 'Solar Corona', desc: 'Solar Blessing ban thưởng lan toàn bộ đồng minh trong 2 ô.' },
-        'SUNBLOOM:MAT_CATTAIL': { type: 'A', title: 'Sunchaser', desc: '+1 Ô di chuyển — giữ trạm sạc Sol đi kịp đội hình.' },
-        'SUNBLOOM:MAT_ENDURIAN': { type: 'A', title: 'Thorned Bloom', desc: 'Solar Blessing ban khả năng Phản 1 Dmg cho đồng minh được buff.' },
-        'SUNBLOOM:MAT_SPRING_ARM': { type: 'B', title: 'Kinetic Bloom', desc: 'Solar Blessing tạo sóng xung kích hất văng mọi unit kề bên đồng minh.' },
-        'SUNBLOOM:MAT_PUMPKIN': { type: 'A', title: 'Dawn Harvest', desc: 'Skill Harvest đổi thành: Thu hoạch 15 Sol (phạt -10 Sol) nhưng tự bọc 1 Layer Shield bảo vệ bản thân.' },
+        // SUNBLOOM
+        'SUNBLOOM:MAT_SUNBLOOM': { type: 'SIG', effect: 'SUN_PER_TURN', title: 'Pin Sol Đôi', desc: 'Harvest yields double Sol per turn — 50 Sol base, or 30 Sol if combined with Dawn Harvest.' },
+        'SUNBLOOM:MAT_PEABURST': { type: '', effect: 'GRANT_ATTACK', title: 'Đóa Hoa Vũ Trang', desc: 'Có phát bắn đòn thường 1 sát thương và thu về 10 Sol mỗi đòn trúng.' },
+        'SUNBLOOM:MAT_SNAPMAW': { type: '', effect: 'BLESS_POWER', title: 'Ơn Trên Nanh Vuốt', desc: 'Ơn Trên Sol cộng +2 sát thương trong lượt này thay vì +1.' },
+        'SUNBLOOM:MAT_IRONHUSK': { type: '', effect: 'START_SHIELDED', title: 'Đóa Hoa Bọc Giáp', desc: 'Starts the battle shielded in a layer — surviving the first turn guaranteed.' },
+        'SUNBLOOM:MAT_CORNOVA': { type: '', effect: 'SKILL_AURA', title: 'Vành Nhật Hoa', desc: 'Ơn Trên Sol lan ra mọi đồng minh trong bán kính 2 ô, không chỉ một người.' },
+        'SUNBLOOM:MAT_REEDWING': { type: '', effect: 'MOVE_BONUS', title: 'Kẻ Đuổi Nắng', desc: '+1 di chuyển — cục pin theo kịp đội hình mà nó đang tiếp sức.' },
+        'SUNBLOOM:MAT_THORNSHELL': { type: '', effect: 'BLESS_RETALIATE', dead: true, title: 'Đóa Hoa Gai', desc: 'Solar Blessing grants retaliate 1 damage to the blessed ally.' },
+        'SUNBLOOM:MAT_CHARDSLAM': { type: '', effect: 'BLESS_SHOCKWAVE', title: 'Đóa Hoa Chấn Động', desc: 'Lời ban phước giáng xuống như một sóng chấn: mọi thứ đứng kề đồng minh được ban đều bị đẩy ra xa một ô, kể cả chính cô.' },
+        'SUNBLOOM:MAT_GOURDWARD': { type: '', effect: 'HARVEST_SHIELD', dead: true, title: 'Dawn Harvest', desc: 'Harvest yields 15 Sol per turn (-10 Sol penalty) but grants Sunbloom a passive 1-layer shield.' },
 
-        // PEABURST (Ranged)
-        'PEABURST:MAT_SUNFLOWER': { type: 'A', title: 'Sunbeam Pea', desc: 'Thu hoạch 10 Sol mỗi khi đòn bắn kết liễu 1 zombie (Chống free skill).' },
-        'PEABURST:MAT_PEASHOOTER': { type: 'SIG', title: 'Repeater', desc: 'Bắn viên pea thứ 2 (1 Dmg). Nếu viên 1 diệt quái, viên 2 tự lăn sang con sau.' },
-        'PEABURST:MAT_CHOMPER': { type: 'B', title: 'Serrated Pea', desc: 'Đòn bắn làm mục tiêu chảy máu Bleeding: đòn tiếp theo trúng nhận +1 Dmg.' },
-        'PEABURST:MAT_WALLNUT': { type: 'A', title: 'Armored Pea', desc: '+2 Máu tối đa (Tăng từ 6 lên 8 HP đệm an toàn tuyến sau).' },
-        'PEABURST:MAT_CORN_MORTAR': { type: 'B', title: 'Mortar Pea', desc: 'Đòn bắn vòng qua mọi cản (LOB 4 ô).' },
-        'PEABURST:MAT_CATTAIL': { type: 'B', title: 'Smokeline', desc: 'Precision Blast để lại mây khói DUST tại ô trúng đòn (Khóa đòn ngắm).' },
-        'PEABURST:MAT_ENDURIAN': { type: 'A', title: 'Barbed Pea', desc: 'Quái trúng đòn bị Taunt ép phải quay sang tấn công Peaburst.' },
-        'PEABURST:MAT_SPRING_ARM': { type: 'B', title: 'Overwatch Pea', desc: 'Đòn Phục Kích Tự Động! Bắn 1 pea khi đồng đội hất quái vào đường bắn.' },
-        'PEABURST:MAT_PUMPKIN': { type: 'A', title: 'Precision Shield', desc: 'Chỉ khi hạ gục zombie bằng Kỹ Năng Precision Blast mới được bọc 1 Layer Shield (Thưởng cho vị trí lách bắn rủi ro).' },
+        // PEABURST
+        'PEABURST:MAT_SUNBLOOM': { type: '', effect: 'SUN_ON_KILL', title: 'Đậu Tia Nắng', desc: 'Harvests 10 Sol whenever a shot finishes a zombie off.' },
+        'PEABURST:MAT_PEABURST': { type: 'SIG', effect: 'DOUBLE_ATTACK', title: 'Đậu Liên Thanh', desc: 'Một viên đậu thứ hai gây 1 sát thương. Nếu viên đầu kết liễu mục tiêu, viên sau bay tiếp sang mục tiêu kế.' },
+        'PEABURST:MAT_SNAPMAW': { type: '', effect: 'BLEED_ON_HIT', title: 'Đạn Đậu Răng Cưa', desc: 'Đạn của cô để lại vết thương hở: đòn kế tiếp vào mục tiêu mạnh thêm 1.' },
+        'PEABURST:MAT_IRONHUSK': { type: '', effect: 'BONUS_HP', title: 'Đậu Bọc Giáp', desc: '+2 max HP — 8 instead of 6, providing a safe backline health buffer.' },
+        'PEABURST:MAT_CORNOVA': { type: '', effect: 'ARC_ATTACK', title: 'Đậu Cối Pháo', desc: 'Đạn của cô bay vòng qua mọi vật cản — tầm bắn 4 ô.' },
+        'PEABURST:MAT_REEDWING': { type: '', effect: 'SKILL_DISARM', title: 'Lằn Khói', desc: 'Phát Bắn Chuẩn Xác để lại bụi ngay ô nó bắn trúng — thứ gì đứng trong đó đều không vung đòn được.' },
+        'PEABURST:MAT_THORNSHELL': { type: '', effect: 'PROVOKE_ON_HIT', title: 'Đậu Ngạnh Gai', desc: 'Kẻ nào trúng đạn của cô đều quay sang cô — lượt sau buộc phải xông tới chỗ cô.' },
+        'PEABURST:MAT_CHARDSLAM': { type: '', effect: 'OVERWATCH_SHOT', title: 'Đậu Yểm Trợ', desc: 'Kẻ địch nào bị cả đội đẩy vào tầm ngắm thông thoáng của cô đều ăn một viên đạn 1 sát thương — mà cô không tốn lượt.' },
+        'PEABURST:MAT_GOURDWARD': { type: '', effect: 'SHIELD_ON_SKILL_KILL', dead: true, title: 'Precision Shield', desc: 'Finishing a zombie off with Precision Blast shells her in a layer — high risk positioning rewarded with protection.' },
 
-        // SNAPMAW (Melee)
-        'SNAPMAW:MAT_SUNFLOWER': { type: 'A', title: 'Sunlit Gut', desc: 'Thu hoạch 10 Sol/lượt trong suốt thời gian đang tiêu hóa (Tổng 20 Sol qua 2 lượt nhai).' },
-        'SNAPMAW:MAT_PEASHOOTER': { type: 'B', title: 'Rending Claws', desc: 'Trong khi tiêu hóa vẫn dùng móng vuốt cào 1 Dmg kề bên (Free).' },
-        'SNAPMAW:MAT_CHOMPER': { type: 'SIG', title: 'Double Jaw', desc: 'Cắn nuốt nhanh gấp đôi — Tiêu hóa chỉ mất 1 lượt thay vì 2.' },
-        'SNAPMAW:MAT_WALLNUT': { type: 'A', title: 'Armored Jaws', desc: 'Giảm -1 Dmg nhận vào trong suốt thời gian đang tiêu hóa.' },
-        'SNAPMAW:MAT_CORN_MORTAR': { type: 'B', title: 'Stun Fang', desc: 'Cắn đòn thường gây STUN 1 lượt đối với quái còn nguyên 100% HP.' },
-        'SNAPMAW:MAT_CATTAIL': { type: 'B', title: 'Prowl Rotor', desc: 'Trong khi tiêu hóa nhai quái vẫn được di chuyển +1 ô mỗi lượt để giữ cơ động.' },
-        'SNAPMAW:MAT_ENDURIAN': { type: 'A', title: 'Bristleback', desc: 'Phản lại 100% sát thương khi bị đánh trong lúc đang tiêu hóa.' },
-        'SNAPMAW:MAT_SPRING_ARM': { type: 'B', title: 'Anchored Gullet', desc: 'Trong khi tiêu hóa nhai quái hoàn toàn miễn nhiễm sát thương va chạm và hiệu ứng đẩy lùi PUSH.' },
-        'SNAPMAW:MAT_PUMPKIN': { type: 'A', title: 'Warded Gut', desc: 'Mỗi kill cắn nuốt tự bọc bản thân trong 1 Layer Shield.' },
+        // SNAPMAW
+        'SNAPMAW:MAT_SUNBLOOM': { type: '', effect: 'SUN_WHILE_DIGESTING', title: 'Dạ Dày Nắng Rọi', desc: 'Digesting is productive: yields 10 Sol per turn while chewing (20 Sol total over 2 turns).' },
+        'SNAPMAW:MAT_PEABURST': { type: '', effect: 'DIGEST_CLAW', title: 'Móng Vuốt Xé Thịt', desc: 'Đang tiêu hoá vẫn cào được kẻ địch kề bên 1 sát thương. Miễn phí.' },
+        'SNAPMAW:MAT_SNAPMAW': { type: 'SIG', effect: 'DIGEST_REDUCTION', title: 'Hàm Kép', desc: 'Nuốt nhanh gấp đôi — tiêu hóa trong 1 lượt thay vì 2.' },
+        'SNAPMAW:MAT_IRONHUSK': { type: '', effect: 'ARMOR_WHILE_DIGESTING', title: 'Hàm Bọc Giáp', desc: 'Mỗi đòn nhận vào giảm 1 sát thương trong suốt lúc cô đang tiêu hoá.' },
+        'SNAPMAW:MAT_CORNOVA': { type: '', effect: 'STUN_ON_FULL_HP', title: 'Nanh Choáng', desc: 'Cú cắn dội choáng lên kẻ địch còn nguyên máu: nó mất trọn lượt kế tiếp.' },
+        'SNAPMAW:MAT_REEDWING': { type: '', effect: 'DIGEST_MOVE', dead: true, title: 'Prowl Rotor', desc: 'While digesting she can still move 1 tile per turn — maintaining battlefield mobility.' },
+        'SNAPMAW:MAT_THORNSHELL': { type: '', effect: 'DIGEST_RETALIATE', dead: true, title: 'Lưng Xù Gai', desc: 'Reflects full retaliate damage back while digesting.' },
+        'SNAPMAW:MAT_CHARDSLAM': { type: '', effect: 'DIGEST_STEADFAST', dead: true, title: 'Anchored Gullet', desc: 'Immune to collision damage and push/knockback effects while digesting.' },
+        'SNAPMAW:MAT_GOURDWARD': { type: '', effect: 'SHIELD_ON_DIGEST', dead: true, title: 'Dạ Dày Hộ Giáp', desc: 'Swallowing a zombie shells her in a layer at the start of digestion — guarding her helpless 2-turn window.' },
 
-        // IRONHUSK (Melee)
-        'IRONHUSK:MAT_SUNFLOWER': { type: 'A', title: 'Sunstone Shield', desc: 'Bịt hố spawn quái thu hoạch ngay 20 Sol.' },
-        'IRONHUSK:MAT_PEASHOOTER': { type: 'B', title: 'Lance Bash', desc: 'Plate Slam vươn xa thêm 1 ô bằng thương giáp dài mà vẫn giữ nguyên lực đẩy lùi.' },
-        'IRONHUSK:MAT_CHOMPER': { type: 'A', title: 'Fanged Bash', desc: '+1 Sát thương cho mọi đòn vung đánh (Plate Slam & Rolling Charge).' },
-        'IRONHUSK:MAT_WALLNUT': { type: 'SIG', title: 'Iron Bulwark', desc: 'Nhận STEADFAST: Giảm -1 Dmg, giảm 50% Dmg va chạm & bịt hố không mất HP.' },
-        'IRONHUSK:MAT_CORN_MORTAR': { type: 'B', title: 'Stun Charge', desc: 'Rolling Charge gây STUN 1 lượt cho mục tiêu bị tông.' },
-        'IRONHUSK:MAT_CATTAIL': { type: 'A', title: 'Overdrive Charge', desc: 'Skill Rolling Charge lăn xa 4 ô thay vì 3 ô.' },
-        'IRONHUSK:MAT_SPIKE_ARMOR': { type: 'B', title: 'Spiked Bulwark', desc: 'Plate Slam gây thêm +1 sát thương và phản lại +1 sát thương cận chiến khi bị tấn công.' },
-        'IRONHUSK:MAT_SPRING_ARM': { type: 'B', title: 'Sprung Bash', desc: 'Đẩy lùi xa thêm +1 ô cho cả Plate Slam và Rolling Charge.' },
-        'IRONHUSK:MAT_PUMPKIN': { type: 'A', title: 'Bunker Plating', desc: 'Sinh Tồn Giờ G: Đòn chí mạng kết liễu thay vì chết sẽ mọc 1 Layer Shield.' },
+        // IRONHUSK
+        'IRONHUSK:MAT_SUNBLOOM': { type: '', effect: 'SUN_ON_BLOCK_SPAWN', title: 'Khiên Đá Sol', desc: 'Plugging a spawn hole pays 20 Sol — she is rewarded for standing on it.' },
+        'IRONHUSK:MAT_PEABURST': { type: '', effect: 'ATTACK_RANGE_BONUS', title: 'Lance Bash', desc: 'Plate Slam reaches 1 tile further with extended lance range while keeping its push.' },
+        'IRONHUSK:MAT_SNAPMAW': { type: '', effect: 'BONUS_DAMAGE', title: 'Cú Đập Nanh', desc: '+1 sát thương cho mọi đòn cô vung ra — cú đập rốt cuộc cũng cắn được.' },
+        'IRONHUSK:MAT_IRONHUSK': { type: 'SIG', effect: 'STEADFAST', title: 'Thành Lũy Sắt', desc: 'Mỗi đòn nhận vào giảm 1 sát thương, sát thương va chạm giảm một nửa, và bịt lỗ trồi không mất máu.' },
+        'IRONHUSK:MAT_CORNOVA': { type: '', effect: 'SKILL_STUN', title: 'Cú Húc Choáng', desc: 'Cú Lăn Húc dội choáng lên thứ nó tông trúng: mục tiêu mất trọn lượt kế tiếp.' },
+        'IRONHUSK:MAT_REEDWING': { type: '', effect: 'DASH_DISTANCE', dead: true, title: 'Overdrive Charge', desc: 'Rolling Charge travels 4 tiles instead of 3, allowing long-distance engagements.' },
+        'IRONHUSK:MAT_THORNSHELL': { type: '', effect: 'RETALIATE_DAMAGE', title: 'Thành Lũy Gai', desc: 'Plate Slam deals +1 extra damage and reflects +1 retaliate damage when struck in melee.' },
+        'IRONHUSK:MAT_CHARDSLAM': { type: '', effect: 'PUSH_DISTANCE', title: 'Cú Đập Lò Xo', desc: 'Mỗi cú đẩy cô tung ra đều đi xa thêm một ô — cú đập hất 2 ô, cú lăn cũng vậy.' },
+        'IRONHUSK:MAT_GOURDWARD': { type: '', effect: 'LAST_STAND_SHIELD', title: 'Vỏ Boong-ke', desc: 'Mỗi trận một lần: cú đánh đáng lẽ kết liễu cô lại dựng lên một lớp chắn — và lớp đó nuốt trọn nó.' },
 
-        // CORNOVA (Ranged)
-        'CORNOVA:MAT_SUNFLOWER': { type: 'B', title: 'Sunlit Cob', desc: 'Nova Shell giảm giá 15 Sol (Còn 35 Sol).' },
-        'CORNOVA:MAT_PEASHOOTER': { type: 'B', title: 'Twin Cob', desc: 'Đạn cối chính được nối tiếp bằng 1 đạn cối phụ 1 Dmg.' },
-        'CORNOVA:MAT_CHOMPER': { type: 'B', title: 'Shrapnel Kernel', desc: 'Đạn cối gây hiệu ứng Bleeding (Đòn sau trúng nhận +1 Dmg).' },
-        'CORNOVA:MAT_WALLNUT': { type: 'A', title: 'Armored Cob', desc: '+3 Máu tối đa đệm sống qua combat.' },
-        'CORNOVA:MAT_CORN_MORTAR': { type: 'SIG', title: 'Cob Howitzer', desc: 'Nova Shell gây STUN mục tiêu chính và SLOW toàn bộ ô kề bên.' },
-        'CORNOVA:MAT_CATTAIL': { type: 'B', title: 'Ash Carriage', desc: 'Đạn cối để lại mây khói DUST tại ô trúng đòn làm mù quái.' },
-        'CORNOVA:MAT_SPIKE_ARMOR': { type: 'B', title: 'Barbed Cob', desc: 'Đạn cối trúng quái ép quái bị Taunt quay sang đánh Cornova.' },
-        'CORNOVA:MAT_SPRING_ARM': { type: 'B', title: 'Overwatch Cob', desc: 'Đòn Phục Kích Cầu Vồng! Ném đạn cối khi đồng đội hất quái vào tầm bắn.' },
-        'CORNOVA:MAT_PUMPKIN': { type: 'A', title: 'Reactive Cob Shell', desc: 'Lần đầu tiên bị đánh trúng trong trận tự động nảy 1 Layer Shield.' },
+        // CORNOVA
+        'CORNOVA:MAT_SUNBLOOM': { type: '', effect: 'SKILL_DISCOUNT', title: 'Bắp Nắng Rọi', desc: 'Đạn Nova tốn ít hơn 15 Sol.' },
+        'CORNOVA:MAT_PEABURST': { type: '', effect: 'DOUBLE_ATTACK', title: 'Bắp Đôi', desc: 'Sau hạt ngô đầu là một hạt nhẹ hơn, gây 1 sát thương.' },
+        'CORNOVA:MAT_SNAPMAW': { type: '', effect: 'BLEED_ON_HIT', title: 'Hạt Ngô Mảnh Văng', desc: 'Hạt ngô của cô để lại vết thương hở: đòn kế tiếp vào mục tiêu mạnh thêm 1.' },
+        'CORNOVA:MAT_IRONHUSK': { type: '', effect: 'BONUS_HP', title: 'Bắp Bọc Giáp', desc: '+3 max HP — 11 instead of 8, allowing mid-range artillery to sustain side flank attacks.' },
+        'CORNOVA:MAT_CORNOVA': { type: 'SIG', effect: 'SKILL_SPLASH', title: 'Đại Bác Bắp', desc: 'Đạn Nova ghim cứng mục tiêu chính và làm chậm các ô xung quanh.' },
+        'CORNOVA:MAT_REEDWING': { type: '', effect: 'SMOKE_ON_HIT', title: 'Càng Tro', desc: 'Thứ gì bị hạt ngô của cô làm đau đều đứng lại trong bụi — lượt sau không vung nổi đòn trừ khi nó bước ra.' },
+        'CORNOVA:MAT_THORNSHELL': { type: '', effect: 'PROVOKE_ON_HIT', title: 'Bắp Ngạnh Gai', desc: 'Kẻ nào trúng hạt ngô của cô đều quay sang cô — lượt sau buộc phải xông tới chỗ cô.' },
+        'CORNOVA:MAT_CHARDSLAM': { type: '', effect: 'OVERWATCH_SHOT', title: 'Bắp Yểm Trợ', desc: 'Kẻ địch nào bị cả đội đẩy vào tầm vòng cung của cô đều ăn một hạt ngô 1 sát thương — mà cô không tốn lượt.' },
+        'CORNOVA:MAT_GOURDWARD': { type: '', effect: 'REACTIVE_SHIELD', dead: true, title: 'Reactive Cob Shell', desc: 'After taking her first attack hit in battle, she immediately deploys a reactive 1-layer shield.' },
 
-        // REEDWING (Ranged)
-        'REEDWING:MAT_SUNFLOWER': { type: 'A', title: 'Solar Rotor', desc: 'Thu hoạch 15 Sol mỗi kill từ trên không.' },
-        'REEDWING:MAT_PEASHOOTER': { type: 'B', title: 'Twin Pods', desc: 'Cả 2 cánh bay bắn tiếp đợt tên lửa thứ 2 (1 Dmg/ô).' },
-        'REEDWING:MAT_CHOMPER': { type: 'B', title: 'Executioner Pods', desc: 'Tên lửa bắn nhận thêm +2 sát thương thưởng (Tổng 3 Dmg) khi tấn công vào mục tiêu đang bị chảy máu Bleeding.' },
-        'REEDWING:MAT_WALLNUT': { type: 'A', title: 'Armored Fuselage', desc: '+3 Máu tối đa (Tăng từ 4 lên 7 HP bọc giáp không quân).' },
-        'REEDWING:MAT_CORN_MORTAR': { type: 'B', title: 'Cluster Load', desc: 'Thả thêm 1 tên lửa thứ 3 vào ô trung tâm giữa 2 đòn bắn nước mã.' },
-        'REEDWING:MAT_CATTAIL': { type: 'SIG', title: 'Overdrive Rotor', desc: 'Tăng khoảng cách di chuyển lên 5 ô (FLYING trên không).' },
-        'REEDWING:MAT_SPIKE_ARMOR': { type: 'B', title: 'Barbed Skids', desc: 'Tên lửa ép quái Taunt đánh mình, nhưng Reedwing bay đi chỗ khác.' },
-        'REEDWING:MAT_SPRING_ARM': { type: 'B', title: 'Downwash', desc: 'Tên lửa đẩy lùi PUSH cả 2 mục tiêu về phía sau 1 ô.' },
-        'REEDWING:MAT_PUMPKIN': { type: 'A', title: 'Dawn Pod Plating', desc: 'Khởi đầu trận đấu nhận ngay 1 Layer Shield bảo vệ không quân.' },
+        // REEDWING
+        'REEDWING:MAT_SUNBLOOM': { type: '', effect: 'SUN_ON_KILL', title: 'Cánh Quạt Sol', desc: 'Mỗi zombie bị song pháo kết liễu trả 15 Sol — hai nòng, hai cơ hội mỗi lượt.' },
+        'REEDWING:MAT_PEABURST': { type: '', effect: 'DOUBLE_ATTACK', title: 'Pháo Đôi', desc: 'Cả hai cánh bắn thêm loạt thứ hai, 1 sát thương.' },
+        'REEDWING:MAT_SNAPMAW': { type: '', effect: 'BLEED_EXECUTION', dead: true, title: 'Executioner Pods', desc: 'Wing guns deal +2 bonus damage (3 damage total) against targets currently suffering from Bleeding.' },
+        'REEDWING:MAT_IRONHUSK': { type: '', effect: 'DAMAGE_REDUCTION', title: 'Thân Máy Bọc Thép', desc: 'Takes 1 less damage from every hit — armored flight frame replaces paper wings.' },
+        'REEDWING:MAT_CORNOVA': { type: '', effect: 'WING_MIDSHOT', title: 'Băng Đạn Chùm', desc: 'Một quả tên lửa thứ ba thả từ bụng máy bay xuống đúng ô nằm giữa hai phát đạn cánh.' },
+        'REEDWING:MAT_REEDWING': { type: 'SIG', effect: 'MOVE_BONUS', title: 'Cánh Quạt Tăng Áp', desc: '+1 di chuyển — 5 ô, đang bay. Chính cô, vặn to lên.' },
+        'REEDWING:MAT_THORNSHELL': { type: '', effect: 'PROVOKE_ON_HIT', title: 'Càng Đáp Gai', desc: 'Kẻ nào trúng rocket của cô đều quay sang cô — còn cô thì bay đi trước khi nó tới nơi.' },
+        'REEDWING:MAT_CHARDSLAM': { type: '', effect: 'ON_HIT_PUSH', title: 'Luồng Gió Ép', desc: 'Rocket của cô hất thứ nó trúng lùi một ô — cả hai ô cùng lúc.' },
+        'REEDWING:MAT_GOURDWARD': { type: '', effect: 'START_SHIELDED', title: 'Dawn Pod Plating', desc: 'Starts the battle shielded in a layer — aerial unit stays protected on turn one.' },
 
-        // THORNSHELL (Melee)
-        'THORNSHELL:MAT_SUNFLOWER': { type: 'B', title: 'Sunlit Thorn', desc: 'Provoke giảm giá 15 Sol (Còn 35 Sol).' },
-        'THORNSHELL:MAT_PEASHOOTER': { type: 'B', title: 'Piercing Needles', desc: 'Thorn Swipe phóng chùm gai xuyên tối đa 2 mục tiêu theo hàng thẳng, sát thương giảm dần theo khoảng cách về 1 Dmg.' },
-        'THORNSHELL:MAT_CHOMPER': { type: 'B', title: 'Rending Husk', desc: 'Quái đánh cận chiến vào Thornshell bị chảy máu Bleeding.' },
-        'THORNSHELL:MAT_WALLNUT': { type: 'A', title: 'Thorn Lunge', desc: 'Đòn đánh thường biến thành đòn lao đệm tới mục tiêu cách 1 ô (tương tự chiêu lăn).' },
-        'THORNSHELL:MAT_CORN_MORTAR': { type: 'B', title: 'Bellowing Thorn', desc: 'Provoke mở rộng bán kính khiêu khích từ 3 lên 5 ô.' },
-        'THORNSHELL:MAT_CATTAIL': { type: 'A', title: 'Windburr', desc: 'Nhận MOVE_BONUS (+1 Ô di chuyển — giúp Thornshell cơ động chọn vị trí Provoke).' },
-        'THORNSHELL:MAT_SPIKE_ARMOR': { type: 'SIG', title: 'Bristling Armor', desc: 'Phản đòn cận chiến tăng sát thương lên 3 Dmg.' },
-        'THORNSHELL:MAT_SPRING_ARM': { type: 'B', title: 'Sprung Thorn', desc: 'Swipe gai hất đẩy mục tiêu văng vào ô phía sau.' },
-        'THORNSHELL:MAT_PUMPKIN': { type: 'A', title: 'Warded Provoke', desc: 'Bật Provoke nhận ngay 1 Layer Shield cho bản thân.' },
+        // THORNSHELL
+        'THORNSHELL:MAT_SUNBLOOM': { type: '', effect: 'SKILL_DISCOUNT', title: 'Gai Nắng Rọi', desc: 'Khiêu Khích tốn ít hơn 15 Sol.' },
+        'THORNSHELL:MAT_PEABURST': { type: '', effect: 'LASER_NEEDLE', dead: true, title: 'Piercing Needles', desc: 'Thorn Swipe shoots a needle beam piercing up to 2 targets in a row — damage tapers off with distance down to 1.' },
+        'THORNSHELL:MAT_SNAPMAW': { type: '', effect: 'RETALIATE_BLEED', title: 'Vỏ Xé Thịt', desc: 'Kẻ nào đánh cận chiến trúng anh đều bị chảy máu: đòn kế tiếp giáng xuống nó cộng thêm 1.' },
+        'THORNSHELL:MAT_IRONHUSK': { type: '', effect: 'THORN_LUNGE', dead: true, title: 'Thorn Lunge', desc: 'Basic attack transforms into a 1-tile lunge charge towards the target.' },
+        'THORNSHELL:MAT_CORNOVA': { type: '', effect: 'PROVOKE_RADIUS', title: 'Gai Gầm Vang', desc: 'Khiêu Khích vươn tới 5 ô thay vì 3 — đủ xa để tóm cả những kẻ tưởng mình đứng ngoài tầm anh.' },
+        'THORNSHELL:MAT_REEDWING': { type: '', effect: 'MOVE_BONUS', title: 'Gai Cuốn Gió', desc: '+1 move — 3 move speed allows Thornshell to position flexibly for Provoke.' },
+        'THORNSHELL:MAT_THORNSHELL': { type: 'SIG', effect: 'RETALIATE_DAMAGE', title: 'Giáp Gai Nhọn', desc: 'Kẻ đánh cận chiến bị phản 3 sát thương thay vì 2.' },
+        'THORNSHELL:MAT_CHARDSLAM': { type: '', effect: 'ON_HIT_PUSH', title: 'Gai Lò Xo', desc: 'Cú quét của anh hất mục tiêu lùi một ô — dúi thẳng vào thứ đang đứng phía sau nó.' },
+        'THORNSHELL:MAT_GOURDWARD': { type: '', effect: 'PROVOKE_SHIELD', dead: true, title: 'Warded Provoke', desc: 'Casting Provoke grants Thornshell a 1-layer shield to absorb incoming attacks.' },
 
-        // CHARDSLAM (Support)
-        'CHARDSLAM:MAT_SUNFLOWER': { type: 'A', title: 'Sunlit Chard', desc: 'Thu hoạch 15 Sol mỗi khi hất quái rơi xuống nước/hố/va chạm chết.' },
-        'CHARDSLAM:MAT_PEASHOOTER': { type: 'B', title: 'Longarm Chard', desc: 'Vault Toss hất quái qua đầu từ khoảng cách 2 ô.' },
-        'CHARDSLAM:MAT_CHOMPER': { type: 'B', title: 'Rending Chard', desc: 'Cú hất làm mục tiêu chảy máu Bleeding khi rơi xuống.' },
-        'CHARDSLAM:MAT_WALLNUT': { type: 'A', title: 'Armored Chard', desc: 'Giảm -1 Dmg nhận vào từ mọi đòn đánh.' },
-        'CHARDSLAM:MAT_CORN_MORTAR': { type: 'B', title: 'Catapult Chard', desc: 'Skill Sweep hất đẩy xa đến 3 ô thay vì 2 ô.' },
-        'CHARDSLAM:MAT_CATTAIL': { type: 'B', title: 'Catapult Rotor', desc: 'Mọi cú hất Vault Toss, Sweep và dập slam đều ném tất cả zombie bay xa hơn +1 ô.' },
-        'CHARDSLAM:MAT_SPIKE_ARMOR': { type: 'B', title: 'Thorned Chard', desc: 'Quái đánh cận chiến vào Chardslam bị hất văng 1 ô.' },
-        'CHARDSLAM:SPRING_ARM': { type: 'SIG', title: 'Grand Chard', desc: 'Va chạm địa hình / va chạm quái nhận thêm +2 Dmg.' },
-        'CHARDSLAM:MAT_PUMPKIN': { type: 'A', title: 'Warded Chard', desc: 'Mỗi cú hất va chạm chết quái tự bọc 1 Layer Shield.' },
+        // CHARDSLAM
+        'CHARDSLAM:MAT_SUNBLOOM': { type: '', effect: 'SUN_ON_KILL', title: 'Cải Nắng Rọi', desc: 'Mỗi zombie anh đẩy xuống nước, vào đá hay vào thân xác khác đều trả 15 Sol.' },
+        'CHARDSLAM:MAT_PEABURST': { type: '', effect: 'ATTACK_RANGE_BONUS', title: 'Cải Cầu Vồng Tay Dài', desc: 'Quăng Vượt Đầu tóm được từ khoảng cách 2 ô — anh quật mà không cần bước vào tận nơi.' },
+        'CHARDSLAM:MAT_SNAPMAW': { type: '', effect: 'BLEED_ON_HIT', title: 'Cải Xé Thịt', desc: 'Cú ném của anh để lại vết thương hở: đòn kế tiếp vào mục tiêu mạnh thêm 1.' },
+        'CHARDSLAM:MAT_IRONHUSK': { type: '', effect: 'STEADFAST', title: 'Cải Bọc Giáp', desc: 'Takes 50% less collision damage and plugs spawn holes painlessly — collision specialist.' },
+        'CHARDSLAM:MAT_CORNOVA': { type: '', effect: 'PUSH_DISTANCE', title: 'Cải Máy Bắn', desc: 'Quét Ngang hất xa 3 ô thay vì 2 — đủ để tìm tới mặt nước từ giữa bàn cờ.' },
+        'CHARDSLAM:MAT_REEDWING': { type: '', effect: 'PUSH_DISTANCE', title: 'Catapult Rotor', desc: 'Every shove, toss, and slam throws all target enemies 1 extra tile further.' },
+        'CHARDSLAM:MAT_THORNSHELL': { type: '', effect: 'RETALIATE_PUSH', title: 'Cải Gai Nhọn', desc: 'Kẻ tấn công cận chiến bị hất lùi một ô.' },
+        'CHARDSLAM:MAT_CHARDSLAM': { type: 'SIG', effect: 'COLLISION_BONUS', title: 'Đại Cải Cầu Vồng', desc: 'Thứ gì bị anh dúi vào thân khác, vào đá hay vào mép bản đồ đều chịu thêm 2 sát thương.' },
+        'CHARDSLAM:MAT_GOURDWARD': { type: '', effect: 'SHIELD_ON_KILL', title: 'Cải Hộ Giáp', desc: 'Mỗi cái xác anh dúi chết đều bọc cho anh một lớp chắn — đòn kế tiếp bị chặn trọn vẹn.' },
 
-        // GOURDWARD (Support)
-        'GOURDWARD:MAT_SUNFLOWER': { type: 'B', title: 'Sunlit Rind', desc: 'Skill Encase giảm giá 10 Sol (Còn 50 Sol).' },
-        'GOURDWARD:MAT_PEASHOOTER': { type: 'B', title: 'Rind Pellet', desc: 'Reinforce bắn dọc theo hàng rào ban khiên cho ô đồng minh xa 4 ô.' },
-        'GOURDWARD:MAT_CHOMPER': { type: 'B', title: 'Glass Rind', desc: 'Khiên nổ mọc gai: Kẻ phá vỡ 1 Layer Shield bị chảy máu Bleeding.' },
-        'GOURDWARD:MAT_WALLNUT': { type: 'A', title: 'Ironrind', desc: 'Giảm -1 Dmg nhận vào từ mọi đòn đánh.' },
-        'GOURDWARD:MAT_CORN_MORTAR': { type: 'B', title: 'Stun Shell', desc: 'Skill Encase gây STUN 1 lượt cho toàn bộ quái trong vùng bọc khiên.' },
-        'GOURDWARD:MAT_CATTAIL': { type: 'A', title: 'Airborne Rind', desc: 'Skill Encase tạo cuồng phong đẩy lùi zombie kề bên 1 ô khi tạo khiên.' },
-        'GOURDWARD:MAT_SPIKE_ARMOR': { type: 'B', title: 'Spined Rind', desc: 'Quái đánh cận chiến vào Gourdward bị đâm 1 Dmg.' },
-        'GOURDWARD:MAT_SPRING_ARM': { type: 'B', title: 'Shockrind', desc: 'Skill Encase tạo sóng xung kích hất đẩy quái kề bên 1 ô.' },
-        'GOURDWARD:MAT_PUMPKIN': { type: 'SIG', title: 'Greatrind', desc: 'Encase lan tỏa Layer Shield cho cả đồng minh đứng kề bên mục tiêu.' },
+        // GOURDWARD
+        'GOURDWARD:MAT_SUNBLOOM': { type: '', effect: 'SKILL_DISCOUNT', title: 'Vỏ Nắng Rọi', desc: 'Bọc Giáp tốn ít hơn 10 Sol.' },
+        'GOURDWARD:MAT_PEABURST': { type: '', effect: 'ATTACK_RANGE_BONUS', title: 'Đạn Vỏ Bí', desc: 'Gia Cố được bắn dọc theo hàng: bọc cho đồng minh — hoặc Tháp Xanh — đầu tiên trong vòng 4 ô.' },
+        'GOURDWARD:MAT_SNAPMAW': { type: '', effect: 'BARBED_SHIELD', title: 'Vỏ Thuỷ Tinh', desc: 'Lớp chắn của anh là thuỷ tinh nhọn: kẻ nào phá vỡ nó đều bị chảy máu — đòn kế tiếp giáng xuống nó cộng thêm 1.' },
+        'GOURDWARD:MAT_IRONHUSK': { type: '', effect: 'DAMAGE_REDUCTION', title: 'Vỏ Sắt', desc: 'Mỗi đòn nhận vào giảm 1 sát thương — lớp vỏ quanh đồng minh chỉ còn chừng nào người mang nó còn.' },
+        'GOURDWARD:MAT_CORNOVA': { type: '', effect: 'SKILL_STUN', title: 'Vỏ Choáng', desc: 'Bọc Giáp dội choáng lên mọi zombie nó chạm tới: mỗi con mất trọn lượt kế tiếp.' },
+        'GOURDWARD:MAT_REEDWING': { type: '', effect: 'ENCASE_RANGE', dead: true, title: 'Vỏ Lăn', desc: 'Encase can be cast up to 2 tiles away to protect distant allies.' },
+        'GOURDWARD:MAT_THORNSHELL': { type: '', effect: 'RETALIATE_DAMAGE', title: 'Vỏ Tua Gai', desc: 'Kẻ nào đánh cận chiến trúng anh đều bị gai đâm 1 — muốn vượt qua anh để tới người anh che chở thì phải trả bằng máu.' },
+        'GOURDWARD:MAT_CHARDSLAM': { type: '', effect: 'SKILL_REPEL', title: 'Vỏ Chấn Động', desc: 'Bọc Giáp thổi bật mọi kẻ địch đứng kề anh lùi một ô ngay khi lớp vỏ dựng lên.' },
+        'GOURDWARD:MAT_GOURDWARD': { type: 'SIG', effect: 'SHIELD_SPREAD', title: 'Đại Vỏ Bí', desc: 'Mỗi lớp chắn anh trao ra đều tràn sang, bọc luôn những ai đứng kề người nhận.' },
     };
 
     // DOM ELEMENTS
@@ -839,13 +841,21 @@
                 td.dataset.gearId = g.id;
                 
                 const key = `${h.id}:${g.id}`;
-                const recipe = RECIPES[key] || { type: 'A', title: 'Chưa rõ', desc: '...' };
+                const recipe = RECIPES[key] || { type: '', title: 'Chưa rõ', desc: '...' };
                 td.dataset.traitType = recipe.type;
                 td.dataset.title = recipe.title.toLowerCase();
                 td.dataset.desc = recipe.desc.toLowerCase();
 
-                let tagClass = recipe.type === 'SIG' ? 'tag-sig' : (recipe.type === 'A' ? 'tag-a' : 'tag-b');
-                let tagLabel = recipe.type === 'SIG' ? '⭑ SIG' : (recipe.type === 'A' ? 'A MÓN A' : 'B MÓN B');
+                /**
+                 * Nhãn ô. Cặp A/B cũ đã bỏ: nó không có nguồn dữ liệu nào trong
+                 * data/fusionRecipes.ts, nên nó là thứ gõ tay và trôi. Ba nhãn dưới đây đều đọc
+                 * thẳng từ dữ liệu do scripts/gen-fusion-matrix.mjs sinh ra:
+                 *   SIG  — gear của chính hero đó
+                 *   DEAD — effect type KHÔNG nơi nào trong engine đọc (kiểm toán tự động)
+                 *   còn lại — in thẳng tên effect type, thứ nói đúng ô đó làm gì
+                 */
+                let tagClass = recipe.dead ? 'tag-dead' : (recipe.type === 'SIG' ? 'tag-sig' : 'tag-b');
+                let tagLabel = recipe.dead ? '⚠ CHƯA WIRE' : (recipe.type === 'SIG' ? '⭑ SIG' : (recipe.effect || ''));
 
                 td.innerHTML = `
                     <div class="cell-content">
