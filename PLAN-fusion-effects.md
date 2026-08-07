@@ -106,11 +106,12 @@ Plate Slam với tới xa thêm 1 ô. Vẫn giữ nguyên cú đẩy.
   trả phí), 1 damage 1 ô, nên không phá ranh giới "free splash mỗi lượt".
 - **Wiring:** attack resolution, chọn ô phụ deterministic. **Vừa.**
 
-### *(tên chờ)* — Reedwing — `EXTENDED_BARRELS` — ĐỔI [C6.2] · ⚠ NỢ SƠ ĐỒ
-- **Ý định:** mỗi nòng bắn dài thêm 1 ô, mỗi bên thành 2 ô — tổng 4 ô, 2 ô mới ăn 1 damage.
-- **Vấn đề chưa giải:** đòn của cô là `rangeType: 'WING_PAIR'`, **8 ô knight** (`heroes.ts:282`),
-  không phải hàng dọc. "Kéo dài thêm 1 ô" trên ô knight **không có nghĩa hiển nhiên** — phải định
-  nghĩa trục. Tôi vẽ sơ đồ ô đưa bạn duyệt **trước khi** code.
+### Underslung Pods *(tên đề xuất)* — Reedwing — `EXTENDED_BARRELS` — ĐỔI [C6.2] · **→ SƠ ĐỒ: Phụ lục C**
+- **Ý định:** mỗi đòn bắn thêm **2 ô chéo kề** cô, mỗi bên thành một cột dọc 2 ô — tổng 4 ô, 2 ô mới ăn 1 damage.
+- **Hình học đã giải** (chi tiết + 3 phương án + lý do chọn ở **Phụ lục C**): đòn của cô là
+  `rangeType: 'WING_PAIR'`, 8 ô knight, bắn **2 ô mỗi lần** theo cặp có hướng. Phương án khuyến nghị
+  lấp hai ô chéo `(x∓1, y∓1)` — vá đúng vùng chết quanh thân cô, và vì `inMelee` là Manhattan ≤ 1 nên
+  **ô chéo là chỗ địch không đánh lại được**.
 - **Vì sao ô này tồn tại:** bản `FOCUS_BARRELS` (gộp hai nòng vào một mục tiêu) đã bị bạn loại vì đè
   relic độc quyền. Đây là hướng thay thế: đổi độ đầm lấy độ **phủ**.
 - **Luật:** không đụng VOLLEY CAP (không nhân theo shot count).
@@ -174,9 +175,9 @@ Tiêu hoá **1 lượt thay vì 2**. Cắt đôi cửa sổ bất lực — ô �
 ### Executioner Pods — Reedwing — `BLEED_EXECUTION` 2 — ⚠ RỖNG [A7]
 - **Thẻ hứa:** *"Wing guns deal +2 bonus damage (3 damage total) against targets currently suffering from Bleeding."*
 - **Thực tế:** engine **không đọc** type này. Mua xong không có gì xảy ra.
-- **Khi wire phải quyết một luật chưa có:** đòn của cô là `WING_PAIR` — **basic attack, KHÔNG nằm dưới
-  VOLLEY CAP** (cap chỉ chặn skill có effect `VOLLEY`, `fusion.ts:488`). Nên "+2 mỗi ô" × 5 ô = **15
-  damage**. Muốn ra **7** (5 + 2, như bạn tính) thì phải viết "+2 **một lần mỗi đòn**" — tức một cap thứ hai.
+- **Luật cộng dồn — đã giải, chi tiết ở Phụ lục D.** Khuyến nghị: `BLEED_EXECUTION` **tiêu vết bleed
+  y như một đòn thường, nhưng trả +2 THAY VÌ +1**. Ra đúng **7** như bạn tính, khớp chữ "3 damage
+  total" đang in trên thẻ, và **không đẻ cap mới** — chỉ dùng cơ chế `bleedConsumed` đang chạy.
 
 ### Rending Husk — Thornshell — `RETALIATE_BLEED` — GIỮ
 Kẻ đánh anh **bằng cận chiến** bị chảy máu. Đánh dấu cho người khác kết liễu.
@@ -576,3 +577,235 @@ Xếp theo **vùng wiring** chứ không theo cột — mỗi đợt một vùng
 
 **2 type xoá** ([A5]): `NEEDLE_BURST` · `ARMOR_SHRED`. **Giữ** `RETALIATE_FREEZE` cho ICE element
 (mồ-côi-data nhưng engine đang resolve).
+
+---
+
+# Phụ lục C · SƠ ĐỒ — `WING_PAIR` và `EXTENDED_BARRELS` (trả nợ [C6.2])
+
+## C.1 · Hình học hiện tại, lấy nguyên từ code
+
+`utils/gameLogic.ts:744` — `WING_OFFSETS`, tám ô knight. **Quy ước trục của repo: `x` = HÀNG (xuống
+là dương), `y` = CỘT (sang phải là dương).**
+
+| Hướng ngắm | Cặp ô bắn |
+|---|---|
+| LÊN | `(x-2, y-1)` + `(x-2, y+1)` |
+| XUỐNG | `(x+2, y-1)` + `(x+2, y+1)` |
+| TRÁI | `(x-1, y-2)` + `(x+1, y-2)` |
+| PHẢI | `(x-1, y+2)` + `(x+1, y+2)` |
+
+Toàn bộ 8 ô cô **có thể** ngắm:
+
+```
+        .  X  .  X  .
+        X  .  .  .  X
+        .  .  Z  .  .          Z = Reedwing
+        X  .  .  .  X          X = 8 ô knight
+        .  X  .  X  .
+```
+
+**Quan trọng — mỗi đòn chỉ bắn HAI ô, không phải tám.** Người chơi ngắm một ô, engine tự thêm ô
+sinh đôi cùng hướng (`wingTwin`, `gameLogic.ts:750`). Bắn hướng LÊN:
+
+```
+        .  X  .  X  .
+        .  .  .  .  .
+        .  .  Z  .  .
+        .  .  .  .  .
+        .  .  .  .  .
+```
+
+Ô **giữa** cặp — `(x-2, y)` khi bắn lên — là cái lỗ giữa hình, và **chỉ Cluster Load
+(`WING_MIDSHOT`) mới lấp** (`wingMid`, `gameLogic.ts:765`):
+
+```
+        .  X  M  X  .          M = ô Cluster Load thêm vào
+        .  .  .  .  .
+        .  .  Z  .  .
+```
+
+## C.2 · Ba cách mở rộng — bạn chọn
+
+Tất cả vẽ ở hướng bắn LÊN. `n` = ô mới do `EXTENDED_BARRELS` thêm.
+
+**Phương án A — LẤP Ô CHÉO GẦN** *(khuyến nghị)*
+
+```
+        .  X  .  X  .          X = (x-2, y∓1)  ô knight gốc
+        .  n  .  n  .          n = (x-1, y∓1)  ô chéo kề Z
+        .  .  Z  .  .
+```
+
+Mỗi bên thành **một cột dọc 2 ô**. Ghép Cluster Load:
+
+```
+        .  X  M  X  .
+        .  n  .  n  .          → 5 ô, đúng con số combo 2 của bạn
+        .  .  Z  .  .
+```
+
+**Phương án B — ĐẨY RA XA THÊM**
+
+```
+        .  n  .  n  .          n = (x-3, y∓1)
+        .  X  .  X  .
+        .  .  .  .  .
+        .  .  Z  .  .
+```
+
+**Phương án C — BANH NGANG**
+
+```
+        n  X  .  X  n          n = (x-2, y∓2)
+        .  .  .  .  .
+        .  .  Z  .  .
+```
+
+## C.3 · Vì sao khuyến nghị A
+
+**① Khớp cả ba vế câu bạn viết ở [C6.2].** Bạn viết: *"bắn thêm 2 ô chéo (ngay dưới 2 ô cuối của chữ
+L giống kiểu súng 2 bên bắn thành 1 hàng dọc"*.
+
+| Vế bạn viết | A | B | C |
+|---|---|---|---|
+| "2 ô **chéo**" — `(x-1, y∓1)` đúng là hai ô chéo kề Z | ✅ | ❌ | ❌ |
+| "**ngay dưới** 2 ô cuối của chữ L" — vào phía trong, gần Z | ✅ | ❌ (ra ngoài) | ❌ (sang ngang) |
+| "súng 2 bên bắn thành **1 hàng dọc**" | ✅ | ✅ | ❌ |
+
+**② A lấp VÙNG CHẾT, B chỉ kéo dài thứ cô đã dài nhất.** Hình knight có một lỗ hổng ngay quanh thân
+cô: bất cứ thứ gì đứng sát đều **không bắn được**. Cô là hero 4 máu — thứ đứng sát cô là thứ nguy
+hiểm nhất, mà lại đúng thứ cô bó tay. A vá đúng lỗ đó. B thì cộng tầm cho khẩu súng vốn đã với xa
+nhất roster — ít giá trị hơn hẳn.
+
+**③ Ô chéo là TÚI AN TOÀN — đây là chỗ hay nhất của A.** `inMelee` trong engine là **Manhattan ≤ 1**
+(`turnManager.ts:826`), tức **đường chéo KHÔNG tính là kề**. Hệ quả: một zombie đứng chéo cô thì
+**nó không đánh cô được** (phải bước sang ô trực giao trước), nhưng sau A thì **cô bắn được nó**.
+Một ô bắn-mà-không-bị-bắn-lại, hợp đúng thân giấy.
+
+**④ Không đụng bất kỳ luật nào.** Không nhân theo shot count (VOLLEY CAP không liên quan), không
+random, overlay tô đủ 4–5 ô trước khi bấm.
+
+**Lưu ý phải nói ra:** A **không** giúp vòng hit & run. `WIND_TAUNT` (Barbed Skids) kích khi cô rời ô
+**kề** — mà kề là trực giao. Bắn chéo thì không dựng được taunt. Hai ô này phục vụ hai lối chơi khác
+nhau, không cộng hưởng — đó là tính năng, không phải lỗi.
+
+## C.4 · Chốt spec nếu bạn duyệt A
+
+- **Type:** `EXTENDED_BARRELS`
+- **Tên đề xuất:** **"Underslung Pods"** (Bệ Súng Dưới Cánh) — hoặc **"Close Pods"**. Bỏ tên "Twin
+  Pods" cũ vì nó tả `DOUBLE_ATTACK`, không tả ô này.
+- **Hiệu ứng:** mỗi đòn thường, ngoài cặp ô knight, bắn thêm **hai ô chéo kề** cùng phía hướng ngắm —
+  `(x∓1, y∓1)` cho hướng dọc, `(x∓1, y∓1)` tương ứng cho hướng ngang. Hai ô mới ăn **1 damage**.
+- **Ca biên:** ô mới ngoài bàn → bỏ qua ô đó, ô còn lại vẫn bắn. Ô mới có **ally** → xử lý y hệt ô
+  knight gốc hiện đang xử lý ally (giữ nguyên luật sẵn có, không tạo ngoại lệ mới).
+- **Wiring:** thêm hai offset vào cùng chỗ `wingTwin` được đọc — targeting overlay, resolver, path
+  preview **dùng chung một hàm** (`gameLogic.ts:740` đã ghi rõ kỷ luật này). **Vừa.**
+
+- **Trạng thái:** ⬜ chờ duyệt — chọn A / B / C
+- **Góp ý:**
+
+---
+
+# Phụ lục D · LUẬT CỘNG DỒN
+
+## D.1 · Vấn đề: ba con số cùng rơi vào một cú bắn
+
+Khi Reedwing bắn một zombie **đang chảy máu**, có ba thứ cùng đòi cộng:
+
+| | Nguồn | Giá trị |
+|---|---|---|
+| ① | **Damage in trên thẻ** | 1 mỗi ô |
+| ② | **BLEED** (vết thương hở, tiêu hao) | +1, **một lần**, rồi vết tiêu |
+| ③ | **`BLEED_EXECUTION`** (Executioner Pods) | +2 "khi mục tiêu đang bleeding" |
+
+Cộng theo ba thứ tự khác nhau ra **7, 8, hoặc 16**. Chưa có luật nào trong repo nói cái nào đúng —
+vì ô ③ **chưa từng được wire** ([A7]).
+
+## D.2 · VOLLEY CAP làm gì — chính xác
+
+`utils/fusion.ts:488`:
+
+```
+const volleyShots = effects.find(e => e.type === 'VOLLEY')?.value ?? 0;
+if (volleyShots > 1) { ...kẹp mọi DAMAGE về đúng số in trên thẻ... }
+```
+
+Ba điều phải nắm:
+
+1. **Cap khoá theo effect `VOLLEY`, không khoá theo số Ô bị trúng.** Nó tồn tại vì Precision Blast của
+   Peaburst nhân damage-mỗi-phát với số phát, nên một cú +1 tới nơi thành +3.
+2. **`WING_PAIR` là `rangeType`, KHÔNG phải effect `VOLLEY`** → **cap không bao giờ nổ cho Reedwing.**
+   Đây không phải sơ suất: đòn cô bắn 2 ô **khác nhau**, mỗi ô một mục tiêu khác — không phải 2 phát
+   dồn vào một thân.
+3. **Cap chỉ kẹp `DAMAGE`.** Nó không biết gì về bleed, về rider, về bonus có điều kiện.
+
+## D.3 · Tiền lệ THÀNH VĂN: buff thường trực áp MỖI Ô
+
+`data/heroUpgrades.ts:91`, nâng cấp riêng của Reedwing (*Heavier Payload*, `BONUS_DAMAGE 1`):
+
+> *"Damage is honest here: **WING_PAIR fires two cells, so +1 lands on both** — the same rule that
+> makes Peaburst's identical upgrade lift her whole volley."*
+
+Tức repo **đã chốt** rằng buff thường trực nhân theo số ô của cô, và gọi đó là "honest". Nên nếu
+`BLEED_EXECUTION` được coi là buff thường trực, luật hiện hành sẽ tự cho ra **per-ô** — chứ không
+phải một ngoại lệ ai đó bịa ra.
+
+## D.4 · Luật cộng dồn đề xuất — BA TẦNG
+
+| Tầng | Gồm | Cộng thế nào | Vì sao |
+|---|---|---|---|
+| **1 · Số ô** | `EXTENDED_BARRELS` · `WING_MIDSHOT` · `SPLIT_SHOT` · `DOUBLE_ATTACK` | thêm **ô**, mỗi ô ăn damage in trên thẻ | đây chính là món các ô này bán |
+| **2 · Buff thường trực** | `BONUS_DAMAGE` · `BLESS_POWER` | **MỖI Ô** — tiền lệ *Heavier Payload* | bị VOLLEY CAP chặn **chỉ khi** skill có effect `VOLLEY` |
+| **3 · Bonus có điều kiện TIÊU HAO** | `BLEED` · `BLEED_EXECUTION` | **MỘT LẦN mỗi đòn** | vì điều kiện **tự tiêu** sau lần đầu — không cần cap mới, chỉ cần đọc đúng |
+
+Điểm mấu chốt của tầng 3: engine **đã** có cơ chế tiêu vết — `DamageResult.bleedConsumed`
+(*"This instance spent the target's BLEEDING wound"*). Vết bleed bị **cú đánh đầu tiên** ăn mất. Nên
+nếu `BLEED_EXECUTION` kiểm điều kiện "đang bleeding" **tại từng cú**, cú thứ hai trở đi nhìn vào thân
+**đã hết bleed** → tự động không cộng. **Luật một-lần không phải cap thứ hai — nó là hệ quả của cơ
+chế sẵn có.**
+
+## D.5 · Bốn cách đọc, bốn con số — combo 2 của bạn
+
+Bối cảnh: Reedwing damage 1 · `EXTENDED_BARRELS` + Cluster Load = **5 ô** · relic độc quyền dồn cả 5
+phát vào **một** zombie **đang chảy máu**.
+
+| Cách đọc | Phát 1 | Phát 2–5 | **Tổng** |
+|---|---|---|---|
+| ③ per-ô, đọc bleed **chụp trước loạt** | 1+1+2 = 4 | 1+2 = 3 (×4) | **16** |
+| ③ per-ô, đọc bleed **sống** (phát 1 tiêu vết) | 1+1+2 = 4 | 1 (×4) | **8** |
+| ③ một-lần, **CỘNG** với +1 của bleed | 5 + 1 + 2 | | **8** |
+| **③ một-lần, +2 THAY THẾ +1 của bleed** *(khuyến nghị)* | 1+2 = 3 | 1 (×4) | **7** |
+
+## D.6 · Khuyến nghị — và vì sao nó ra đúng số của bạn
+
+**`BLEED_EXECUTION` = một cú kết liễu vết thương: nó TIÊU vết bleed y như một đòn thường, nhưng trả
++2 THAY VÌ +1.**
+
+Ba thứ khớp cùng lúc, không phải trùng hợp:
+
+1. **Khớp thẻ bài đang in.** Card viết *"+2 bonus damage (**3 damage total**) against targets currently
+   suffering from Bleeding"*. 3 = 1 (base) + 2 (execution). Thẻ **không** cộng thêm +1 của bleed —
+   đúng cách đọc "thay thế".
+2. **Khớp con số bạn tính.** 5 + 2 = **7**.
+3. **Không đẻ luật mới.** Không cần cap thứ hai. Chỉ dùng đúng cơ chế `bleedConsumed` đang chạy: vết
+   bleed là **tài nguyên một lần**, ai tiêu trước thì được.
+
+Kiểm lại ca **không có relic focus** (chơi thường, 2 ô, một zombie đang bleed đứng ở một ô):
+- ô có zombie bleed: 1 + 2 = **3** ✓ đúng chữ "3 damage total" trên thẻ
+- ô kia: 1
+
+## D.7 · Ô nào khác bị luật này chạm
+
+| Ô | Tầng | Hệ quả |
+|---|---|---|
+| *Heavier Payload* (nâng cấp Reedwing) | 2 | giữ nguyên +1 lên **cả hai** nòng — không đổi gì |
+| *Fanged Blessing* `BLESS_POWER` | 2 | +1 lên **mỗi ô** của đòn được ban |
+| *Fanged Bash* `BONUS_DAMAGE` | 2 | như cũ |
+| *Serrated Pea* / *Rending Chard* (`BLEED_ON_HIT`, `BLEED_ON_SHOVE`) | 3 | **đặt** vết, không tiêu vết — không đụng luật này |
+| *Shrapnel Kernel* `SKILL_BLEED_SPLASH` | 3 | đặt vết lên 4 ô; **combo có chủ đích**: Cornova rải vết, Reedwing kết liễu |
+| *Repeater* `DOUBLE_ATTACK` | 1 | loạt thứ hai là **ô/phát mới**, mỗi phát tự đọc trạng thái bleed hiện tại |
+| *Split Shell* `SPLIT_SHOT` | 1 | viên phụ là phát riêng, tầng 3 vẫn chỉ tính một lần cho cả đòn |
+| *Cob Howitzer* `SKILL_SPLASH` | 1 | vành ngoài nửa sức — nhân theo ô, không nhân theo bonus tầng 3 |
+
+- **Trạng thái:** ⬜ chờ duyệt
+- **Góp ý:**

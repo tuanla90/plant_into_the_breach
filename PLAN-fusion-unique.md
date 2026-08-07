@@ -750,9 +750,11 @@ Cả 9 cột đạt **9/9 theo type** — nhưng con số thật chỉ đúng sa
 
 ### F11 · Ba việc còn nợ trước khi gõ dòng code đầu tiên
 
-1. **[A7]** — 14 ô rỗng: *wire* hay *hạ `live: false`*. Chặn mọi phép đo phía sau.
-2. **Tên + sơ đồ ô Reedwing × MAT_PEABURST** (`EXTENDED_BARRELS`) — `WING_PAIR` là 8 ô knight; tôi nợ bạn hình vẽ duyệt trước.
-3. **Luật cộng dồn của `BLEED_EXECUTION`** — "+2 mỗi ô" (ra 15) hay "+2 một lần mỗi đòn" (ra 7 như bạn tính). Quyết trong cùng đợt [A7].
+1. **[A7]** — 14 ô rỗng: *wire* hay *hạ `live: false`*. Chặn mọi phép đo phía sau. **Còn treo.**
+2. ~~Sơ đồ ô Reedwing × MAT_PEABURST~~ — **XONG**, `PLAN-fusion-effects.md` **Phụ lục C**: 3 phương án
+   có hình, khuyến nghị A (lấp 2 ô chéo kề). Chỉ còn chờ bạn chọn A/B/C.
+3. ~~Luật cộng dồn `BLEED_EXECUTION`~~ — **XONG**, `PLAN-fusion-effects.md` **Phụ lục D**: luật cộng
+   dồn 3 tầng cho toàn ma trận, và khuyến nghị "+2 **thay** +1, tiêu vết bleed" → ra đúng 7.
 
 - **Trạng thái:** ⬜ chờ duyệt
 - **Góp ý:**
