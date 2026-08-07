@@ -836,15 +836,27 @@ export const processTurn = (
                     // flag dies with it — written in the same update as the shield it belongs
                     // to, which is what keeps the two from ever disagreeing.
                     const barbed = !!targetUnit.shieldBarbed;
-                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: targetUnit.id, updates: { ...shieldUpdatesFor(result), shieldBarbed: false } });
+                    // PAYBACK SHELL (SHIELD_BREAK_STUN): cùng kỷ luật với Glass Rind — cờ nằm
+                    // trên LỚP, đọc trước khi lớp vỡ, và chết trong cùng một update với nó.
+                    const stuns = !!targetUnit.shieldStuns;
+                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: targetUnit.id, updates: { ...shieldUpdatesFor(result), shieldBarbed: false, shieldStuns: false } });
                     targetUnit.shield = result.remainingShield;
                     targetUnit.shieldBarbed = false;
+                    targetUnit.shieldStuns = false;
                     // Melee only, like every other answer below: a stone lobbed from three
                     // tiles away shatters the glass without ever touching it.
                     if (barbed && inMelee && enemy.hp > 0 && !enemy.statusEffects.includes('BLEEDING')) {
                         const bleeding: typeof enemy.statusEffects = [...enemy.statusEffects, 'BLEEDING'];
                         actions.push({ type: 'UPDATE_UNIT_STATE', unitId: enemy.id, updates: { statusEffects: bleeding } });
                         enemy.statusEffects = bleeding;
+                    }
+                    // Payback Shell: kẻ ĐẬP VỠ lớp bị ghim lượt kế. Melee-only cùng lý do Glass
+                    // Rind — hòn đá ném từ ba ô làm vỡ kính mà không hề chạm vào nó. Cái giá của
+                    // ngoại lệ STUN RULE này nằm ở chỗ nó đến CHẬM một nhịp và địch phải tự đấm.
+                    if (stuns && inMelee && enemy.hp > 0 && !enemy.statusEffects.includes('STUN')) {
+                        const stunned: typeof enemy.statusEffects = [...enemy.statusEffects, 'STUN'];
+                        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: enemy.id, updates: { statusEffects: stunned } });
+                        enemy.statusEffects = stunned;
                     }
                 }
 

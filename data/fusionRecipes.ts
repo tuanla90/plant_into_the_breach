@@ -588,10 +588,16 @@ export const FUSION_RECIPES: Matrix = {
             effect: { type: 'DAMAGE_REDUCTION', value: 1 },
             live: true,
         },
+        /**
+         * [C1.1] Trước đây ô này là `SKILL_STUN` — trùng NGUYÊN implementation với Stun Charge
+         * của Ironhusk, tức hai trong ba ngoại lệ của STUN RULE chạy chung một dòng code. Dời
+         * trigger từ "lúc bọc" sang "lúc vỡ" là thứ làm hai ô khác nhau thật, và nó gắn cú ghim
+         * vào đúng danh từ của anh: cái khiên.
+         */
         MAT_CORNOVA: {
-            name: 'Stun Shell',
-            description: 'Encase concusses every zombie it reaches: each one loses its whole next turn.',
-            effect: { type: 'SKILL_STUN' },
+            name: 'Payback Shell',
+            description: 'The layers Encase raises answer back: whatever shatters one in melee loses its next turn. Once per layer.',
+            effect: { type: 'SHIELD_BREAK_STUN' },
             live: true,
         },
         MAT_REEDWING: {

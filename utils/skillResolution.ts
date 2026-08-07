@@ -196,11 +196,15 @@ export const planSkillActions = (
                  * whoever stands beside the recipient too.
                  */
                 const barbed = hasFusionEffect(caster, 'BARBED_SHIELD');
+                // Payback Shell: chi lop do KY NANG TRA PHI phat ra moi ghim duoc - cung cong ma
+                // SKILL_SPLASH dung. Reinforce la don thuong mien phi, cho no ghim la pha STUN RULE.
+                const stunning = hasFusionEffect(caster, 'SHIELD_BREAK_STUN') && (skill.sunCost ?? 0) > 0;
                 if ((e.value || 0) > 0 && (ally.shield || 0) === 0) {
-                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: ally.id, updates: { shield: 1, shieldBarbed: barbed } });
+                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: ally.id, updates: { shield: 1, shieldBarbed: barbed, shieldStuns: stunning } });
                     // Keep the simulation in step, so a second pass sees the layer.
                     ally.shield = 1;
                     ally.shieldBarbed = barbed;
+                    ally.shieldStuns = stunning;
                     actions.push({ type: 'APPLY_DAMAGE', targetId: ally.id, amount: 0, eventType: 'BLOCK', pos: at });
                 }
                 if ((e.value || 0) > 0 && hasFusionEffect(caster, 'SHIELD_SPREAD')) {
@@ -209,7 +213,8 @@ export const planSkillActions = (
                         if (n && !n.isEnemy && (n.shield || 0) === 0) {
                             n.shield = 1;
                             n.shieldBarbed = barbed;
-                            actions.push({ type: 'UPDATE_UNIT_STATE', unitId: n.id, updates: { shield: 1, shieldBarbed: barbed } });
+                            n.shieldStuns = stunning;
+                            actions.push({ type: 'UPDATE_UNIT_STATE', unitId: n.id, updates: { shield: 1, shieldBarbed: barbed, shieldStuns: stunning } });
                             actions.push({ type: 'APPLY_DAMAGE', targetId: n.id, amount: 0, eventType: 'BLOCK', pos: n.position });
                         }
                     });
@@ -529,9 +534,13 @@ export const planSkillActions = (
                         && (casterSim.shield || 0) === 0
                         && hasFusionEffect(caster, 'SHIELD_ON_KILL')) {
                         const barbed = hasFusionEffect(caster, 'BARBED_SHIELD');
+                        // Payback Shell: chi lop do KY NANG TRA PHI phat ra moi ghim duoc - cung cong ma
+                        // SKILL_SPLASH dung. Reinforce la don thuong mien phi, cho no ghim la pha STUN RULE.
+                        const stunning = hasFusionEffect(caster, 'SHIELD_BREAK_STUN') && (skill.sunCost ?? 0) > 0;
                         casterSim.shield = 1;
                         casterSim.shieldBarbed = barbed;
-                        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: caster.id, updates: { shield: 1, shieldBarbed: barbed } });
+                        casterSim.shieldStuns = stunning;
+                        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: caster.id, updates: { shield: 1, shieldBarbed: barbed, shieldStuns: stunning } });
                         actions.push({ type: 'APPLY_DAMAGE', targetId: caster.id, amount: 0, eventType: 'BLOCK', pos: casterSim.position });
                     }
                 }

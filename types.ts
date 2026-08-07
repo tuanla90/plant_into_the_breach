@@ -446,6 +446,16 @@ export interface Unit {
    */
   shieldBarbed?: boolean;
   /**
+   * The LAYER currently worn answers back with a STUN (Gourdward's Payback Shell). Same
+   * discipline as `shieldBarbed`: written at every grant site alongside `shield`, true or
+   * false, so it dies with the layer it describes.
+   *
+   * Chỉ được bật bởi lớp do KỸ NĂNG TRẢ PHÍ phát ra. Reinforce là đòn thường miễn phí của anh,
+   * nên nếu cờ này dán được lên lớp đó thì ô sẽ thành "stun miễn phí mỗi lượt" — đúng hình
+   * dạng mà STUN RULE tồn tại để cấm, và là thứ làm cái giá 60 Sol của ngoại lệ này bốc hơi.
+   */
+  shieldStuns?: boolean;
+  /**
    * The LAST_STAND_SHIELD layer has already been spent this battle. Reset by unitFactory when
    * the body is built for a fight, which is also where the flag is cleared between battles —
    * a once-per-fight promise stored on a snapshot that persists between fights would be a
@@ -1011,6 +1021,18 @@ export type FusionEffectType =
      * một special-case tồn tại chỉ vì `BLEED_ON_HIT` chưa nói thật.
      */
     | 'BLEED_ON_SHOVE'
+    /**
+     * Payback Shell — lớp chắn do KỸ NĂNG TRẢ PHÍ của hero này phát ra được đánh dấu; kẻ nào
+     * ĐẬP VỠ nó bằng đòn cận chiến thì bị STUN lượt kế. Mỗi lớp một lần.
+     *
+     * Ngoại lệ #2 của STUN RULE, và là ngoại lệ ĐẮT nhất: 60 Sol, 0 sát thương, phải đứng giữa
+     * đám, stun đến CHẬM một nhịp, và địch phải tự đấm vỡ mới dính. Bản cũ (`SKILL_STUN`, ghim
+     * ngay lúc bọc) trùng nguyên implementation với Stun Charge của Ironhusk — dời trigger từ
+     * lúc bọc sang lúc vỡ là thứ làm hai ô khác nhau thật sự.
+     *
+     * Melee-only, đồng bộ Glass Rind: hòn đá ném từ ba ô làm vỡ kính mà không hề chạm vào nó.
+     */
+    | 'SHIELD_BREAK_STUN'
     /**
      * Shields this hero hands out spill over to whoever stands beside the recipient.
      * Replaces SHIELD_BONUS ("+2 size"), which stopped meaning anything when shields became
