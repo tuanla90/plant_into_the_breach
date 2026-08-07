@@ -508,6 +508,25 @@ export interface Unit {
    */
   moveLocked?: boolean;
   /**
+   * SỐ VẾT THƯƠNG HỞ đang mang. Mỗi instance sát thương tiêu ĐÚNG MỘT vết và ăn +1.
+   *
+   * Trước đợt này bleed là một cờ nhị phân, và ba site đặt vết đều có chốt
+   * `!statusEffects.includes('BLEEDING')` — tức đặt vết lên thân đang chảy máu thì **không làm
+   * gì cả**. Hệ quả: càng nhiều nguồn bleed càng phản tác dụng, và một build gom ba ô bleed
+   * nhận về giá trị của một. Đổi sang số đếm KHÔNG tăng sức mạnh mỗi lần đặt — nó chỉ thôi
+   * vứt đi những lần đặt thừa.
+   *
+   * Trần 5, rơi 1 mỗi VÒNG (cuối lượt địch). Trần chỉ để badge giữ một chữ số và chặn build
+   * rùa gom vô hạn; cân bằng vốn tự lo, vì tốc độ tiêu (mỗi instance một vết) thường ngang
+   * hoặc hơn tốc độ nạp.
+   *
+   * `statusEffects` vẫn giữ `'BLEEDING'` như tấm gương của `bleedStacks > 0`, để mọi nơi đang
+   * đọc status (icon, AI, miễn nhiễm) không phải đổi một dòng nào.
+   *
+   * Không cần migrate save: bleed chỉ sống trong trận, mà `pitb_run_v1` cố ý không lưu giữa trận.
+   */
+  bleedStacks?: number;
+  /**
    * Số Sol lớp chắn hiện tại hoàn lại khi bị ĐẬP VỠ (Gourdward — Sunlit Rind). Lưu SỐ chứ
    * không lưu id người phát: lớp chắn phải tự trả được tiền kể cả khi người phát nó đã chết,
    * cùng lý do `shieldBarbed` nằm trên lớp chứ không tra ngược về ai đứng gần.

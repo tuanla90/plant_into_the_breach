@@ -384,6 +384,35 @@ export interface DamageResult {
  * promise — a site that forgets it does not crash, it quietly hands the player a second free
  * death save, which is the kind of bug that never gets reported.
  */
+/** Trần vết thương hở. Chỉ để badge giữ một chữ số và chặn build rùa gom vô hạn — xem `bleedStacks`. */
+export const BLEED_CAP = 5;
+
+/**
+ * ĐẶT MỘT VẾT THƯƠNG HỞ — một cửa duy nhất cho cả năm nguồn bleed trong game.
+ *
+ * Trước đợt này mỗi nguồn tự viết `if (!statusEffects.includes('BLEEDING'))`, và cái chốt đó
+ * chính là chỗ giá trị bị vứt: đặt vết lên thân đang chảy máu thì không làm gì cả. Gom vào đây
+ * để luật cộng dồn + trần chỉ có MỘT nơi, đúng bài học `chainStep`.
+ *
+ * Mutate thân được truyền vào (sim copy) VÀ trả về `updates` cho caller đẩy lên bàn cờ — cùng
+ * khuôn `shieldUpdatesFor`. Trả `null` khi không đặt được (thân đã đầy vết, hoặc miễn nhiễm).
+ */
+export const addBleedStack = (unit: Unit): Partial<Unit> | null => {
+    if (unit.immunities?.includes('STATUS')) {
+        // Trùm VẪN chảy máu: bleed cố ý xuyên miễn nhiễm STATUS (DESIGN §3). Cửa này chỉ chặn
+        // thứ gì thực sự khai miễn nhiễm mà cũng không có vết nào — hôm nay không ai.
+    }
+    const now = unit.bleedStacks ?? (unit.statusEffects?.includes('BLEEDING') ? 1 : 0);
+    if (now >= BLEED_CAP) return null;
+    const next = now + 1;
+    const statusEffects = unit.statusEffects?.includes('BLEEDING')
+        ? unit.statusEffects
+        : [...(unit.statusEffects ?? []), 'BLEEDING' as const];
+    unit.bleedStacks = next;
+    unit.statusEffects = statusEffects;
+    return { bleedStacks: next, statusEffects };
+};
+
 export const shieldUpdatesFor = (r: DamageResult): Partial<Unit> =>
     r.lastStandSpent
         ? { shield: r.remainingShield, lastStandUsed: true }
@@ -400,6 +429,17 @@ export const calculateDamage = (
      * instead of armour blanking every 1-damage tool in the game at once.
      */
     ignoresArmor: boolean = false,
+    /**
+     * AI đang gây ra đòn này. TUỲ CHỌN và đứng cuối có chủ đích: 21 nơi gọi hiện có không phải
+     * đổi một ký tự, và chỉ nơi nào thực sự biết người đánh mới truyền.
+     *
+     * Hôm nay đúng MỘT thứ đọc nó: `BLEED_EXECUTION` (Executioner Pods), thứ trả 2 máu cho mỗi
+     * vết CÔ tiêu thay vì 1. Không truyền thì mệnh giá là 1 — tức hành vi cũ, cho mọi ai khác.
+     *
+     * Đừng biến nó thành cửa cho các bộ lọc "ai đánh" khác (melee/ranged chẳng hạn): cột Tấm
+     * Giáp đã cố ý tránh đúng con đường đó, vì nó bắt mọi nơi gọi phải biết thêm một thứ.
+     */
+    attacker?: Unit | null,
 ): DamageResult => {
     // Untouchable. First line of the one function every damage source in the game funnels
     // through, so "nothing hurts it this turn" needs no cooperation from any caller.
@@ -503,8 +543,25 @@ export const calculateDamage = (
     if (amount > 0
         && shieldDmg === 0 && currentShield === 0   // no layer between the blow and the wound
         && target.statusEffects?.includes('BLEEDING')) {
-        damageToDeal += 1;
-        target.statusEffects = target.statusEffects.filter(s => s !== 'BLEEDING');
+        /**
+         * MỘT INSTANCE TIÊU ĐÚNG MỘT VẾT.
+         *
+         * `bleedStacks` là con số thật; `'BLEEDING'` trong statusEffects chỉ là tấm gương của
+         * "còn ≥1 vết", giữ lại để mọi nơi đang đọc status không phải đổi. Save cũ không có
+         * `bleedStacks` thì đọc là 1 — đúng hành vi cờ nhị phân cũ.
+         *
+         * EXECUTIONER PODS: mỗi vết CÔ tiêu trả 2 thay vì 1. Nó không phải một con số cộng
+         * thêm chồng lên bleed — nó THAY mệnh giá của tờ vừa rút, nên tổng lợi ích vẫn bị chặn
+         * cứng bởi số vết đội đã bỏ công đặt. Không có phép nhân nào ở đây.
+         */
+        const stacks = target.bleedStacks ?? 1;
+        const payout = (attacker ? getFusionEffectValue(attacker, 'BLEED_EXECUTION') : 0) || 1;
+        damageToDeal += payout;
+        const left = Math.max(0, stacks - 1);
+        target.bleedStacks = left;
+        if (left === 0) {
+            target.statusEffects = target.statusEffects.filter(s => s !== 'BLEEDING');
+        }
         bleedConsumed = true;
     }
 

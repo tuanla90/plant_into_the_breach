@@ -395,7 +395,7 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_SNAPMAW: {
             name: 'Executioner Pods',
-            description: 'Wing guns deal +2 bonus damage (3 damage total) against targets currently suffering from Bleeding.',
+            description: 'Every open wound her guns spend is worth 2 damage instead of 1 — she cashes the squad\'s bleed at double rate.',
             effect: { type: 'BLEED_EXECUTION', value: 2 },
             live: true,
         },

@@ -233,3 +233,21 @@ Còn mở:
 - Node nghỉ đổi icon lều → tháp: có cần art mới không (`art-src/ART-TODO.md`)?
 - Giá material 25–225 coin có cần chỉnh sau luật nhiễm bẩn (§4b)?
 - DORMANT trong ưu tiên mục tiêu của zombie đứng dưới sprout bao xa (§4b)?
+
+## §10. Lore phủ đuôi (chỉ text — KHÔNG đổi luật chơi, dùng cho codex/tooltip/i18n)
+
+Đã viết sẵn trong game_lore.md v2.1, mỗi mục một câu, cơ chế giữ nguyên:
+- **Phản ứng hủy tương hỗ** (chốt bởi chủ dự án): xác lết cắn Mầm → cả hai cùng phân rã
+  — lý do zombie ăn sprout xong biến mất; mỗi con là "viên đạn tự hủy" của Blightlord.
+- **Chúa tể không dám chạm Mầm** (tự hủy) → vì sao boss không bao giờ cướp sprout;
+  đồng thời foreshadow vũ khí kết liễu.
+- **The Breach** = hành lang giữa các vết sẹo; hộp ấp để lại trên Cỗ Tàu (không luật
+  sprout), mục tiêu của Blightlord là giết Sunbloom; "phế liệu nhặt giữa hai trận" = camp coin.
+- **Act Upgrades** (`data/heroUpgrades.ts`) = "giọt năng lượng biến dị" tưới cho người
+  sống sau mỗi boss; bám thân xác nên run-scoped (không qua được trôi dạt).
+- **Blightlord SEVERED** = bàn tay tước nhịp nguyên tố, phá Cộng Hưởng.
+- Fusion 3 slot/hero = lò nuôi nổi ba mối ghép; chỉ hero nhận fusion = mối ghép cần
+  linh hồn để bén rễ.
+- Rewind 1 lần/trận = điện tích tua qua đêm mới kết tinh.
+- Shop reroll giá leo thang = trả phí cho Mulch lục sâu hơn thùng xe.
+- Power Plant = **Pin Nén** (một hơi thở Sol đóng sẵn — một tuyệt kỹ không tốn Sol).

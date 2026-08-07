@@ -1,6 +1,6 @@
 
 import { Unit, TileData, GameState, UnitClass, UnitType, UnitDefinition, Position, TerrainDefinition, TurnAction, Intent, StatusEffectType, AreaHit, TerrainType } from '../types';
-import { getTileAt, getUnitAt, findPath, calculateDamage, canStopOn, canCrossBodies, planPush, canRideTo, shieldUpdatesFor, survivesWater } from './gameLogic';
+import { addBleedStack, getTileAt, getUnitAt, findPath, calculateDamage, canStopOn, canCrossBodies, planPush, canRideTo, shieldUpdatesFor, survivesWater } from './gameLogic';
 import { applyPushPlan, applyCollisionDamage } from './actionBuilders';
 import { planEnemyIntent } from './aiLogic';
 import { tutorialBattle } from '../data/tutorial';
@@ -881,10 +881,9 @@ export const processTurn = (
                     }
                     // Melee only, like every other answer below: a stone lobbed from three
                     // tiles away shatters the glass without ever touching it.
-                    if (barbed && inMelee && enemy.hp > 0 && !enemy.statusEffects.includes('BLEEDING')) {
-                        const bleeding: typeof enemy.statusEffects = [...enemy.statusEffects, 'BLEEDING'];
-                        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: enemy.id, updates: { statusEffects: bleeding } });
-                        enemy.statusEffects = bleeding;
+                    if (barbed && inMelee && enemy.hp > 0) {
+                        const upd = addBleedStack(enemy);
+                        if (upd) actions.push({ type: 'UPDATE_UNIT_STATE', unitId: enemy.id, updates: upd });
                     }
                     // Payback Shell: kẻ ĐẬP VỠ lớp bị ghim lượt kế. Melee-only cùng lý do Glass
                     // Rind — hòn đá ném từ ba ô làm vỡ kính mà không hề chạm vào nó. Cái giá của
@@ -1180,11 +1179,9 @@ export const processTurn = (
                  * a hero who drags four bodies into contact and cannot finish any of them.
                  */
                 if (enemy.hp > 0 && inMelee
-                    && hasFusionEffect(targetUnit, 'RETALIATE_BLEED')
-                    && !enemy.statusEffects.includes('BLEEDING')) {
-                    const bleeding: typeof enemy.statusEffects = [...enemy.statusEffects, 'BLEEDING'];
-                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: enemy.id, updates: { statusEffects: bleeding } });
-                    enemy.statusEffects = bleeding;
+                    && hasFusionEffect(targetUnit, 'RETALIATE_BLEED')) {
+                    const upd = addBleedStack(enemy);
+                    if (upd) actions.push({ type: 'UPDATE_UNIT_STATE', unitId: enemy.id, updates: upd });
                 }
 
                 // --- RETALIATE_PUSH (the Spring Arm row) ---
@@ -2102,6 +2099,27 @@ export const processTurn = (
             actions.push({ type: 'UPDATE_UNIT_STATE', unitId: u.id, updates: { statusEffects: next } });
         });
     }
+
+    /**
+     * VẾT THƯƠNG SE LẠI — mỗi thân rụng MỘT vết mỗi vòng, tính ở cuối lượt địch.
+     *
+     * Cuối VÒNG chứ không cuối lượt người chơi: vết do Rending Husk và Glass Rind đặt trong
+     * lượt địch phải còn nguyên giá trị cho lượt người chơi kế tiếp, không thì hai ô thụ động
+     * đó bị thiệt trọn một nhịp.
+     *
+     * Đây là thứ biến bleed thành cơ chế TEMPO: nạp rồi phải tiêu ngay, không để dành. Và nó
+     * cũng là cái phanh của máy kích hoạt hàng loạt — ví không phình được thì không có cú burst
+     * nào để nuôi.
+     */
+    remainingUnits.forEach(u => {
+        const now = u.bleedStacks ?? (u.statusEffects.includes('BLEEDING') ? 1 : 0);
+        if (now <= 0) return;
+        const left = now - 1;
+        const statusEffects = left > 0 ? u.statusEffects : u.statusEffects.filter(e => e !== 'BLEEDING');
+        u.bleedStacks = left;
+        u.statusEffects = statusEffects;
+        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: u.id, updates: { bleedStacks: left, statusEffects } });
+    });
 
     actions.push({ type: 'NEW_TURN_RESET' });
 

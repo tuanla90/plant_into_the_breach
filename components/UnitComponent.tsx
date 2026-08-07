@@ -276,8 +276,18 @@ const UnitComponentBase: React.FC<UnitComponentProps> = ({ unit, isSelected, isB
                 {/* Status Effects */}
                 <div className="absolute -top-2 left-0 flex flex-col gap-1 z-20">
                     {hasBurn && <Flame size={12} className="text-orange-500 animate-bounce" />}
-                    {/* An open wound: the next hit against this body lands +1 (BLEED_ON_HIT). */}
-                    {isBleeding && <Droplets size={12} className="text-red-400 animate-pulse" />}
+                    {/* Vết thương hở, ĐEO SỐ: mỗi vết là một đòn tới đây ăn +1, và mỗi instance
+                        sát thương tiêu đúng một vết. Con số phải hiện, không thì stack thứ hai
+                        trở đi là thông tin ẩn — mà cả game bán đúng cái cam kết cộng-nhẩm-được
+                        -trước-khi-bấm. Một vết thì chỉ hiện icon, cho đỡ nhiễu. */}
+                    {isBleeding && (
+                        <span className="inline-flex items-center leading-none">
+                            <Droplets size={12} className="text-red-400 animate-pulse" />
+                            {(unit.bleedStacks ?? 1) > 1 && (
+                                <span className="text-[9px] font-bold text-red-300 -ml-[1px]">{unit.bleedStacks}</span>
+                            )}
+                        </span>
+                    )}
                     {hasStun && <CloudFog size={12} className="text-gray-300 animate-pulse" />}
                     {hasFreeze && <Snowflake size={12} className="text-sky-300 animate-pulse" />}
                     {isDormant && <Skull size={12} className="text-gray-400" />}

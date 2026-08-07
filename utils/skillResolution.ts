@@ -1,5 +1,5 @@
 import { Position, Skill, StatusEffectType, TurnAction, Unit, UnitType } from '../types';
-import { calculateDamage, getSkillTargetPath, getTileAt, planPush, shieldUpdatesFor, survivesWater, wingMid, wingNear, wingTwin } from './gameLogic';
+import { addBleedStack, calculateDamage, getSkillTargetPath, getTileAt, planPush, shieldUpdatesFor, survivesWater, wingMid, wingNear, wingTwin } from './gameLogic';
 import { getFusionEffects, getFusionEffectValue, hasFusionEffect } from './fusion';
 import { applyPushPlan, applyCollisionDamage, pushKill, type ResolveContext } from './actionBuilders';
 import { chainDamageFor, chainStep, skillCarriesElement } from './elements';
@@ -413,10 +413,8 @@ export const planSkillActions = (
         if (!hasFusionEffect(caster, 'BLEED_ON_SHOVE')) return;
         if (unit.hp <= 0 || !unit.isEnemy) return;
         if (hasFusionEffect(unit, 'STEADFAST')) return;
-        if (unit.statusEffects.includes('BLEEDING')) return;
-        const bleeding: StatusEffectType[] = [...unit.statusEffects, 'BLEEDING'];
-        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: unit.id, updates: { statusEffects: bleeding } });
-        unit.statusEffects = bleeding;
+        const upd = addBleedStack(unit);
+        if (upd) actions.push({ type: 'UPDATE_UNIT_STATE', unitId: unit.id, updates: upd });
     };
     const applyShoveBleed = (plan: { collided: string[] }) => {
         if (!hasFusionEffect(caster, 'BLEED_ON_SHOVE')) return;
@@ -545,7 +543,7 @@ export const planSkillActions = (
                 if (splitTiles.has(`${targetPos.x},${targetPos.y}`)) rawDmg = 1;
                 const totalDmg = rawDmg;
                 // Use tempUnit for calculation (safe)
-                const result = calculateDamage(targetUnit, totalDmg, hasPierce);
+                const result = calculateDamage(targetUnit, totalDmg, hasPierce, false, caster);
 
                 if (result.shieldDamage > 0) {
                     actions.push({ type: 'APPLY_DAMAGE', targetId: targetUnit.id, amount: 0, eventType: 'BLOCK', pos: targetPos });
@@ -763,11 +761,8 @@ export const planSkillActions = (
              * twice is still one wound.
              */
             if (!isDead && skill.effects.some(e => e.type === 'APPLY_BLEED')) {
-                if (!targetUnit.statusEffects.includes('BLEEDING')) {
-                    const bleeding: StatusEffectType[] = [...targetUnit.statusEffects, 'BLEEDING'];
-                    actions.push({ type: 'UPDATE_UNIT_STATE', unitId: targetUnit.id, updates: { statusEffects: bleeding } });
-                    targetUnit.statusEffects = bleeding;
-                }
+                const upd = addBleedStack(targetUnit);
+                if (upd) actions.push({ type: 'UPDATE_UNIT_STATE', unitId: targetUnit.id, updates: upd });
             }
 
             if (!isDead && skill.effects.some(e => e.type === 'HYPNOTIZE')) {
@@ -1341,11 +1336,10 @@ export const planSkillActions = (
         ringOf(pos).forEach(t => {
             const victim = [...tempUnits.values()].find(
                 u => u.hp > 0 && u.isEnemy && !u.isBurrowed && u.position.x === t.x && u.position.y === t.y);
-            if (!victim || victim.statusEffects.includes('BLEEDING')) return;
+            if (!victim) return;
             // Vết bleed xuyên miễn nhiễm STATUS như mọi chỗ khác — trùm vẫn chảy máu.
-            const bleeding: StatusEffectType[] = [...victim.statusEffects, 'BLEEDING'];
-            actions.push({ type: 'UPDATE_UNIT_STATE', unitId: victim.id, updates: { statusEffects: bleeding } });
-            victim.statusEffects = bleeding;
+            const upd = addBleedStack(victim);
+            if (upd) actions.push({ type: 'UPDATE_UNIT_STATE', unitId: victim.id, updates: upd });
         });
     }
 

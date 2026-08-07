@@ -20,7 +20,7 @@ Vì mang lò Sol trong ngực, **mắt chúng tôi luôn rực sáng** — thứ
 
 *"Con là trái tim của chiến dịch này, Sunbloom."* Cha run rẩy đặt vào vòng tay tôi chiếc hộp ấp chứa **Các Mầm Sống**. *"Mỗi Mầm là một Linh Hồn — một cơ hội Hồi Sinh. Không đồng xu rỉ sét nào trên cõi đời này định giá được sinh mạng. Chỉ có Mầm Sống mới vá víu lại được cái chết."*
 
-Rồi ông dặn điều mà cả hành trình của chúng tôi sẽ xoay quanh: **Mầm chỉ là mầm.** Chúng cũng cần được nuôi. Cứ một quãng đường, tôi phải dừng lại, cắm từng quả Mầm vào các **Trạm Mầm (Seedpost)** — trạm tiền tiêu của mạng lưới cũ — để chúng hút năng lượng. Mỗi quả Mầm cần một trạm riêng: đoàn mang theo bao nhiêu linh hồn, mỗi điểm dừng phải dàn quân giữ bấy nhiêu trạm — hộp ấp càng đầy, phòng tuyến càng dài — và trong suốt canh sạc ấy, sự sống đậm đặc nhất còn sót lại trên hành tinh sẽ tỏa hương như một ngọn đuốc giữa đêm. Bầy xác lết không đánh hơi thấy thép, không đánh hơi thấy gỗ. Chúng đánh hơi thấy *Mầm*. Chúng sẽ bỏ qua mọi họng súng để lao về phía các trạm; con nào nuốt được một quả Mầm sẽ lập tức quay đầu rời trận — mang linh hồn ấy về dâng cho chủ nhân của chúng. Mỗi trận đánh của chúng tôi, vì thế, chưa bao giờ là đi săn. Nó là **trụ cho đến khi Mầm no năng lượng, rồi ôm Mầm mà chạy tiếp.**
+Rồi ông dặn điều mà cả hành trình của chúng tôi sẽ xoay quanh: **Mầm chỉ là mầm.** Chúng cũng cần được nuôi. Cứ một quãng đường, tôi phải dừng lại, cắm từng quả Mầm vào các **Trạm Mầm (Seedpost)** — trạm tiền tiêu của mạng lưới cũ — để chúng hút năng lượng. Mỗi quả Mầm cần một trạm riêng: đoàn mang theo bao nhiêu linh hồn, mỗi điểm dừng phải dàn quân giữ bấy nhiêu trạm — hộp ấp càng đầy, phòng tuyến càng dài — và trong suốt canh sạc ấy, sự sống đậm đặc nhất còn sót lại trên hành tinh sẽ tỏa hương như một ngọn đuốc giữa đêm. Bầy xác lết không đánh hơi thấy thép, không đánh hơi thấy gỗ. Chúng đánh hơi thấy *Mầm*. Chúng sẽ bỏ qua mọi họng súng để lao về phía các trạm — và khi hàm răng mục rữa cắn được vào một quả Mầm, sự sống thuần khiết gặp phân rã thuần túy: **cả hai cùng tan biến** trong một nhịp lóe xanh. Kẻ thù của chúng tôi sẵn lòng trả cái giá đó — mỗi con xác lết là một viên đạn tự hủy, đổi một cái xác lấy một linh hồn — bởi hắn hiểu điều mà khi ấy tôi chưa hiểu: Mầm là thứ duy nhất trên đời có thể giết hắn. Mỗi trận đánh của chúng tôi, vì thế, chưa bao giờ là đi săn. Nó là **trụ cho đến khi Mầm no năng lượng, rồi ôm Mầm mà chạy tiếp.**
 
 Cha không đơn độc. Trước khi sụp đổ, Vành Đai Xanh có cả một mạng lưới hai tầng: các **Tháp Xanh (Greenspire)** — tháp lớn giữ trường an toàn, kho thân máy dự trữ và văn khố **Bản Thiết Kế**; và các **Trạm Mầm** nhỏ rải dọc mọi nẻo đường — chính là nơi Mầm ăn no trong lửa đạn.
 
@@ -42,11 +42,11 @@ Rồi tôi nghe tiếng khiên thép cắm phập xuống đất. **Ironhusk** �
 
 Đêm đó, dưới trường an toàn của Tháp Xanh đầu tiên, tôi thực hiện nghi thức đầu đời: đặt Peaburst lên một thân máy nguyên sơ của tháp, vắt kiệt lò Sol, và cấy một Mầm vào lồng ngực lạnh của cô. Bình minh, cô mở mắt. Hộp ấp của tôi **nhẹ đi một linh hồn** — đó là cái giá, và tôi sẽ còn trả nó nhiều lần nữa.
 
-Nhưng Khu Khai Quật còn giữ một bài học cuối. Thứ bầy đàn đào lên là một **Gravehulk** — khối thịt khổng lồ không thể bị đẩy lùi. Chúng tôi dốc mọi hỏa lực; nó vẫn bước tới. Khoảnh khắc hàm răng nó cắn vào quả Mầm cuối cùng, Chrona kích hoạt cảnh báo đỏ: **cưỡng bức trôi dạt dòng thời gian**. Thực tại vỡ nát, kéo cả đội sang một nhánh vũ trụ kề bên — nơi trận chiến ấy chưa kịp thua. *"Tôi vẫn giữ một bản sao của dòng thời gian này,"* Chrona nói. *"Nhảy cùng tôi."*
+Nhưng Khu Khai Quật còn giữ một bài học cuối. Thứ bầy đàn đào lên là một **Gravehulk** — khối thịt khổng lồ không thể bị đẩy lùi. Chúng tôi dốc mọi hỏa lực; nó vẫn bước tới — và trong lúc cả đội bị nó ghim chân, bầy tôi của nó tràn qua trạm cuối cùng. Khoảnh khắc quả Mầm cuối tan biến giữa hàm răng bầy đàn, Chrona kích hoạt cảnh báo đỏ: **cưỡng bức trôi dạt dòng thời gian**. Thực tại vỡ nát, kéo cả đội sang một nhánh vũ trụ kề bên — nơi trận chiến ấy chưa kịp thua. *"Tôi vẫn giữ một bản sao của dòng thời gian này,"* Chrona nói. *"Nhảy cùng tôi."*
 
 Cú trôi dạt dạy tôi hai định luật. Thứ nhất: Chrona chỉ mang theo được **linh hồn và thông tin** — ký ức, tri thức trong sổ, và những người anh em đã nhập đoàn. Thân xác được dệt lại từ bản sao gốc; mọi của nả, mọi mối ghép trên cơ thể đều ở lại phía sau như quần áo của người chết đuối. Thứ hai, và kỳ lạ hơn: nhánh vũ trụ chúng tôi dạt vào **cũng từng có một đoàn lữ hành của chính nó** — một Sunbloom khác, một Peaburst khác, đã ngã xuống ở đâu đó trên con đường này. Thỉnh thoảng chúng tôi tìm thấy đồ đạc họ để lại bên vệ đường, còn ấm hơi lò. Người đi trước không kịp về đích; hành trang của họ đi tiếp cùng chúng tôi. Chỉ chuyến khởi hành *đầu tiên* — chuyến của một dòng thời gian còn chưa ai từng thử — là trắng tay đúng nghĩa.
 
-Cũng từ Chrona, tôi hiểu định luật tàn nhẫn thứ ba: nó chỉ có thể tua ngược một khoảnh khắc rất ngắn, hoặc trôi dạt *xuôi* theo dòng chảy giữa các nhánh. **Ngược dòng trọn vẹn thì không** — năng lượng cho một cú nhảy ngược thật sự lớn đến mức chưa thứ gì trên đời chứa nổi. Đã nhổ trại tiến sang vùng đất mới là vĩnh viễn không quay đầu. Con đường một chiều.
+Cũng từ Chrona, tôi hiểu định luật tàn nhẫn thứ ba: nó chỉ có thể tua ngược một khoảnh khắc rất ngắn — và mỗi cú tua đốt một điện tích phải qua một đêm mới kết tinh lại, nên giữa một trận đánh, Chrona chỉ cứu được chúng tôi đúng một lần — hoặc trôi dạt *xuôi* theo dòng chảy giữa các nhánh. **Ngược dòng trọn vẹn thì không** — năng lượng cho một cú nhảy ngược thật sự lớn đến mức chưa thứ gì trên đời chứa nổi. Đã nhổ trại tiến sang vùng đất mới là vĩnh viễn không quay đầu. Con đường một chiều.
 
 Và trong cú trôi dạt đầu tiên ấy, tôi thoáng thấy trên dòng thời gian **một vết sẹo cũ** — một vết rách khổng lồ, liền da từ lâu, không phải do chúng tôi tạo ra. Tôi hỏi. Chrona im lặng đúng ba giây.
 
@@ -58,10 +58,10 @@ Thế giới mục nát này vận hành bằng bốn dòng chảy, và khốn t
 
 1. **Sol** — hơi thở của lò phản ứng trong ngực mỗi Bio-Mech. Nó đầy lại theo từng nhịp trận đánh và tan đi khi trận đánh kết thúc; không để dành được, không mua bán được. Sol quyết định *lượt này bạn làm được gì* — mỗi tuyệt kỹ là một hơi thở đốt đi.
 2. **Tiền Xu** — phế liệu sinh cơ học văng ra khi một xác lết bị nghiền nát: bánh răng, vi mạch dính máu, kim loại rỉ. Xu quyết định *đoàn của bạn là ai* — nó đổi được thân máy, vật phẩm, và những thứ lão Mulch nhặt được.
-3. **Mầm Sống** — linh hồn. Thứ duy nhất vá víu được cái chết, và cũng là thứ bầy xác lết khao khát dâng về cho chủ. Mất Mầm là mất một phần tương lai của hành tinh.
+3. **Mầm Sống** — linh hồn. Thứ duy nhất vá víu được cái chết, và là thứ kẻ thù của chúng tôi sợ đến mức xua cả bầy đàn đi hủy bằng mọi giá. Mất Mầm là mất một phần tương lai của hành tinh.
 4. **Bản Thiết Kế** — tri thức. Không bán, không cướp được; chỉ nằm trong văn khố các Tháp Xanh, mỗi tháp một trang.
 
-**Old Mulch** là ngoại lệ của mọi quy luật. Lão già rít tẩu này từng làm kỹ thuật cho mạng lưới tháp — giờ lang thang trên cỗ xe tải bọc thép, làm nghề **thu gom**. Vì không còn phân biệt nổi thứ gì quan trọng, lão nhặt *tất cả*: thân máy ngủ đông, vật phẩm, di sản nghiên cứu, và thỉnh thoảng — một quả **Mầm Sống** còn ấm, moi được từ đống đổ nát của một tháp nào đó. Chúng tôi chưa bao giờ hẹn được lão. Đường của lão và đường của chúng tôi thi thoảng cắt nhau, thế thôi — và mỗi lần cắt nhau đều đáng dừng xe.
+**Old Mulch** là ngoại lệ của mọi quy luật. Lão già rít tẩu này từng làm kỹ thuật cho mạng lưới tháp — giờ lang thang trên cỗ xe tải bọc thép, làm nghề **thu gom**. Vì không còn phân biệt nổi thứ gì quan trọng, lão nhặt *tất cả*: thân máy ngủ đông, di sản nghiên cứu, đồ nghề đánh trận đủ loại — lựu đạn, mìn hạt, cả những khối **Pin Nén** đóng sẵn một hơi thở Sol trong vỏ thép, đập vỡ là được một tuyệt kỹ không cần lò phải thở — và thỉnh thoảng, một quả **Mầm Sống** còn ấm, moi được từ đống đổ nát của một tháp nào đó. Lão chỉ bày lên quầy vài món một lúc; muốn xem món khác thì trả thêm vài đồng để lão lục sâu hơn vào thùng xe, và càng bắt lão lục sâu, phí càng nặng tay. Chúng tôi chưa bao giờ hẹn được lão. Đường của lão và đường của chúng tôi thi thoảng cắt nhau, thế thôi — và mỗi lần cắt nhau đều đáng dừng xe.
 
 Mầm thì lão không định giá. Lão chỉ lật ngửa cái mũ ra và nói: *"Đổ hết vào đây."* Dù trong túi tôi có 30 xu hay 3.000 xu, giá của một sinh mạng luôn là **toàn bộ những gì tôi đang có**. Có lần tôi cự nự. Lão nhả khói, đáp: *"Nhóc thấy chưa, chú có bịp đâu — lời Cha nhóc nói đấy thôi. Xu không định giá được sinh mạng. Nên chú lấy hết xu."*
 
@@ -73,7 +73,7 @@ Tháp Xanh là những quãng lặng hiếm hoi của con đường một chiề
 
 - **Ngủ.** Tôi hạ nhiệt lò, hòa mạng tuần hoàn của cả đội vào trường của tháp. Sáng hôm sau, toàn đội thức dậy lành lặn như mới.
 - **Hồi sinh.** Tôi lấy một Mầm Sống, mượn một thân máy nguyên sơ trong kho tháp, vắt kiệt lò Sol để gọi một đồng đội về từ cái chết. Người trở về nguyên vẹn; những người còn lại trải qua đêm trắng bên vết thương còn nguyên — không ai được hồi phục một giọt sinh lực nào.
-- **Hợp Trái.** Tôi ép một thân máy nguyên sơ tan vào cơ thể một chiến binh theo đúng Bản Thiết Kế — sức mạnh theo suốt phần còn lại của chuyến đi, đổi bằng chính đêm trắng đó của cả đội.
+- **Hợp Trái.** Tôi ép một thân máy nguyên sơ tan vào cơ thể một chiến binh theo đúng Bản Thiết Kế — sức mạnh theo suốt phần còn lại của chuyến đi, đổi bằng chính đêm trắng đó của cả đội. Mối ghép cần một linh hồn để bén rễ, nên thân máy vô hồn không bao giờ tiếp nhận được nó; và lò Sol của một chiến binh chỉ nuôi nổi **ba mối ghép** — ép mối thứ tư, lò tắt.
 
 Một đêm, một lựa chọn. Giấc ngủ của tất cả, một linh hồn trở về, hay một sức mạnh mới — tôi chưa bao giờ được chọn cả hai.
 
@@ -99,11 +99,13 @@ Vậy nên trước mỗi thân máy, tôi luôn phải trả lời cùng một 
 
 Ba Lõi Nguyên Tố văng ra từ vết rách nguyên thủy, chôn vùi tại ba miền đất cách nhau đại dương nước đen: **Vành Đai Xanh** giấu Lõi Lửa dưới lò nung Kiln Row; **Bờ Viễn** phong ấn Lõi Băng sau cổng Frostgate; và **Thành Phố** — nơi mọi chuyện bắt đầu — nuôi Lõi Sét trong lưới điện The Grid.
 
-Xác lết hấp thụ hơi Lõi lâu ngày đột biến thành những **chúa tể** — mỗi vùng một kẻ, mỗi kẻ một tổ hợp đột biến sinh-cơ khí mạnh đến phi lý. Và chính sự phi lý đó là mùa gặt của chúng tôi.
+Xác lết hấp thụ hơi Lõi lâu ngày đột biến thành những **chúa tể** — mỗi vùng một kẻ, mỗi kẻ một tổ hợp đột biến sinh-cơ khí mạnh đến phi lý. Nhưng càng bão hòa năng lượng biến dị, chúng càng không dám tự chạm vào một quả Mầm: với thân xác đã mục rữa đến thế, chạm vào sự sống thuần khiết là tự hủy. Việc bẩn ấy, chúng xua bầy tôi đi làm — còn chính sự phi lý trong thân xác chúng, lại là mùa gặt của chúng tôi.
 
-Bởi nghi thức lớn nhất Cha truyền lại cho tôi không phải hồi sinh. Là **Phổ Hệ**. Khi một chúa tể gục ngã, tôi đặt một thân máy ngủ đông cạnh cái xác còn nóng, và cấy một Mầm Sống vào giữa. Rễ Mầm cắm phập vào xác chúa tể như một cỗ máy quét: đọc mã gen đột biến, bòn rút những linh kiện cốt lõi, rồi ép thân máy phải *mọc* ra những bộ phận tương tự. Khác với hồi sinh, nghi thức này không lấy đi của hộp ấp điều gì: Mầm ở đây làm **khuôn lọc**, không làm nhiên liệu — nguồn năng lượng biến dị cuồn cuộn của chính chúa tể bị hút qua bộ rễ, gạn sạch Miasma, rót vào thân máy; xong việc, tôi rút Mầm ra nguyên vẹn. **Kẻ bạo chúa tự trả giá cho người kế nhiệm mình.** Bình minh, một người anh em mới đứng dậy từ đống sắt và thịt — **một phiên bản đã được thanh tẩy**: hình hài của cỗ xe, sức mạnh của con quái, và một linh hồn sạch. Súng cối từng nã vào chúng tôi suốt một chương đường, nay đổi chủ.
+Bởi nghi thức lớn nhất Cha truyền lại cho tôi không phải hồi sinh. Là **Phổ Hệ**. Khi một chúa tể gục ngã, tôi đặt một thân máy ngủ đông cạnh cái xác còn nóng, và cấy một Mầm Sống vào giữa. Cùng một phản ứng từng nuốt cả xác lết lẫn Mầm giữa trận tiền — nhưng trên một cái xác đã tắt, nó không còn là vụ nổ, mà là một lò luyện. Rễ Mầm cắm phập vào xác chúa tể như một cỗ máy quét: đọc mã gen đột biến, bòn rút những linh kiện cốt lõi, rồi ép thân máy phải *mọc* ra những bộ phận tương tự. Khác với hồi sinh, nghi thức này không lấy đi của hộp ấp điều gì: Mầm ở đây làm **khuôn lọc**, không làm nhiên liệu — nguồn năng lượng biến dị cuồn cuộn của chính chúa tể bị hút qua bộ rễ, gạn sạch Miasma, rót vào thân máy; xong việc, tôi rút Mầm ra nguyên vẹn. **Kẻ bạo chúa tự trả giá cho người kế nhiệm mình.** Bình minh, một người anh em mới đứng dậy từ đống sắt và thịt — **một phiên bản đã được thanh tẩy**: hình hài của cỗ xe, sức mạnh của con quái, và một linh hồn sạch. Súng cối từng nã vào chúng tôi suốt một chương đường, nay đổi chủ.
 
 Mầm không sao chép mù quáng. Có những sức mạnh không thể — hoặc không *nên* — mọc lại trên một cơ thể sống, và khi ấy Mầm dùng chính DNA của chúa tể để sinh ra **khắc tinh** của hắn: lấy khiên của địch làm vũ khí của ta. Phả hệ đầy đủ của chín người anh em, và món nợ mỗi người mang với con quái đã sinh ra mình, tôi chép ở cuối cuốn sổ này.
+
+Và không phải đợi tới thân máy mới. Mỗi chúa tể ngã xuống, tôi còn gạn được **vài giọt năng lượng biến dị** còn nóng, tưới thẳng cho những người anh em đang sống — kẻ dày thêm một nhịp sống, kẻ nhanh hơn một bước chân, kẻ mài sắc thêm chính món nghề của mình. Những giọt ấy chỉ bám vào thân xác, không bám vào linh hồn — nên chúng không bao giờ theo được ai qua một cú trôi dạt. Nhưng trong một chuyến đi, đó là phần thưởng nóng hổi nhất của mỗi trận công thành.
 
 Còn kẻ đột biến sâu nhất — kẻ nuốt trọn hơi Lõi và trấn giữ hồi kết của miền đất — khi gục ngã sẽ nhả ra chính **mảnh Lõi Nguyên Tố**. Lò Sol của tôi hấp thụ nó, và mang nó lên Cỗ Tàu.
 
@@ -112,6 +114,8 @@ Hải trình sang miền đất kế tiếp dài hàng tháng. Trong khoang kín
 Và có một giới hạn vật lý không khoan nhượng: **mỗi cơ thể chỉ chứa nổi MỘT nguyên tố.** Nhồi cả Lửa và Băng vào cùng một chiến binh, xung đột nhiệt động học sẽ xé toạc DNA và kích nổ lõi cơ khí ngay lập tức. Muốn sức mạnh cực đại thì phải làm ngược lại lòng tham: **cả đội cùng hòa một nhịp**. Ba trái tim đập cùng một tần số sẽ cộng hưởng — băng giá dày hơn, lửa lan xa hơn, tia sét nhảy thêm một nhịp nữa. Đó là **Cộng Hưởng**: phần thưởng của sự toàn tâm, thứ một đội hình chắp vá không bao giờ với tới.
 
 Chỉ duy nhất một dạng tồn tại có thể ôm cả ba nguyên tố mà không vỡ: một **Mầm Sống** — sự sống thuần khiết, chưa từng bị rèn thành vũ khí. Suốt ba hải trình, một quả Mầm trong hộp ấp của tôi cứ lặng lẽ sáng dần lên, hấp thụ cả Lửa, Băng, lẫn Sét. Tôi gọi nó là **Mầm Sống Tối Thượng**, và tôi chưa hiểu nó để làm gì — cho đến ngày cuối cùng.
+
+Còn một nơi tôi phải chép lại, dù chỉ nhớ đến nó thôi lò Sol của tôi đã lạnh đi: **hành lang giữa các vết sẹo**. Đôi lần dò đường, Chrona bắt được một khe hẹp khoét dọc những vết khâu của Đa Vũ Trụ — và trong đó, Blightlord dựng lại bóng ma của mọi chúa tể đã ngã, xếp thành một hàng dài, chờ chúng tôi. Ở đó hắn không cho bầy ma săn Mầm. Hắn đã hiểu ra một điều đơn giản hơn: chỉ cần dập tắt trái tim đang ôm hộp ấp — dập tắt *tôi* — thì mọi quả Mầm trên đời thành vô chủ. Vì thế mỗi lần bước vào hành lang ấy, tôi để hộp ấp lại trên Cỗ Tàu, nơi hắn không với tới. Trong đó không có trạm nào phải giữ. Chỉ có chúng tôi, phế liệu nhặt giữa hai trận, và một hàng dài những cơn ác mộng cũ.
 
 ---
 
@@ -123,7 +127,7 @@ Vì Đốm Tàn không phải hàng vạn đám nấm rời rạc trên hàng v�
 
 Chúng tôi nhảy. Cú nhảy ngược đầu tiên và cuối cùng — về Alpha, khoan thẳng xuống **Tâm Trái Đất**. **Blightlord** đứng đó, giữa buồng lõi, không hề ngạc nhiên. *"Ta biết các ngươi sẽ tới,"* hắn nói. *"Cánh cửa duy nhất của Đa Vũ Trụ mở ra ở đây. Ta đã đợi bên nó từ ngày nó thành hình."*
 
-Trận đánh dài như một đời người. Khi vỏ giáp hắn nứt nẻ, loạt hỏa lực tập trung cuối cùng bắn tung chiếc mặt nạ phòng độc — và kẻ thù tối thượng mang **khuôn mặt của Cha**. Già hơn. Sẹo máy móc và thối rữa. Nhưng là khuôn mặt ấy.
+Trận đánh dài như một đời người. Hắn không chỉ đánh — hắn *tước*. Bàn tay phân rã của hắn chạm vào ai là cắt lìa nhịp nguyên tố của người đó, và chỉ cần một trái tim lạc nhịp, tiếng cộng hưởng của cả đội câm bặt. Khi vỏ giáp hắn nứt nẻ, loạt hỏa lực tập trung cuối cùng bắn tung chiếc mặt nạ phòng độc — và kẻ thù tối thượng mang **khuôn mặt của Cha**. Già hơn. Sẹo máy móc và thối rữa. Nhưng là khuôn mặt ấy.
 
 Trên màn hình võng mạc của tôi, các ký tự của cái tên tôi yêu nhất tự xáo trộn:
 
@@ -149,27 +153,34 @@ Tôi đứng giữa Tâm Trái Đất rực sáng, cởi mặt nạ phòng độ
 |---|---|---|---|
 | 1 | Mắt sáng / mặt nạ / áo choàng | Art direction hero (chibi tactical) | khớp art hiện có |
 | 1 | Trường ngụy trang phủ được 3 người | Squad 3 hero/trận, 9 người cùng đoàn | khớp sẵn |
-| 1 | Mầm cần sạc ở Trạm Mầm; bầy đàn đánh hơi Mầm, nuốt xong rời trận | Sprout trong ô hàng trên; zombie nhắm sprout, ăn xong biến mất | khớp sẵn (đây là lý do lore của luật) |
+| 1 | Mầm cần sạc ở Trạm Mầm; xác lết cắn Mầm = **cả hai cùng phân rã** | Sprout trong ô hàng trên; zombie nhắm sprout, chạm là −1 sprout và zombie biến mất | khớp sẵn (đây là lý do lore của luật) |
 | 1 | Mỗi Mầm một trạm — mang bao nhiêu, giữ bấy nhiêu | Số ô cần bảo vệ trên bàn = số sprout hiện có; độ khó chỉnh ngân sách (easy 6 → nightmare 3) | **cần sửa** (PLAN §1b) |
 | 1 | Mầm = linh hồn, "xu không định giá được sinh mạng" | Sprout: ngân sách toàn run + tiền hồi sinh | **cần sửa** (PLAN §1) |
 | 2 | Không hồi sinh được khi đang bị săn đuổi | Hồi sinh chỉ ở node nghỉ | khớp sẵn |
 | 2 | Xe pháo đậu thức tỉnh khi hero đứng cạnh, tàn trận thì hỏng | Cây hoang DORMANT, isBattleOnlyUnit | khớp sẵn |
 | 2 | Trôi dạt chỉ mang linh hồn + thông tin; đồ của "người đi trước" | Meta giữ hero/recipe/element; quà sau game over | flavor hóa (PLAN §9) |
 | 2 | Gravehulk cắn Mầm cuối → trôi dạt | Game Over = timeline jump (`App.tsx:1996`) | khớp sẵn |
-| 2 | Chrona tua một khoảnh khắc ngắn | Rewind 1 lần/trận | khớp sẵn |
+| 2 | Chrona tua một khoảnh khắc ngắn; điện tích qua đêm mới kết tinh lại | Rewind 1 lần/trận | khớp sẵn |
 | 2 | Con đường một chiều | Map node một chiều | khớp sẵn |
 | 3 | Sol / Xu / Mầm / Bản Thiết Kế | Sol trong trận, Coin giữa trận, Sprout, Blueprint | Blueprint **cần thêm** (PLAN §3) |
 | 3 | Mulch tình cờ gặp, bán Mầm giá "toàn bộ xu" | Shop: +1 sprout, giá = all coins | **cần thêm** (PLAN §2) |
+| 3 | Trả thêm để Mulch lục sâu hơn thùng xe, càng lục phí càng nặng | Shop reroll giá tăng dần (10→20→30) | khớp sẵn |
+| 3 | Pin Nén — một hơi thở Sol đóng sẵn trong vỏ thép | Power Plant: 50 coin, một lượt skill không tốn Sol | khớp sẵn |
+| 4 | Mối ghép cần linh hồn để bén rễ; lò nuôi nổi đúng 3 mối | Fusion chỉ vào hero (không vào bench); 3 slot/hero | khớp sẵn |
 | 4 | Một đêm một nghi thức: Ngủ / Hồi sinh / Hợp Trái | Node nghỉ: chọn đúng 1 trong 3 | khớp sẵn; giá hồi sinh **cần sửa** (PLAN §1) |
 | 4 | Mỗi tháp +1 trang Bản Thiết Kế | +1 Blueprint mỗi lần tới node nghỉ | **cần sửa** (PLAN §3) |
 | 5 | Tàn Cơ niêm phong: thử thách → Di Sản | Mission → Relic | **cần sửa** (PLAN §4) |
 | 5 | Ngủ đông = nguyên sơ (fuse/hồi sinh được); nổ máy = nhiễm bẩn vĩnh viễn, chỉ chiến đấu | Cây hoang giữ ngủ → thu sau trận; bench đã ra sân → mất tư cách nguyên liệu | **cần thêm** (PLAN §4b) |
 | 6 | Nghi thức Phổ Hệ: thân máy + xác chúa tể + Mầm (khuôn lọc, không tốn) → anh em mới | Hero unlock qua defeat boss, miễn phí (`unlocks.ts` — hint "changes hands" khớp sẵn giọng) | khớp sẵn; flavor codex (Phụ lục B) |
+| 6 | Giọt năng lượng biến dị tưới cho người sống; bám thân xác nên không qua được trôi dạt | Act Upgrades VIGOR/STRIDE/EDGE, run-scoped (`data/heroUpgrades.ts`) | khớp sẵn |
+| 6 | Chúa tể không dám tự chạm Mầm (tự hủy) | Boss không bao giờ cướp sprout (luật trong CLAUDE.md/turnManager) | khớp sẵn |
+| 6 | Hành lang giữa các vết sẹo: hộp ấp để lại trên Cỗ Tàu, mục tiêu của hắn là Sunbloom | The Breach: boss rush, không luật sprout, camp tiêu coin | khớp sẵn |
 | 6 | Boss hồi kết miền đất nhả Lõi | Cinder Colossus/Yeti/Voltmaw trả element | khớp sẵn |
 | 6 | Hòa nhịp = −2 nhịp sống, một nguyên tố mỗi thân | Element −2 maxHP, 1 element/hero | khớp sẵn |
 | 6 | Cả đội cùng nhịp → Cộng Hưởng | Resonance mono-element (`elements.ts`) | khớp sẵn |
 | 7 | Ba Lõi = pin cho cú nhảy ngược duy nhất, về Alpha | Lý do "một chiều" không mâu thuẫn hồi kết | vá lỗ truyện |
 | 7 | Nấm là MỘT sinh thể, mọc dọc vết sẹo không gian | Vì sao mọi nhánh đều nhiễm + kết cứu được tất cả | vá lỗ truyện |
+| 7 | Bàn tay tước nhịp — một trái tim lạc nhịp là cộng hưởng câm bặt | Blightlord SEVERED cắt element, phá resonance (`utils/elements.ts` activeResonance) | khớp sẵn |
 | 7 | Blightlord đứng tâm vết rách | Boss hint: "walked backwards through time" | khớp sẵn |
 
 ---
