@@ -1,6 +1,6 @@
 import { Position, Skill, StatusEffectType, TurnAction, Unit, UnitType } from '../types';
 import { addBleedStack, grantLayer, calculateDamage, getSkillTargetPath, getTileAt, planPush, shieldUpdatesFor, survivesWater, wingMid, wingNear, wingTwin } from './gameLogic';
-import { getFusionEffects, getFusionEffectValue, hasFusionEffect } from './fusion';
+import { getFusionEffects, getFusionEffectValue, hasFusionEffect, collisionAura } from './fusion';
 import { applyPushPlan, applyCollisionDamage, pushKill, type ResolveContext } from './actionBuilders';
 import { chainDamageFor, chainStep, skillCarriesElement } from './elements';
 import { HERO_DEFINITIONS } from '../data/heroes';
@@ -373,40 +373,18 @@ export const planSkillActions = (
     };
 
     /**
-     * COLLISION_BONUS — extra damage for bodies THIS hero slams into something.
+     * COLLISION_BONUS đã RỜI khỏi đây.
      *
-     * The base collision point is dealt inside applyPushPlan (utils/actionBuilders.ts), which
-     * knows nothing about the pusher's fusions and is shared with the hazard, item and enemy
-     * shoves. Rather than teach every one of those about a fusion only a hero can carry, the
-     * extra is charged here, on top of whatever the plan already billed. STEADFAST is honoured
-     * exactly as it is there: a braced unit takes nothing from a slam, so there is nothing to
-     * add to.
+     * Bản cũ là một cú đánh THỨ HAI, tính riêng, chỉ cho những thân do chính caster dúi: cộng
+     * thêm `collisionBonus` sau khi `applyPushPlan` đã thu điểm va chạm nền. Grand Chard bây
+     * giờ là luật của BÀN CỜ (`collisionAura`, utils/fusion) nên nó phải nằm trong chính con
+     * số va chạm nền, ở `applyCollisionDamage` — chỗ mà hazard, vật phẩm và cú đẩy của địch
+     * cũng đi qua.
+     *
+     * Ghi lại chỗ này thay vì im lặng xoá, vì cái bẫy vẫn còn nguyên đó: hễ ai định "cộng
+     * thêm damage va chạm" lần nữa thì bản chép tay thứ hai sẽ lại xuất hiện, và lần trước nó
+     * đã trôi khỏi bản gốc đúng ba chỗ (đọc `applyCollisionDamage`).
      */
-    const collisionBonus = getFusionEffectValue(caster, 'COLLISION_BONUS');
-    const applyCollisionBonus = (plan: { collided: string[] }) => {
-        if (collisionBonus <= 0) return;
-        plan.collided.forEach(id => {
-            const u = tempUnits.get(id);
-            // Already dead from the base collision, the drown or the attack itself.
-            if (!u || u.hp <= 0) return;
-            if (hasFusionEffect(u, 'STEADFAST')) return;
-            // Same door the base collision point uses: a slam ignores helmet armour.
-            const r = calculateDamage(u, collisionBonus, false, true);
-            if (r.shieldDamage > 0) {
-                actions.push({ type: 'APPLY_DAMAGE', targetId: id, amount: 0, eventType: 'BLOCK', pos: u.position });
-                actions.push({ type: 'UPDATE_UNIT_STATE', unitId: id, updates: shieldUpdatesFor(r) });
-            }
-            if (r.finalDamage > 0) {
-                actions.push({ type: 'APPLY_DAMAGE', targetId: id, amount: r.finalDamage, eventType: 'DAMAGE', pos: u.position });
-            }
-            if (r.bleedConsumed) {
-                actions.push({ type: 'UPDATE_UNIT_STATE', unitId: id, updates: { statusEffects: [...u.statusEffects] } });
-            }
-            u.hp = r.remainingHp;
-            u.shield = r.remainingShield;
-            if (r.isFatal) pushKill(actions, u, caster);
-        });
-    };
 
     /**
      * COLLISION_SPLASH — Blast Chard. Cú đẩy của anh biến thân địch thành quả lựu đạn.
@@ -447,7 +425,7 @@ export const planSkillActions = (
                         u => u.hp > 0 && !u.isBurrowed && u.position.x === t.x && u.position.y === t.y);
                     if (!victim || hit.has(victim.id)) continue;
                     hit.add(victim.id);
-                    const r = applyCollisionDamage(victim, 1, actions);
+                    const r = applyCollisionDamage(victim, 1, actions, tempUnits.values());
                     if (r?.isFatal) pushKill(actions, victim, caster);
                 }
             }
@@ -911,7 +889,6 @@ export const planSkillActions = (
                 if (dx !== 0 || dy !== 0) {
                     const plan = planPush(targetUnit, dx, dy, livingSim, board, terrainDefs, 3, new Set(), pushTiles);
                     applyPushPlan(plan, actions, tempUnits, caster);
-                    applyCollisionBonus(plan);
                     applyCollisionSplash(plan);
                     applyShoveBleed(plan);
                 }
@@ -954,9 +931,10 @@ export const planSkillActions = (
                             isDead = true;
                         } else {
                             // THE FALL: collision damage, not a DAMAGE effect — armour is
-                            // bypassed like every slam, COLLISION_BONUS scales it (Grand
-                            // Chard turns the 1 into 3), and a layer eats it whole.
-                            const fall = 1 + getFusionEffectValue(caster, 'COLLISION_BONUS');
+                            // bypassed like every slam, and a layer eats it whole. Grand Chard
+                            // scales it qua `collisionAura` (BÀN CỜ, không phải người ném):
+                            // một cú tiếp đất là va chạm, nên nó đọc đúng luật va chạm.
+                            const fall = 1 + collisionAura(tempUnits.values());
                             const r = calculateDamage(targetUnit, fall, false, true);
                             if (r.shieldDamage > 0) {
                                 actions.push({ type: 'APPLY_DAMAGE', targetId: targetUnit.id, amount: 0, eventType: 'BLOCK', pos: dest });
@@ -1110,7 +1088,6 @@ export const planSkillActions = (
             const living = Array.from(tempUnits.values()).filter(u => u.hp > 0);
             const plan = planPush(body, d.x, d.y, living, board, terrainDefs, 3, new Set(), 1);
             applyPushPlan(plan, actions, tempUnits, caster);
-            applyCollisionBonus(plan);
             applyCollisionSplash(plan);
             applyShoveBleed(plan);
         });

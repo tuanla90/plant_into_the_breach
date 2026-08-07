@@ -4,7 +4,7 @@ import { addBleedStack, grantLayer, getTileAt, getUnitAt, findPath, calculateDam
 import { applyPushPlan, applyCollisionDamage } from './actionBuilders';
 import { planEnemyIntent } from './aiLogic';
 import { tutorialBattle } from '../data/tutorial';
-import { getFusionEffectValue, hasFusionEffect, bracedAgainstCollision } from './fusion';
+import { getFusionEffectValue, hasFusionEffect, bracedAgainstCollision, collisionAura } from './fusion';
 import { activeResonance, chainDamageFor, chainStep, ELEMENT_WORLDS, rollEnemyElement } from './elements';
 import { planHazard } from '../data/hazards';
 import { hooksFor } from './bossBehaviours';
@@ -394,7 +394,7 @@ export const processTurn = (
                 plan.collided.forEach(id => {
                     const t = simUnits.find(s2 => s2.id === id);
                     if (!t) return;
-                    const r = applyCollisionDamage(t, 1, actions);
+                    const r = applyCollisionDamage(t, 1, actions, simUnits);
                     if (r?.isFatal) killUnit(t);
                 });
             });
@@ -439,9 +439,12 @@ export const processTurn = (
              // Iron Bulwark: plugs the hole without taking the emergence hit.
              const painless = bracedAgainstCollision(occupant);
              // FIX: Use 'DAMAGE' eventType so HP is actually reduced in GameEngine
+             // Grand Chard tính cả ở đây, và đây chính là MẶT TRÁI của ô đó: bịt hố là chiến
+             // thuật của phe mình, nên luật toàn-bàn của anh làm hero nhà đau thêm. Chủ ý —
+             // đọc `collisionAura`. Ai chống được va chạm thì vẫn không mất gì.
              const result = painless
                 ? { finalDamage: 0, shieldDamage: 0, remainingShield: occupant.shield || 0, remainingHp: occupant.hp, isFatal: false }
-                : calculateDamage(occupant, 1, false);
+                : calculateDamage(occupant, 1 + collisionAura(simUnits), false);
              actions.push({ type: 'APPLY_DAMAGE', targetId: occupant.id, amount: result.finalDamage, eventType: painless ? 'BLOCK' : 'DAMAGE', pos });
 
              // Sunstone Shield: plugging the hole with your body is already a real tactic —

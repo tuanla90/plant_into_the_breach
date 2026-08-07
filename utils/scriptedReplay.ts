@@ -29,7 +29,7 @@ import {
     getValidMoves, getValidSkillTargets, getSkillTargetPath,
     calculateDamage, planPush, getTileAt,
 } from './gameLogic';
-import { applyFusionToSkill, hasFusionEffect, getFusionEffectValue } from './fusion';
+import { applyFusionToSkill, hasFusionEffect, getFusionEffectValue, bracedAgainstCollision, collisionAura } from './fusion';
 import { HERO_DEFINITIONS } from '../data/heroes';
 import { ZOMBIE_DEFINITIONS } from '../data/zombies';
 import { MATERIAL_DEFINITIONS } from '../data/materials';
@@ -194,11 +194,13 @@ export const replayScriptedBattle = (
         });
         plan.collided.forEach(id => {
             const u = living().find(z => z.id === id);
-            if (!u || hasFusionEffect(u, 'STEADFAST')) return;
+            if (!u || bracedAgainstCollision(u)) return;
             // 4th arg mirrors applyPushPlan: a slam ignores helmet armour. This block is a
             // copy of the real one and MUST stay in step with it — the armour change proved
-            // the drift is real, not theoretical.
-            const r = calculateDamage(u, 1, false, true);
+            // the drift is real, not theoretical. Hai lần trôi tìm được sau đó, cùng một lúc:
+            // bản này còn đọc `STEADFAST` trần (bỏ sót hai ô Tấm Giáp còn lại) và chưa biết
+            // Grand Chard đã thành luật toàn bàn.
+            const r = calculateDamage(u, 1 + collisionAura(living()), false, true);
             u.hp = r.remainingHp;
             log.push(`collision: ${u.heroId || u.class} -> hp${u.hp}`);
             if (r.isFatal) killUnit(u);

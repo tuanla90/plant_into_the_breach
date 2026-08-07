@@ -259,6 +259,33 @@ export const bracedAgainstCollision = (unit: Unit): boolean =>
     || hasFusionEffect(unit, 'SPINED_PLATING');
 
 /**
+ * GRAND CHARD (`COLLISION_BONUS`) — ô DUY NHẤT của ma trận không thuộc về một cú đánh, mà
+ * thuộc về BÀN CỜ. Chừng nào anh còn sống, mọi cú va chạm ở mọi nơi đau thêm chừng này.
+ *
+ * Trước đây nó là buff cá nhân: chỉ những thân do CHÍNH anh dúi mới ăn thêm. Bản này bỏ chữ
+ * "chính anh" — và đó là chỗ nó có **mặt trái**, ô đầu tiên trong ma trận có mặt trái:
+ *   - zombie đẩy zombie cũng đau thêm (lãi);
+ *   - trùm dúi hero nhà vào tường cũng đau thêm (lỗ);
+ *   - hero nhà đứng bịt hố spawn cũng mất thêm máu (lỗ).
+ *
+ * Chủ dự án chốt như vậy có chủ đích, cùng triết lý friendly fire vốn đã chạy khắp game: đạn
+ * lạc trúng người nhà, `SHIELD_SHOT` bọc nhầm zombie chắn hàng. Luật không có mắt là luật
+ * người chơi tính trước được — mà tính trước được thì thành chiến thuật.
+ *
+ * Nhận cả bàn cờ chứ không nhận người đẩy, vì "ai gây ra cú va chạm" chính là thứ ô này không
+ * còn quan tâm. `hp > 0`: anh ngã xuống là luật tắt theo.
+ */
+export const collisionAura = (units: Iterable<Unit>): number => {
+    let best = 0;
+    for (const u of units) {
+        if (u.hp <= 0) continue;
+        const v = getFusionEffectValue(u, 'COLLISION_BONUS');
+        if (v > best) best = v;
+    }
+    return best;
+};
+
+/**
  * Total value of every effect of this type. Returns 0 when the unit has none.
  *
  * Values sum, which matters only if two different materials ever share an effect

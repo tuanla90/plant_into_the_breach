@@ -1881,13 +1881,15 @@ export const VI: Record<string, string> = {
     "Anchored Gullet": "Họng Neo Chặt",
 
     // --- Đợt 13: 4 ô rỗng cuối cùng ([A7] khép lại). ---
-    "Thorned Bloom": "Đoá Hoa Gai",
+    // "Thorned Bloom" và "Rolling Rind" đã có tên ở trên (dòng 1627 / 1027) — chỉ thêm mô tả.
     "The blessed ally retaliates for 1 more through the coming enemy turn — on top of whatever thorns it already has.": "Đồng minh được ban phước phản đòn thêm 1 suốt lượt địch kế tiếp — cộng lên phần gai nó vốn đã có.",
     "Overdrive Charge": "Cú Húc Vượt Ngưỡng",
     "Rolling Charge travels a tile further than it otherwise would.": "Cú Lăn Húc lao xa thêm một ô so với bình thường.",
     "Piercing Needles": "Kim Xuyên Thấu",
     "Thorn Swipe runs straight through: whatever stands directly behind the target takes 1 as well.": "Cú Quét Gai đâm xuyên thẳng: thứ đứng ngay sau mục tiêu cũng ăn 1.",
-    "Rolling Rind": "Vỏ Bí Lăn",
     "Encase can be centred on a tile beside him instead of on himself — he is still inside the plus.": "Bọc Giáp có thể lấy tâm là một ô kề bên thay vì chính anh — anh vẫn nằm trong dấu cộng.",
     "Devour swallowed it: nothing can push or pull him while he digests. Devour failed: the target cannot move next turn.": "Nuốt Chửng nuốt trúng: không gì đẩy hay kéo anh nổi suốt lúc tiêu hoá. Nuốt Chửng trượt: mục tiêu không đi được ở lượt sau.",
+
+    // --- Đợt 14: Grand Chard thành luật toàn bàn. ---
+    "While he stands, EVERY collision on the board hurts 1 more — his shoves, the horde's, and the hole your own wall is plugging.": "Chừng nào anh còn đứng, MỌI cú va chạm trên bàn đều đau thêm 1 — cú đẩy của anh, cú đẩy của địch, và cả cái hố mà tường nhà đang bịt.",
 };

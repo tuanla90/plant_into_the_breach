@@ -1,6 +1,6 @@
 import { ElementId, Position, TerrainDefinition, TileData, TurnAction, Unit, UnitType } from '../types';
 import { calculateDamage, planPush, shieldUpdatesFor } from './gameLogic';
-import { getFusionEffectValue, hasFusionEffect, bracedAgainstCollision } from './fusion';
+import { getFusionEffectValue, hasFusionEffect, bracedAgainstCollision, collisionAura } from './fusion';
 
 /**
  * The two builders every attack, item and shove funnels through.
@@ -91,6 +91,12 @@ export const applyCollisionDamage = (
     unit: Unit,
     amount: number,
     actions: TurnAction[],
+    /**
+     * Cả bàn cờ, chỉ để đọc Grand Chard (`collisionAura`). Bắt buộc chứ không mặc định 0: bốn
+     * nơi gọi đều có sẵn tập unit trong tay, mà một luật TOÀN BÀN mà nơi gọi được phép quên
+     * thì nó sẽ bị quên đúng ở nơi khó thấy nhất. Để TypeScript canh hộ.
+     */
+    board: Iterable<Unit>,
 ): ReturnType<typeof calculateDamage> | null => {
     if (unit.hp <= 0) return null;
 
@@ -104,7 +110,7 @@ export const applyCollisionDamage = (
     // Đối số thứ 4: một cú slam BỎ QUA giáp mũ. Cái xô giữ được viên đậu, không giữ được bức
     // tường đang lao tới. Đây cũng là thứ giữ hai hero đẩy còn việc làm trước một hàng giáp —
     // thiếu nó, giáp âm thầm xoá đúng điểm va chạm vốn là sát thương DUY NHẤT của Chardslam.
-    const r = calculateDamage(unit, amount, false, true);
+    const r = calculateDamage(unit, amount + collisionAura(board), false, true);
 
     if (r.shieldDamage > 0) {
         actions.push({ type: 'APPLY_DAMAGE', targetId: unit.id, amount: 0, eventType: 'BLOCK', pos: unit.position });
@@ -209,7 +215,7 @@ export const applyPushPlan = (
     plan.collided.forEach(id => {
         const u = sim.get(id);
         if (!u) return;
-        const r = applyCollisionDamage(u, 1, actions);
+        const r = applyCollisionDamage(u, 1, actions, sim.values());
         if (r?.isFatal) pushKill(actions, u, killer ?? undefined);
     });
 
@@ -231,7 +237,7 @@ export const applyPushPlan = (
         [[ua, ub], [ub, ua]].forEach(([spiked, hitter]) => {
             if (!hasFusionEffect(spiked, 'SPINED_PLATING')) return;
             if (hitter.hp <= 0) return;
-            const r = applyCollisionDamage(hitter, 2, actions);
+            const r = applyCollisionDamage(hitter, 2, actions, sim.values());
             if (r?.isFatal) pushKill(actions, hitter, spiked);
         });
     });

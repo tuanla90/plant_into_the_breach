@@ -555,8 +555,8 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_CHARDSLAM: {
             name: 'Grand Chard',
-            description: 'Anything he slams into a body, a rock or the map edge takes 2 extra damage.',
-            effect: { type: 'COLLISION_BONUS', value: 2 },
+            description: 'While he stands, EVERY collision on the board hurts 1 more — his shoves, the horde\'s, and the hole your own wall is plugging.',
+            effect: { type: 'COLLISION_BONUS', value: 1 },
             live: true,
         },
         MAT_GOURDWARD: {
