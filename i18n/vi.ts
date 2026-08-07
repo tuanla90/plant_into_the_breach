@@ -1970,5 +1970,9 @@ export const VI: Record<string, string> = {
     "Payback Shell": "Vỏ Trả Đũa",
     "The layers Encase raises answer back: whatever shatters one in melee loses its next turn. Once per layer.": "Lớp chắn do Bọc Giáp dựng lên biết trả đòn: kẻ nào đập vỡ nó bằng cận chiến đều mất lượt kế tiếp. Mỗi lớp một lần.",
     "The layers he hands out grow spines: whoever hits the ally wearing one in melee is impaled for 1, for as long as the layer holds.": "Lớp chắn anh trao ra mọc gai: kẻ nào đánh cận chiến vào đồng minh đang mang nó đều bị đâm 1, chừng nào lớp chắn còn.",
+
+    // --- Đợt 20: Slingshot Chard (chốt FINAL v3). ---
+    "Slingshot Chard": "Cải Súng Cao Su",
+    "Sweep launches him first: he hurtles up to 3 tiles down a straight line, then sweeps everything around wherever he lands.": "Quét Ngang phóng anh đi trước: anh lao thẳng tối đa 3 ô, rồi mới quét sạch mọi thứ quanh chỗ anh đáp xuống.",
     "While he stands, EVERY collision on the board hurts 1 more — his shoves, the horde's, and the hole your own wall is plugging.": "Chừng nào anh còn đứng, MỌI cú va chạm trên bàn đều đau thêm 1 — cú đẩy của anh, cú đẩy của địch, và cả cái hố mà tường nhà đang bịt.",
 };

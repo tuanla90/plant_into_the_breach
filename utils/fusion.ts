@@ -712,6 +712,25 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
         rangeValue = Math.max(2, Math.ceil(rangeValue / 2));
     }
 
+    /**
+     * SLINGSHOT CHARD (`SKILL_DASH`) — cú quét tại chỗ thành cú quét ở CUỐI một đường lao.
+     *
+     * Đổi `rangeType` chứ không thêm effect, đúng khuôn `ARC_ATTACK` ngay trên: một skill đổi
+     * hình thì phải đổi ở ĐÂY, vì hàm này nuôi cả bộ phân giải LẪN overlay ngắm — người chơi
+     * phải thấy vệt lao trước khi bấm, không phải sau.
+     *
+     * Cổng: SELF + đẩy + TRẢ PHÍ. Ba vế đều cần. Cú vung miễn phí của anh mang `TOSS` chứ
+     * không mang `PUSH` nên không lọt; và một cú lao miễn phí mỗi lượt là một hero khác hẳn
+     * hero mà cái giá 50 Sol đang định giá.
+     */
+    if (rangeType === 'SELF'
+        && (skill.sunCost ?? 0) > 0
+        && hasFusionEffect(caster, 'SKILL_DASH')
+        && effects.some(e => e.type === 'PUSH' || e.type === 'PULL')) {
+        rangeType = 'DASH';
+        rangeValue = Math.max(1, getFusionEffectValue(caster, 'SKILL_DASH'));
+    }
+
     const changed = effects.length !== skill.effects.length
         || rangeValue !== skill.rangeValue
         || rangeType !== skill.rangeType

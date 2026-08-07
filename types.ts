@@ -1387,6 +1387,22 @@ export type FusionEffectType =
      * he thong toggle rieng — va nut thu hai thi telegraph, overlay, phim tat deu co san.
      */
     | 'ARC_MODE'
+    /**
+     * SLINGSHOT CHARD — Sweep doi CACH TIEP CAN: thay vi quet tai cho, anh LAO theo duong
+     * thang roi moi quet radial TAI DIEM DEN. Anh tu bien minh thanh vien dan.
+     *
+     * La modifier ho `SKILL_*` dan len ky nang TRA PHI (tien le SKILL_STUN / SKILL_REPEL), nen
+     * no KHONG pham bai hoc vong 3 — "doi co che chien dau thi thuoc tang relic, khong thuoc
+     * lop MAT". Cai doi o day la duong TIEP CAN, khong phai ban than cu quet.
+     *
+     * Ban dung danh tu cot Seed Gun: duong thang, vien dan.
+     *
+     * Phan dinh cam giac voi Rolling Charge cua Ironhusk: co ay lao-huc MOT muc tieu; anh nay
+     * lao-quet MOT VONG. Mot mui khoan va mot qua luu dan.
+     *
+     * Van tu can: mot hero 0 damage tu phong vao giua bay la mot canh bac that.
+     */
+    | 'SKILL_DASH'
     /** Finishing something off raises a fresh layer on this hero. */
     | 'SHIELD_ON_KILL'
     /** Melee attackers are shoved back as well as hurt. */

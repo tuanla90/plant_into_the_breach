@@ -67,6 +67,7 @@ const categoryOf = (type: FusionEffectType): { label: string; color: string } =>
         case 'ARC_MODE':
         case 'SKILL_SPLASH':
         case 'SKILL_STUN':
+        case 'SKILL_DASH':
         case 'SKILL_DISARM':
         case 'SKILL_DUST_RING':
         case 'SKILL_AURA':

@@ -703,7 +703,20 @@ const App: React.FC = () => {
                }
 
                if (!hasPush && !hasPull) return null;
-               
+
+               /**
+                * SLINGSHOT CHARD — không vẽ mũi tên, vì mũi tên ở đây sẽ NÓI DỐI.
+                *
+                * Công thức dưới đọc "hướng ra xa chỗ hero ĐANG ĐỨNG", đúng với mọi cú đẩy khác
+                * trong game. Với cú lao thì tâm đẩy là ô anh SẼ ĐÁP, và vòng quét toả ra bốn
+                * phía từ đó — nên một mũi tên dọc theo vệt lao mô tả sai gần như mọi thân nó
+                * chạm tới. Vệt lao (getSkillGeometry, nhánh DASH) vẫn hiện đủ để đọc đường đi.
+                *
+                * ⚠ Nợ [G0]: cần bốn mũi tên toả từ ô đáp. Thà thiếu còn hơn vẽ sai — đó là L7
+                * áp cho overlay, đúng như nó áp cho thẻ bài.
+                */
+               if (skill.rangeType === 'DASH' && hasFusionEffect(selectedUnit, 'SKILL_DASH')) return null;
+
                const dx = hoveredTile.x - selectedUnit.position.x;
                const dy = hoveredTile.y - selectedUnit.position.y;
                

@@ -509,9 +509,9 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_PEABURST: {
-            name: 'Longarm Chard',
-            description: 'Vault Toss grabs from 2 tiles away — he throws without stepping into contact.',
-            effect: { type: 'ATTACK_RANGE_BONUS', value: 1 },
+            name: 'Slingshot Chard',
+            description: 'Sweep launches him first: he hurtles up to 3 tiles down a straight line, then sweeps everything around wherever he lands.',
+            effect: { type: 'SKILL_DASH', value: 3 },
             live: true,
         },
         MAT_SNAPMAW: {

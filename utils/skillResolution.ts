@@ -37,6 +37,42 @@ export const planSkillActions = (
         attackRange: skill.rangeType,
     });
 
+    /**
+     * SLINGSHOT CHARD (`SKILL_DASH`) — CÚ LAO PHẢI XONG TRƯỚC KHI CÚ QUÉT BẮT ĐẦU.
+     *
+     * Đây là thứ tự ngược với mọi skill DASH khác trong game, và sự ngược đó là toàn bộ ô này.
+     * Rolling Charge của Ironhusk *húc rồi mới dừng lại* — sát thương rơi ở nơi cô lao TỚI,
+     * nên khối DASH ở cuối hàm (phát `UNIT_MOVE` sau cùng) là đúng cho cô. Anh này thì *lao
+     * tới rồi mới nổ*: vòng quét phải mọc quanh ô anh ĐÁP, không phải ô anh xuất phát.
+     *
+     * Cách rẻ nhất và an toàn nhất để cả hàm đọc đúng vị trí mới là **dời chính `caster` sang
+     * ô đáp ngay tại đây**, trước khi bất cứ dòng nào đọc `caster.position`. Có hơn hai mươi
+     * chỗ đọc nó — vòng quét (`hasRadialPush`), vector đẩy "ra xa tôi" trong `resolveTargets`,
+     * ô neo của bụi, tâm của Provoke — và vá từng chỗ một là mời đúng loại lệch mà file này đã
+     * gặp ba lần. Một phép gán, mọi nơi đọc cùng một sự thật.
+     *
+     * `tempUnits` được dựng muộn hơn (từ `units` của caller) nên thân anh trong mô phỏng cũng
+     * phải dời theo — nếu không, mọi cú đẩy sẽ né một bức tường vô hình ở ô anh vừa rời đi.
+     */
+    const slingshot = skill.rangeType === 'DASH'
+        && hasFusionEffect(caster, 'SKILL_DASH')
+        && skill.effects.some(e => e.type === 'PUSH' || e.type === 'PULL');
+    if (slingshot) {
+        // Ô đáp: đúng ô ngắm nếu nó trống, còn nếu có thân chắn thì dừng ngay trước nó — cùng
+        // luật với khối DASH ở cuối hàm, để hai đường không bao giờ kể hai câu chuyện.
+        const blocker = units.find(u => u.hp > 0 && !u.isBurrowed
+            && u.position.x === pos.x && u.position.y === pos.y);
+        let landing = { ...pos };
+        if (blocker) {
+            const path = getSkillTargetPath(caster, skill, pos, board);
+            landing = path.length > 1 ? { ...path[path.length - 2] } : { ...caster.position };
+        }
+        if (landing.x !== caster.position.x || landing.y !== caster.position.y) {
+            actions.push({ type: 'UNIT_MOVE', unitId: caster.id, path: [landing] });
+        }
+        caster = { ...caster, position: landing };
+    }
+
     // Check for POWER TILE boost
     let damageBoost = 0;
     const standingTile = getTileAt(caster.position, board);
@@ -47,7 +83,9 @@ export const planSkillActions = (
     const targets = [pos];
     const hasPierce = skill.effects.some(e => e.type === 'PIERCE_ATTACK');
 
-    const hasRadialPush = skill.rangeType === 'SELF'
+    // Slingshot Chard vẫn là một cú quét RADIAL — chỉ là tâm của nó đã dời tới ô đáp (xem
+    // khối SKILL_DASH phía trên). Cú lao thay đổi cách tiếp cận, không thay đổi cú quét.
+    const hasRadialPush = (skill.rangeType === 'SELF' || slingshot)
         && skill.effects.some(e => e.type === 'PUSH' || e.type === 'PULL');
 
     // Encase's shape (PLAN-hero-zephyr §6.3): a PAID self-shield covers the caster AND the
@@ -57,7 +95,7 @@ export const planSkillActions = (
         && (skill.sunCost ?? 0) > 0
         && skill.effects.some(e => e.type === 'SHIELD');
 
-    if (skill.rangeType === 'DASH' || skill.rangeType === 'LINE') {
+    if ((skill.rangeType === 'DASH' || skill.rangeType === 'LINE') && !slingshot) {
         if (hasPierce) {
             const path = getSkillTargetPath(caster, skill, pos, board);
             path.forEach(p => {
@@ -227,6 +265,12 @@ export const planSkillActions = (
     // This prevents the "Double Damage" bug where modifying targetUnit.hp directly caused
     // the state reducer to subtract damage from an already reduced value.
     const tempUnits = new Map<string, Unit>(units.map(u => [u.id, { ...u }]));
+    // Slingshot Chard đã bay sang ô khác ở đầu hàm. `units` là mảng của caller, chụp TRƯỚC cú
+    // lao, nên thân anh trong mô phỏng phải được dời theo — nếu không, mọi cú đẩy sẽ né một
+    // bức tường vô hình ở ô anh vừa rời đi, và không cú nào tính được va chạm vào chính anh.
+    if (slingshot && tempUnits.has(caster.id)) {
+        tempUnits.set(caster.id, { ...tempUnits.get(caster.id)!, position: { ...caster.position } });
+    }
     // Only living units occupy a tile in the simulation. Units killed earlier in this
     // same resolution must stop blocking pushes and stop being valid targets.
     // ...and anything under the sand. This ONE predicate is why the burrow rule did not become
@@ -1733,7 +1777,9 @@ export const planSkillActions = (
         }
     }
 
-    if (skill.rangeType === 'DASH') {
+    // `!slingshot`: cú lao của anh đã được phát ở ĐẦU hàm, vì vòng quét phải nổ sau khi anh
+    // tới nơi. Không chặn ở đây thì anh đi hai lần trong một lượt.
+    if (skill.rangeType === 'DASH' && !slingshot) {
         const targetUnit = getTempUnit(pos);
         if (!targetUnit) {
             actions.push({ type: 'UNIT_MOVE', unitId: caster.id, path: [pos] });
