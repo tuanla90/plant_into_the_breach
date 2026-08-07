@@ -71,11 +71,11 @@ const pricedMaxHp = (baseMaxHp: number, element?: ElementId): number =>
  * always tested for — so without a name for it it was quietly adopted: saved into the run on
  * the next map screen, and handed back as a roster member in the next fight.
  *
- * The wild plant was the second case and is gone (utils/encounterBuilder). The helper stays
- * because the rule is not about crates: the run never owns a body the board handed out.
+ * The wild plant is the second case (utils/encounterBuilder — restored 2026-08-06): the
+ * run never owns a body the board handed out.
  */
 export const isBattleOnlyUnit = (u: Unit): boolean =>
-    u.class === UnitClass.GEAR_CRATE;
+    u.class === UnitClass.GEAR_CRATE || !!u.isWild;
 
 /**
  * TÊN HIỂN THỊ CỦA MỘT UNIT — hero đọc theo hero, còn lại đọc theo thân cây.

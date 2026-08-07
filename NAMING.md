@@ -254,3 +254,20 @@ TRƯỚC mọi filter — xem comment tại 3 điểm nạp. KHÔNG import idAli
 
 **Cảnh báo cho mọi phiên sau**: NAMING.md và art-src/ART-PROMPTS* bị LOẠI khỏi các đợt
 sed (cột "Cũ" và ràng buộc phủ định phải giữ nguyên tên cũ) — đừng "sửa giùm".
+
+## Đợt 7 (cùng ngày) — KHÔI PHỤC Cây hoang + DORMANT (quyết định của chủ dự án)
+
+Tính năng cây hoang (WILD_POOL, bị gỡ trong be947f9) đã QUAY LẠI theo yêu cầu — đừng gỡ
+lần nữa. Thiết kế giữ nguyên bản gốc, chỉ đổi pool:
+
+- Pool = **9 thân cây material của hero** (SEED_GUN, SOL_BATTERY, STEEL_JAWS, ARMOR_PLATE,
+  CORN_MORTAR, ROTOR_WING, SPIKE_ARMOR, SPRING_ARM, BUNKER_SHELL). Triết lý gốc đứng vững:
+  bất ngờ nằm ở VỊ TRÍ, không phải danh tính.
+- 25%/trận thường (không bao giờ ở node BOSS), spawn DORMANT giữa bàn, tỉnh khi hero đứng
+  cạnh (luật ở turnManager cuối lượt địch — chỉ đánh thức unit có `isWild`, DORMANT của
+  tutorial không bị đụng). Tỉnh dậy là tháp pháo moveRange 0; `isBattleOnlyUnit` giữ nó
+  khỏi roster sau trận.
+- Các điểm chạm: types.Unit.isWild · encounterBuilder (pool/spawn/EncounterPlan.allies) ·
+  turnManager (wake) · unitFactory (isBattleOnlyUnit) · useGameProgression (rolledAllies).
+- Đã verify: typecheck PASS, assert FULLY PASS, sim 60 lượt build → 17 cây hoang (28%),
+  100% DORMANT + isWild + đứng yên, boss-node = 0.

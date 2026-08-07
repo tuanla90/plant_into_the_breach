@@ -13,7 +13,7 @@ import { ICONS } from '../utils/icons';
  * Mười entry còn lại, và LÝ DO từng cái còn — đây là danh sách kiểm tra khi định thêm cây
  * mới; thêm một entry mà không mở được một trong hai cửa dưới đây là lại đẻ ra rác:
  *
- *   1. CHÍN cây gốc của hero — SEED_GUN, ARMOR_PLATE, SOL_BATTERY, STEEL_JAWS, CORNOVA, ROTOR_WING,
+ *   1. CHÍN cây gốc của hero — SEED_GUN, ARMOR_PLATE, SOL_BATTERY, STEEL_JAWS, CORN_MORTAR, ROTOR_WING,
  *      SPIKE_ARMOR, SPRING_ARM, BUNKER_SHELL. Vừa là `baseClass` của một hero vừa là `benchClass`
  *      của nguyên liệu cùng tên, tức là thân cây mà mầm dự bị mang ra sân. Đủ CHÍN, không
  *      phải tám: Rotor Wing từng thiếu ở đây và đó là lỗi, không phải chủ ý — xem chú thích
@@ -21,7 +21,7 @@ import { ICONS } from '../utils/icons';
  *   2. GEAR_CRATE — không phải cây, là cái thùng của nhiệm vụ hộ tống.
  *
  * CACTUS và ICE_GRENADE từng sống nhờ WILD_POOL của encounterBuilder (cây hoang mọc sẵn trên
- * bàn). Cây hoang đã bỏ, nên hai cây đó cũng đi theo.
+ * bàn). Cây hoang đã QUAY LẠI 2026-08-06 với pool = 9 thân cây material của hero (xem WILD_POOL) — riêng CACTUS và ICE_GRENADE vẫn bỏ.
  *
  * `evolvesTo`/`evolutionCost` cũng đi theo: mọi đích tiến hoá đều nằm trong nhóm bị xoá, và
  * bản thân cơ chế tiến hoá tiêu Sol trên bản đồ trong khi Sol là tài nguyên trong-một-trận —

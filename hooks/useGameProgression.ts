@@ -957,7 +957,7 @@ export const useGameProgression = ({
         // Rolled OUTSIDE the setUnits updater: React may invoke that updater twice (StrictMode
         // does, in development), and a wave rolled inside it would be a different wave each
         // time. Deploy tiles come back with it — same board, same pass.
-        const { enemies: rolledEnemies, deployTiles } =
+        const { enemies: rolledEnemies, allies: rolledAllies, deployTiles } =
             buildEncounter(node, newBoard, depth, unitDefs, terrainDefs, mods, boss);
 
         /**
@@ -1125,7 +1125,7 @@ export const useGameProgression = ({
             // The gear crate is neither squad nor wave. It goes in last and is never recorded
             // in `benchDeployedRef`, so the end-of-battle ledger cannot charge the player for
             // a body they did not buy.
-            return [...roster, ...benchUnits, ...gearUnits, ...rolledEnemies];
+            return [...roster, ...benchUnits, ...gearUnits, ...rolledAllies, ...rolledEnemies];
         });
 
         setBoard(newBoard);

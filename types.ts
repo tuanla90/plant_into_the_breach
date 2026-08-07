@@ -349,6 +349,8 @@ export interface Unit {
    * set and cleared by the engine inside one APPLY_DAMAGE — never saved, never read by rules.
    */
   isHitFlashing?: boolean;
+    /** Wild board-gift plant: sleeps DORMANT until a hero stands adjacent; the run never owns it (isBattleOnlyUnit). */
+    isWild?: boolean;
   flipX?: boolean;
   isMassive?: boolean;
   /**

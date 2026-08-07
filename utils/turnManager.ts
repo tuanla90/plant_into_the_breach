@@ -1714,9 +1714,31 @@ export const processTurn = (
         actions.push({ type: 'UPDATE_INTENT', unitId: enemy.id, intent: newIntent });
     });
 
-    // Luật "cây hoang tỉnh giấc khi có hero đứng cạnh" đã bỏ cùng cây hoang. DORMANT vẫn
-    // còn dùng — nhưng chỉ cho nội dung có kịch bản (data/tutorial.ts: Sunbloom là thứ được
-    // bảo vệ, không phải một unit thứ hai), và ở đó không có gì đánh thức nó cả.
+    /**
+     * THE WILD PLANT WAKES (khôi phục 2026-08-06 cùng cây hoang — encounterBuilder).
+     *
+     * Checked here, at the end of the enemy turn, because that is the moment the board has
+     * finished moving: the player walked a hero over during their turn, the horde has just
+     * had its answer, and whoever is still standing beside the sleeper is standing there for
+     * real. Waking it during the player's turn would have meant a body that appears mid-drag.
+     *
+     * DORMANT is simply removed. There is no partial state and no timer — a plant is either
+     * asleep or it is fighting for you, and the second one lasts the rest of the battle.
+     * (Tutorial's DORMANT heroes are untouched: they carry no `isWild`, so this loop skips
+     * them and nothing in a scripted board wakes them.)
+     */
+    simUnits.forEach(u => {
+        if (u.isEnemy || u.hp <= 0 || !u.isWild) return;
+        if (!u.statusEffects.includes('DORMANT')) return;
+        const woken = simUnits.some(h =>
+            !h.isEnemy && h.hp > 0 && h.isHero && h.id !== u.id
+            && Math.abs(h.position.x - u.position.x) + Math.abs(h.position.y - u.position.y) <= 1);
+        if (!woken) return;
+        const cleared = u.statusEffects.filter(e => e !== 'DORMANT');
+        u.statusEffects = cleared;
+        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: u.id, updates: { statusEffects: cleared } });
+        actions.push({ type: 'APPLY_DAMAGE', targetId: u.id, amount: 0, eventType: 'BUFF', pos: { ...u.position } });
+    });
 
     // --- BOSS END OF TURN ---
     // Traits that are a state of the board rather than an action: the Colossus feeding off its

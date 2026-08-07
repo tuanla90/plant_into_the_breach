@@ -22,16 +22,32 @@ import { bossClassFor, MASSIVE_BOSSES, BOSS_OPENING_INTENT, BOSS_ESCORTS, BOSS_I
  */
 
 /*
- * CÂY HOANG ĐÃ BỎ. Một phần tư số trận từng mở màn với một cây sống sót mọc sẵn đâu đó
- * trên bàn, đang ngủ; đi hero tới cạnh là nó tỉnh và đánh giúp hết trận.
+ * CÂY HOANG — QUAY LẠI theo quyết định 2026-08-06 (từng bị bỏ một nhịp trong đợt dọn cây).
+ * Một phần tư số trận mở màn với một mầm ngủ (DORMANT) đâu đó trên bàn; đi hero tới cạnh
+ * là nó tỉnh và đánh giúp hết trận (luật tỉnh giấc nằm ở turnManager, cuối lượt địch).
  *
- * Nó chết cùng đợt dọn cây vì chính cái nó dựa vào: pool là năm cây thường, mà bốn trong
- * số đó giờ chỉ còn tồn tại với tư cách thân cây gốc của hero. Một "bất ngờ" rút từ đúng
- * bộ thân thể mà người chơi đã cầm trong tay thì không còn là bất ngờ.
+ * Pool giờ là CHÍN thân cây material của hero — đúng triết lý gốc của tính năng: bất ngờ
+ * nằm ở VỊ TRÍ, không phải ở danh tính ("the surprise is WHERE it is, not what it is"),
+ * và một thân quen mọc dại vẫn là một body miễn phí phải đi bộ tới mới nhận được.
+ * Cây tỉnh dậy KHÔNG di chuyển được (moveRange 0): nó là tháp pháo cắm đất, không phải
+ * thành viên squad — isBattleOnlyUnit giữ nó khỏi roster sau trận.
  */
+const WILD_POOL: UnitClass[] = [
+    UnitClass.SEED_GUN, UnitClass.SOL_BATTERY, UnitClass.STEEL_JAWS,
+    UnitClass.ARMOR_PLATE, UnitClass.CORN_MORTAR, UnitClass.ROTOR_WING,
+    UnitClass.SPIKE_ARMOR, UnitClass.SPRING_ARM, UnitClass.BUNKER_SHELL,
+];
+const WILD_ALLY_CHANCE = 0.25;
 
 export interface EncounterPlan {
     enemies: Unit[];
+    /**
+     * Units that start on the PLAYER's side without being part of the squad — the wild plant
+     * above, and nothing else yet. Returned separately from `enemies` because the caller has
+     * to put them through a different door: they are not rolled against the wave budget, they
+     * do not count as pressure, and they must not be struck off the bench ledger.
+     */
+    allies: Unit[];
     /** Where the player may deploy. Derived from the same board, so it is returned together. */
     deployTiles: Position[];
 }
@@ -52,6 +68,7 @@ export const buildEncounter = (
     boss?: BossId,
 ): EncounterPlan => {
     const enemies: Unit[] = [];
+    const allies: Unit[] = [];
     // Benched units don't occupy board tiles, so occupancy starts empty.
     const occupiedKeys = new Set<string>();
 
@@ -156,8 +173,48 @@ export const buildEncounter = (
         .filter(t => t.isDeployZone && terrainDefs[t.terrain]?.isWalkable)
         .map(t => ({ x: t.x, y: t.y }));
 
+    /**
+     * THE WILD ALLY. Rolled last, so it can see every tile the wave has already taken.
+     *
+     * Never on a deploy tile (it would be standing in your placement screen), never on a spawn
+     * hole (it would be a free plug), and never on a doorstep — a free body one tile from the
+     * Greenspire it is defending is not a discovery, it is a gift, and this is supposed to be
+     * worth walking to.
+     *
+     * DORMANT is the sleep. It is an existing status that already means "cannot act, and
+     * nothing clears it on its own" (types.ts), which is exactly right: the only thing that
+     * wakes this plant is a hero standing next to it, and that rule lives in turnManager.
+     */
+    if (node.type !== 'BOSS' && Math.random() < WILD_ALLY_CHANCE) {
+        const spots = board.filter(t =>
+            !t.isHouse && !t.isDeployZone && !t.isSpawnZone
+            && terrainDefs[t.terrain]?.isWalkable
+            && t.terrain !== 'LAVA'
+            && t.y >= 2 && t.y <= 4
+            && !occupiedKeys.has(`${t.x},${t.y}`)
+            && !board.some(h => h.isHouse && Math.abs(h.x - t.x) + Math.abs(h.y - t.y) <= 1));
+        const spot = spots[Math.floor(Math.random() * spots.length)];
+        if (spot) {
+            const cls = WILD_POOL[Math.floor(Math.random() * WILD_POOL.length)];
+            const def = unitDefs[cls];
+            if (def) {
+                occupiedKeys.add(`${spot.x},${spot.y}`);
+                allies.push({
+                    id: `wild_${cls}_${spot.x}_${spot.y}`,
+                    type: UnitType.PLANT, class: cls, role: UNIT_ROLE_MAP[cls] ?? 'TACTICAL',
+                    hp: def.maxHp, maxHp: def.maxHp, damage: def.damage, moveRange: 0,
+                    cooldownReduction: 0, level: 1, position: { x: spot.x, y: spot.y },
+                    isEnemy: false, hasMoved: false, hasAttacked: false,
+                    statusEffects: ['DORMANT'],
+                    movementType: def.movementType, immunities: def.immunities, imgUrl: def.imgUrl,
+                    attackRange: def.attackRange ?? 1,
+                    isWild: true,
+                } as Unit);
+            }
+        }
+    }
 
-    return { enemies, deployTiles };
+    return { enemies, allies, deployTiles };
 };
 
 /**
