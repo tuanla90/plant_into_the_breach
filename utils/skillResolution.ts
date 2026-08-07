@@ -1058,14 +1058,18 @@ export const planSkillActions = (
     }
 
     /**
-     * WHERE THE DUST WILL SETTLE — snapshotted BEFORE anything resolves.
+     * NƠI BỤI SẼ ĐỌNG — chụp lại TRƯỚC khi mọi thứ phân giải.
      *
-     * The rule is "dust rises where the BODY ends up", and that needs both halves of the
-     * sentence: which bodies the strike found (only knowable now, before they are shoved or
-     * killed) and where each of them finished (only knowable after). So the tile is paired
-     * with the id here, and the position is read back off the simulation down in the dust
-     * block. Veilsweep is why: a body swept two tiles away leaves the veil on the tile it
-     * LANDED on — dust on the square it just vacated cancels nothing, which was the bug.
+     * Luật hiện hành (Smoke Bullet, chốt vòng 3): **bụi bốc lên ở nơi VIÊN ĐẠN VA CHẠM**, tức
+     * chính ô bị đánh, không phải ô thân thể rơi xuống sau đó. Cần chụp ở đây vì sau khi
+     * `resolveTargets()` chạy thì thân có thể đã bị đẩy, bị kéo, hoặc đã chết.
+     *
+     * `unitId` vẫn được ghi kèm, và đó KHÔNG phải để đọc vị trí cuối nữa — nó là cái lọc "có
+     * thân mới có khói": một viên đạn không trúng gì thì không nổ, nên ô trống không bốc bụi.
+     *
+     * Đây là bản đọc lại L6 chứ không phải phá L6. L6 sinh ra để chặn Smokeline phủ CẢ LÀN
+     * ĐẠN BAY QUA — và bản này vẫn chỉ phủ đúng những ô có va chạm. Câu chữ đúng của luật bây
+     * giờ là: *"bụi ở nơi va chạm, không phải dọc đường bay"*.
      */
     const dustAnchors = skill.effects.some(e => e.type === 'DUST_TILE')
         ? targets.map(t => ({ tile: { ...t }, unitId: getTempUnit(t)?.id }))
@@ -1336,41 +1340,16 @@ export const planSkillActions = (
     }
 
     /**
-     * SMOKE_ON_HIT (Prowl Veil, Ash Carriage) — the body you hurt is left in a cloud.
+     * `SMOKE_ON_HIT` đã RỜI khỏi đây — Ash Carriage giờ là `SKILL_DUST_RING`.
      *
-     * Read off the finished action list, the same trick FIRE RESONANCE and the support shot
-     * use, and for the same reason: this hero can hurt something through the damage pass, the
-     * Repeater's second pass, a volley shot or a lightning arc, and one scan catches all four
-     * without any of them knowing about it. The position comes from the SIMULATION, so it
-     * obeys L6 — the cloud goes up where the body ended up, not where it was standing when the
-     * shot left.
+     * Bản cũ quét danh sách action đã xong để tìm mọi thân bị làm đau rồi phủ một ô bụi dưới
+     * chân từng thân. Nó đúng về mặt kỹ thuật (một lượt quét bắt được cả đòn thường, phát thứ
+     * hai của Repeater, viên volley và tia lan điện) nhưng sai về mặt luật: bụi đi kèm ĐÒN
+     * MIỄN PHÍ nghĩa là một cái disarm không mất gì, lặp lại mỗi lượt.
      *
-     * ONE tile, ONE turn, and only under something still alive. Smoke Pod is five tiles for
-     * three; the whole reason a free attack may carry this at all is that it is neither.
+     * Hình mới nằm trong khối `DUST_TILE` phía dưới, và cổng trả-phí nằm ở `applyFusionToSkill`
+     * — cùng một cửa với Smoke Bullet, nên hai ô bụi của game không thể trôi khỏi nhau.
      */
-    if (hasFusionEffect(caster, 'SMOKE_ON_HIT')) {
-        const hurt = new Set(actions
-            .filter(a => a.type === 'APPLY_DAMAGE' && a.eventType === 'DAMAGE'
-                && a.targetId && a.targetId !== 'tile' && (a.amount ?? 0) > 0)
-            .map(a => a.targetId!));
-        const dusted = new Set<string>();
-        hurt.forEach(id => {
-            const victim = tempUnits.get(id);
-            // A corpse needs no blinding, and an obstacle never swings.
-            if (!victim || victim.hp <= 0 || !victim.isEnemy || victim.type === UnitType.OBSTACLE) return;
-            const key = `${victim.position.x},${victim.position.y}`;
-            if (dusted.has(key)) return;
-            dusted.add(key);
-            const tile = getTileAt(victim.position, board);
-            if (!tile || tile.terrain === 'WALL' || tile.terrain === 'MOUNTAIN') return;
-            actions.push({
-                type: 'MODIFY_TERRAIN',
-                pos: { ...victim.position },
-                environment: 'SMOKE',
-                smoke: { turns: 1 },
-            });
-        });
-    }
 
     /**
      * SPIKE_TILE — the row stays dangerous after the volley has landed.
@@ -1525,16 +1504,27 @@ export const planSkillActions = (
                 - (Math.abs(b.x - caster.position.x) + Math.abs(b.y - caster.position.y))
                 || a.x - b.x || a.y - b.y)
             .slice(0, 1);
-        // Read back off the simulation: each body the strike found, wherever it finished.
-        // Tiles that held nobody drop out entirely — no body, no cloud.
-        const landed: Position[] = dustAnchors
+        // SMOKE BULLET: ô viên đạn VA CHẠM, chụp trước khi phân giải. Ô không có thân thì rơi
+        // ra khỏi danh sách — không trúng ai thì không có khói.
+        const impacts: Position[] = dustAnchors
             .filter(a => !!a.unitId)
-            .map(a => ({ ...(tempUnits.get(a.unitId!)?.position ?? a.tile) }));
-        const covered: Position[] = allyCentred
+            .map(a => ({ ...a.tile }));
+        /**
+         * ASH CARRIAGE (`SKILL_DUST_RING`) — hình thứ tư, và là hình của một khẩu pháo: bụi
+         * KHÔNG đọng ở điểm nổ mà ở BỐN Ô QUANH nó. Tro bắn ra ngoài.
+         *
+         * Cố ý chừa ô tâm: đó là ô Cornova vừa dội trúng và ghim (Nova Shell mang STUN), nên
+         * phủ bụi lên đó là phủ lên thứ đằng nào lượt này cũng không đánh được. Bốn ô quanh
+         * mới là chỗ đàn zombie kế tiếp bước vào.
+         */
+        const ashRing = hasFusionEffect(caster, 'SKILL_DUST_RING');
+        const covered: Position[] = ashRing
             ? ring
-            : !skill.effects.some(e => e.type === 'DAMAGE' || e.type === 'PUSH')
-                ? [pos, ...podTrail]
-                : landed;
+            : allyCentred
+                ? ring
+                : !skill.effects.some(e => e.type === 'DAMAGE' || e.type === 'PUSH')
+                    ? [pos, ...podTrail]
+                    : impacts;
         const dusted = new Set<string>();
         covered.forEach(p => {
             if (p.x < 0 || p.x >= 8 || p.y < 0 || p.y >= 8) return;

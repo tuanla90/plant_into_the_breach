@@ -73,10 +73,22 @@ từng đòn nhỏ trong rất nhiều đòn); hero **tầm xa** mua `BONUS_HP` 
 là nặng — cần đệm sống qua một lượt tồi). Sunbloom không có đòn đánh nào nên đọc theo vế cận
 chiến: cô bị *chạm tới*, và `BONUS_HP` thì cô đã có ở cột bí ngô.
 
-**L6 · BỤI RƠI XUỐNG CHỖ THÂN ĐÁP, KHÔNG PHẢI CHỖ ĐẤT ĐI QUA.** Một câu, chữa hai lỗi ngược
-chiều nhau: *Smokeline* từng phủ cả làn viên đạn bay qua (bịt luôn đường bắn của phe mình), còn
-*Veilsweep* từng phủ vành đất mà zombie **vừa bị hất ra khỏi** — tức là màn bụi tin cậy trượt
-đúng thứ nó nhắm. Giờ mây bốc lên nơi thân thể rơi xuống.
+**L6 · BỤI Ở NƠI VA CHẠM, KHÔNG PHẢI DỌC ĐƯỜNG BAY.** Luật này sinh ra để chữa *Smokeline*, thứ
+từng phủ **cả làn viên đạn bay qua** và bịt luôn đường bắn của phe mình. Nội dung được giữ
+nguyên; cái đã đổi là mốc.
+
+*Bản đầu (đã nghỉ): "bụi rơi xuống chỗ thân ĐÁP".* Mốc đó chọn theo *Veilsweep* — ô từng phủ
+vành đất mà zombie **vừa bị hất ra khỏi**, tức màn bụi tin cậy trượt đúng thứ nó nhắm. Ô đó
+không còn trong ma trận, và mốc "chỗ đáp" theo nó mà đi.
+
+*Bản đang chạy (chốt vòng 3): mốc là **ô VA CHẠM**.* Smoke Bullet nổ ngay chỗ nó trúng — thân bị
+đẩy đi sau đó thì để lại đám mây phía sau, đúng vật lý của một viên đạn khói. Vẫn không phá tinh
+thần gốc: bụi chỉ đọng ở những ô CÓ va chạm, không bao giờ trải dọc đường đạn. Không trúng ai thì
+không có khói.
+
+Hình bụi do từng ô quyết định, và cả hai đều **chỉ nằm trên kỹ năng trả phí** (lệnh cấm nhắm vào
+tần suất, không nhắm vào chữ "bụi"): **Smoke Bullet** = đúng ô va chạm; **Ash Carriage** = bốn ô
+**quanh** điểm nổ, chừa ô tâm — pháo bắn tro ra ngoài, còn ô tâm thì Nova Shell đã ghim rồi.
 
 **L7 · THẺ KHÔNG ĐƯỢC NÓI DỐI.** `BONUS_DAMAGE` *map chứ không append* (hero 0 sát thương không
 bị gear bơm số từ bên hông); rider nguyên tố **chỉ dán lên kỹ năng chạm được địch** (trước đây

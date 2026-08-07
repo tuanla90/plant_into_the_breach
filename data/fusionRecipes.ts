@@ -185,8 +185,8 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_REEDWING: {
-            name: 'Smokeline',
-            description: 'Precision Blast leaves the tile it struck hanging with dust — nothing standing in it can swing.',
+            name: 'Smoke Bullet',
+            description: 'Precision Blast bursts into dust where it hits — whatever ends its turn in the cloud cannot swing.',
             effect: { type: 'SKILL_DISARM' },
             live: true,
         },
@@ -360,8 +360,8 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_REEDWING: {
             name: 'Ash Carriage',
-            description: 'Whatever her kernels hurt is left standing in dust — it cannot swing next turn unless it walks out.',
-            effect: { type: 'SMOKE_ON_HIT' },
+            description: 'Nova Shell throws ash onto the four tiles around the blast — anything ending its turn there cannot swing.',
+            effect: { type: 'SKILL_DUST_RING' },
             live: true,
         },
         MAT_THORNSHELL: {

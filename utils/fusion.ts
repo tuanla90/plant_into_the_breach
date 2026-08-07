@@ -448,17 +448,21 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
         extra.push({ type: 'APPLY_BLEED' });
     }
 
-    // The Rotor Wing axis, skill-only by construction (the SKILL_SPLASH precedent): the PAID
-    // skill also drops dust where it struck.
-    //
-    // "Free-attack dust would be a free disarm every turn" is why — and `SMOKE_ON_HIT` is not
-    // a hole in that ban, it is the other side of it. THIS one dusts an AREA (every tile the
-    // cast covered, two turns), which on a free action is a wall raised every single turn.
-    // That one dusts ONE tile for ONE turn under a body the hero already had to hit. The ban
-    // is on the footprint, not on the word "dust".
+    /**
+     * TRỤC ROTOR WING — cả hai ô bụi đều CHỈ nằm trên kỹ năng TRẢ PHÍ (tiền lệ `SKILL_SPLASH`).
+     *
+     * Lý do lệnh cấm: một đòn miễn phí mang bụi là một cái **disarm miễn phí mỗi lượt**, tức
+     * một bức tường dựng lại đều đặn không tốn gì. Lệnh cấm nhắm vào TẦN SUẤT, nên nó không
+     * chừa ai — `SKILL_DUST_RING` (Ash Carriage) trước đây là rider trên đòn thường của
+     * Cornova và đã được kéo về đúng bên này hàng rào.
+     *
+     * Hai ô, một effect, hai HÌNH khác nhau (hình quyết định ở `covered` trong skillResolution):
+     *   - Smoke Bullet (`SKILL_DISARM`) : ô viên đạn VA CHẠM.
+     *   - Ash Carriage (`SKILL_DUST_RING`): BỐN Ô QUANH điểm nổ, chừa ô tâm.
+     */
     if ((skill.sunCost ?? 0) > 0
         && (hasDamage || hasShove)
-        && hasFusionEffect(caster, 'SKILL_DISARM')
+        && (hasFusionEffect(caster, 'SKILL_DISARM') || hasFusionEffect(caster, 'SKILL_DUST_RING'))
         && !skill.effects.some(e => e.type === 'DUST_TILE')) {
         extra.push({ type: 'DUST_TILE', value: 2 });
     }

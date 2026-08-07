@@ -1423,13 +1423,16 @@ export type FusionEffectType =
      */
     | 'LAST_STAND_SHIELD'
     /**
-     * skill version dusts an AREA (every tile the cast covered, three turns), which on a free
-     * action would be a wall raised every turn. This dusts ONE tile, for ONE turn, under a body
-     * the hero already had to hit — and dust cancels a SWING, never a turn: the zombie still
-     * walks, still telegraphs, and can simply step out of the cloud. That puts it level with
-     * `ON_HIT_PUSH`, which denies an attack by moving the body instead of blinding it.
+     * ASH CARRIAGE — cu no cua ky nang TRA PHI de lai tro tren BON O QUANH diem no. O tam
+     * duoc chua ra: Nova Shell da ghim thu dung do roi, phu bui len no la phu len thu dang
+     * nao luot nay cung khong danh duoc.
+     *
+     * Ban cu la `SMOKE_ON_HIT` — bui duoi MOI than co bi don thuong cua co lam dau. Doi vi
+     * hai le: (1) mot khau phao de lai tro quanh cho no roi, khong phai duoi chan tung nan
+     * nhan; (2) skill-only la tien le `SKILL_SPLASH` — mot cai la chan dung moi luot bang don
+     * mien phi la mot tro choi khac han tro choi no duoc dinh gia.
      */
-    | 'SMOKE_ON_HIT'
+    | 'SKILL_DUST_RING'
     // --- New capped fusion effect types ---
     | 'BLESS_RETALIATE'
     | 'DIGEST_RETALIATE'
