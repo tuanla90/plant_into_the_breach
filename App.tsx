@@ -1604,10 +1604,13 @@ const App: React.FC = () => {
           // Same blocks the button honours: spent its action, disabled by status, digesting.
           if (selectedUnit.hasAttacked) return;
           if (selectedUnit.statusEffects?.includes('STUN') || selectedUnit.statusEffects?.includes('FREEZE') || selectedUnit.statusEffects?.includes('DORMANT')) return;
-          if ((selectedUnit.digestingTurns || 0) > 0) return;
 
           const skill = skillsFor(selectedUnit)[slot];
           if (!skill) return;
+          // Cửa tiêu hoá, đọc cùng một luật với getValidSkillTargets: chỉ Rending Claws lọt.
+          // Chặn theo unit (như trước) thì phím tắt từ chối đúng cái skill sinh ra để dùng
+          // trong cửa sổ đó — nút bấm cho phép, bàn phím không, và hai đường không được lệch.
+          if ((selectedUnit.digestingTurns || 0) > 0 && skill.id !== DIGEST_CLAW_SKILL.id) return;
           if (skill.requiresSunCharge && !((selectedUnit.sunCharge || 0) > 0)) return;
           if (selectedUnit.hasMoved && isSunProducingSkill(skill)) return;
           const netCost = Math.max(0, (skill.sunCost || 0) - getFusionEffectValue(selectedUnit, 'SKILL_DISCOUNT'));

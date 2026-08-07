@@ -1575,6 +1575,30 @@ export const planSkillActions = (
                 actions.push({ type: 'APPLY_DAMAGE', targetId: caster.id, amount: 0, eventType: 'BLOCK', pos: caster.position });
             }
         }
+    } else if (skill.id === 'burrow_strike' && hasFusionEffect(caster, 'DIGEST_STEADFAST')) {
+        /**
+         * ANCHORED GULLET — nửa THỨ HAI, nửa "nuốt trượt". Hai võ sĩ nắm áo nhau.
+         *
+         * Nuốt trúng thì anh bất động (nửa kia, trong `planPush`). Nuốt TRƯỢT — nghĩa là con
+         * kia là trùm hoặc Massive, hai loại `burrow_strike` chỉ gãi được 1 damage — thì
+         * ĐỊCH bất động: `ROOTED` cấm đi, cho đánh. Hàm răng đã ngoạm vào rồi, chỉ là không
+         * nuốt nổi.
+         *
+         * Vì sao đây là ô đáng một slot: cú Devour vào trùm trước giờ là một lượt vứt đi (1
+         * damage, không nuốt, không tiêu hoá). Ô này biến nó thành đòn KHOÁ CHÂN trùm một
+         * lượt — thứ duy nhất trong ma trận ghim được một thân thể không ai đẩy nổi.
+         *
+         * STUN RULE ✓: không lượt nào bị xoá. Con trùm vẫn đánh, chỉ là đánh tại chỗ — và
+         * chỗ đó có Snapmaw đang đứng, nên anh trả giá bằng máu mình cho một lượt bàn cờ
+         * đứng yên. `immunities STATUS` vẫn từ chối được, đúng tiền lệ RETALIATE_ROOT.
+         */
+        const held = getTempUnit(pos);
+        if (held && held.isEnemy && held.hp > 0 && !held.immunities.includes('STATUS')
+            && !held.statusEffects.includes('ROOTED')) {
+            const next: typeof held.statusEffects = [...held.statusEffects, 'ROOTED'];
+            held.statusEffects = next;
+            actions.push({ type: 'UPDATE_UNIT_STATE', unitId: held.id, updates: { statusEffects: next } });
+        }
     }
 
     if (skill.rangeType === 'DASH') {

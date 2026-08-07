@@ -1873,4 +1873,11 @@ export const VI: Record<string, string> = {
     "Ash Carriage": "Càng Tro",
     "Whatever her bite hurts is left standing in dust — it cannot swing next turn unless it walks out.": "Thứ gì bị cú cắn của cô làm đau đều đứng lại trong bụi — lượt sau không vung nổi đòn trừ khi nó bước ra.",
     "Whatever her kernels hurt is left standing in dust — it cannot swing next turn unless it walks out.": "Thứ gì bị hạt ngô của cô làm đau đều đứng lại trong bụi — lượt sau không vung nổi đòn trừ khi nó bước ra.",
+
+    // --- Đợt 12: bật cửa sổ tiêu hoá của Snapmaw (3 ô rỗng [A7]). ---
+    "Prowl Rotor": "Cánh Quạt Rình Mồi",
+    "He can crawl 1 tile a turn while digesting. Still no attack, still no skill.": "Đang tiêu hoá anh vẫn bò được 1 ô mỗi lượt. Vẫn không đánh, vẫn không dùng skill.",
+    "While digesting, anything that hits him in melee takes 1 back.": "Trong lúc anh tiêu hoá, kẻ nào đánh cận chiến trúng anh đều ăn lại 1.",
+    "Anchored Gullet": "Họng Neo Chặt",
+    "Devour swallowed it: nothing can push or pull him while he digests. Devour failed: the target cannot move next turn.": "Nuốt Chửng nuốt trúng: không gì đẩy hay kéo anh nổi suốt lúc tiêu hoá. Nuốt Chửng trượt: mục tiêu không đi được ở lượt sau.",
 };

@@ -1015,8 +1015,22 @@ export const processTurn = (
                 // là cách anh trả đòn THAY người anh hộ vệ. Cộng vào cùng con số `thorns` để
                 // RETALIATION RULE vẫn chỉ có MỘT nơi cộng, không phải hai đường phản đòn.
                 const shieldThorns = (targetUnit.shield ?? 0) > 0 && targetUnit.shieldSpined ? 1 : 0;
+                /**
+                 * BRISTLEBACK (`DIGEST_RETALIATE`) — gai chỉ dựng lên trong lúc anh đang nhai.
+                 *
+                 * Luật của cả hàng Snapmaw: mọi ô phải đánh vào CỬA SỔ TIÊU HOÁ. Ô này biến
+                 * quãng bất lực thành cái bẫy — đàn zombie xúm vào lúc anh không đỡ được là
+                 * lúc chúng phải trả tiền. Ngoài cửa sổ thì bằng 0, nên nó KHÔNG phải một bản
+                 * `RETALIATE_DAMAGE` rẻ tiền.
+                 *
+                 * Đúng **1** theo RETALIATION RULE (L3) — sầu riêng ghép lên người khác phản 1;
+                 * ngoại lệ 3 chỉ thuộc về Bristling Armor nội tại của Thornshell. Cộng vào cùng
+                 * biến `thorns` để cả game vẫn chỉ có MỘT nơi cộng phản đòn.
+                 */
+                const digestThorns = (targetUnit.digestingTurns ?? 0) > 0
+                    && hasFusionEffect(targetUnit, 'DIGEST_RETALIATE') ? 1 : 0;
                 const thorns = inMelee
-                    ? (targetUnit.retaliateDamage ?? 0) + getFusionEffectValue(targetUnit, 'RETALIATE_DAMAGE') + shieldThorns
+                    ? (targetUnit.retaliateDamage ?? 0) + getFusionEffectValue(targetUnit, 'RETALIATE_DAMAGE') + shieldThorns + digestThorns
                     : 0;
                 if (thorns > 0) {
                     const back = calculateDamage(enemy, thorns, false);

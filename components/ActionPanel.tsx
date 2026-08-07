@@ -5,6 +5,7 @@ import { SQUAD_SIZE } from '../constants';
 import { UNIT_SKILLS, DEFAULT_TERRAIN_DEFS } from '../constants';
 import { Crosshair, Move, Shield, Zap, XCircle, Hourglass, ChevronsRight, ArrowUpCircle, Utensils, RotateCcw, Sun as Sol, Skull, Info, Mountain, Radar, Sword, ArrowRight, Play, UserPlus, MinusCircle, AlertCircle, Plus } from 'lucide-react';
 import { formatGridPosition, isSunProducingSkill } from '../utils/gameLogic';
+import { DIGEST_CLAW_SKILL_ID } from '../utils/fusion';
 import { unitDisplayName } from '../utils/unitFactory';
 import { mobileSprite } from '../utils/platform';
 import { useI18n } from '../i18n';
@@ -435,15 +436,25 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                     </div>
                 )}
 
-                {isDigesting ? (
+                {isDigesting && (
                     <div className="p-5 border border-purple-500/50 bg-purple-950/30 text-center rounded-xl">
                         <Utensils size={36} className="mx-auto text-purple-400 mb-2 animate-bounce" />
                         <div className="text-purple-300 font-black text-base uppercase">{t('Digesting')}</div>
                         <div className="text-purple-300/70 text-xs mt-1">{t('{turns} turns remaining', { turns: selectedUnit!.digestingTurns! })}</div>
                     </div>
-                ) : (
-                    <div className="space-y-2">
-                        {skills.map((skill, index) => {
+                )}
+
+                {/**
+                 * Cửa sổ tiêu hoá KHÔNG còn xoá sạch bảng kỹ năng.
+                 *
+                 * Nó từng xoá — và Rending Claws (`DIGEST_CLAW`) vì thế là một lời hứa không có
+                 * nút bấm: `getValidSkillTargets` mở cổng theo id, `skillsFor` dựng sẵn thẻ, rồi
+                 * panel này thay cả danh sách bằng cái hộp tím. Lọc TẠI CHỖ chứ không lọc mảng,
+                 * để `index` — và do đó phím tắt Q/W/E — vẫn trỏ đúng ô nó vẫn trỏ.
+                 */}
+                <div className="space-y-2">
+                    {skills.map((skill, index) => {
+                            if (isDigesting && skill.id !== DIGEST_CLAW_SKILL_ID) return null;
                             const isActive = selectedSkillId === skill.id;
                             // A sun producer may reposition OR bank light, never both in one turn.
                             const isMoveLocked = !!selectedUnit?.hasMoved && isSunProducingSkill(skill);
@@ -555,8 +566,7 @@ export const ActionPanel: React.FC<ActionPanelProps> = ({
                                 </button>
                             );
                         })}
-                    </div>
-                )}
+                </div>
 
                 <div className="flex gap-2 pt-1 mt-auto">
                     {!isDone && (

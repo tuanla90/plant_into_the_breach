@@ -293,8 +293,19 @@ export const planPush = (
      * Hệ quả cố ý: trùm chuyên đẩy-hero mất bài với anh, và anh đứng bịt hố thì không gì cạy ra
      * được. Đó là tính năng — người ném thì không ai nên ném được.
      */
+    /**
+     * ANCHORED GULLET (`DIGEST_STEADFAST`) — nửa THỨ NHẤT của ô, nửa "nuốt trúng".
+     *
+     * Nuốt được thì anh trụ lại: suốt cửa sổ nhai không ai xê dịch anh nổi. Cùng cửa với
+     * COLLISION_PLATING và vì cùng lý do — đọc fusion tại chỗ, không ghi vào `immunities`
+     * trên thân, vì `immunities` là dữ liệu save và trạng thái này TẮT khi nhai xong.
+     *
+     * Nửa THỨ HAI (nuốt trượt → chính con địch bị `ROOTED`) nằm ở utils/skillResolution.ts,
+     * chỗ `burrow_strike`: hai vế của cùng một câu, mỗi vế ở nơi nó đọc được kết quả cú cắn.
+     */
     if (mover.immunities.includes('PUSH') || mover.isBurrowed
-        || hasFusionEffect(mover, 'COLLISION_PLATING')) return plan;
+        || hasFusionEffect(mover, 'COLLISION_PLATING')
+        || ((mover.digestingTurns ?? 0) > 0 && hasFusionEffect(mover, 'DIGEST_STEADFAST'))) return plan;
 
     // Collision damage collects in a set that outlives the individual tiles: a middle unit in
     // a three-body train is bumped from both sides — and now, over a long shove, possibly on
@@ -802,7 +813,17 @@ export const getValidMoves = (
     // Sol producers used to be rooted to the spot. They can walk now — the cost is that
     // moving forfeits this turn's Sol (see isSunProducingSkill), which is a choice the
     // player makes rather than a restriction the board imposes.
-    if (unit.isEnemy || unit.hasMoved || unit.hasAttacked || (unit.digestingTurns && unit.digestingTurns > 0) || unit.statusEffects?.includes('STUN') || unit.statusEffects?.includes('DORMANT')) {
+    /**
+     * PROWL ROTOR (`DIGEST_MOVE`) — cửa sổ tiêu hoá vẫn bất lực, chỉ là không còn chôn chân.
+     *
+     * Cửa duy nhất của cả game cho phép đi trong lúc nhai, và nó KHÔNG mở phần còn lại: skill
+     * vẫn bị `getValidSkillTargets` từ chối, đòn thường vẫn không có. Anh bò được đúng số ô
+     * thẻ in — không phải `moveRange` của mình — nên ô này là "đừng đứng giữa đường ăn đạn",
+     * không phải "tiêu hoá miễn phí".
+     */
+    const digesting = (unit.digestingTurns ?? 0) > 0;
+    const prowl = digesting ? getFusionEffectValue(unit, 'DIGEST_MOVE') : 0;
+    if (unit.isEnemy || unit.hasMoved || unit.hasAttacked || (digesting && prowl <= 0) || unit.statusEffects?.includes('STUN') || unit.statusEffects?.includes('DORMANT')) {
         return [];
     }
 
@@ -828,7 +849,10 @@ export const getValidMoves = (
      */
     const spent = unit.tilesMoved ?? 0;
     const baseRange = Math.max(0, (unit.moveRange || 2) + blessedBonus + convoyBonus - spent);
-    const moveRange = slowed ? Math.max(1, Math.floor(baseRange / 2)) : baseRange;
+    const walkRange = slowed ? Math.max(1, Math.floor(baseRange / 2)) : baseRange;
+    // Trong cửa sổ nhai, con số trên thẻ là TRẦN chứ không phải quà cộng thêm: cắm Windburr
+    // hay đứng trong đoàn Sunchaser cũng không bò nhanh hơn được.
+    const moveRange = prowl > 0 ? Math.min(prowl, walkRange) : walkRange;
 
     while (queue.length > 0) {
         const current = queue.shift()!;

@@ -244,19 +244,19 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_REEDWING: {
             name: 'Prowl Rotor',
-            description: 'While digesting she can still move 1 tile per turn — maintaining battlefield mobility.',
+            description: 'He can crawl 1 tile a turn while digesting. Still no attack, still no skill.',
             effect: { type: 'DIGEST_MOVE', value: 1 },
             live: true,
         },
         MAT_THORNSHELL: {
             name: 'Bristleback',
-            description: 'Reflects full retaliate damage back while digesting.',
+            description: 'While digesting, anything that hits him in melee takes 1 back.',
             effect: { type: 'DIGEST_RETALIATE' },
             live: true,
         },
         MAT_CHARDSLAM: {
             name: 'Anchored Gullet',
-            description: 'Immune to collision damage and push/knockback effects while digesting.',
+            description: 'Devour swallowed it: nothing can push or pull him while he digests. Devour failed: the target cannot move next turn.',
             effect: { type: 'DIGEST_STEADFAST' },
             live: true,
         },
