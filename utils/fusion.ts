@@ -374,10 +374,16 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
         }
     }
 
-    // The Steel Jaws axis: the strike leaves an open wound. On shoves as well as damage —
-    // Chardslam's throw is a strike on a body even at 0 damage, and marking what he cannot
-    // finish is his whole cell (Rending Guard) — but never on a shield or a taunt.
-    if ((hasDamage || hasShove)
+    /**
+     * The Steel Jaws axis: the strike leaves an open wound. Chỉ trên đòn CÓ SÁT THƯƠNG.
+     *
+     * [C2.2] Mệnh đề `|| hasShove` từng đứng ở đây là một special-case tồn tại chỉ vì type chưa
+     * nói thật: nó có mặt để cú ném 0-damage của Chardslam cũng đánh dấu được, tức engine đang
+     * bù cho một cái tên sai. Giờ ô đó có type riêng — `BLEED_ON_SHOVE` — và nó không cưỡi lên
+     * skill nữa mà móc thẳng vào SÁT THƯƠNG VA CHẠM (utils/skillResolution), nên "đập vào mới
+     * toác" là luật chứ không còn là lời kể. `BLEED_ON_HIT` thu về đúng nghĩa đen của nó.
+     */
+    if (hasDamage
         && hasFusionEffect(caster, 'BLEED_ON_HIT')
         && !skill.effects.some(e => e.type === 'APPLY_BLEED')) {
         extra.push({ type: 'APPLY_BLEED' });

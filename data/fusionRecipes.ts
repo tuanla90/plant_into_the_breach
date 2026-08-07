@@ -511,8 +511,8 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_SNAPMAW: {
             name: 'Rending Chard',
-            description: 'His throws leave the target bleeding: the next hit against it lands +1.',
-            effect: { type: 'BLEED_ON_HIT' },
+            description: 'Anything hurt by one of his collisions is left bleeding — both bodies when he throws one into another, and the one that hits the ground when he does not.',
+            effect: { type: 'BLEED_ON_SHOVE' },
             live: true,
         },
         MAT_IRONHUSK: {

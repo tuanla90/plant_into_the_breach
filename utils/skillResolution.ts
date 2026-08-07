@@ -344,6 +344,32 @@ export const planSkillActions = (
         });
     };
 
+    /**
+     * BLEED_ON_SHOVE — Rending Chard. Đập vào mới toác.
+     *
+     * Một cửa duy nhất để đánh dấu, dùng cho cả hai đường thân này có thể ăn va chạm: cú
+     * đẩy/kéo (qua `plan.collided`) và cú ném tiếp đất (THE FALL, trong nhánh TOSS).
+     *
+     * Thân được STEADFAST che thì không chảy máu: nó không NHẬN sát thương va chạm nào, mà luật
+     * của ô này đọc theo sát thương chứ không theo cú đẩy.
+     */
+    const markShoveBleed = (unit: Unit) => {
+        if (!hasFusionEffect(caster, 'BLEED_ON_SHOVE')) return;
+        if (unit.hp <= 0 || !unit.isEnemy) return;
+        if (hasFusionEffect(unit, 'STEADFAST')) return;
+        if (unit.statusEffects.includes('BLEEDING')) return;
+        const bleeding: StatusEffectType[] = [...unit.statusEffects, 'BLEEDING'];
+        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: unit.id, updates: { statusEffects: bleeding } });
+        unit.statusEffects = bleeding;
+    };
+    const applyShoveBleed = (plan: { collided: string[] }) => {
+        if (!hasFusionEffect(caster, 'BLEED_ON_SHOVE')) return;
+        plan.collided.forEach(id => {
+            const u = tempUnits.get(id);
+            if (u) markShoveBleed(u);
+        });
+    };
+
     // `damageOverride` is how the Repeater's second pass lands for less than the
     // first. Passing it here rather than mutating the skill keeps the first pass
     // reading the authored number. `targetList` lets that second pass re-aim (the
@@ -722,6 +748,7 @@ export const planSkillActions = (
                     applyPushPlan(plan, actions, tempUnits, caster);
                     applyCollisionBonus(plan);
                     applyCollisionSplash(plan);
+                    applyShoveBleed(plan);
                 }
             }
 
@@ -786,6 +813,9 @@ export const planSkillActions = (
                                 targetUnit.hp = 0;
                                 isDead = true;
                             }
+                            // Rending Chard: mặt đất cũng là một mặt va chạm, nên cú ném cũng
+                            // để lại vết. Sau khối damage ở trên, vì thân chết rồi thì thôi.
+                            markShoveBleed(targetUnit);
                         }
                     }
                 }
@@ -885,6 +915,7 @@ export const planSkillActions = (
             applyPushPlan(plan, actions, tempUnits, caster);
             applyCollisionBonus(plan);
             applyCollisionSplash(plan);
+            applyShoveBleed(plan);
         });
     }
 

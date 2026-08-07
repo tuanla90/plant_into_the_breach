@@ -1000,6 +1000,18 @@ export type FusionEffectType =
     /** Attacks leave the target BLEEDING: the next hit against it lands +1. The Steel Jaws axis. */
     | 'BLEED_ON_HIT'
     /**
+     * Rending Chard — thứ gì ăn SÁT THƯƠNG VA CHẠM từ cú đẩy/kéo/ném của hero này thì chảy máu.
+     *
+     * Cố ý KHÔNG cưỡi lên skill như `BLEED_ON_HIT`: nó móc thẳng vào chỗ tính damage va chạm,
+     * nên luật đọc đúng một câu — **đập vào mới toác**. Ném hai thân vào nhau: cả hai mất máu
+     * va chạm VÀ cả hai dính vết. Ném ra ô trống thì vẫn toác, vì mặt đất cũng là một mặt va
+     * chạm (THE FALL). Đẩy vào ô trống mà không chạm gì thì không.
+     *
+     * Trước đợt này hành vi đó được bù bằng mệnh đề `|| hasShove` trong `applyFusionToSkill` —
+     * một special-case tồn tại chỉ vì `BLEED_ON_HIT` chưa nói thật.
+     */
+    | 'BLEED_ON_SHOVE'
+    /**
      * Shields this hero hands out spill over to whoever stands beside the recipient.
      * Replaces SHIELD_BONUS ("+2 size"), which stopped meaning anything when shields became
      * LAYERS (PLAN-hero-zephyr §6.0) — a layer has no size to enlarge, so the pumpkin axis
