@@ -55,7 +55,25 @@ export const BOSS_MAX_TURNS = 7;
 export const BREACH_MAX_TURNS = 9;
 export const BRAINS_MAX = 5;                // sprouts that may be lost across the whole run
 export const SQUAD_SIZE = 3;
-export const FUSION_SLOTS = 2;              // 2 while the material pool is 5; 3 once it reaches 7+
+/**
+ * Số ô fusion mỗi hero. **2 → 3, đợt 2026-08-08** ([E] trong PLAN-fusion-unique.md).
+ *
+ * Chú thích cũ ở đây tự hứa: *"2 while the material pool is 5; 3 once it reaches 7+"*. Pool đã
+ * là 9 từ lâu — con số 2 là món nợ từ lúc pool phình, không phải một quyết định đang đứng.
+ *
+ * Vì sao mở BÂY GIỜ chứ không sớm hơn: ở 2 slot, ma trận là "9 cuộc thi 2-suất" và ô
+ * LUÔN-CÓ-TÁC-DỤNG gần như luôn thắng ô CÓ-ĐIỀU-KIỆN. Pass unique vừa rồi đẻ ra một loạt ô
+ * có-điều-kiện đẹp (double-kill, collision-kill, hoàn Sol theo chất lượng cast, bãi gai, kẹt
+ * chân…) — ở 2 slot chúng thua suất trước các ô phẳng và thành bẫy-mua. Suất thứ ba chính là
+ * "suất chơi conditional" đặt cạnh 2 suất nền.
+ *
+ * Và vì sao phải đợi tới SAU đợt 4: mở sớm hơn thì Chardslam ăn ngay `PUSH_DISTANCE +2` (corn +
+ * cattail cộng dồn) — ô trùng-HÀNG đó chết ở 9439fbc, nên giờ slot 3 không còn gì bẩn để nhân đôi.
+ *
+ * Đây là một đợt CÂN BẰNG, không phải một lần đổi số: +50% passive mỗi hero ở cuối run có thể
+ * đòi nhích curve địch. Chỉnh qua bảng `pitb_balance_v1` theo quy trình sẵn có, sau vài run thật.
+ */
+export const FUSION_SLOTS = 3;
 export const BENCH_CAPACITY = 2;
 
 // --- SUN: in-combat action economy, resets every level (DESIGN.md section 4) ---

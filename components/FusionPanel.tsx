@@ -446,7 +446,10 @@ export const FusionPanel: React.FC<FusionPanelProps> = ({ squad, bench, onFuse, 
                                         stun. Planning a build blind to it is not planning. */}
                                     {hero.element && <ElementBadge element={hero.element} size={12} showName />}
                                     {/* Fusion slots */}
-                                    <div className="flex gap-2 mt-1">
+                                    {/* wrap + justify-center: hàng chip đi từ 2 lên 3 ô ở đợt
+                                        FUSION_SLOTS=3, và khung này không có bề rộng cố định —
+                                        cho nó xuống dòng thay vì tràn ở màn hẹp. */}
+                                    <div className="flex flex-wrap justify-center gap-2 mt-1">
                                         {Array.from({ length: FUSION_SLOTS }).map((_, slot) => {
                                             const entry = fusionsOfHero(hero)[slot];
                                             const isPreviewSlot = !entry && ready && slot === (hero.fusions ?? []).length;
