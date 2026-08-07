@@ -484,6 +484,18 @@ export interface Unit {
    */
   killsThisTurn?: number;
   /**
+   * Số Ô đã đi TRONG LƯỢT NÀY. Trước Overdrive Rotor không ai cần con số này: một unit đi một
+   * lần rồi `hasMoved` khoá lại, nên "đi bao xa" không bao giờ được hỏi tới.
+   *
+   * `ATTACK_THEN_MOVE` là ô đầu tiên hỏi, vì nó bán đúng phần CHƯA TIÊU: đi 2 trong 4 ô rồi bắn
+   * thì còn 2 ô để bay tiếp. Nó KHÔNG cộng thêm ô nào — nếu người chơi đã đi hết tầm trước khi
+   * bắn thì sau khi bắn không còn gì để đi.
+   *
+   * Reset trong `NEW_TURN_RESET` cùng chỗ `hasMoved`. Bị ĐẨY không tính: cú đẩy đi qua nhánh
+   * `isForced`, cùng cửa mà `prevPosition` và `hasMoved` đã bỏ qua.
+   */
+  tilesMoved?: number;
+  /**
    * Số Sol lớp chắn hiện tại hoàn lại khi bị ĐẬP VỠ (Gourdward — Sunlit Rind). Lưu SỐ chứ
    * không lưu id người phát: lớp chắn phải tự trả được tiền kể cả khi người phát nó đã chết,
    * cùng lý do `shieldBarbed` nằm trên lớp chứ không tra ngược về ai đứng gần.
@@ -1198,6 +1210,17 @@ export type FusionEffectType =
      * thì phải đứng dính chùm, đúng thứ mà AoE, tia lan điện và Blast Chard trừng phạt.
      */
     | 'CONVOY_AURA'
+    /**
+     * Overdrive Rotor — sau khi TẤN CÔNG, hero này được đi nốt **số ô chưa tiêu** của lượt.
+     *
+     * Cố ý KHÔNG cộng thêm ô nào: đi 2 trong 4 rồi bắn thì còn 2 để bay tiếp; đi hết 4 rồi bắn
+     * thì hết. Nó không bán TỐC ĐỘ, nó bán quyền **tiêu số ô đó SAU cú bắn** — tức bỏ luật
+     * "đánh xong là khoá", và tự cân bằng: muốn bay xa sau khi bắn thì phải bay ít trước khi bắn.
+     *
+     * Đây là mảnh giữa của bộ hit & run ba mảnh cùng Downwash và Barbed Skids — bộ chỉ tồn tại
+     * được từ khi `FUSION_SLOTS` lên 3.
+     */
+    | 'ATTACK_THEN_MOVE'
     /**
      * Shields this hero hands out spill over to whoever stands beside the recipient.
      * Replaces SHIELD_BONUS ("+2 size"), which stopped meaning anything when shields became

@@ -713,7 +713,13 @@ export const getValidMoves = (
     // Sunchaser: cùng phép cộng với BLESSED, không phải đường thứ hai. Hai buff CỘNG DỒN được
     // — được ban phước rồi lại đi trong đoàn thì đi nhanh gấp đôi, và cả hai đều tan sau lượt.
     const convoyBonus = unit.statusEffects?.includes('CONVOYED') ? 1 : 0;
-    const baseRange = (unit.moveRange || 2) + blessedBonus + convoyBonus;
+    /**
+     * Ô ĐÃ TIÊU trong lượt (Overdrive Rotor). Với mọi unit khác con số này luôn 0 khi hàm được
+     * gọi — `hasMoved` đã khoá lượt đi thứ hai từ lâu — nên trừ nó ở đây không đổi gì cả, trừ
+     * đúng trường hợp ô đó mở lại pha di chuyển sau cú bắn.
+     */
+    const spent = unit.tilesMoved ?? 0;
+    const baseRange = Math.max(0, (unit.moveRange || 2) + blessedBonus + convoyBonus - spent);
     const moveRange = slowed ? Math.max(1, Math.floor(baseRange / 2)) : baseRange;
 
     while (queue.length > 0) {

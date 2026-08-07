@@ -413,8 +413,8 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_REEDWING: {
             name: 'Overdrive Rotor',
-            description: '+1 move — move 5, flying. Herself, turned up.',
-            effect: { type: 'MOVE_BONUS', value: 1 },
+            description: 'Firing no longer ends her turn: whatever movement she had left, she can still spend it after the shot. Fly in, fire, fly out.',
+            effect: { type: 'ATTACK_THEN_MOVE' },
             live: true,
         },
         MAT_THORNSHELL: {

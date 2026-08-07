@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { BattleHeroStats, GameState, HeroId, Unit, TileData, DamageEvent, Position, TurnAction, Projectile, UnitClass, VisualEffect } from '../types';
 import { INITIAL_GAME_STATE, INITIAL_BOARD, ANIMATION_CONFIG } from '../constants';
 import { sfx, SfxName } from '../utils/audio';
+import { hasFusionEffect } from '../utils/fusion';
 
 /** Fast-forward multiplier used by the HUD toggle. 1 = authored pacing. */
 export const FAST_SPEED = 4;
@@ -235,6 +236,7 @@ export const useGameEngine = () => {
                       // Solar Rotor đếm kết liễu THEO LƯỢT. Quên dòng này thì "mỗi lượt một
                       // lần" âm thầm thành "mỗi trận một lần" — cùng cái bẫy `lastStandUsed`.
                       killsThisTurn: 0,
+                      tilesMoved: 0,
                       isAttacking: false,
                       visualOffset: undefined,
                       prevPosition: undefined, // Reset undo history at start of turn
@@ -315,8 +317,27 @@ export const useGameEngine = () => {
                   const attacker = unitsRef.current.find(u => u.id === action.unitId);
 
                   if (attacker) {
-                      // Mark attacked, prevents Undo
-                      setUnits(prev => prev.map(u => u.id === action.unitId ? { ...u, hasAttacked: true, hasMoved: true } : u));
+                      /**
+                       * OVERDRIVE ROTOR (ATTACK_THEN_MOVE) — đánh xong CHƯA khoá chân.
+                       *
+                       * Bình thường một cú đánh đóng luôn cả lượt (`hasMoved: true` ở đây chính
+                       * là cái khoá đó). Với ô này, nếu hero còn ô chưa tiêu thì `hasMoved` giữ
+                       * false để pha di chuyển mở lại — `getValidMoves` tự trừ `tilesMoved` nên
+                       * lần đi thứ hai chỉ được đúng phần còn dư.
+                       *
+                       * `hasAttacked` vẫn bật, và đó là chỗ quan trọng: nút Hoàn Tác đọc
+                       * `hasMoved && !hasAttacked` (ActionPanel), nên nước đi sau cú bắn KHÔNG
+                       * hoàn tác được. Đúng luật đã áp cho cast skill — thứ gì đã phân giải lên
+                       * bàn cờ thì không rút lại.
+                       */
+                      const budget = (attacker.moveRange || 2)
+                          + (attacker.statusEffects?.includes('BLESSED') ? 1 : 0)
+                          + (attacker.statusEffects?.includes('CONVOYED') ? 1 : 0);
+                      const canFlyOn = hasFusionEffect(attacker, 'ATTACK_THEN_MOVE')
+                          && (attacker.tilesMoved ?? 0) < budget;
+                      setUnits(prev => prev.map(u => u.id === action.unitId
+                          ? { ...u, hasAttacked: true, hasMoved: canFlyOn ? u.hasMoved : true }
+                          : u));
 
                       if (action.targetPos) {
                           // Driven by the skill's range, not a hardcoded class list — adding a new
@@ -636,7 +657,11 @@ export const useGameEngine = () => {
 
                       // Finalize state
                       if (!action.isForced) {
-                          setUnits(prev => prev.map(u => u.id === action.unitId ? { ...u, hasMoved: true } : u));
+                          // `tilesMoved` cộng dồn thay vì gán: Overdrive Rotor cho đi LẦN THỨ HAI
+                          // trong cùng một lượt, và ngân sách của lần hai phải trừ cả lần một.
+                          setUnits(prev => prev.map(u => u.id === action.unitId
+                              ? { ...u, hasMoved: true, tilesMoved: (u.tilesMoved ?? 0) + action.path.length }
+                              : u));
                       }
                   }
                   break;
