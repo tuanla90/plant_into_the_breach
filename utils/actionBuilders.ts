@@ -1,5 +1,5 @@
 import { ElementId, Position, TerrainDefinition, TileData, TurnAction, Unit, UnitType } from '../types';
-import { calculateDamage, planPush } from './gameLogic';
+import { calculateDamage, planPush, shieldUpdatesFor } from './gameLogic';
 import { getFusionEffectValue, hasFusionEffect } from './fusion';
 
 /**
@@ -55,6 +55,63 @@ export const pushKill = (actions: TurnAction[], victim: Unit, killer?: Unit | nu
  * Turns a PushPlan into actions. Kept beside pushKill so collision damage, drowning and
  * Sol-on-kill all funnel through the same place no matter which shove produced them.
  */
+/**
+ * MỘT CỬA DUY NHẤT CHO SÁT THƯƠNG VA CHẠM.
+ *
+ * Trước đây luật này được gõ tay ở ba chỗ (`applyPushPlan` dưới đây, đường hazard trong
+ * `turnManager`, và bộ mô phỏng `scriptedReplay`) và chúng ĐÃ trôi khỏi nhau — đúng thứ mà chú
+ * thích trong `scriptedReplay` tự cảnh báo: *"MUST stay in step with it — the armour change
+ * proved the drift is real, not theoretical."* Ba chỗ lệch tìm được lúc gộp:
+ *
+ *  1. `turnManager` KHÔNG truyền `ignoresArmor` → va chạm trong lượt địch bị giáp mũ nuốt, còn
+ *     va chạm trong lượt người chơi thì không. Cùng một luật, hai kết quả.
+ *  2. `applyPushPlan` KHÔNG ghi lại `shield` → lớp chắn ăn cú va chạm mà không vỡ, nên một thân
+ *     có layer chặn được vô hạn cú slam. Trái thẳng mô hình §6.0 ("một lớp chặn trọn một nguồn
+ *     rồi vỡ").
+ *  3. `turnManager` bỏ luôn `lastStandSpent` → lời hứa MỘT-LẦN-MỖI-TRẬN âm thầm reset.
+ *
+ * Trả về `DamageResult` thay vì tự kết liễu, vì mỗi nơi gọi có sổ tử riêng (`pushKill` ở đây,
+ * `killUnit` trong turnManager). Trả `null` khi thân đã chết hoặc được miễn.
+ */
+export const applyCollisionDamage = (
+    unit: Unit,
+    amount: number,
+    actions: TurnAction[],
+): ReturnType<typeof calculateDamage> | null => {
+    if (unit.hp <= 0) return null;
+
+    // Iron Bulwark và họ hàng: thân đã chống thì cú slam không làm gì. Vẫn phát BLOCK để người
+    // chơi thấy nó đã chặn, chứ không phải đòn bị nuốt mất.
+    if (hasFusionEffect(unit, 'STEADFAST')) {
+        actions.push({ type: 'APPLY_DAMAGE', targetId: unit.id, amount: 0, eventType: 'BLOCK', pos: unit.position });
+        return null;
+    }
+
+    // Đối số thứ 4: một cú slam BỎ QUA giáp mũ. Cái xô giữ được viên đậu, không giữ được bức
+    // tường đang lao tới. Đây cũng là thứ giữ hai hero đẩy còn việc làm trước một hàng giáp —
+    // thiếu nó, giáp âm thầm xoá đúng điểm va chạm vốn là sát thương DUY NHẤT của Chardslam.
+    const r = calculateDamage(unit, amount, false, true);
+
+    if (r.shieldDamage > 0) {
+        actions.push({ type: 'APPLY_DAMAGE', targetId: unit.id, amount: 0, eventType: 'BLOCK', pos: unit.position });
+        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: unit.id, updates: shieldUpdatesFor(r) });
+    } else {
+        actions.push({ type: 'APPLY_DAMAGE', targetId: unit.id, amount: r.finalDamage, eventType: 'DAMAGE', pos: unit.position });
+    }
+    if (r.bleedConsumed) {
+        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: unit.id, updates: { statusEffects: [...unit.statusEffects] } });
+    }
+    // Đường này không ghi action lớp chắn khi CHỈ có last stand nổ, nên cờ một-lần-mỗi-trận
+    // phải có action riêng của nó.
+    if (r.lastStandSpent && r.shieldDamage <= 0) {
+        actions.push({ type: 'UPDATE_UNIT_STATE', unitId: unit.id, updates: { lastStandUsed: true } });
+    }
+
+    unit.hp = r.remainingHp;
+    unit.shield = r.remainingShield;
+    return r;
+};
+
 export const applyPushPlan = (
     plan: ReturnType<typeof planPush>,
     actions: TurnAction[],
@@ -137,24 +194,8 @@ export const applyPushPlan = (
 
     plan.collided.forEach(id => {
         const u = sim.get(id);
-        if (!u || u.hp <= 0) return;
-        // Iron Bulwark: braced units are never hurt by being slammed into things.
-        if (hasFusionEffect(u, 'STEADFAST')) {
-            actions.push({ type: 'APPLY_DAMAGE', targetId: id, amount: 0, eventType: 'BLOCK', pos: u.position });
-            return;
-        }
-        // A slam IGNORES helmet armour (4th arg): the bucket keeps a pea out, not a wall
-        // arriving at speed. This is also what keeps the two shove heroes employed against
-        // an armoured lane — without it, armour silently deleted the collision point that is
-        // Chardslam's only damage and half of Ironhusk's bash.
-        const r = calculateDamage(u, 1, false, true);
-        actions.push({ type: 'APPLY_DAMAGE', targetId: id, amount: r.finalDamage, eventType: 'DAMAGE', pos: u.position });
-        u.hp = r.remainingHp;
-        // A slam is a damage instance like any other, so the last stand can eat one — and this
-        // path writes no shield action, so the ONCE-PER-BATTLE flag needs its own.
-        if (r.lastStandSpent) {
-            actions.push({ type: 'UPDATE_UNIT_STATE', unitId: id, updates: { lastStandUsed: true } });
-        }
-        if (r.isFatal) pushKill(actions, u, killer ?? undefined);
+        if (!u) return;
+        const r = applyCollisionDamage(u, 1, actions);
+        if (r?.isFatal) pushKill(actions, u, killer ?? undefined);
     });
 };

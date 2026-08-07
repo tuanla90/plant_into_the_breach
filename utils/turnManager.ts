@@ -1,7 +1,7 @@
 
 import { Unit, TileData, GameState, UnitClass, UnitType, UnitDefinition, Position, TerrainDefinition, TurnAction, Intent, StatusEffectType, AreaHit, TerrainType } from '../types';
 import { getTileAt, getUnitAt, findPath, calculateDamage, canStopOn, canCrossBodies, planPush, canRideTo, shieldUpdatesFor, survivesWater } from './gameLogic';
-import { applyPushPlan } from './actionBuilders';
+import { applyPushPlan, applyCollisionDamage } from './actionBuilders';
 import { planEnemyIntent } from './aiLogic';
 import { tutorialBattle } from '../data/tutorial';
 import { getFusionEffectValue, hasFusionEffect } from './fusion';
@@ -388,17 +388,14 @@ export const processTurn = (
                     actions.push({ type: 'BRAIN_LOST', pos: Greenspire, unitId });
                     t.hp = 0;
                 });
+                // Cùng cửa với mọi va chạm khác (`applyCollisionDamage`, utils/actionBuilders).
+                // Bản gõ tay ở đây từng thiếu ba thứ: cờ bỏ-qua-giáp-mũ, ghi lại lớp chắn, và
+                // cờ last-stand — nên va chạm trong lượt địch cư xử khác lượt người chơi.
                 plan.collided.forEach(id => {
                     const t = simUnits.find(s2 => s2.id === id);
-                    if (!t || t.hp <= 0) return;
-                    if (hasFusionEffect(t, 'STEADFAST')) {
-                        actions.push({ type: 'APPLY_DAMAGE', targetId: id, amount: 0, eventType: 'BLOCK', pos: t.position });
-                        return;
-                    }
-                    const r = calculateDamage(t, 1, false);
-                    actions.push({ type: 'APPLY_DAMAGE', targetId: id, amount: r.finalDamage, eventType: 'DAMAGE', pos: t.position });
-                    t.hp = r.remainingHp;
-                    if (r.isFatal) killUnit(t);
+                    if (!t) return;
+                    const r = applyCollisionDamage(t, 1, actions);
+                    if (r?.isFatal) killUnit(t);
                 });
             });
         }
