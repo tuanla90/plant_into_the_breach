@@ -294,7 +294,7 @@ export const VI: Record<string, string> = {
     "Fires a pea down the row. Free.": "Bắn một viên đậu dọc theo hàng. Miễn phí.",
     "Precision Blast": "Bắn Chuẩn Xác",
     "A focused shot that pierces everything in the row.": "Phát bắn tập trung xuyên thủng mọi thứ trên hàng.",
-    "Shield Bash": "Đập Khiên",
+    "Shield Bash": "Nện Giáp",
     "Strikes an adjacent enemy and shoves it back. Free.": "Đánh kẻ địch kề bên và đẩy lùi nó. Miễn phí.",
     "Harden": "Cứng Hóa",
     "Brace for impact. Gain 4 Armor.": "Gồng mình chịu đòn. Nhận 4 Giáp.",

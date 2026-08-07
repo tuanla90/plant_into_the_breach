@@ -1719,7 +1719,7 @@ const App: React.FC = () => {
   const isInRun = !['START_MENU', 'STAGE_SELECT', 'SQUAD_SELECT', 'TUTORIAL'].includes(gameState.screen);
 
   return (
-    <div className="w-full h-[100dvh] bg-[#111] flex flex-col overflow-hidden select-none">
+    <div className="fixed inset-0 w-full h-full bg-[#111] flex flex-col overflow-hidden select-none">
 
       {/* OrientationOverlay đã nghỉ hưu: màn dọc giờ có layout riêng (bàn cờ trên,
           panel hành động dưới) thay vì một tấm chắn bắt người chơi xoay máy. */}

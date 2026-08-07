@@ -694,7 +694,8 @@ export const getValidMoves = (
     const queue: { x: number, y: number, dist: number }[] = [{ x: unit.position.x, y: unit.position.y, dist: 0 }];
     const visited = new Set<string>();
     visited.add(`${unit.position.x},${unit.position.y}`);
-    const baseRange = unit.moveRange || 2;
+    const blessedBonus = unit.statusEffects?.includes('BLESSED') ? 1 : 0;
+    const baseRange = (unit.moveRange || 2) + blessedBonus;
     const moveRange = slowed ? Math.max(1, Math.floor(baseRange / 2)) : baseRange;
 
     while (queue.length > 0) {

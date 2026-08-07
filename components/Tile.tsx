@@ -201,7 +201,7 @@ const TileBase: React.FC<TileProps> = ({
           </div>
       )}
       {data.environment === 'SMOKE' && (
-          <div className="absolute inset-[-4px] bg-gray-600/50 backdrop-blur-[1px] flex items-center justify-center z-20 pointer-events-none">
+          <div className="absolute inset-[-4px] bg-gray-600/50 flex items-center justify-center z-20 pointer-events-none">
               <CloudFog size={28} className="text-gray-300 opacity-90 animate-pulse drop-shadow-lg" />
           </div>
       )}

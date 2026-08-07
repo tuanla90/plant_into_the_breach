@@ -93,9 +93,8 @@ export const FUSION_RECIPES: Matrix = {
     SUNBLOOM: {
         MAT_SUNFLOWER: {
             name: 'Twin Sol Battery',
-            description: 'Harvest yields two suns instead of one — 25 more per turn.',
-            // Stacks with her free Harvest for 50/turn total, but she still spends the action.
-            effect: { type: 'SUN_PER_TURN', value: 25 },
+            description: 'Harvest yields double Sol per turn — 50 Sol base, or 30 Sol if combined with Dawn Harvest.',
+            effect: { type: 'SUN_PER_TURN', value: 50 },
             live: true,
         },
         MAT_PEASHOOTER: {
@@ -105,70 +104,45 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_CHOMPER: {
-            // The jaws face the BLESSING, not the enemy — she has nothing to bite with. Her
-            // one output is what the blessed body does next, so the gear raises that number.
             name: 'Fanged Blessing',
             description: 'Solar Blessing is worth +2 damage this turn instead of +1.',
             effect: { type: 'BLESS_POWER', value: 1 },
             live: true,
         },
         MAT_WALLNUT: {
-            // The wall-nut column reads MELEE -> reduction, RANGED -> max HP. She is neither:
-            // she has no attack at all. Reduction wins because the escort problem is being
-            // reached repeatedly by chip damage, and because BONUS_HP is already her Bunker Shell.
             name: 'Armored Bloom',
-            description: 'Takes 1 less damage from every hit.',
-            effect: { type: 'DAMAGE_REDUCTION', value: 1 },
+            description: 'Starts the battle shielded in a layer — surviving the first turn guaranteed.',
+            effect: { type: 'START_SHIELDED' },
             live: true,
         },
         MAT_CORN_MORTAR: {
-            // Was Mortar Bloom (+2 reach) — reach on a single-target buff only moves WHO gets
-            // it. The throwing arm now scatters the blessing over the whole pocket instead.
             name: 'Solar Corona',
             description: 'Solar Blessing washes over every ally within 2 tiles, not just one.',
             effect: { type: 'SKILL_AURA' },
             live: true,
         },
         MAT_CATTAIL: {
-            // Was Ashveil (SKILL_DISARM). The rotors' other half fits her better: the escort
-            // problem is half a footwork problem, and move 2 is the slowest body in the game.
             name: 'Sunchaser',
             description: '+1 move — the battery keeps up with the squad it is powering.',
             effect: { type: 'MOVE_BONUS', value: 1 },
             live: true,
         },
         MAT_ENDURIAN: {
-            // 1, not 2: the durian column pays ONE back on every hero but the durian himself
-            // (see the RETALIATION RULE below).
             name: 'Thorned Bloom',
-            description: 'Anything that hits her in melee is impaled for 1.',
-            effect: { type: 'RETALIATE_DAMAGE', value: 1 },
+            description: 'Solar Blessing grants retaliate 1 damage to the blessed ally.',
+            effect: { type: 'BLESS_RETALIATE' },
             live: true,
         },
         MAT_SPRING_ARM: {
-            // Was Guarded Bloom (RETALIATE_PUSH) — an exception cell, and one that only ever
-            // paid out AFTER she had already been reached. The stem's leverage moves onto the
-            // thing she actually does: the blessing lands and the ground beside it clears.
-            //
-            // Everything in the ring moves — enemy, ally, and the blesser herself when she is
-            // standing next to the body she just blessed. That last part is the point rather
-            // than a side effect: a chain-lightning arc hops between ADJACENT bodies, so a
-            // squad that spends 50 Sol to bless is a squad that stops standing in a line.
             name: 'Kinetic Bloom',
             description: 'The blessing lands like a shockwave: everything beside the blessed ally is shoved a tile away, her included.',
             effect: { type: 'BLESS_SHOCKWAVE' },
             live: true,
         },
         MAT_PUMPKIN: {
-            // Was +3 max HP, which is a number rather than an answer — it bought her two more
-            // zombie bites, not a way through them. A LAYER is the pumpkin column's own axis
-            // and it is worth far more on the one hero who cannot fight back: the first blow
-            // that reaches her costs the horde a turn instead of costing her the escort.
-            // NOT "Bunker Shell": that is the GEAR's own name now (data/materials.ts), and a
-            // recipe that shares its material's name reads as "no result" in the shop line.
-            name: 'Dawn Shell',
-            description: 'She walks onto the board already shelled in a layer — the first hit of every battle is blocked in full.',
-            effect: { type: 'START_SHIELDED' },
+            name: 'Dawn Harvest',
+            description: 'Harvest yields 15 Sol per turn (-10 Sol penalty) but grants Sunbloom a passive 1-layer shield.',
+            effect: { type: 'HARVEST_SHIELD', value: 15 },
             live: true,
         },
     },
@@ -177,79 +151,56 @@ export const FUSION_RECIPES: Matrix = {
     PEABURST: {
         MAT_SUNFLOWER: {
             name: 'Sunbeam Pea',
-            description: 'Harvests 15 Sol whenever a shot finishes a zombie off.',
-            // Deliberately on the kill, not the hit: shooting alone must never pay.
-            effect: { type: 'SUN_ON_KILL', value: 15 },
+            description: 'Harvests 10 Sol whenever a shot finishes a zombie off.',
+            effect: { type: 'SUN_ON_KILL', value: 10 },
             live: true,
         },
         MAT_PEASHOOTER: {
             name: 'Repeater',
             description: 'A second pea for 1 damage. If the first kills, it flies on to the next target.',
-            // 2+1, and the second pea NEVER fizzles. The old failure mode: whenever the
-            // first pea killed, the second resolved against a corpse and vanished — the
-            // same click read 3 into a tank and 2 into a kill, which players filed as a
-            // bug. A brief "both peas hit for 2" experiment fixed the optics but doubled
-            // her free damage forever; the real fix keeps the 1 and re-aims instead — an
-            // overkill second shot rolls over to the next body in the lane
-            // (skillResolution's DOUBLE_ATTACK pass). Every shot now reads 2+1, always.
             effect: { type: 'DOUBLE_ATTACK', value: 1 },
             live: true,
         },
         MAT_CHOMPER: {
-            // Was Vampire Pea (SHIELD_ON_KILL) — under the layer model that duplicated her
-            // own Gourd Sniper cell, so the jaws take their true axis here instead.
             name: 'Serrated Pea',
             description: 'Her shots leave the target bleeding: the next hit against it lands +1.',
             effect: { type: 'BLEED_ON_HIT' },
             live: true,
         },
         MAT_WALLNUT: {
-            // Was ON_HIT_PUSH. The wall-nut column now reads by RANGE: a melee hero buys
-            // reduction (it is charged on every one of the many hits they take), a shooter
-            // buys the buffer that keeps one bad turn from ending them.
             name: 'Armored Pea',
-            description: '+3 max HP — 9 instead of 6, so one zombie reaching her is not the end of it.',
-            effect: { type: 'BONUS_HP', value: 3 },
+            description: '+2 max HP — 8 instead of 6, providing a safe backline health buffer.',
+            effect: { type: 'BONUS_HP', value: 2 },
             live: true,
         },
         MAT_CORN_MORTAR: {
             name: 'Mortar Pea',
-            // 4, not 5: the arc formula is ceil(range/2) off her LINE 8, and the card must
-            // print what the engine computes rather than a rounder-sounding number.
             description: 'Her shot arcs over anything in the way — with a range of 4 tiles.',
             effect: { type: 'ARC_ATTACK' },
             live: true,
         },
         MAT_CATTAIL: {
-            // Dust settles where the BODY ends up, not along the flight path (skillResolution's
-            // one dust rule). For a lane shot that is the tile the first pea found — a scalpel,
-            // not a wall, so her own squad's lines stay open behind it.
             name: 'Smokeline',
             description: 'Precision Blast leaves the tile it struck hanging with dust — nothing standing in it can swing.',
             effect: { type: 'SKILL_DISARM' },
             live: true,
         },
         MAT_ENDURIAN: {
-            // The durian's OTHER half: not thorns, the SHOUT. A shooter who can choose which
-            // zombie stops walking to a Greenspire is worth more than one who shoves it a tile.
             name: 'Barbed Pea',
             description: 'Anything her shots hurt turns on her — it must come for her next turn.',
             effect: { type: 'TAUNT_ON_HIT' },
             live: true,
         },
         MAT_SPRING_ARM: {
-            // The stem's leverage read as SUPPORT FIRE: she does not shove, she punishes
-            // everyone else's shoves. The one cell in the matrix that fires on somebody
-            // ELSE's action, which is why it wants a squad built around Chardslam/Ironhusk.
             name: 'Overwatch Pea',
             description: 'Any enemy the squad shoves into her clear line eats a pea for 1 — her own turn is untouched.',
             effect: { type: 'OVERWATCH_SHOT' },
             live: true,
         },
         MAT_PUMPKIN: {
-            name: 'Warded Pea',
-            description: 'Every zombie she finishes off shells her in a layer — the next hit is blocked in full.',
-            effect: { type: 'SHIELD_ON_KILL', value: 1 },
+            name: 'Precision Shield',
+            description: 'Finishing a zombie off with Precision Blast shells her in a layer — high risk positioning rewarded with protection.',
+            effect: { type: 'SHIELD_ON_SKILL_KILL', value: 1 },
             live: true,
         },
     },
@@ -257,19 +208,12 @@ export const FUSION_RECIPES: Matrix = {
     // --- SNAPMAW: helpless for 2 turns after eating. Every fusion attacks that window. ---
     SNAPMAW: {
         MAT_SUNFLOWER: {
-            // The card always said "while she chews"; the engine paid every turn regardless,
-            // which made it the flat income cell instead of the window cell. Now it is the
-            // sentence it was written as: the drawback is what pays.
             name: 'Sunlit Gut',
-            description: 'Digesting is productive: 25 Sol a turn, but only while she chews.',
-            effect: { type: 'SUN_WHILE_DIGESTING', value: 25 },
+            description: 'Digesting is productive: yields 10 Sol per turn while chewing (20 Sol total over 2 turns).',
+            effect: { type: 'SUN_WHILE_DIGESTING', value: 10 },
             live: true,
         },
         MAT_PEASHOOTER: {
-            // Was Spitter — a granted LINE shot the card promised she could use while
-            // digesting, which the targeting gate refused outright (a hero mid-digest has no
-            // legal target for anything). A CLAW is the honest version of the same promise:
-            // one small action allowed through the window, and nothing outside it.
             name: 'Rending Claws',
             description: 'While digesting she can still claw an adjacent enemy for 1. Free.',
             effect: { type: 'DIGEST_CLAW' },
@@ -284,53 +228,37 @@ export const FUSION_RECIPES: Matrix = {
         MAT_WALLNUT: {
             name: 'Armored Jaws',
             description: 'Takes 1 less damage from every hit while she is digesting.',
-            // The layer version duplicated her own Gourd Gut cell, so the shell went back to
-            // being a THICKER HIDE — the wall-nut column's melee reading, fenced inside the
-            // window it exists to guard. Every blow of the digest is softened, not just one.
             effect: { type: 'ARMOR_WHILE_DIGESTING', value: 1 },
             live: true,
         },
         MAT_CORN_MORTAR: {
-            // Was Numbed Hide (retaliation while digesting). The stun now rides the BITE,
-            // which is the corn's real axis — and the STUN RULE's one written exception: it
-            // fires only against a body at FULL health, so it lands once per zombie ever and
-            // she has to walk into contact to spend it.
             name: 'Stun Fang',
             description: 'Her bite concusses any enemy still at full health: it loses its whole next turn.',
             effect: { type: 'STUN_ON_FULL_HP' },
             live: true,
         },
         MAT_CATTAIL: {
-            // Was +1 move, and it was the one cell in this row that ignored the row's own rule:
-            // every Snapmaw fusion is supposed to attack the DIGEST WINDOW, and legs do nothing
-            // for the two turns she cannot act. The dust does exactly that job — she bites, the
-            // thing she bit is blinded, and the helpless window opens with one fewer swing
-            // pointed at her.
-            name: 'Prowl Veil',
-            description: 'Whatever her bite hurts is left standing in dust — it cannot swing next turn unless it walks out.',
-            effect: { type: 'SMOKE_ON_HIT' },
+            name: 'Prowl Rotor',
+            description: 'While digesting she can still move 1 tile per turn — maintaining battlefield mobility.',
+            effect: { type: 'DIGEST_MOVE', value: 1 },
             live: true,
         },
         MAT_ENDURIAN: {
             name: 'Bristleback',
-            description: 'Anything that bites her takes 1 back — including through both digesting turns.',
-            effect: { type: 'RETALIATE_DAMAGE', value: 1 },
+            description: 'Reflects full retaliate damage back while digesting.',
+            effect: { type: 'DIGEST_RETALIATE' },
             live: true,
         },
         MAT_SPRING_ARM: {
-            // Was RETALIATE_PUSH, which paid her for being bitten — the wrong half of a hero
-            // whose problem is the two turns she cannot act. On the BITE it is a tool she
-            // spends herself: chew, then throw the next one out of reach before the window
-            // opens, or slam it into the body behind it.
-            name: 'Sprung Gullet',
-            description: 'Her bite hurls what it chews a tile back — into water, into rock, or just out of reach.',
-            effect: { type: 'ON_HIT_PUSH', value: 1 },
+            name: 'Anchored Gullet',
+            description: 'Immune to collision damage and push/knockback effects while digesting.',
+            effect: { type: 'DIGEST_STEADFAST' },
             live: true,
         },
         MAT_PUMPKIN: {
             name: 'Warded Gut',
-            description: 'Every kill shells her in a layer — the next hit is blocked in full.',
-            effect: { type: 'SHIELD_ON_KILL', value: 1 },
+            description: 'Swallowing a zombie shells her in a layer at the start of digestion — guarding her helpless 2-turn window.',
+            effect: { type: 'SHIELD_ON_DIGEST', value: 1 },
             live: true,
         },
     },
@@ -339,20 +267,17 @@ export const FUSION_RECIPES: Matrix = {
     IRONHUSK: {
         MAT_SUNFLOWER: {
             name: 'Sunstone Shield',
-            description: 'Plugging a spawn hole pays 35 Sol — she is rewarded for standing on it.',
-            effect: { type: 'SUN_ON_BLOCK_SPAWN', value: 35 },
+            description: 'Plugging a spawn hole pays 20 Sol — she is rewarded for standing on it.',
+            effect: { type: 'SUN_ON_BLOCK_SPAWN', value: 20 },
             live: true,
         },
         MAT_PEASHOOTER: {
-            name: 'Spear Bash',
-            description: 'Shield Bash reaches 1 tile further while keeping its push.',
+            name: 'Lance Bash',
+            description: 'Plate Slam reaches 1 tile further with extended lance range while keeping its push.',
             effect: { type: 'ATTACK_RANGE_BONUS', value: 1 },
             live: true,
         },
         MAT_CHOMPER: {
-            // Was BLEED_ON_HIT — a mark for somebody else to cash, on the hero whose problem
-            // is that her own 1 damage never gets there. The jaws' other half is the one she
-            // needs: the bash bites, and Rolling Charge with it.
             name: 'Fanged Bash',
             description: '+1 damage on everything she swings — the bash finally bites.',
             effect: { type: 'BONUS_DAMAGE', value: 1 },
@@ -365,25 +290,20 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_CORN_MORTAR: {
-            // Was Cob Turret (a granted gun), which answered a hero who is idle — she is not,
-            // she is holding a corridor. The stun is the corn's real axis and it goes on
-            // the PAID skill, where one pin per cast is bought rather than free.
             name: 'Stun Charge',
             description: 'Rolling Charge concusses what it slams: the target loses its whole next turn.',
             effect: { type: 'SKILL_STUN' },
             live: true,
         },
         MAT_CATTAIL: {
-            name: 'Quick Bulwark',
-            description: '+1 move — arriving at the corridor in time is the whole job.',
-            effect: { type: 'MOVE_BONUS', value: 1 },
+            name: 'Overdrive Charge',
+            description: 'Rolling Charge travels 4 tiles instead of 3, allowing long-distance engagements.',
+            effect: { type: 'DASH_DISTANCE', value: 1 },
             live: true,
         },
         MAT_ENDURIAN: {
-            // Was ADJACENT_STRIKE. The durian column's own axis fits the wall best of anyone:
-            // she is the hero who gets hit the most, so being hit is where her output belongs.
             name: 'Spiked Bulwark',
-            description: 'Anything that hits her in melee is impaled for 1 — blocking finally pays.',
+            description: 'Plate Slam deals +1 extra damage and reflects +1 retaliate damage when struck in melee.',
             effect: { type: 'RETALIATE_DAMAGE', value: 1 },
             live: true,
         },
@@ -394,11 +314,6 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_PUMPKIN: {
-            // Was DAMAGE_REDUCTION, which said the same sentence as Iron Bulwark one column
-            // over — a dead pick. And `SHIELD_ON_KILL` was the obvious replacement and the
-            // wrong one: on a body this hard to remove it would be up again every other turn,
-            // which is armour wearing a shield's name. A LAST STAND fires once, when it
-            // decides the fight, and is worth nothing the rest of the time.
             name: 'Bunker Plating',
             description: 'Once a battle, the blow that would finish her raises a layer instead — and the layer eats it whole.',
             effect: { type: 'LAST_STAND_SHIELD' },
@@ -406,9 +321,7 @@ export const FUSION_RECIPES: Matrix = {
         },
     },
 
-    // --- COLD SNAP: delays everything, kills almost nothing. Fusions cash that control in. ---
-    // --- COBB: the arc is free, everything else about her is short. Her fusions buy back
-    //     the reach, the tempo and the durability that the trajectory cost her. ---
+    // --- COBB: the arc is free, everything else about her is short. ---
     CORNOVA: {
         MAT_SUNFLOWER: {
             name: 'Sunlit Cob',
@@ -430,7 +343,7 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_WALLNUT: {
             name: 'Armored Cob',
-            description: '+3 max HP — artillery that has to stand this close needs to survive being reached.',
+            description: '+3 max HP — 11 instead of 8, allowing mid-range artillery to sustain side flank attacks.',
             effect: { type: 'BONUS_HP', value: 3 },
             live: true,
         },
@@ -441,48 +354,32 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_CATTAIL: {
-            // Was +1 move. The rotors' item B belongs to the RANGED heroes, and the reason is
-            // who the payoff is worth something to: "the body I hit cannot swing" is nearly
-            // worthless to a melee hero (they were going to be hit anyway, and Thornshell
-            // actively wants it), and decisive for someone shooting from outside arm's reach.
-            // Peaburst already carries the skill version; Reedwing owns the gear and keeps the
-            // legs; Cornova is the third, and she lobs from two tiles with 8 hp.
             name: 'Ash Carriage',
             description: 'Whatever her kernels hurt is left standing in dust — it cannot swing next turn unless it walks out.',
             effect: { type: 'SMOKE_ON_HIT' },
             live: true,
         },
         MAT_ENDURIAN: {
-            // Was +1 damage — a number, on the hero whose problem was never the number. The
-            // durian's SHOUT is the same cell Peaburst has, and it reads the same way on the
-            // artillery: she is the one piece that can reach a zombie three tiles from a
-            // Greenspire, so she is the one who gets to decide it walks at her instead.
             name: 'Barbed Cob',
             description: 'Anything her kernels hurt turns on her — it must come for her next turn.',
             effect: { type: 'TAUNT_ON_HIT' },
             live: true,
         },
         MAT_SPRING_ARM: {
-            // Was RETALIATE_PUSH. The stem's leverage read as SUPPORT FIRE, exactly as it is
-            // on Peaburst — with one difference that falls out for free: the support shot is
-            // fired with the gun she is actually holding, so hers ARCS (no line of sight, 2
-            // tiles) where Peaburst's needs a clear row.
             name: 'Overwatch Cob',
             description: 'Any enemy the squad shoves within reach of her arc eats a kernel for 1 — her own turn is untouched.',
             effect: { type: 'OVERWATCH_SHOT' },
             live: true,
         },
         MAT_PUMPKIN: {
-            name: 'Warded Cob',
-            description: 'Every kernel that finishes a zombie off shells her in a layer — the next hit is blocked in full.',
-            effect: { type: 'SHIELD_ON_KILL', value: 1 },
+            name: 'Reactive Cob Shell',
+            description: 'After taking her first attack hit in battle, she immediately deploys a reactive 1-layer shield.',
+            effect: { type: 'REACTIVE_SHIELD' },
             live: true,
         },
     },
 
-    // --- REEDWING: paper on wings. Both guns only land when the enemy stands where her
-    //     knight's-move cells fall, and she must fly into that pocket to fire — her row buys
-    //     survival, exits, and ways to hold the formation still. ---
+    // --- REEDWING: paper on wings. ---
     REEDWING: {
         MAT_SUNFLOWER: {
             name: 'Solar Rotor',
@@ -497,22 +394,18 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_CHOMPER: {
-            name: 'Grinder Pods',
-            description: 'Her rockets leave both targets bleeding: the next hit against each lands +1.',
-            effect: { type: 'BLEED_ON_HIT' },
+            name: 'Executioner Pods',
+            description: 'Wing guns deal +2 bonus damage (3 damage total) against targets currently suffering from Bleeding.',
+            effect: { type: 'BLEED_EXECUTION', value: 2 },
             live: true,
         },
         MAT_WALLNUT: {
             name: 'Armored Fuselage',
-            description: '+3 max HP — 7 instead of 4, and the wings stop being made of paper.',
-            effect: { type: 'BONUS_HP', value: 3 },
+            description: 'Takes 1 less damage from every hit — armored flight frame replaces paper wings.',
+            effect: { type: 'DAMAGE_REDUCTION', value: 1 },
             live: true,
         },
         MAT_CORN_MORTAR: {
-            // The throwing arm, read as GEOMETRY rather than as reach: her two wing cells sit
-            // exactly two tiles apart, so there is always a hole between them — the corn drops
-            // a third rocket into it. Half her formation puzzle, solved, and only for her:
-            // no other kit in the game has a gap of its own to fill.
             name: 'Cluster Load',
             description: 'A third rocket drops from her belly onto the tile between the two wing shots.',
             effect: { type: 'WING_MIDSHOT' },
@@ -525,10 +418,6 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_ENDURIAN: {
-            // Was RETALIATE_PUSH — a shove bought AFTER something already reached the 4 hp
-            // frame. The shout is the version that never lets it get there: she pulls a body
-            // onto herself and then simply is not there next turn. She is the only unit on the
-            // board that FLIES, so "come at me" costs her nothing and costs the horde a walk.
             name: 'Barbed Skids',
             description: 'Anything her rockets hurt turns on her — and she flies away before it arrives.',
             effect: { type: 'TAUNT_ON_HIT' },
@@ -541,15 +430,14 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_PUMPKIN: {
-            name: 'Pod Plating',
-            description: 'A kill raises a fresh layer over her — insurance bought with her own guns.',
-            effect: { type: 'SHIELD_ON_KILL', value: 1 },
+            name: 'Dawn Pod Plating',
+            description: 'Starts the battle shielded in a layer — aerial unit stays protected on turn one.',
+            effect: { type: 'START_SHIELDED' },
             live: true,
         },
     },
 
-    // --- THORNSHELL: catches nobody on his own, and is deadly the moment the enemy chooses to
-    //     come to him. His fusions make him last longer, hurt more to touch, and call louder. ---
+    // --- THORNSHELL: taunt tank. ---
     THORNSHELL: {
         MAT_SUNFLOWER: {
             name: 'Sunlit Thorn',
@@ -558,34 +446,24 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_PEASHOOTER: {
-            name: 'Twin Thorn',
-            description: 'His swipe lands a second time for 1 damage.',
-            effect: { type: 'DOUBLE_ATTACK', value: 1 },
+            name: 'Piercing Needles',
+            description: 'Thorn Swipe shoots a needle beam piercing up to 2 targets in a row — damage tapers off with distance down to 1.',
+            effect: { type: 'LASER_NEEDLE', value: 2 },
             live: true,
         },
         MAT_CHOMPER: {
-            // Was ADJACENT_STRIKE (a wider swipe), which pays him for ATTACKING — the half of
-            // this hero that is deliberately bad. The jaws go on the RETALIATION instead: he
-            // is the body four zombies are dragged into contact with, and now each of them
-            // leaves the exchange marked for whoever swings next.
             name: 'Rending Husk',
             description: 'Anything that hits him in melee is left bleeding: the next hit against it lands +1.',
             effect: { type: 'RETALIATE_BLEED' },
             live: true,
         },
         MAT_WALLNUT: {
-            // Was +3 max HP. He is the melee body every attack in the fight is aimed at, and
-            // the wall-nut column's melee reading is REDUCTION — charged on every one of the
-            // many small hits Provoke invites, where a one-off buffer is charged once.
-            name: 'Ironthorn',
-            description: 'Takes 1 less damage from every hit — the thickest hide in the game, and everything is aimed at it.',
-            effect: { type: 'DAMAGE_REDUCTION', value: 1 },
+            name: 'Thorn Lunge',
+            description: 'Basic attack transforms into a 1-tile lunge charge towards the target.',
+            effect: { type: 'THORN_LUNGE', value: 1 },
             live: true,
         },
         MAT_CORN_MORTAR: {
-            // Was +1 swipe reach. The throwing arm now carries the SHOUT instead of the swing,
-            // which is the half of him worth extending: at 5 tiles Provoke reaches the
-            // artillery and the fliers that were sitting comfortably outside a 3-tile call.
             name: 'Bellowing Thorn',
             description: 'Provoke reaches 5 tiles instead of 3 — far enough for whatever thought it could outrange him.',
             effect: { type: 'TAUNT_RADIUS', value: 2 },
@@ -593,7 +471,7 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_CATTAIL: {
             name: 'Windburr',
-            description: '+1 move — 2 damage and move 2 catches nobody. Now he chooses where the provoking happens.',
+            description: '+1 move — 3 move speed allows Thornshell to position flexibly for Provoke.',
             effect: { type: 'MOVE_BONUS', value: 1 },
             live: true,
         },
@@ -604,24 +482,20 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_SPRING_ARM: {
-            // The stem's leverage on the one swing he has. A shove out of contact looks like
-            // anti-synergy for a taunt hero and is the opposite: he is standing in a crowd by
-            // design, so almost every knock-back is a body slammed into another body.
             name: 'Sprung Thorn',
             description: 'His swipe knocks the target back a tile — into whatever is standing behind it.',
             effect: { type: 'ON_HIT_PUSH', value: 1 },
             live: true,
         },
         MAT_PUMPKIN: {
-            name: 'Warded Husk',
-            description: 'Every zombie he finishes off with a swipe shells him in a layer — the next hit is blocked in full.',
-            effect: { type: 'SHIELD_ON_KILL', value: 1 },
+            name: 'Warded Provoke',
+            description: 'Casting Provoke grants Thornshell a 1-layer shield to absorb incoming attacks.',
+            effect: { type: 'PROVOKE_SHIELD' },
             live: true,
         },
     },
 
-    // --- CHARDSLAM: 0 damage is the hero. His row buys hazards, distance and slam damage —
-    //     never a damage number, which utils/fusion.ts enforces on its side as well. ---
+    // --- CHARDSLAM: 0 damage is the hero. ---
     CHARDSLAM: {
         MAT_SUNFLOWER: {
             name: 'Sunlit Chard',
@@ -630,45 +504,33 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_PEASHOOTER: {
-            // Card fixed with the kit: Backswing retired when Vault Toss became the free
-            // action (PLAN-hero-zephyr §6.2), and the reach now buys the GRAB — he takes hold
-            // of a body two tiles out and it still lands on the mirrored tile behind him.
             name: 'Longarm Chard',
             description: 'Vault Toss grabs from 2 tiles away — he throws without stepping into contact.',
             effect: { type: 'ATTACK_RANGE_BONUS', value: 1 },
             live: true,
         },
         MAT_CHOMPER: {
-            // Bleed is not a damage number, so it passes the only gate his row enforces —
-            // the hero who finishes nothing himself now marks bodies for whoever does.
             name: 'Rending Chard',
             description: 'His throws leave the target bleeding: the next hit against it lands +1.',
             effect: { type: 'BLEED_ON_HIT' },
             live: true,
         },
         MAT_WALLNUT: {
-            // Melee reading of the wall-nut column: he has to walk into contact to do anything
-            // at all, so he is charged the many small hits reduction is priced against.
             name: 'Armored Chard',
-            description: 'Takes 1 less damage from every hit — he has to walk into contact to do anything at all.',
-            effect: { type: 'DAMAGE_REDUCTION', value: 1 },
+            description: 'Takes 50% less collision damage and plugs spawn holes painlessly — collision specialist.',
+            effect: { type: 'STEADFAST', value: 1 },
             live: true,
         },
         MAT_CORN_MORTAR: {
-            // Card fixed: the swing is a TOSS now, not a push, so PUSH_DISTANCE never touched
-            // it. Sweep is the one shove he owns, and this is the cell that grows it.
             name: 'Catapult Chard',
             description: 'Sweep throws 3 tiles instead of 2 — far enough to find the water from the middle of the board.',
             effect: { type: 'PUSH_DISTANCE', value: 1 },
             live: true,
         },
         MAT_CATTAIL: {
-            // The dust falls where the BODIES LAND, not where they were standing — otherwise
-            // the veil sits on ground the zombie has just left and cancels nothing. Same one
-            // rule as Smokeline: dust settles on the finished position (skillResolution).
-            name: 'Veilsweep',
-            description: 'Everything Sweep throws kicks up dust where it lands — thrown back, and unable to swing.',
-            effect: { type: 'SKILL_DISARM' },
+            name: 'Catapult Rotor',
+            description: 'Every shove, toss, and slam throws all target enemies 1 extra tile further.',
+            effect: { type: 'PUSH_DISTANCE', value: 1 },
             live: true,
         },
         MAT_ENDURIAN: {
@@ -684,10 +546,6 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_PUMPKIN: {
-            // Moved off DAMAGE_REDUCTION when Bulwark Chard took that axis — two identical
-            // cells in one row is a dead pick. The layer is the pumpkin's own axis anyway, and
-            // he DOES finish things: every body he slams into water, rock or another body is a
-            // kill in the ledger (Sunlit Guard is paid on exactly the same event).
             name: 'Warded Chard',
             description: 'Every body he slams to death shells him in a layer — the next hit is blocked in full.',
             effect: { type: 'SHIELD_ON_KILL', value: 1 },
@@ -695,56 +553,33 @@ export const FUSION_RECIPES: Matrix = {
         },
     },
 
-    // --- GOURDWARD: worth exactly what the ally he is covering is worth. His fusions make the
-    //     shell bigger, cheaper and able to reach more people — and give him a floor of his own. ---
+    // --- GOURDWARD: pure shield guard. ---
     GOURDWARD: {
         MAT_SUNFLOWER: {
-            // 10, not the column's 15 — the ONE cell where the discount is priced down, and
-            // the reason is arithmetic rather than theme. Encase is the widest paid effect in
-            // the game and Stun Shell turns it into a mass pin as well, so a full-strength
-            // discount on top made "shield everyone and pin everything" a five-times-a-fight
-            // play (DESIGN-fusion-matrix §9.3). Cornova and Thornshell keep 15: their skills
-            // hit one target.
             name: 'Sunlit Rind',
             description: 'Encase costs 10 less Sol.',
             effect: { type: 'SKILL_DISCOUNT', value: 10 },
             live: true,
         },
         MAT_PEASHOOTER: {
-            // He never wanted a gun — he wanted to reach the person who needs the shell. The
-            // pea makes Reinforce a PELLET: fired down a row like a shot, stopping at the
-            // first body (or Greenspire) it meets, exactly as a pea does. Stacks with Long Arm
-            // Shell below, which is the one deliberate double on this axis in the matrix.
             name: 'Rind Pellet',
             description: 'Reinforce is fired down a row: it shells the first ally — or Greenspire — up to 4 tiles away.',
             effect: { type: 'ATTACK_RANGE_BONUS', value: 3 },
             live: true,
         },
         MAT_CHOMPER: {
-            // Was flat thorns. The jaws go into the SHELL instead, which is the only surface
-            // he actually owns: spiked glass, and whatever breaks a layer he handed out walks
-            // away bleeding. His one way of hurting anything, and it is still not his swing.
             name: 'Glass Rind',
             description: 'His layers are spiked glass: whatever breaks one is left bleeding — the next hit against it lands +1.',
             effect: { type: 'BARBED_SHIELD' },
             live: true,
         },
         MAT_WALLNUT: {
-            // Melee reading of the wall-nut column: he stands in contact to hand out shells,
-            // and the chip damage he eats doing it is exactly what reduction is priced for.
             name: 'Ironrind',
             description: 'Takes 1 less damage from every hit — the shell around the ally only lasts while its carrier does.',
             effect: { type: 'DAMAGE_REDUCTION', value: 1 },
             live: true,
         },
         MAT_CORN_MORTAR: {
-            // Was Long Arm Shell (+1 reach), which sat on the SAME axis as Rind Pellet one
-            // column over and read as the weaker half of a pair. The stun is the corn's real
-            // second item and this is the only kit it fits: Encase already reaches the plus
-            // around him, so the pin costs him what it should — he has to be standing IN the
-            // crowd, at 0 damage, on 8 hp, for a whole turn and 50 Sol.
-            //
-            // The STUN RULE's third priced exception, and the most expensive of the three.
             name: 'Stun Shell',
             description: 'Encase concusses every zombie it reaches: each one loses its whole next turn.',
             effect: { type: 'SKILL_STUN' },
@@ -752,8 +587,8 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_CATTAIL: {
             name: 'Rolling Rind',
-            description: '+1 move — his shell is worth exactly as much as his ability to reach whoever needs it.',
-            effect: { type: 'MOVE_BONUS', value: 1 },
+            description: 'Encase can be cast up to 2 tiles away to protect distant allies.',
+            effect: { type: 'ENCASE_RANGE', value: 1 },
             live: true,
         },
         MAT_ENDURIAN: {
@@ -763,9 +598,6 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_SPRING_ARM: {
-            // Was Braced Shell (STEADFAST), which was reduction wearing a longer sentence and
-            // now collides with Ironrind. The stem turns the shell into a SHOCKWAVE instead:
-            // going up is an event, and everything standing against him is thrown off it.
             name: 'Shockrind',
             description: 'Encase blows every enemy standing beside him a tile back as the shell goes up.',
             effect: { type: 'SKILL_REPEL' },
@@ -773,7 +605,6 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_PUMPKIN: {
             name: 'Greatrind',
-            // SHIELD_BONUS ("+2 size") died with shield sizes (§6.0) — coverage is the axis now.
             description: 'Every shield he hands out spills over, layering whoever stands beside the recipient too.',
             effect: { type: 'SHIELD_SPREAD' },
             live: true,
@@ -785,3 +616,4 @@ export const getRecipe = (heroId: HeroId | undefined, materialId: MaterialId): F
     if (!heroId) return null;
     return FUSION_RECIPES[heroId]?.[materialId] ?? null;
 };
+

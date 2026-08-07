@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ma Trận Fusion 2 Chiều - Blightfall: The Last Garden</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0b0f19;
+            --bg-card: rgba(22, 30, 49, 0.75);
+            --bg-card-hover: rgba(32, 45, 74, 0.9);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --border-glow: rgba(59, 130, 246, 0.4);
+            
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            
+            --accent-green: #10b981;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-amber: #f59e0b;
+            --accent-red: #ef4444;
+            
+            --badge-signature: #f59e0b;
+            --badge-trait-a: #06b6d4;
+            --badge-trait-b: #ec4899;
+            
+            --shadow-glow: 0 0 25px rgba(59, 130, 246, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 1.5rem;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.08) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* HEADER */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo-group h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-group p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.2rem;
+        }
+
+        .stats-pills {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .pill {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            padding: 0.4rem 0.8rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .pill strong {
+            color: #fff;
+        }
+
+        .pill-sig { border-color: rgba(245, 158, 11, 0.4); color: #fbbf24; }
+        .pill-a { border-color: rgba(6, 182, 212, 0.4); color: #22d3ee; }
+        .pill-b { border-color: rgba(236, 72, 153, 0.4); color: #f472b6; }
+
+        /* CONTROL PANEL & FILTERS */
+        .control-panel {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            align-items: end;
+            box-shadow: var(--shadow-glow);
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .filter-group label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        select, input {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0.6rem 0.9rem;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        select:focus, input:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .btn-reset {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-reset:hover {
+            background: rgba(239, 68, 68, 0.3);
+            color: #fff;
+        }
+
+        /* MATRIX TABLE WRAPPER */
+        .matrix-container {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            overflow-x: auto;
+            box-shadow: var(--shadow-glow);
+            margin-bottom: 2rem;
+        }
+
+        table.matrix-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 1100px;
+        }
+
+        /* TABLE HEADERS */
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-right: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
+        }
+
+        th {
+            background: rgba(15, 23, 42, 0.95);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th.col-header {
+            min-width: 140px;
+            vertical-align: bottom;
+        }
+
+        .col-header-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+            text-align: center;
+        }
+
+        .gear-icon {
+            font-size: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .gear-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #fff;
+        }
+
+        .gear-owner {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* ROW HEADER (HERO) */
+        th.row-header {
+            position: sticky;
+            left: 0;
+            z-index: 20;
+            background: rgba(15, 23, 42, 0.98);
+            min-width: 160px;
+            border-right: 2px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .row-header-box {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .hero-icon {
+            font-size: 1.6rem;
+            background: rgba(255, 255, 255, 0.05);
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border-color);
+            flex-shrink: 0;
+        }
+
+        .hero-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .hero-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #fff;
+        }
+
+        .role-badge {
+            display: inline-block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            margin-top: 0.2rem;
+            width: fit-content;
+        }
+
+        .role-ranged { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .role-melee { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
+        .role-support { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+        /* MATRIX CELL */
+        td.cell {
+            background: rgba(15, 23, 42, 0.4);
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 90px;
+            vertical-align: top;
+        }
+
+        td.cell:hover {
+            background: rgba(59, 130, 246, 0.15) !important;
+            border-color: var(--border-glow);
+            transform: scale(1.02);
+            z-index: 5;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        /* HIGHLIGHT CROSSHAIR */
+        tr:hover td.cell {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .cell-content {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            gap: 0.3rem;
+        }
+
+        .cell-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .trait-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 0.1rem 0.35rem;
+            border-radius: 4px;
+        }
+
+        .tag-sig { background: rgba(245, 158, 11, 0.25); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); }
+        .tag-a { background: rgba(6, 182, 212, 0.25); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.4); }
+        .tag-b { background: rgba(236, 72, 153, 0.25); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.4); }
+
+        .recipe-title {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .recipe-desc {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* CELL HIGHLIGHT STATES FOR FILTERING */
+        td.dimmed {
+            opacity: 0.15;
+            filter: grayscale(80%);
+        }
+
+        td.matched {
+            border: 2px solid var(--accent-blue);
+            animation: pulseGlow 1.5s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            from { box-shadow: 0 0 5px rgba(59, 130, 246, 0.3); }
+            to { box-shadow: 0 0 15px rgba(59, 130, 246, 0.7); }
+        }
+
+        /* MODAL DETAIL POPUP */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(5, 8, 15, 0.85);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+            padding: 1rem;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: #111827;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 550px;
+            padding: 1.75rem;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(59, 130, 246, 0.2);
+            transform: scale(0.95);
+            transition: transform 0.25s ease;
+            position: relative;
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.25rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .modal-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .modal-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 0.2rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .btn-close {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .btn-close:hover {
+            background: rgba(239, 68, 68, 0.4);
+        }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .detail-row {
+            display: flex;
+            gap: 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 0.8rem 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .detail-item {
+            flex: 1;
+        }
+
+        .detail-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+        }
+
+        .detail-val {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .effect-box {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 1rem;
+            border-radius: 12px;
+        }
+
+        .effect-box h4 {
+            font-size: 0.85rem;
+            color: #60a5fa;
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+        }
+
+        .effect-box p {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #f3f4f6;
+        }
+
+        footer {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* CORNER CELL */
+        th.corner-cell {
+            position: sticky;
+            top: 0;
+            left: 0;
+            z-index: 30;
+            background: rgba(11, 15, 25, 0.98);
+            border-right: 2px solid rgba(255, 255, 255, 0.15);
+            text-align: center;
+            vertical-align: middle;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- HEADER -->
+    <header>
+        <div class="logo-group">
+            <h1>Blightfall: The Last Garden</h1>
+            <p>Ma Trận Hợp Thể Fusion 2 Chiều (9 Hero × 9 Gear Materials = 81 Công Thức Sync Từ Code Standard)</p>
+        </div>
+        <div class="stats-pills">
+            <div class="pill pill-sig">⭑ Signature: <strong>9</strong></div>
+            <div class="pill pill-a">A Món A (Chỉ số/Thụ động): <strong>36</strong></div>
+            <div class="pill pill-b">B Món B (Kỹ năng/Biến đổi): <strong>36</strong></div>
+        </div>
+    </header>
+
+    <!-- CONTROL PANEL / FILTERS -->
+    <div class="control-panel">
+        <div class="filter-group">
+            <label for="heroFilter">Hero Nhận (Hàng Y)</label>
+            <select id="heroFilter">
+                <option value="ALL">-- Tất Cả 9 Hero --</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="gearFilter">Gear Nguồn (Cột X)</label>
+            <select id="gearFilter">
+                <option value="ALL">-- Tất Cả 9 Gear --</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="traitFilter">Loại Công Thức (Trait Type)</label>
+            <select id="traitFilter">
+                <option value="ALL">-- Tất Cả Loại Món --</option>
+                <option value="SIG">⭑ Signature (Chữ Ký Chính Chủ)</option>
+                <option value="A">A Món A (Chỉ Số / Thụ Động)</option>
+                <option value="B">B Món B (Biến Đổi Kỹ Năng)</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="searchInput">Tìm Kiếm Từ Khóa</label>
+            <input type="text" id="searchInput" placeholder="Tên công thức, hiệu ứng...">
+        </div>
+
+        <button class="btn-reset" id="resetBtn">↻ Đặt Lại Bộ Lọc</button>
+    </div>
+
+    <!-- 2D MATRIX GRID TABLE -->
+    <div class="matrix-container">
+        <table class="matrix-table" id="matrixTable">
+            <thead>
+                <tr id="headerRow">
+                    <th class="corner-cell">Hero ↓ \ Gear →</th>
+                    <!-- Dynamic Gear Column Headers -->
+                </tr>
+            </thead>
+            <tbody id="matrixBody">
+                <!-- Dynamic Matrix Cells (9x9) -->
+            </tbody>
+        </table>
+    </div>
+
+    <footer>
+        <p>Blightfall: The Last Garden — Interactive Fusion Matrix Viewer • Data Synced 100% with <code>data/fusionRecipes.ts</code></p>
+    </footer>
+</div>
+
+<!-- MODAL DETAIL POPUP -->
+<div class="modal-overlay" id="detailModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <div>
+                <div class="modal-title" id="mTitle">Tên Công Thức</div>
+                <div class="modal-subtitle" id="mCode">HERO:MATERIAL</div>
+            </div>
+            <button class="btn-close" id="closeModalBtn">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="detail-row">
+                <div class="detail-item">
+                    <div class="detail-label">Hero Nhận</div>
+                    <div class="detail-val" id="mHero">Hero Name</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Gear Nguồn</div>
+                    <div class="detail-val" id="mGear">Gear Name</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Phân Loại Món</div>
+                    <div class="detail-val" id="mTrait">Món A</div>
+                </div>
+            </div>
+
+            <div class="effect-box">
+                <h4>Hiệu Ứng Nâng Cấp Chi Tiết</h4>
+                <p id="mEffect">Nội dung hiệu ứng kỹ năng / thụ động sẽ hiển thị ở đây...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // DATA DATASETS
+    const HEROES = [
+        { id: 'SUNBLOOM', name: 'Sunbloom', role: 'SUPPORT', icon: '☀️', gearId: 'SOL_BATTERY' },
+        { id: 'PEABURST', name: 'Peaburst', role: 'RANGED', icon: '🎯', gearId: 'SEED_GUN' },
+        { id: 'SNAPMAW', name: 'Snapmaw', role: 'MELEE', icon: '🐊', gearId: 'STEEL_JAWS' },
+        { id: 'IRONHUSK', name: 'Ironhusk', role: 'MELEE', icon: '🛡️', gearId: 'ARMOR_PLATE' },
+        { id: 'CORNOVA', name: 'Cornova', role: 'RANGED', icon: '🌽', gearId: 'CORN_MORTAR' },
+        { id: 'REEDWING', name: 'Reedwing', role: 'RANGED', icon: '🪶', gearId: 'ROTOR_WING' },
+        { id: 'THORNSHELL', name: 'Thornshell', role: 'MELEE', icon: '🦔', gearId: 'SPIKE_ARMOR' },
+        { id: 'CHARDSLAM', name: 'Chardslam', role: 'SUPPORT', icon: '🤾', gearId: 'SPRING_ARM' },
+        { id: 'GOURDWARD', name: 'Gourdward', role: 'SUPPORT', icon: '🎃', gearId: 'BUNKER_SHELL' },
+    ];
+
+    const GEARS = [
+        { id: 'MAT_SUNFLOWER', name: 'Sol Battery', owner: 'Sunbloom', icon: '☀️' },
+        { id: 'MAT_PEASHOOTER', name: 'Seed Gun', owner: 'Peaburst', icon: '🌱' },
+        { id: 'MAT_CHOMPER', name: 'Steel Jaws', owner: 'Snapmaw', icon: '🦷' },
+        { id: 'MAT_WALLNUT', name: 'Armor Plate', owner: 'Ironhusk', icon: '🛡️' },
+        { id: 'MAT_CORN_MORTAR', name: 'Corn Mortar', owner: 'Cornova', icon: '🌽' },
+        { id: 'MAT_CATTAIL', name: 'Rotor Wing', owner: 'Reedwing', icon: '🪶' },
+        { id: 'MAT_ENDURIAN', name: 'Spike Armor', owner: 'Thornshell', icon: '🌵' },
+        { id: 'MAT_SPRING_ARM', name: 'Spring Arm', owner: 'Chardslam', icon: '🦾' },
+        { id: 'MAT_PUMPKIN', name: 'Bunker Shell', owner: 'Gourdward', icon: '🎃' },
+    ];
+
+    // AUTHENTIC 81 RECIPES MATRIX SYNCED 100% WITH data/fusionRecipes.ts
+    const RECIPES = {
+        // SUNBLOOM (Support)
+        'SUNBLOOM:MAT_SUNFLOWER': { type: 'SIG', title: 'Twin Sol Battery', desc: 'Harvest thu hoạch gấp đôi nắng: +50 Sol gốc (hoặc +30 Sol nếu đi cùng Dawn Harvest).' },
+        'SUNBLOOM:MAT_PEASHOOTER': { type: 'B', title: 'Gunbloom', desc: 'Gains đòn bắn 1 Dmg tầm xa + thu thập 10 Sol khi trúng.' },
+        'SUNBLOOM:MAT_CHOMPER': { type: 'B', title: 'Fanged Blessing', desc: 'Solar Blessing tăng sát thương cho đồng minh thành +2 Dmg.' },
+        'SUNBLOOM:MAT_WALLNUT': { type: 'A', title: 'Armored Bloom', desc: 'Khởi đầu trận đấu nhận ngay 1 Layer Shield bảo vệ.' },
+        'SUNBLOOM:MAT_CORN_MORTAR': { type: 'B', title: 'Solar Corona', desc: 'Solar Blessing ban thưởng lan toàn bộ đồng minh trong 2 ô.' },
+        'SUNBLOOM:MAT_CATTAIL': { type: 'A', title: 'Sunchaser', desc: '+1 Ô di chuyển — giữ trạm sạc Sol đi kịp đội hình.' },
+        'SUNBLOOM:MAT_ENDURIAN': { type: 'A', title: 'Thorned Bloom', desc: 'Solar Blessing ban khả năng Phản 1 Dmg cho đồng minh được buff.' },
+        'SUNBLOOM:MAT_SPRING_ARM': { type: 'B', title: 'Kinetic Bloom', desc: 'Solar Blessing tạo sóng xung kích hất văng mọi unit kề bên đồng minh.' },
+        'SUNBLOOM:MAT_PUMPKIN': { type: 'A', title: 'Dawn Harvest', desc: 'Skill Harvest đổi thành: Thu hoạch 15 Sol (phạt -10 Sol) nhưng tự bọc 1 Layer Shield bảo vệ bản thân.' },
+
+        // PEABURST (Ranged)
+        'PEABURST:MAT_SUNFLOWER': { type: 'A', title: 'Sunbeam Pea', desc: 'Thu hoạch 10 Sol mỗi khi đòn bắn kết liễu 1 zombie (Chống free skill).' },
+        'PEABURST:MAT_PEASHOOTER': { type: 'SIG', title: 'Repeater', desc: 'Bắn viên pea thứ 2 (1 Dmg). Nếu viên 1 diệt quái, viên 2 tự lăn sang con sau.' },
+        'PEABURST:MAT_CHOMPER': { type: 'B', title: 'Serrated Pea', desc: 'Đòn bắn làm mục tiêu chảy máu Bleeding: đòn tiếp theo trúng nhận +1 Dmg.' },
+        'PEABURST:MAT_WALLNUT': { type: 'A', title: 'Armored Pea', desc: '+2 Máu tối đa (Tăng từ 6 lên 8 HP đệm an toàn tuyến sau).' },
+        'PEABURST:MAT_CORN_MORTAR': { type: 'B', title: 'Mortar Pea', desc: 'Đòn bắn vòng qua mọi cản (LOB 4 ô).' },
+        'PEABURST:MAT_CATTAIL': { type: 'B', title: 'Smokeline', desc: 'Precision Blast để lại mây khói DUST tại ô trúng đòn (Khóa đòn ngắm).' },
+        'PEABURST:MAT_ENDURIAN': { type: 'A', title: 'Barbed Pea', desc: 'Quái trúng đòn bị Taunt ép phải quay sang tấn công Peaburst.' },
+        'PEABURST:MAT_SPRING_ARM': { type: 'B', title: 'Overwatch Pea', desc: 'Đòn Phục Kích Tự Động! Bắn 1 pea khi đồng đội hất quái vào đường bắn.' },
+        'PEABURST:MAT_PUMPKIN': { type: 'A', title: 'Precision Shield', desc: 'Chỉ khi hạ gục zombie bằng Kỹ Năng Precision Blast mới được bọc 1 Layer Shield (Thưởng cho vị trí lách bắn rủi ro).' },
+
+        // SNAPMAW (Melee)
+        'SNAPMAW:MAT_SUNFLOWER': { type: 'A', title: 'Sunlit Gut', desc: 'Thu hoạch 10 Sol/lượt trong suốt thời gian đang tiêu hóa (Tổng 20 Sol qua 2 lượt nhai).' },
+        'SNAPMAW:MAT_PEASHOOTER': { type: 'B', title: 'Rending Claws', desc: 'Trong khi tiêu hóa vẫn dùng móng vuốt cào 1 Dmg kề bên (Free).' },
+        'SNAPMAW:MAT_CHOMPER': { type: 'SIG', title: 'Double Jaw', desc: 'Cắn nuốt nhanh gấp đôi — Tiêu hóa chỉ mất 1 lượt thay vì 2.' },
+        'SNAPMAW:MAT_WALLNUT': { type: 'A', title: 'Armored Jaws', desc: 'Giảm -1 Dmg nhận vào trong suốt thời gian đang tiêu hóa.' },
+        'SNAPMAW:MAT_CORN_MORTAR': { type: 'B', title: 'Stun Fang', desc: 'Cắn đòn thường gây STUN 1 lượt đối với quái còn nguyên 100% HP.' },
+        'SNAPMAW:MAT_CATTAIL': { type: 'B', title: 'Prowl Rotor', desc: 'Trong khi tiêu hóa nhai quái vẫn được di chuyển +1 ô mỗi lượt để giữ cơ động.' },
+        'SNAPMAW:MAT_ENDURIAN': { type: 'A', title: 'Bristleback', desc: 'Phản lại 100% sát thương khi bị đánh trong lúc đang tiêu hóa.' },
+        'SNAPMAW:MAT_SPRING_ARM': { type: 'B', title: 'Anchored Gullet', desc: 'Trong khi tiêu hóa nhai quái hoàn toàn miễn nhiễm sát thương va chạm và hiệu ứng đẩy lùi PUSH.' },
+        'SNAPMAW:MAT_PUMPKIN': { type: 'A', title: 'Warded Gut', desc: 'Mỗi kill cắn nuốt tự bọc bản thân trong 1 Layer Shield.' },
+
+        // IRONHUSK (Melee)
+        'IRONHUSK:MAT_SUNFLOWER': { type: 'A', title: 'Sunstone Shield', desc: 'Bịt hố spawn quái thu hoạch ngay 20 Sol.' },
+        'IRONHUSK:MAT_PEASHOOTER': { type: 'B', title: 'Lance Bash', desc: 'Plate Slam vươn xa thêm 1 ô bằng thương giáp dài mà vẫn giữ nguyên lực đẩy lùi.' },
+        'IRONHUSK:MAT_CHOMPER': { type: 'A', title: 'Fanged Bash', desc: '+1 Sát thương cho mọi đòn vung đánh (Plate Slam & Rolling Charge).' },
+        'IRONHUSK:MAT_WALLNUT': { type: 'SIG', title: 'Iron Bulwark', desc: 'Nhận STEADFAST: Giảm -1 Dmg, giảm 50% Dmg va chạm & bịt hố không mất HP.' },
+        'IRONHUSK:MAT_CORN_MORTAR': { type: 'B', title: 'Stun Charge', desc: 'Rolling Charge gây STUN 1 lượt cho mục tiêu bị tông.' },
+        'IRONHUSK:MAT_CATTAIL': { type: 'A', title: 'Overdrive Charge', desc: 'Skill Rolling Charge lăn xa 4 ô thay vì 3 ô.' },
+        'IRONHUSK:MAT_SPIKE_ARMOR': { type: 'B', title: 'Spiked Bulwark', desc: 'Plate Slam gây thêm +1 sát thương và phản lại +1 sát thương cận chiến khi bị tấn công.' },
+        'IRONHUSK:MAT_SPRING_ARM': { type: 'B', title: 'Sprung Bash', desc: 'Đẩy lùi xa thêm +1 ô cho cả Plate Slam và Rolling Charge.' },
+        'IRONHUSK:MAT_PUMPKIN': { type: 'A', title: 'Bunker Plating', desc: 'Sinh Tồn Giờ G: Đòn chí mạng kết liễu thay vì chết sẽ mọc 1 Layer Shield.' },
+
+        // CORNOVA (Ranged)
+        'CORNOVA:MAT_SUNFLOWER': { type: 'B', title: 'Sunlit Cob', desc: 'Nova Shell giảm giá 15 Sol (Còn 35 Sol).' },
+        'CORNOVA:MAT_PEASHOOTER': { type: 'B', title: 'Twin Cob', desc: 'Đạn cối chính được nối tiếp bằng 1 đạn cối phụ 1 Dmg.' },
+        'CORNOVA:MAT_CHOMPER': { type: 'B', title: 'Shrapnel Kernel', desc: 'Đạn cối gây hiệu ứng Bleeding (Đòn sau trúng nhận +1 Dmg).' },
+        'CORNOVA:MAT_WALLNUT': { type: 'A', title: 'Armored Cob', desc: '+3 Máu tối đa đệm sống qua combat.' },
+        'CORNOVA:MAT_CORN_MORTAR': { type: 'SIG', title: 'Cob Howitzer', desc: 'Nova Shell gây STUN mục tiêu chính và SLOW toàn bộ ô kề bên.' },
+        'CORNOVA:MAT_CATTAIL': { type: 'B', title: 'Ash Carriage', desc: 'Đạn cối để lại mây khói DUST tại ô trúng đòn làm mù quái.' },
+        'CORNOVA:MAT_SPIKE_ARMOR': { type: 'B', title: 'Barbed Cob', desc: 'Đạn cối trúng quái ép quái bị Taunt quay sang đánh Cornova.' },
+        'CORNOVA:MAT_SPRING_ARM': { type: 'B', title: 'Overwatch Cob', desc: 'Đòn Phục Kích Cầu Vồng! Ném đạn cối khi đồng đội hất quái vào tầm bắn.' },
+        'CORNOVA:MAT_PUMPKIN': { type: 'A', title: 'Reactive Cob Shell', desc: 'Lần đầu tiên bị đánh trúng trong trận tự động nảy 1 Layer Shield.' },
+
+        // REEDWING (Ranged)
+        'REEDWING:MAT_SUNFLOWER': { type: 'A', title: 'Solar Rotor', desc: 'Thu hoạch 15 Sol mỗi kill từ trên không.' },
+        'REEDWING:MAT_PEASHOOTER': { type: 'B', title: 'Twin Pods', desc: 'Cả 2 cánh bay bắn tiếp đợt tên lửa thứ 2 (1 Dmg/ô).' },
+        'REEDWING:MAT_CHOMPER': { type: 'B', title: 'Executioner Pods', desc: 'Tên lửa bắn nhận thêm +2 sát thương thưởng (Tổng 3 Dmg) khi tấn công vào mục tiêu đang bị chảy máu Bleeding.' },
+        'REEDWING:MAT_WALLNUT': { type: 'A', title: 'Armored Fuselage', desc: '+3 Máu tối đa (Tăng từ 4 lên 7 HP bọc giáp không quân).' },
+        'REEDWING:MAT_CORN_MORTAR': { type: 'B', title: 'Cluster Load', desc: 'Thả thêm 1 tên lửa thứ 3 vào ô trung tâm giữa 2 đòn bắn nước mã.' },
+        'REEDWING:MAT_CATTAIL': { type: 'SIG', title: 'Overdrive Rotor', desc: 'Tăng khoảng cách di chuyển lên 5 ô (FLYING trên không).' },
+        'REEDWING:MAT_SPIKE_ARMOR': { type: 'B', title: 'Barbed Skids', desc: 'Tên lửa ép quái Taunt đánh mình, nhưng Reedwing bay đi chỗ khác.' },
+        'REEDWING:MAT_SPRING_ARM': { type: 'B', title: 'Downwash', desc: 'Tên lửa đẩy lùi PUSH cả 2 mục tiêu về phía sau 1 ô.' },
+        'REEDWING:MAT_PUMPKIN': { type: 'A', title: 'Dawn Pod Plating', desc: 'Khởi đầu trận đấu nhận ngay 1 Layer Shield bảo vệ không quân.' },
+
+        // THORNSHELL (Melee)
+        'THORNSHELL:MAT_SUNFLOWER': { type: 'B', title: 'Sunlit Thorn', desc: 'Provoke giảm giá 15 Sol (Còn 35 Sol).' },
+        'THORNSHELL:MAT_PEASHOOTER': { type: 'B', title: 'Piercing Needles', desc: 'Thorn Swipe phóng chùm gai xuyên tối đa 2 mục tiêu theo hàng thẳng, sát thương giảm dần theo khoảng cách về 1 Dmg.' },
+        'THORNSHELL:MAT_CHOMPER': { type: 'B', title: 'Rending Husk', desc: 'Quái đánh cận chiến vào Thornshell bị chảy máu Bleeding.' },
+        'THORNSHELL:MAT_WALLNUT': { type: 'A', title: 'Thorn Lunge', desc: 'Đòn đánh thường biến thành đòn lao đệm tới mục tiêu cách 1 ô (tương tự chiêu lăn).' },
+        'THORNSHELL:MAT_CORN_MORTAR': { type: 'B', title: 'Bellowing Thorn', desc: 'Provoke mở rộng bán kính khiêu khích từ 3 lên 5 ô.' },
+        'THORNSHELL:MAT_CATTAIL': { type: 'A', title: 'Windburr', desc: 'Nhận MOVE_BONUS (+1 Ô di chuyển — giúp Thornshell cơ động chọn vị trí Provoke).' },
+        'THORNSHELL:MAT_SPIKE_ARMOR': { type: 'SIG', title: 'Bristling Armor', desc: 'Phản đòn cận chiến tăng sát thương lên 3 Dmg.' },
+        'THORNSHELL:MAT_SPRING_ARM': { type: 'B', title: 'Sprung Thorn', desc: 'Swipe gai hất đẩy mục tiêu văng vào ô phía sau.' },
+        'THORNSHELL:MAT_PUMPKIN': { type: 'A', title: 'Warded Provoke', desc: 'Bật Provoke nhận ngay 1 Layer Shield cho bản thân.' },
+
+        // CHARDSLAM (Support)
+        'CHARDSLAM:MAT_SUNFLOWER': { type: 'A', title: 'Sunlit Chard', desc: 'Thu hoạch 15 Sol mỗi khi hất quái rơi xuống nước/hố/va chạm chết.' },
+        'CHARDSLAM:MAT_PEASHOOTER': { type: 'B', title: 'Longarm Chard', desc: 'Vault Toss hất quái qua đầu từ khoảng cách 2 ô.' },
+        'CHARDSLAM:MAT_CHOMPER': { type: 'B', title: 'Rending Chard', desc: 'Cú hất làm mục tiêu chảy máu Bleeding khi rơi xuống.' },
+        'CHARDSLAM:MAT_WALLNUT': { type: 'A', title: 'Armored Chard', desc: 'Giảm -1 Dmg nhận vào từ mọi đòn đánh.' },
+        'CHARDSLAM:MAT_CORN_MORTAR': { type: 'B', title: 'Catapult Chard', desc: 'Skill Sweep hất đẩy xa đến 3 ô thay vì 2 ô.' },
+        'CHARDSLAM:MAT_CATTAIL': { type: 'B', title: 'Catapult Rotor', desc: 'Mọi cú hất Vault Toss, Sweep và dập slam đều ném tất cả zombie bay xa hơn +1 ô.' },
+        'CHARDSLAM:MAT_SPIKE_ARMOR': { type: 'B', title: 'Thorned Chard', desc: 'Quái đánh cận chiến vào Chardslam bị hất văng 1 ô.' },
+        'CHARDSLAM:SPRING_ARM': { type: 'SIG', title: 'Grand Chard', desc: 'Va chạm địa hình / va chạm quái nhận thêm +2 Dmg.' },
+        'CHARDSLAM:MAT_PUMPKIN': { type: 'A', title: 'Warded Chard', desc: 'Mỗi cú hất va chạm chết quái tự bọc 1 Layer Shield.' },
+
+        // GOURDWARD (Support)
+        'GOURDWARD:MAT_SUNFLOWER': { type: 'B', title: 'Sunlit Rind', desc: 'Skill Encase giảm giá 10 Sol (Còn 50 Sol).' },
+        'GOURDWARD:MAT_PEASHOOTER': { type: 'B', title: 'Rind Pellet', desc: 'Reinforce bắn dọc theo hàng rào ban khiên cho ô đồng minh xa 4 ô.' },
+        'GOURDWARD:MAT_CHOMPER': { type: 'B', title: 'Glass Rind', desc: 'Khiên nổ mọc gai: Kẻ phá vỡ 1 Layer Shield bị chảy máu Bleeding.' },
+        'GOURDWARD:MAT_WALLNUT': { type: 'A', title: 'Ironrind', desc: 'Giảm -1 Dmg nhận vào từ mọi đòn đánh.' },
+        'GOURDWARD:MAT_CORN_MORTAR': { type: 'B', title: 'Stun Shell', desc: 'Skill Encase gây STUN 1 lượt cho toàn bộ quái trong vùng bọc khiên.' },
+        'GOURDWARD:MAT_CATTAIL': { type: 'A', title: 'Airborne Rind', desc: 'Skill Encase tạo cuồng phong đẩy lùi zombie kề bên 1 ô khi tạo khiên.' },
+        'GOURDWARD:MAT_SPIKE_ARMOR': { type: 'B', title: 'Spined Rind', desc: 'Quái đánh cận chiến vào Gourdward bị đâm 1 Dmg.' },
+        'GOURDWARD:MAT_SPRING_ARM': { type: 'B', title: 'Shockrind', desc: 'Skill Encase tạo sóng xung kích hất đẩy quái kề bên 1 ô.' },
+        'GOURDWARD:MAT_PUMPKIN': { type: 'SIG', title: 'Greatrind', desc: 'Encase lan tỏa Layer Shield cho cả đồng minh đứng kề bên mục tiêu.' },
+    };
+
+    // DOM ELEMENTS
+    const heroFilter = document.getElementById('heroFilter');
+    const gearFilter = document.getElementById('gearFilter');
+    const traitFilter = document.getElementById('traitFilter');
+    const searchInput = document.getElementById('searchInput');
+    const resetBtn = document.getElementById('resetBtn');
+    const headerRow = document.getElementById('headerRow');
+    const matrixBody = document.getElementById('matrixBody');
+    const detailModal = document.getElementById('detailModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+
+    // INITIALIZE SELECT OPTIONS
+    function initFilters() {
+        HEROES.forEach(h => {
+            const opt = document.createElement('option');
+            opt.value = h.id;
+            opt.textContent = `${h.icon} ${h.name} (${h.role})`;
+            heroFilter.appendChild(opt);
+        });
+
+        GEARS.forEach(g => {
+            const opt = document.createElement('option');
+            opt.value = g.id;
+            opt.textContent = `${g.icon} ${g.name} (${g.owner})`;
+            gearFilter.appendChild(opt);
+        });
+    }
+
+    // RENDER MATRIX TABLE
+    function renderMatrix() {
+        // Render Column Headers
+        headerRow.innerHTML = '<th class="corner-cell">Hero ↓ \\ Gear →</th>';
+        GEARS.forEach(g => {
+            const th = document.createElement('th');
+            th.className = 'col-header';
+            th.dataset.gearId = g.id;
+            th.innerHTML = `
+                <div class="col-header-box">
+                    <div class="gear-icon">${g.icon}</div>
+                    <div class="gear-title">${g.name}</div>
+                    <div class="gear-owner">${g.owner}</div>
+                </div>
+            `;
+            headerRow.appendChild(th);
+        });
+
+        // Render Rows & Cells
+        matrixBody.innerHTML = '';
+        HEROES.forEach(h => {
+            const tr = document.createElement('tr');
+            tr.dataset.heroId = h.id;
+
+            // Row Header
+            const th = document.createElement('th');
+            th.className = 'row-header';
+            let roleClass = h.role === 'RANGED' ? 'role-ranged' : (h.role === 'MELEE' ? 'role-melee' : 'role-support');
+            th.innerHTML = `
+                <div class="row-header-box">
+                    <div class="hero-icon">${h.icon}</div>
+                    <div class="hero-info">
+                        <div class="hero-name">${h.name}</div>
+                        <span class="role-badge ${roleClass}">${h.role}</span>
+                    </div>
+                </div>
+            `;
+            tr.appendChild(th);
+
+            // Cells for each Gear
+            GEARS.forEach(g => {
+                const td = document.createElement('td');
+                td.className = 'cell';
+                td.dataset.heroId = h.id;
+                td.dataset.gearId = g.id;
+                
+                const key = `${h.id}:${g.id}`;
+                const recipe = RECIPES[key] || { type: 'A', title: 'Chưa rõ', desc: '...' };
+                td.dataset.traitType = recipe.type;
+                td.dataset.title = recipe.title.toLowerCase();
+                td.dataset.desc = recipe.desc.toLowerCase();
+
+                let tagClass = recipe.type === 'SIG' ? 'tag-sig' : (recipe.type === 'A' ? 'tag-a' : 'tag-b');
+                let tagLabel = recipe.type === 'SIG' ? '⭑ SIG' : (recipe.type === 'A' ? 'A MÓN A' : 'B MÓN B');
+
+                td.innerHTML = `
+                    <div class="cell-content">
+                        <div class="cell-top">
+                            <span class="trait-tag ${tagClass}">${tagLabel}</span>
+                        </div>
+                        <div class="recipe-title">${recipe.title}</div>
+                        <div class="recipe-desc">${recipe.desc}</div>
+                    </div>
+                `;
+
+                td.addEventListener('click', () => openModal(h, g, key, recipe));
+                tr.appendChild(td);
+            });
+
+            matrixBody.appendChild(tr);
+        });
+    }
+
+    // FILTER LOGIC
+    function applyFilters() {
+        const selHero = heroFilter.value;
+        const selGear = gearFilter.value;
+        const selTrait = traitFilter.value;
+        const searchKw = searchInput.value.trim().toLowerCase();
+
+        const cells = document.querySelectorAll('td.cell');
+
+        cells.forEach(cell => {
+            const heroId = cell.dataset.heroId;
+            const gearId = cell.dataset.gearId;
+            const traitType = cell.dataset.traitType;
+            const title = cell.dataset.title;
+            const desc = cell.dataset.desc;
+
+            let matchHero = (selHero === 'ALL' || selHero === heroId);
+            let matchGear = (selGear === 'ALL' || selGear === gearId);
+            let matchTrait = (selTrait === 'ALL' || selTrait === traitType);
+            let matchSearch = (!searchKw || title.includes(searchKw) || desc.includes(searchKw) || heroId.toLowerCase().includes(searchKw) || gearId.toLowerCase().includes(searchKw));
+
+            if (matchHero && matchGear && matchTrait && matchSearch) {
+                cell.classList.remove('dimmed');
+                if (selHero !== 'ALL' || selGear !== 'ALL' || selTrait !== 'ALL' || searchKw) {
+                    cell.classList.add('matched');
+                } else {
+                    cell.classList.remove('matched');
+                }
+            } else {
+                cell.classList.add('dimmed');
+                cell.classList.remove('matched');
+            }
+        });
+    }
+
+    // RESET FILTERS
+    resetBtn.addEventListener('click', () => {
+        heroFilter.value = 'ALL';
+        gearFilter.value = 'ALL';
+        traitFilter.value = 'ALL';
+        searchInput.value = '';
+        applyFilters();
+    });
+
+    // EVENT LISTENERS FOR FILTERS
+    heroFilter.addEventListener('change', applyFilters);
+    gearFilter.addEventListener('change', applyFilters);
+    traitFilter.addEventListener('change', applyFilters);
+    searchInput.addEventListener('input', applyFilters);
+
+    // MODAL LOGIC
+    function openModal(hero, gear, key, recipe) {
+        document.getElementById('mTitle').textContent = recipe.title;
+        document.getElementById('mCode').textContent = key;
+        document.getElementById('mHero').textContent = `${hero.icon} ${hero.name}`;
+        document.getElementById('mGear').textContent = `${gear.icon} ${gear.name}`;
+        
+        let traitText = recipe.type === 'SIG' ? '⭑ Signature (Chữ Ký Chính Chủ)' : (recipe.type === 'A' ? 'Món A (Chỉ Số / Thụ Động)' : 'Món B (Biến Đổi Kỹ Năng)');
+        document.getElementById('mTrait').textContent = traitText;
+        document.getElementById('mEffect').textContent = recipe.desc;
+
+        detailModal.classList.add('active');
+    }
+
+    closeModalBtn.addEventListener('click', () => {
+        detailModal.classList.remove('active');
+    });
+
+    detailModal.addEventListener('click', (e) => {
+        if (e.target === detailModal) {
+            detailModal.classList.remove('active');
+        }
+    });
+
+    // INITIALIZATION
+    initFilters();
+    renderMatrix();
+</script>
+
+</body>
+</html>

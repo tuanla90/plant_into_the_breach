@@ -47,7 +47,7 @@ export const StartMenu: React.FC<StartMenuProps> = ({ onStart, onContinue, onTut
     };
 
     return (
-        <div className="w-full min-h-[100dvh] h-auto lg:h-[100dvh] bg-[#0d0e11] flex items-end md:items-center justify-center font-pixel text-white relative overflow-y-auto lg:overflow-hidden">
+        <div className="fixed inset-0 w-full h-full bg-[#0d0e11] flex items-end md:items-center justify-center font-pixel text-white relative overflow-y-auto lg:overflow-hidden">
 
             {/* --- KEY ART --- */}
             {hasCover && (

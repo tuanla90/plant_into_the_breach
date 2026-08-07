@@ -48,7 +48,7 @@ export const HUD: React.FC<HUDProps> = ({
     // iPhone cầm dọc: ở đó trang vẽ tràn lên dưới tai thỏ (viewport-fit=cover), và
     // hàng Sol / Xu nằm khuất một nửa sau thanh trạng thái. Mọi nơi khác env()
     // trả 0 nên dòng này không đổi gì.
-    <header className="w-full bg-[#0b0d14]/90 border-b border-[#293245] z-50 shadow-2xl shrink-0 relative backdrop-blur-md font-pixel select-none portrait:pt-[env(safe-area-inset-top,0px)]">
+    <header className="w-full bg-[#0b0d14]/90 border-b border-[#293245] z-50 shadow-2xl shrink-0 relative font-pixel select-none portrait:pt-[env(safe-area-inset-top,0px)]">
       {/* Glow Accent Line */}
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-emerald-500 via-sky-400 to-amber-400 opacity-80" />
 
@@ -117,7 +117,7 @@ export const HUD: React.FC<HUDProps> = ({
 
           <div
               className={`
-                  shrink-0 flex items-center gap-2 lg:gap-3 px-2 lg:px-4 h-11 border-2 rounded-lg shadow-xl backdrop-blur-md transition-all
+                  shrink-0 flex items-center gap-2 lg:gap-3 px-2 lg:px-4 h-11 border-2 rounded-lg shadow-xl transition-all
                   ${brainsCritical
                       ? 'bg-red-950/80 border-red-500 animate-threat shadow-[0_0_24px_rgba(239,68,68,0.6)]'
                       : 'bg-[#221028]/80 border-pink-500/50 shadow-[0_0_15px_rgba(236,72,153,0.2)]'}

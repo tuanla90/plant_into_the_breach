@@ -86,7 +86,7 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
         imgUrl: HERO_ICONS.IRONHUSK, boardImgUrl: HERO_SPRITES.IRONHUSK,
         movementType: 'WALKING', immunities: [],
         basicAttack: {
-            id: 'wk_bash', name: 'Shield Bash',
+            id: 'wk_bash', name: 'Plate Slam',
             description: 'Shoves an adjacent enemy back. Chip damage only — the shove is the point. Free.',
             rangeType: 'MELEE', rangeValue: 1,
             effects: [{ type: 'DAMAGE', value: 1 }, { type: 'PUSH', value: 1 }],
@@ -134,15 +134,12 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
             effects: [{ type: 'RESOURCE_GAIN', value: 50, resource: 'SUN' }],
         },
         /**
-         * PURE BUFF, and the sequencing IS the skill (PLAN-hero-zephyr §6.1). Sol Burn — her
+         * PURE OFFENSIVE & TEMPO BUFF (PLAN-hero-zephyr §6.1). Sol Burn — her
          * old 4-damage lob and only offence — is retired: the support branch deals no direct
-         * damage at all now, and what she sells instead is TEMPO. The +1 lasts only until
-         * this player turn ends (BLESSED, cleared before the enemy phase), so blessing a
-         * hero who has already swung is 50 Sol thrown away — bless first, then attack.
+         * damage at all now, and what she sells instead is TEMPO & SPEED. The +1 Dmg and +1 Move
+         * last only until this player turn ends (BLESSED, cleared before the enemy phase).
          *
-         * The layer is the "máu" half (§6.0: no number, no stacking, no cap needed), and it
-         * is deliberately a LAYER rather than a heal: hp debt is the run's campfire economy,
-         * and an in-battle heal would leak straight into it.
+         * NO SHIELD: Shield is 100% exclusive to Gourdward's Bunker Shell identity.
          *
          * THE BATTERY: if she carries an element and the ally does not, the ally's attacks
          * borrow it for the same one-turn window (blessedElement). Fire-Sunbloom blesses Snapmaw
@@ -151,9 +148,9 @@ export const HERO_DEFINITIONS: Record<HeroId, HeroDefinition> = {
          */
         heroSkill: {
             id: 'sf_blessing', name: 'Solar Blessing',
-            description: 'Blesses an ally: a shell layer, +1 damage this turn — and this turn only. Her element rides along.',
+            description: 'Blesses an ally: +1 damage and +1 Move speed this turn — and this turn only. Her element rides along.',
             rangeType: 'LOB', rangeValue: 3, sunCost: 50,
-            effects: [{ type: 'SHIELD', value: 1 }, { type: 'BLESS' }],
+            effects: [{ type: 'BLESS' }],
         },
     },
 

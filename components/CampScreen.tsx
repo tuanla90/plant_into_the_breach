@@ -118,7 +118,7 @@ export const CampScreen: React.FC<CampScreenProps> = ({
     );
 
     return (
-        <div className="w-full min-h-[100dvh] h-auto lg:h-[100dvh] bg-[#0d0e11] flex flex-col font-pixel text-white relative overflow-y-auto lg:overflow-hidden">
+        <div className="fixed inset-0 w-full h-full bg-[#0d0e11] flex flex-col font-pixel text-white overflow-y-auto lg:overflow-hidden">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_110%,#2a1a10_0%,#0d0e11_55%,#000_100%)]" />
 
             <div className="relative z-10 w-full min-h-full lg:h-full max-w-[1300px] mx-auto flex flex-col gap-3 px-5 py-4">

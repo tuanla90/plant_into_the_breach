@@ -1075,18 +1075,32 @@ export type FusionEffectType =
      */
     | 'LAST_STAND_SHIELD'
     /**
-     * A body this hero HURTS is left standing in dust for one turn: it cannot line up a swing
-     * next turn unless it walks out of the cloud first.
-     *
-     * The Rotor Wing gear's item B, cut down to fit a FREE attack. `SKILL_DISARM` is banned
-     * from free attacks and this is not a hole in that ban, it is the other side of it: the
      * skill version dusts an AREA (every tile the cast covered, three turns), which on a free
      * action would be a wall raised every turn. This dusts ONE tile, for ONE turn, under a body
      * the hero already had to hit — and dust cancels a SWING, never a turn: the zombie still
      * walks, still telegraphs, and can simply step out of the cloud. That puts it level with
      * `ON_HIT_PUSH`, which denies an attack by moving the body instead of blinding it.
      */
-    | 'SMOKE_ON_HIT';
+    | 'SMOKE_ON_HIT'
+    // --- New capped fusion effect types ---
+    | 'BLESS_RETALIATE'
+    | 'DIGEST_RETALIATE'
+    | 'DASH_DISTANCE'
+    | 'ARMOR_SHRED'
+    | 'REACTIVE_SHIELD'
+    | 'NEEDLE_BURST'
+    | 'WIND_TAUNT'
+    | 'PROVOKE_SHIELD'
+    | 'FLYER_REPEL'
+    | 'ENCASE_RANGE'
+    | 'LASER_NEEDLE'
+    | 'BLEED_EXECUTION'
+    | 'HARVEST_SHIELD'
+    | 'SHIELD_ON_SKILL_KILL'
+    | 'SHIELD_ON_DIGEST'
+    | 'DIGEST_MOVE'
+    | 'DIGEST_STEADFAST'
+    | 'THORN_LUNGE';
 
 export interface FusionEffect {
     type: FusionEffectType;
