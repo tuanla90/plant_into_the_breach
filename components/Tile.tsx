@@ -140,6 +140,7 @@ const TileBase: React.FC<TileProps> = ({
 
   return (
     <div 
+      role="button"
       className={`w-full h-full relative cursor-pointer group transition-transform duration-100 active:translate-y-0.5 border-2 border-black/20`}
       style={bgStyle}
       onClick={onClick}
