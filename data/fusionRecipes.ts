@@ -110,9 +110,9 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_IRONHUSK: {
-            name: 'Armored Bloom',
-            description: 'Starts the battle shielded in a layer — surviving the first turn guaranteed.',
-            effect: { type: 'START_SHIELDED' },
+            name: 'Guarded Bloom',
+            description: 'Stand touching an ally and every hit against her lands one lighter. Escorted properly, the battery is hard to break.',
+            effect: { type: 'ESCORTED_REDUCTION', value: 1 },
             live: true,
         },
         MAT_CORNOVA: {
@@ -342,9 +342,9 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_IRONHUSK: {
-            name: 'Armored Cob',
-            description: '+3 max HP — 11 instead of 8, allowing mid-range artillery to sustain side flank attacks.',
-            effect: { type: 'BONUS_HP', value: 3 },
+            name: 'Dug-in Cob',
+            description: 'Spend a turn without moving and the bracing legs come down: every hit that turn lands one lighter.',
+            effect: { type: 'EMPLACED_PLATING', value: 1 },
             live: true,
         },
         MAT_CORNOVA: {
@@ -400,9 +400,9 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_IRONHUSK: {
-            name: 'Armored Fuselage',
-            description: 'Takes 1 less damage from every hit — armored flight frame replaces paper wings.',
-            effect: { type: 'DAMAGE_REDUCTION', value: 1 },
+            name: 'Airframe',
+            description: 'A turn she spends moving is a turn she is hard to hit: every hit lands one lighter. Sit still and the armour is worth nothing.',
+            effect: { type: 'SLIPSTREAM_PLATING', value: 1 },
             live: true,
         },
         MAT_CORNOVA: {
@@ -458,9 +458,9 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_IRONHUSK: {
-            name: 'Thorn Lunge',
-            description: 'Basic attack transforms into a 1-tile lunge charge towards the target.',
-            effect: { type: 'THORN_LUNGE', value: 1 },
+            name: 'Thorn Plating',
+            description: 'Collisions do not move him and plugging a spawn hole costs him nothing — and anything slammed into him is impaled for 2.',
+            effect: { type: 'SPINED_PLATING', value: 2 },
             live: true,
         },
         MAT_CORNOVA: {
@@ -516,9 +516,9 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_IRONHUSK: {
-            name: 'Armored Chard',
-            description: 'Takes 50% less collision damage and plugs spawn holes painlessly — collision specialist.',
-            effect: { type: 'STEADFAST', value: 1 },
+            name: 'Unstoppable Chard',
+            description: 'Collisions do not hurt him, spawn holes do not either, and nothing on the board can push, pull or throw him. The thrower cannot be thrown.',
+            effect: { type: 'COLLISION_PLATING' },
             live: true,
         },
         /**

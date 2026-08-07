@@ -20,9 +20,9 @@ Vì mang lò Sol trong ngực, **mắt chúng tôi luôn rực sáng** — thứ
 
 *"Con là trái tim của chiến dịch này, Sunbloom."* Cha run rẩy đặt vào vòng tay tôi chiếc hộp ấp chứa **Các Mầm Sống**. *"Mỗi Mầm là một Linh Hồn — một cơ hội Hồi Sinh. Không đồng xu rỉ sét nào trên cõi đời này định giá được sinh mạng. Chỉ có Mầm Sống mới vá víu lại được cái chết."*
 
-Rồi ông dặn điều mà cả hành trình của chúng tôi sẽ xoay quanh: **Mầm chỉ là mầm.** Chúng cũng cần được nuôi. Cứ một quãng đường, tôi phải dừng lại, cắm từng quả Mầm vào các **trạm tiền tiêu** của mạng lưới cũ để chúng hút năng lượng — và trong suốt canh sạc ấy, sự sống đậm đặc nhất còn sót lại trên hành tinh sẽ tỏa hương như một ngọn đuốc giữa đêm. Bầy xác lết không đánh hơi thấy thép, không đánh hơi thấy gỗ. Chúng đánh hơi thấy *Mầm*. Chúng sẽ bỏ qua mọi họng súng để lao về phía các trạm; con nào nuốt được một quả Mầm sẽ lập tức quay đầu rời trận — mang linh hồn ấy về dâng cho chủ nhân của chúng. Mỗi trận đánh của chúng tôi, vì thế, chưa bao giờ là đi săn. Nó là **trụ cho đến khi Mầm no năng lượng, rồi ôm Mầm mà chạy tiếp.**
+Rồi ông dặn điều mà cả hành trình của chúng tôi sẽ xoay quanh: **Mầm chỉ là mầm.** Chúng cũng cần được nuôi. Cứ một quãng đường, tôi phải dừng lại, cắm từng quả Mầm vào các **Trạm Mầm (Seedpost)** — trạm tiền tiêu của mạng lưới cũ — để chúng hút năng lượng. Mỗi quả Mầm cần một trạm riêng: đoàn mang theo bao nhiêu linh hồn, mỗi điểm dừng phải dàn quân giữ bấy nhiêu trạm — hộp ấp càng đầy, phòng tuyến càng dài — và trong suốt canh sạc ấy, sự sống đậm đặc nhất còn sót lại trên hành tinh sẽ tỏa hương như một ngọn đuốc giữa đêm. Bầy xác lết không đánh hơi thấy thép, không đánh hơi thấy gỗ. Chúng đánh hơi thấy *Mầm*. Chúng sẽ bỏ qua mọi họng súng để lao về phía các trạm; con nào nuốt được một quả Mầm sẽ lập tức quay đầu rời trận — mang linh hồn ấy về dâng cho chủ nhân của chúng. Mỗi trận đánh của chúng tôi, vì thế, chưa bao giờ là đi săn. Nó là **trụ cho đến khi Mầm no năng lượng, rồi ôm Mầm mà chạy tiếp.**
 
-Cha không đơn độc. Trước khi sụp đổ, Vành Đai Xanh có cả một mạng lưới **Tháp Xanh (Greenspire)**: tháp lớn giữ trường an toàn, kho thân máy dự trữ và văn khố **Bản Thiết Kế**; trạm nhỏ tiền tiêu rải dọc mọi nẻo đường — chính là nơi Mầm ăn no trong lửa đạn.
+Cha không đơn độc. Trước khi sụp đổ, Vành Đai Xanh có cả một mạng lưới hai tầng: các **Tháp Xanh (Greenspire)** — tháp lớn giữ trường an toàn, kho thân máy dự trữ và văn khố **Bản Thiết Kế**; và các **Trạm Mầm** nhỏ rải dọc mọi nẻo đường — chính là nơi Mầm ăn no trong lửa đạn.
 
 Để hộ vệ tôi, Cha đánh thức hai người anh chị được tạo ra trước: **Peaburst**, ngọn giáo; **Ironhusk**, tấm khiên. Nhiệm vụ của chúng tôi: ôm Các Mầm Sống, bước qua khe nứt không gian mà Chrona mở, đi qua ba miền đất, tìm **ba Lõi Nguyên Tố** — Lửa, Băng, Sét. Hợp nhất được ba lõi, chúng tôi sẽ có sức mạnh chấm dứt Đốm Tàn tận gốc.
 
@@ -101,7 +101,7 @@ Ba Lõi Nguyên Tố văng ra từ vết rách nguyên thủy, chôn vùi tại 
 
 Xác lết hấp thụ hơi Lõi lâu ngày đột biến thành những **chúa tể** — mỗi vùng một kẻ, mỗi kẻ một tổ hợp đột biến sinh-cơ khí mạnh đến phi lý. Và chính sự phi lý đó là mùa gặt của chúng tôi.
 
-Bởi nghi thức lớn nhất Cha truyền lại cho tôi không phải hồi sinh. Là **Phổ Hệ**. Khi một chúa tể gục ngã, tôi đặt một thân máy ngủ đông cạnh cái xác còn nóng, và cấy một Mầm Sống vào giữa. Rễ Mầm cắm phập vào xác chúa tể như một cỗ máy quét: đọc mã gen đột biến, bòn rút những linh kiện cốt lõi, rồi ép thân máy phải *mọc* ra những bộ phận tương tự. Bình minh, một người anh em mới đứng dậy từ đống sắt và thịt — **một phiên bản đã được thanh tẩy**: hình hài của cỗ xe, sức mạnh của con quái, và một linh hồn sạch. Súng cối từng nã vào chúng tôi suốt một chương đường, nay đổi chủ.
+Bởi nghi thức lớn nhất Cha truyền lại cho tôi không phải hồi sinh. Là **Phổ Hệ**. Khi một chúa tể gục ngã, tôi đặt một thân máy ngủ đông cạnh cái xác còn nóng, và cấy một Mầm Sống vào giữa. Rễ Mầm cắm phập vào xác chúa tể như một cỗ máy quét: đọc mã gen đột biến, bòn rút những linh kiện cốt lõi, rồi ép thân máy phải *mọc* ra những bộ phận tương tự. Khác với hồi sinh, nghi thức này không lấy đi của hộp ấp điều gì: Mầm ở đây làm **khuôn lọc**, không làm nhiên liệu — nguồn năng lượng biến dị cuồn cuộn của chính chúa tể bị hút qua bộ rễ, gạn sạch Miasma, rót vào thân máy; xong việc, tôi rút Mầm ra nguyên vẹn. **Kẻ bạo chúa tự trả giá cho người kế nhiệm mình.** Bình minh, một người anh em mới đứng dậy từ đống sắt và thịt — **một phiên bản đã được thanh tẩy**: hình hài của cỗ xe, sức mạnh của con quái, và một linh hồn sạch. Súng cối từng nã vào chúng tôi suốt một chương đường, nay đổi chủ.
 
 Mầm không sao chép mù quáng. Có những sức mạnh không thể — hoặc không *nên* — mọc lại trên một cơ thể sống, và khi ấy Mầm dùng chính DNA của chúa tể để sinh ra **khắc tinh** của hắn: lấy khiên của địch làm vũ khí của ta. Phả hệ đầy đủ của chín người anh em, và món nợ mỗi người mang với con quái đã sinh ra mình, tôi chép ở cuối cuốn sổ này.
 
@@ -149,7 +149,8 @@ Tôi đứng giữa Tâm Trái Đất rực sáng, cởi mặt nạ phòng độ
 |---|---|---|---|
 | 1 | Mắt sáng / mặt nạ / áo choàng | Art direction hero (chibi tactical) | khớp art hiện có |
 | 1 | Trường ngụy trang phủ được 3 người | Squad 3 hero/trận, 9 người cùng đoàn | khớp sẵn |
-| 1 | Mầm cần sạc ở trạm tiền tiêu; bầy đàn đánh hơi Mầm, nuốt xong rời trận | Sprout trong Greenspire hàng trên; zombie nhắm sprout, ăn xong biến mất | khớp sẵn (đây là lý do lore của luật) |
+| 1 | Mầm cần sạc ở Trạm Mầm; bầy đàn đánh hơi Mầm, nuốt xong rời trận | Sprout trong ô hàng trên; zombie nhắm sprout, ăn xong biến mất | khớp sẵn (đây là lý do lore của luật) |
+| 1 | Mỗi Mầm một trạm — mang bao nhiêu, giữ bấy nhiêu | Số ô cần bảo vệ trên bàn = số sprout hiện có; độ khó chỉnh ngân sách (easy 6 → nightmare 3) | **cần sửa** (PLAN §1b) |
 | 1 | Mầm = linh hồn, "xu không định giá được sinh mạng" | Sprout: ngân sách toàn run + tiền hồi sinh | **cần sửa** (PLAN §1) |
 | 2 | Không hồi sinh được khi đang bị săn đuổi | Hồi sinh chỉ ở node nghỉ | khớp sẵn |
 | 2 | Xe pháo đậu thức tỉnh khi hero đứng cạnh, tàn trận thì hỏng | Cây hoang DORMANT, isBattleOnlyUnit | khớp sẵn |
@@ -163,7 +164,7 @@ Tôi đứng giữa Tâm Trái Đất rực sáng, cởi mặt nạ phòng độ
 | 4 | Mỗi tháp +1 trang Bản Thiết Kế | +1 Blueprint mỗi lần tới node nghỉ | **cần sửa** (PLAN §3) |
 | 5 | Tàn Cơ niêm phong: thử thách → Di Sản | Mission → Relic | **cần sửa** (PLAN §4) |
 | 5 | Ngủ đông = nguyên sơ (fuse/hồi sinh được); nổ máy = nhiễm bẩn vĩnh viễn, chỉ chiến đấu | Cây hoang giữ ngủ → thu sau trận; bench đã ra sân → mất tư cách nguyên liệu | **cần thêm** (PLAN §4b) |
-| 6 | Nghi thức Phổ Hệ: thân máy + xác chúa tể + Mầm → anh em mới | Hero unlock qua defeat boss (`unlocks.ts` — hint "changes hands" khớp sẵn giọng) | khớp sẵn; flavor codex (Phụ lục B) |
+| 6 | Nghi thức Phổ Hệ: thân máy + xác chúa tể + Mầm (khuôn lọc, không tốn) → anh em mới | Hero unlock qua defeat boss, miễn phí (`unlocks.ts` — hint "changes hands" khớp sẵn giọng) | khớp sẵn; flavor codex (Phụ lục B) |
 | 6 | Boss hồi kết miền đất nhả Lõi | Cinder Colossus/Yeti/Voltmaw trả element | khớp sẵn |
 | 6 | Hòa nhịp = −2 nhịp sống, một nguyên tố mỗi thân | Element −2 maxHP, 1 element/hero | khớp sẵn |
 | 6 | Cả đội cùng nhịp → Cộng Hưởng | Resonance mono-element (`elements.ts`) | khớp sẵn |
@@ -175,7 +176,7 @@ Tôi đứng giữa Tâm Trái Đất rực sáng, cởi mặt nạ phòng độ
 
 ## PHỤ LỤC B — PHẢ HỆ: CHÍN NGƯỜI ANH EM VÀ MÓN NỢ VỚI CHÚA TỂ
 
-*Nghi thức Phổ Hệ đọc mã gen đột biến của chúa tể vừa ngã, bòn rút linh kiện cốt lõi, và ép thân máy ngủ đông mọc ra phần tương tự. Có hai kết cục: Mầm **sao chép** khi sức mạnh ấy sống được trên một cơ thể sạch — và Mầm **phản chế** khi sức mạnh ấy không thể (hoặc không nên) mọc lại, dùng chính DNA của chúa tể để sinh ra khắc tinh của hắn.*
+*Nghi thức Phổ Hệ đọc mã gen đột biến của chúa tể vừa ngã, bòn rút linh kiện cốt lõi, và ép thân máy ngủ đông mọc ra phần tương tự. Mầm làm khuôn lọc chứ không làm nhiên liệu — năng lượng của nghi thức lấy từ chính xác chúa tể, hộp ấp không mất gì. Có hai kết cục: Mầm **sao chép** khi sức mạnh ấy sống được trên một cơ thể sạch — và Mầm **phản chế** khi sức mạnh ấy không thể (hoặc không nên) mọc lại, dùng chính DNA của chúa tể để sinh ra khắc tinh của hắn.*
 
 **Thế hệ đầu — Cha tạo trong hầm ngầm, không qua Phổ Hệ:** Sunbloom, Peaburst, Ironhusk (và các thân máy gốc của họ).
 

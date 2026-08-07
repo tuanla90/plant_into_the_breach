@@ -242,6 +242,23 @@ export const hasFusionEffect = (unit: Unit, type: FusionEffectType): boolean =>
     getFusionEffects(unit).some(effect => effect.type === type);
 
 /**
+ * ĐANG CHỐNG ĐƯỢC CÚ VA CHẠM — nền chung của cột Tấm Giáp, ba ô cùng mua.
+ *
+ * Ba tanker ghép Tấm Giáp đọc thành một câu: **cùng một nền, ba cái đuôi khác nhau.**
+ *   - `STEADFAST`         (Ironhusk)   nền + `-1` mọi nguồn
+ *   - `COLLISION_PLATING` (Chardslam)  nền + miễn mọi dịch chuyển cưỡng bức
+ *   - `SPINED_PLATING`    (Thornshell) nền + thân va vào anh tự mất 2 máu
+ *
+ * Nền = miễn damage va chạm + bịt hố spawn không mất máu. Gom vào một vị ngữ vì trước đây luật
+ * đó được gõ tay ở ba nơi và ĐÃ trôi khỏi nhau một lần (xem `applyCollisionDamage`); thêm hai
+ * ô nữa vào ba bản chép tay là mời đúng cái bug đó quay lại.
+ */
+export const bracedAgainstCollision = (unit: Unit): boolean =>
+    hasFusionEffect(unit, 'STEADFAST')
+    || hasFusionEffect(unit, 'COLLISION_PLATING')
+    || hasFusionEffect(unit, 'SPINED_PLATING');
+
+/**
  * Total value of every effect of this type. Returns 0 when the unit has none.
  *
  * Values sum, which matters only if two different materials ever share an effect

@@ -38,20 +38,32 @@ Hiện trạng: hồi sinh giá `COIN_REVIVE_HERO = 75` tại campfire/camp (`co
   để mà tiêu.
 - Lưới an toàn "cuối chapter hồi sinh miễn phí" (DESIGN §2) giữ nguyên — lore: cập bến
   miền đất mới, cả đoàn được Cỗ Tàu tái tạo.
-- **Cân bằng cần canh:** ngân sách 5 sprout/run giờ gánh cả thua-nhà lẫn hồi sinh →
-  cần playtest; có thể nâng ngân sách gốc lên 6, hoặc để nguyên 5 cho đau. Đề xuất:
-  giữ 5, vì shop đã có van xả (§2).
-
 File đụng tới (ước lượng): `constants.ts`, `hooks/useGameProgression.ts`,
 `components/CampScreen.tsx` (tách nhánh campfire/camp), `components/EventScreen.tsx`
 (event hồi sinh nếu có), i18n, DESIGN.md §2/§5.
+
+## §1b. Ngân sách sprout theo độ khó + "mỗi Mầm một ô cần bảo vệ" (ĐÃ CHỐT)
+
+- Ngân sách sprout khởi điểm gắn với **độ khó trong setting**: easy **6** → nightmare
+  **3** (nightmare = 3, khớp 3 hero, vẫn chơi được vì ít mầm = ít điểm phải giữ).
+- **Cơ chế mới:** số ô cần bảo vệ trên bàn (hàng Trạm Mầm) = **số sprout hiện có**,
+  cập nhật theo run — mất/tiêu sprout thì trận sau ít trạm hơn. Lore ch.1: "mang theo
+  bao nhiêu linh hồn, mỗi điểm dừng phải dàn quân giữ bấy nhiêu trạm."
+- Hệ quả thiết kế đẹp: hồi sinh (tiêu 1 sprout, §1) đồng thời rút ngắn phòng tuyến —
+  một quyết định, hai mặt giá.
+- Kỹ thuật: số nhà hàng trên hiện cố định trong encounter — cần derive từ sprout đếm
+  được lúc vào trận (`utils/encounterBuilder.ts`, Board render, `turnManager` targeting
+  không đổi vì zombie đã nhắm sprout gần nhất).
+
+File: `utils/encounterBuilder.ts`, `components/Board*`, `constants.ts` (bảng độ khó),
+settings UI, DESIGN.md §1.
 
 ## §2. Shop bán Sprout — giá "toàn bộ xu"
 
 Mới hoàn toàn:
 - Mỗi lần ghé shop, có **1 suất Mầm Sống** (mua tối đa 1/lần ghé).
-- Giá = **toàn bộ coin đang có**, với **sàn tối thiểu** (đề xuất **100 coin** — dưới sàn
-  thì nút khóa, "lão Mulch chê túi nhóc nhẹ quá").
+- Giá = **toàn bộ coin đang có**, với **sàn tối thiểu 100 coin** (ĐÃ CHỐT — dưới sàn
+  thì nút khóa, "lão Mulch chê túi nhóc nhẹ quá"). Độ khó cao hơn: sàn +20 mỗi bậc.
 - Vì sao không giá cố định (đúng lo ngại của chủ dự án): giá cố định rẻ → mỗi shop +1
   mầm, ngân sách sprout mất răng. Giá all-in tạo đúng thế lưỡng nan của lore: mua mạng
   là từ bỏ mọi kế hoạch mua cây/fusion của node đó — và người chơi giàu trả nhiều hơn
@@ -76,8 +88,8 @@ Hiện trạng: 1 level chỉ huy = 1 công thức; XP từ layer/objective/act
 - Bonus objective hiện trả recipe (3 objective = 1 recipe) → **đổi sang trả Relic** (§4),
   hết vai trò trả recipe.
 - **Cân bằng cần canh:** tần suất node nghỉ ~10%/map + luật "mỗi 3 tầng có campfire"
-  (DESIGN §2) → ước 1–2 blueprint/run, chậm hơn 2–3 level/run hiện tại. Nếu đói, cho
-  event/Tàn Cơ thưởng thêm blueprint lẻ.
+  (DESIGN §2) → ước 1–2 blueprint/run, chậm hơn 2–3 level/run hiện tại. Nguồn phụ
+  (event/Tàn Cơ thưởng blueprint lẻ) được phép dùng để bù nhịp (ĐÃ CHỐT).
 
 File: `data/unlocks.ts`, `utils/persistence.ts` (migration), `hooks/useGameProgression.ts`,
 màn hình hiển thị level (App/Codex), i18n, DESIGN.md §7.
@@ -113,11 +125,15 @@ như máy vô hồn tới khi vỡ). Cơ chế tương ứng:
 4. Hệ quả UI: bench hiển thị trạng thái nguyên sơ/nhiễm bẩn (icon lá xanh / khói tím);
    màn fusion và màn hồi sinh lọc bỏ thân máy nhiễm bẩn, tooltip nói lý do.
 
-**Cân bằng cần canh:** (1) nhặt cây hoang miễn phí ~25% trận thường = nguồn material
-mới, có thể phải giảm tỉ lệ spawn cây hoang hoặc cho zombie ưu tiên phá cây DORMANT
-để "giữ được nó ngủ yên" là một thử thách thật chứ không phải quà; (2) luật nhiễm bẩn
-làm dự bị rẻ giá trị hơn — đúng chủ đích (bảo hiểm có giá thật), nhưng cần xem lại giá
-mua material 25–225 coin.
+**ĐÃ CHỐT — zombie chủ động phá cây DORMANT** để "giữ được nó ngủ yên" là thử thách
+thật chứ không phải quà. Kèm điều kiện: **sửa vị trí spawn cây hoang vào nửa trong
+của bàn** (hiện spawn giữa bàn — phải nằm trên/gần đường bầy đàn tràn qua thì mối đe
+dọa mới thật). Đụng: `utils/encounterBuilder.ts` (vùng spawn), `utils/aiLogic.ts` +
+`turnManager` (DORMANT thành mục tiêu hợp lệ của zombie — cân nhắc ưu tiên thấp hơn
+sprout để không phá luật "zombie đi về phía sprout gần nhất" một cách khó đọc).
+
+**Cân bằng cần canh:** luật nhiễm bẩn làm dự bị rẻ giá trị hơn — đúng chủ đích
+(bảo hiểm có giá thật), nhưng cần xem lại giá mua material 25–225 coin.
 
 File: `types.ts` (BenchPlant + Unit.isWild flow), `utils/encounterBuilder.ts`,
 `utils/turnManager.ts` (AI có phá DORMANT không), `hooks/useGameProgression.ts`,
@@ -125,12 +141,15 @@ File: `types.ts` (BenchPlant + Unit.isWild flow), `utils/encounterBuilder.ts`,
 
 ## §4c. Nghi thức Phổ Hệ — flavor cho hero unlock (KHÔNG đổi luật)
 
-Hero vẫn unlock đúng như `data/unlocks.ts` (defeat boss → hero). Chỉ thay khung kể:
-không phải "giải vây người trấn thủ" mà là **thân máy ngủ đông + xác boss + Mầm →
-người anh em mới mang sức mạnh (hoặc khắc tinh) của boss** — chi tiết từng cặp ở
-game_lore.md Phụ lục B. Hint text trong `unlocks.ts` ("changes hands", "take the fire
-from it") vốn đã đúng giọng này, gần như không phải sửa. Việc cần làm: cutscene/codex
-mô tả nghi thức + 6 đoạn phả hệ (Phụ lục B đã viết sẵn), i18n.
+Hero vẫn unlock đúng như `data/unlocks.ts` (defeat boss → hero), **miễn phí — ĐÃ CHỐT**.
+Chỉ thay khung kể: không phải "giải vây người trấn thủ" mà là **thân máy ngủ đông +
+xác boss + Mầm → người anh em mới mang sức mạnh (hoặc khắc tinh) của boss** — chi tiết
+từng cặp ở game_lore.md Phụ lục B. Lý do lore cho việc miễn phí: Mầm làm **khuôn lọc**
+chứ không làm nhiên liệu — năng lượng nghi thức rút từ chính khối biến dị của xác boss,
+Mầm rút ra nguyên vẹn ("kẻ bạo chúa tự trả giá cho người kế nhiệm mình"). Hint text
+trong `unlocks.ts` ("changes hands", "take the fire from it") vốn đã đúng giọng này,
+gần như không phải sửa. Việc cần làm: cutscene/codex mô tả nghi thức + 6 đoạn phả hệ
+(Phụ lục B đã viết sẵn), i18n.
 
 ## §5. Tutorial — dựng lại theo mạch lore chương 2
 
@@ -174,7 +193,7 @@ khi người chơi gặp node nghỉ.
 
 | Thuật ngữ | Quyết định |
 |---|---|
-| **Tháp Xanh / Greenspire** | MỘT mạng lưới, hai cấp: **nhà trên bàn cờ** = trạm mầm tiền tiêu của mạng lưới (giữ tên Greenspire); **node nghỉ** = một Tháp Xanh trọn vẹn (đổi tên node "Campfire/Mái Lều" → "Tháp Xanh", icon tháp thay icon lều). Không cần rename code, chỉ đổi string hiển thị + icon |
+| **Tháp Xanh / Greenspire** vs **Trạm Mầm / Seedpost** | HAI thuật ngữ riêng (ĐÃ CHỐT), cùng một mạng lưới lore: **node nghỉ** = **Greenspire / Tháp Xanh** (thay "Campfire/Mái Lều", icon tháp thay icon lều); **ô chứa mầm trên bàn cờ** (city của ItB) = **Seedpost / Trạm Mầm** (tên MỚI — NAMING.md hiện gán "Greenspire/Tháp Xanh" cho ô này, cần cập nhật bảng NAMING + mọi string hiển thị/tutorial nhắc "Greenspire" nghĩa cũ, vd. thoại bàn 7 "the last Greenspire"). Chỉ đổi string hiển thị + icon, không rename code id |
 | **The Blight / Đốm Tàn** | Tên bệnh chính thức (khớp title Blightfall). **Miasma** = màn sương bào tử, "hơi thở" của Blight — hai từ cùng tồn tại, không thay nhau |
 | **Derelict / Tàn Cơ** | NPC giao mission (§4). Cấm dùng "Material" cho nghĩa này |
 | **Blueprint / Bản Thiết Kế** | Đơn vị mở công thức fusion (§3) |
@@ -194,16 +213,23 @@ khi người chơi gặp node nghỉ.
 
 Mỗi bước: `npm run typecheck` + mở dev cho `tutorial.assert.ts` tự chạy.
 
-## §9. Câu hỏi còn mở
+## §9. Quyết định đã chốt (2026-08-08) + việc còn mở
 
-- Ngân sách sprout gốc giữ 5 hay nâng 6 khi hồi sinh cũng ăn sprout? (§1 — đề xuất giữ 5)
-- Sàn giá sprout ở shop: 100 coin? (§2)
-- Blueprint có nguồn phụ (event/Tàn Cơ) không, hay chỉ node nghỉ? (§3)
+Đã chốt bởi chủ dự án:
+- Ngân sách sprout theo **độ khó**: easy 6 → nightmare 3; số ô cần bảo vệ = số sprout
+  hiện có (§1b).
+- Sàn giá sprout shop: **100 coin**, độ khó cao hơn +20 mỗi bậc (§2).
+- Blueprint **được phép có nguồn phụ** (event/Tàn Cơ) (§3).
+- **"Quà của người đi trước" chắc chắn làm** (kiểu Slay the Spire — thưởng khởi đầu cho
+  run sau game-over; run đầu tiên của save thì không). Cơ chế chưa có trong code —
+  viết mới: đề xuất 1–2 item thường roll từ pool shop, hiện ở màn bắt đầu run kèm câu
+  "Đồ của người đi trước để lại."
+- **Zombie chủ động phá cây DORMANT** + dời vùng spawn cây hoang vào nửa trong bàn (§4b).
+- Nghi thức Phổ Hệ **miễn phí** — lore "Mầm làm khuôn lọc, boss tự trả năng lượng" (§4c).
+- **Hai thuật ngữ riêng**: Greenspire/Tháp Xanh = node nghỉ; Seedpost/Trạm Mầm = ô chứa
+  mầm trên bàn (§7).
+
+Còn mở:
 - Node nghỉ đổi icon lều → tháp: có cần art mới không (`art-src/ART-TODO.md`)?
-- "Quà của người đi trước" (lore ch.2): run sau game-over nhận vài item khởi đầu, run
-  đầu tiên của save thì không — cần xác nhận cơ chế hiện tại đã có hay phải viết mới
-  (chưa thấy trong code; nếu viết mới: 1–2 item thường, roll từ pool shop, hiện ở
-  màn bắt đầu run kèm câu "Đồ của người đi trước để lại").
-- Zombie có chủ động phá cây hoang DORMANT không (§4b — để "giữ ngủ yên" thành thử thách)?
-- Nghi thức Phổ Hệ trong lore dùng 1 Mầm — có bắt trả 1 sprout tại trận boss unlock hero
-  không, hay để nguyên miễn phí (đề xuất: miễn phí, nghi thức diễn ra ngoài khung run)?
+- Giá material 25–225 coin có cần chỉnh sau luật nhiễm bẩn (§4b)?
+- DORMANT trong ưu tiên mục tiêu của zombie đứng dưới sprout bao xa (§4b)?

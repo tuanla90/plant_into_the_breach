@@ -285,7 +285,16 @@ export const planPush = (
     // PUSH immunity as a STATE rather than a stat. Sandreaver is not push-immune — it is
     // push-immune while it is under the board, and an entry in `immunities` could never be
     // turned back off when it surfaces.
-    if (mover.immunities.includes('PUSH') || mover.isBurrowed) return plan;
+    /**
+     * UNSTOPPABLE CHARD (`COLLISION_PLATING`) — bất động minh vương: PUSH/PULL/TOSS không xê
+     * dịch được anh. Đọc fusion ngay tại cửa mà `immunities` đang dùng, KHÔNG ghi vào `immunities`
+     * trên thân — làm thế là phải migrate mọi bản save đang có.
+     *
+     * Hệ quả cố ý: trùm chuyên đẩy-hero mất bài với anh, và anh đứng bịt hố thì không gì cạy ra
+     * được. Đó là tính năng — người ném thì không ai nên ném được.
+     */
+    if (mover.immunities.includes('PUSH') || mover.isBurrowed
+        || hasFusionEffect(mover, 'COLLISION_PLATING')) return plan;
 
     // Collision damage collects in a set that outlives the individual tiles: a middle unit in
     // a three-body train is bumped from both sides — and now, over a long shove, possibly on
@@ -415,8 +424,26 @@ export const calculateDamage = (
     //
     // Armored Jaws joins the same sum, fenced inside the window it is sold for: the hide
     // thickens for the two turns Snapmaw cannot act and is worth nothing the rest of the fight.
+    /**
+     * CỘT TẤM GIÁP — ba ô giảm-damage-CÓ-ĐIỀU-KIỆN, cộng vào đúng cái tổng này chứ không mở
+     * đường riêng, để luật "không bao giờ đưa một đòn xuống dưới 1" chỉ có MỘT nơi cưỡng chế.
+     *
+     * Cả ba đọc được ngay từ `target` — không cần bàn cờ, không cần biết ai đánh:
+     *   - Dug-in Cob   : lượt này KHÔNG di chuyển  → `!hasMoved`
+     *   - Airframe     : lượt này CÓ di chuyển     → `hasMoved`
+     *   - Guarded Bloom: đang kề ally              → status ESCORTED, tính sẵn trong processTurn
+     *
+     * Hai ô đầu là hai nửa của cùng một predicate, cố ý: pháo cắm chân, máy bay không bao giờ
+     * đứng yên. Người chơi học một luật, dùng được hai chỗ.
+     */
+    const emplaced = !target.hasMoved ? getFusionEffectValue(target, 'EMPLACED_PLATING') : 0;
+    const slipstream = target.hasMoved ? getFusionEffectValue(target, 'SLIPSTREAM_PLATING') : 0;
+    const escorted = target.statusEffects?.includes('ESCORTED')
+        ? getFusionEffectValue(target, 'ESCORTED_REDUCTION') : 0;
+
     const reduction = getFusionEffectValue(target, 'DAMAGE_REDUCTION')
         + getFusionEffectValue(target, 'STEADFAST')
+        + emplaced + slipstream + escorted
         + ((target.digestingTurns ?? 0) > 0 ? getFusionEffectValue(target, 'ARMOR_WHILE_DIGESTING') : 0);
     let damageToDeal = reduction > 0 && amount > 0 ? Math.max(1, amount - reduction) : amount;
 

@@ -4,7 +4,7 @@ import { getTileAt, getUnitAt, findPath, calculateDamage, canStopOn, canCrossBod
 import { applyPushPlan, applyCollisionDamage } from './actionBuilders';
 import { planEnemyIntent } from './aiLogic';
 import { tutorialBattle } from '../data/tutorial';
-import { getFusionEffectValue, hasFusionEffect } from './fusion';
+import { getFusionEffectValue, hasFusionEffect, bracedAgainstCollision } from './fusion';
 import { activeResonance, chainDamageFor, chainStep, ELEMENT_WORLDS, rollEnemyElement } from './elements';
 import { planHazard } from '../data/hazards';
 import { hooksFor } from './bossBehaviours';
@@ -437,7 +437,7 @@ export const processTurn = (
         // BLOCK SPAWN LOGIC
         if (occupant) {
              // Iron Bulwark: plugs the hole without taking the emergence hit.
-             const painless = hasFusionEffect(occupant, 'STEADFAST');
+             const painless = bracedAgainstCollision(occupant);
              // FIX: Use 'DAMAGE' eventType so HP is actually reduced in GameEngine
              const result = painless
                 ? { finalDamage: 0, shieldDamage: 0, remainingShield: occupant.shield || 0, remainingHp: occupant.hp, isFatal: false }
@@ -682,6 +682,33 @@ export const processTurn = (
         u.statusEffects = cleared;
         actions.push({ type: 'UPDATE_UNIT_STATE', unitId: u.id, updates: { statusEffects: cleared } });
     });
+
+    /**
+     * GUARDED BLOOM (`ESCORTED`) — tính NGAY TRƯỚC pha địch đánh, và đó là toàn bộ lý do nó
+     * nằm đúng chỗ này.
+     *
+     * `calculateDamage` chỉ nhận `target`, không hề thấy bàn cờ, nên "đang kề ally hay không"
+     * phải được chốt thành một status trước khi đòn rơi. Khoảnh khắc đúng để chốt là lúc người
+     * chơi vừa xếp xong đội hình và địch sắp vung tay — chốt sớm hơn thì một hero đi ra khỏi
+     * nhóm vẫn mang giáp, chốt muộn hơn thì đòn đầu tiên đã tính bằng dữ liệu cũ.
+     *
+     * Quét sạch rồi dán lại mỗi lượt, cùng kỷ luật với `CONVOYED`.
+     */
+    {
+        const allies = simUnits.filter(u => !u.isEnemy && u.hp > 0);
+        allies.forEach(u => {
+            const should = hasFusionEffect(u, 'ESCORTED_REDUCTION')
+                && allies.some(o => o.id !== u.id
+                    && Math.abs(o.position.x - u.position.x) + Math.abs(o.position.y - u.position.y) === 1);
+            const had = u.statusEffects.includes('ESCORTED');
+            if (had === should) return;
+            const next = should
+                ? [...u.statusEffects, 'ESCORTED' as const]
+                : u.statusEffects.filter(e => e !== 'ESCORTED');
+            u.statusEffects = next;
+            actions.push({ type: 'UPDATE_UNIT_STATE', unitId: u.id, updates: { statusEffects: next } });
+        });
+    }
 
     // --- PHASE 3: ENEMY ACTIONS (EXECUTE INTENT) ---
     const enemies = simUnits.filter(u => u.isEnemy && !stunnedUnitIds.has(u.id));

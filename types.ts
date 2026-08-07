@@ -119,6 +119,11 @@ export type StatusEffectType = 'BURN' | 'FREEZE' | 'STUN' | 'HYPNOTIZED' | 'ENRA
      */
     | 'CONVOYED'
     /**
+     * Dang duoc ho tong - ke it nhat mot ally. Tinh lai moi luot ngay truoc pha dich danh, vi
+     * calculateDamage chi nhan `target` va khong he thay ban co. Xem ESCORTED_REDUCTION.
+     */
+    | 'ESCORTED'
+    /**
      * Cannot act at all, and never recovers on its own. Unlike STUN (one turn) and FREEZE
      * (until hit), nothing clears this — it is set by scripted content for a unit the player
      * has to protect rather than command.
@@ -1217,6 +1222,42 @@ export type FusionEffectType =
      * thì phải đứng dính chùm, đúng thứ mà AoE, tia lan điện và Blast Chard trừng phạt.
      */
     | 'CONVOY_AURA'
+    /**
+     * Guarded Bloom - dung ke >=1 ally thi moi don nhan vao -1.
+     *
+     * Doc qua status ESCORTED chu khong tu do adjacency trong calculateDamage: ham do chi nhan
+     * `target`, khong he thay ban co. Status duoc tinh lai ngay TRUOC pha dich danh (processTurn),
+     * tuc dung khoanh khac quan trong - the tran luc nguoi choi vua xep xong doi hinh.
+     */
+    | 'ESCORTED_REDUCTION'
+    /**
+     * Dug-in Cob - luot nao KHONG di chuyen thi moi don nhan vao -1. Ha chan chong.
+     *
+     * Doc thang `target.hasMoved` ngay canh DAMAGE_REDUCTION, 0 thay doi chu ky. Bi DAY khong
+     * tinh la di chuyen (hasMoved chi bat khi tu buoc) - cung luat ma SUN_PER_TURN dung.
+     */
+    | 'EMPLACED_PLATING'
+    /**
+     * Airframe - luot nao CO di chuyen thi moi don nhan vao -1. Dung im la an du.
+     *
+     * Nua doi xung cua EMPLACED_PLATING, doc CUNG mot predicate. Ban dau ke hoach dinh loc theo
+     * melee/ranged, nhung roster chi co 1/12 zombie thuong ban xa nen o do se ngu dong gan het
+     * run; va calculateDamage khong biet ai danh nen loc kieu do phai bom attacker qua 21 noi goi.
+     */
+    | 'SLIPSTREAM_PLATING'
+    /**
+     * Unstoppable Chard - mien 100%% damage va cham, bit ho spawn khong mat mau, va mien MOI
+     * dich chuyen cuong buc (PUSH/PULL/TOSS). Nguoi nem thi khong ai nem duoc.
+     */
+    | 'COLLISION_PLATING'
+    /**
+     * Thorn Plating - nen tanker giong hai o tren (mien damage va cham + mien damage bit ho),
+     * cong cai duoi rieng cua Thornshell: than nao VA CHAM vao anh thi chinh no mat 2 mau.
+     *
+     * Ba o Tam Giap cua ba tanker doc thanh mot cau: cung mot nen, ba cai duoi khac nhau -
+     * Ironhusk them -1 moi nguon, Chardslam them mien day, Thornshell them gai.
+     */
+    | 'SPINED_PLATING'
     /**
      * Overdrive Rotor — sau khi TẤN CÔNG, hero này được đi nốt **số ô chưa tiêu** của lượt.
      *

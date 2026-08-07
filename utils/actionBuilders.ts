@@ -1,6 +1,6 @@
 import { ElementId, Position, TerrainDefinition, TileData, TurnAction, Unit, UnitType } from '../types';
 import { calculateDamage, planPush, shieldUpdatesFor } from './gameLogic';
-import { getFusionEffectValue, hasFusionEffect } from './fusion';
+import { getFusionEffectValue, hasFusionEffect, bracedAgainstCollision } from './fusion';
 
 /**
  * The two builders every attack, item and shove funnels through.
@@ -94,9 +94,9 @@ export const applyCollisionDamage = (
 ): ReturnType<typeof calculateDamage> | null => {
     if (unit.hp <= 0) return null;
 
-    // Iron Bulwark và họ hàng: thân đã chống thì cú slam không làm gì. Vẫn phát BLOCK để người
-    // chơi thấy nó đã chặn, chứ không phải đòn bị nuốt mất.
-    if (hasFusionEffect(unit, 'STEADFAST')) {
+    // Nền chung của cột Tấm Giáp: thân đã chống thì cú slam không làm gì. Vẫn phát BLOCK để
+    // người chơi thấy nó đã chặn, chứ không phải đòn bị nuốt mất.
+    if (bracedAgainstCollision(unit)) {
         actions.push({ type: 'APPLY_DAMAGE', targetId: unit.id, amount: 0, eventType: 'BLOCK', pos: unit.position });
         return null;
     }
@@ -211,5 +211,28 @@ export const applyPushPlan = (
         if (!u) return;
         const r = applyCollisionDamage(u, 1, actions);
         if (r?.isFatal) pushKill(actions, u, killer ?? undefined);
+    });
+
+    /**
+     * THORN PLATING — thân nào VA CHẠM vào Thornshell thì chính nó mất 2 máu.
+     *
+     * Đọc `plan.impacts` (cặp va chạm kèm vị trí, dựng cho Blast Chard) chứ không đọc
+     * `plan.collided`: cần biết ai đâm vào AI, mà mảng phẳng kia đã mất thông tin cặp. Chỉ ca
+     * thân-vào-thân mới có gai — đẩy anh vào tường thì bức tường không đau.
+     *
+     * Đi qua `applyCollisionDamage` nên gai cũng xuyên giáp mũ, vỡ lớp chắn, và một tanker khác
+     * đâm vào anh thì được nền của chính nó che. Không có đường damage thứ hai.
+     */
+    plan.impacts.forEach(({ a, b }) => {
+        const at = (p: Position) => [...sim.values()].find(
+            u => u.hp > 0 && u.position.x === p.x && u.position.y === p.y);
+        const ua = at(a), ub = at(b);
+        if (!ua || !ub) return;
+        [[ua, ub], [ub, ua]].forEach(([spiked, hitter]) => {
+            if (!hasFusionEffect(spiked, 'SPINED_PLATING')) return;
+            if (hitter.hp <= 0) return;
+            const r = applyCollisionDamage(hitter, 2, actions);
+            if (r?.isFatal) pushKill(actions, hitter, spiked);
+        });
     });
 };
