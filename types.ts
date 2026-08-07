@@ -100,6 +100,18 @@ export type StatusEffectType = 'BURN' | 'FREEZE' | 'STUN' | 'HYPNOTIZED' | 'ENRA
      */
     | 'PROVOKED'
     /**
+     * KẸT CHÂN — không đi được, nhưng VẪN ĐÁNH được. Kéo dài đúng một lượt, xoá cùng chỗ STUN.
+     *
+     * Đây là điểm khác STUN, và là toàn bộ lý do nó tồn tại như một status riêng: STUN RULE cấm
+     * "xoá lượt của địch mỗi lượt, miễn phí". Ô sinh ra nó (Jamming Plate) không xoá lượt nào —
+     * con zombie vẫn hành động, chỉ là hành động vào đúng người vừa kẹp nó lại, mà ăn đòn là
+     * nghề của người đó. Nó bị ghim CHÂN, không bị ghim NÃO.
+     *
+     * Đi kèm `PROVOKED` chứ không thay thế: kẹt trên giáp thì vừa không đi được vừa không quay
+     * sang tìm ai khác. Hai nửa của cùng một câu "mày dính vào tao rồi".
+     */
+    | 'ROOTED'
+    /**
      * Cannot act at all, and never recovers on its own. Unlike STUN (one turn) and FREEZE
      * (until hit), nothing clears this — it is set by scripted content for a unit the player
      * has to protect rather than command.
@@ -1146,6 +1158,30 @@ export type FusionEffectType =
      * bọc giáp nhầm cho địch là một sai lầm, hồi máu cho địch là một ô hỏng.
      */
     | 'SHIELD_SHOT'
+    /**
+     * Recoil Cob — đòn thường của hero này KÉO mục tiêu một ô về phía mình, thay vì hất ra.
+     *
+     * Đối xứng hoàn toàn với `ON_HIT_PUSH`: cùng mức đền (đẩy 1 ↔ kéo 1), cùng cái chốt "skill
+     * đã tự có push/pull thì thôi", và đi qua đúng `planPush` nên va chạm vẫn tính damage như
+     * mọi cú đẩy. Không sinh luật thứ hai nào.
+     *
+     * Displacement chiều ngược là thứ chưa ô nào bán trên đòn thường. Nó cũng tự combo với
+     * Overwatch Pea mà không cần code riêng — `OVERWATCH_SHOT` kích theo cú shove của đội, và
+     * kéo cũng là một cú shove: Cornova giật zombie vào hàng ngắm, Peaburst nổ súng.
+     */
+    | 'ON_HIT_PULL'
+    /**
+     * Jamming Plate — thứ gì đánh CẬN CHIẾN vào hero này thì lượt sau bị `ROOTED` + `PROVOKED`
+     * khoá vào chính cô: không đi được, không quay sang ai khác, nhưng VẪN đánh được.
+     *
+     * Vì sao nó không đụng STUN RULE: luật cấm "xoá lượt của địch, miễn phí, mỗi lượt". Ô này
+     * không xoá lượt nào — con zombie vẫn hành động, chỉ là hành động vào đúng người vừa kẹp
+     * nó lại, mà ăn đòn là nghề của người đó (Sunstone Shield còn TRẢ TIỀN cho việc đó). Nó
+     * ghim CHÂN chứ không ghim NÃO.
+     *
+     * Melee-only như mọi phản đòn khác (L4), và thân miễn nhiễm STATUS thì không dính.
+     */
+    | 'RETALIATE_ROOT'
     /**
      * Shields this hero hands out spill over to whoever stands beside the recipient.
      * Replaces SHIELD_BONUS ("+2 size"), which stopped meaning anything when shields became

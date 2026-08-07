@@ -362,6 +362,21 @@ export const applyFusionToSkill = (skill: Skill, caster: Unit): Skill => {
         if (hasFusionEffect(caster, 'ON_HIT_PUSH') && !skill.effects.some(e => e.type === 'PUSH' || e.type === 'PULL')) {
             extra.push({ type: 'PUSH', value: 1 });
         }
+        /**
+         * RECOIL COB (ON_HIT_PULL) — lò xo hoạt động hai chiều: đạn cối KÉO mục tiêu một ô về
+         * phía cô, thay vì hất ra.
+         *
+         * Đối xứng hoàn toàn với `ON_HIT_PUSH` ngay trên, kể cả cái chốt "skill đã tự có
+         * push/pull thì thôi": hai ô đền cùng một mức (đẩy 1 ↔ kéo 1) và đi qua đúng `planPush`,
+         * nên va chạm vẫn tính damage như mọi cú đẩy khác. Không có luật thứ hai nào cả.
+         *
+         * Displacement CHIỀU NGƯỢC là thứ chưa ô nào trong ma trận bán trên đòn thường — và nó
+         * tự combo với Overwatch Pea mà không cần một dòng code riêng: `OVERWATCH_SHOT` kích
+         * theo "cú shove của đội", mà PULL cũng là một cú shove.
+         */
+        if (hasFusionEffect(caster, 'ON_HIT_PULL') && !skill.effects.some(e => e.type === 'PUSH' || e.type === 'PULL')) {
+            extra.push({ type: 'PULL', value: 1 });
+        }
         if (hasFusionEffect(caster, 'ON_HIT_FREEZE') && !skill.effects.some(e => e.type === 'STUN')) {
             extra.push({ type: 'STUN' });
         }

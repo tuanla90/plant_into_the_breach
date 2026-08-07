@@ -1165,6 +1165,32 @@ export const processTurn = (
                 // it just spent its turn walking up to, so it has to pay for the same ground
                 // twice. Routed through planPush/applyPushPlan like every other shove in the
                 // game, so it drowns, chains and hands over sprouts by identical rules.
+                /**
+                 * JAMMING PLATE (RETALIATE_ROOT) — thứ gì đấm vào giáp cô thì kẹt lại đó.
+                 *
+                 * Hai nửa của một câu, đặt cùng lúc: `ROOTED` cắt nửa di chuyển của lượt sau,
+                 * và `PROVOKED` + `provokedBy` khoá nó vào chính cô — nên nó không đi được mà
+                 * cũng không quay sang tìm ai khác. Vẫn ĐÁNH được, và đó là chỗ ô này khác
+                 * STUN: không lượt nào bị xoá, con zombie vẫn hành động, chỉ là hành động vào
+                 * đúng người vừa kẹp nó. Ăn đòn là nghề của cô — Sunstone Shield còn trả tiền
+                 * cho việc đó. Vì thế STUN RULE không bị đụng tới.
+                 *
+                 * Melee-only như mọi phản đòn khác (L4): gai cắt thứ chạm tới nó.
+                 */
+                if (enemy.hp > 0 && inMelee && hasFusionEffect(targetUnit, 'RETALIATE_ROOT')
+                    && !enemy.immunities.includes('STATUS')) {
+                    const next: typeof enemy.statusEffects = [...enemy.statusEffects];
+                    if (!next.includes('ROOTED')) next.push('ROOTED');
+                    if (!next.includes('PROVOKED')) next.push('PROVOKED');
+                    actions.push({
+                        type: 'UPDATE_UNIT_STATE',
+                        unitId: enemy.id,
+                        updates: { statusEffects: next, provokedBy: targetUnit.id },
+                    });
+                    enemy.statusEffects = next;
+                    enemy.provokedBy = targetUnit.id;
+                }
+
                 if (enemy.hp > 0 && inMelee && hasFusionEffect(targetUnit, 'RETALIATE_PUSH')) {
                     const offX = enemy.position.x - targetUnit.position.x;
                     const offY = enemy.position.y - targetUnit.position.y;

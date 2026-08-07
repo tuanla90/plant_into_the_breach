@@ -302,9 +302,9 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_THORNSHELL: {
-            name: 'Spiked Bulwark',
-            description: 'Plate Slam deals +1 extra damage and reflects +1 retaliate damage when struck in melee.',
-            effect: { type: 'RETALIATE_DAMAGE', value: 1 },
+            name: 'Jamming Plate',
+            description: 'Anything that punches her plating gets stuck in it: next turn it cannot move a step, though it can still swing — and it can only swing at her.',
+            effect: { type: 'RETALIATE_ROOT' },
             live: true,
         },
         MAT_CHARDSLAM: {
@@ -366,9 +366,9 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_CHARDSLAM: {
-            name: 'Overwatch Cob',
-            description: 'Any enemy the squad shoves within reach of her arc eats a kernel for 1 — her own turn is untouched.',
-            effect: { type: 'OVERWATCH_SHOT' },
+            name: 'Recoil Cob',
+            description: 'The spring runs both ways: her kernels drag what they hit one tile TOWARDS her — out of an ally\'s face, into the next blast, or onto whatever is waiting behind it.',
+            effect: { type: 'ON_HIT_PULL', value: 1 },
             live: true,
         },
         MAT_GOURDWARD: {

@@ -255,7 +255,7 @@ export const useGameEngine = () => {
                       // BURN stays on both sides: it ticks in PHASE 2 for everyone and is billed
                       // there, so its clock is already correct.
                       statusEffects: u.isEnemy
-                          ? u.statusEffects.filter(e => e !== 'STUN' && e !== 'BURN' && e !== 'SLOW')
+                          ? u.statusEffects.filter(e => e !== 'STUN' && e !== 'BURN' && e !== 'SLOW' && e !== 'ROOTED')
                           : u.statusEffects.filter(e => e !== 'BURN')
                   })));
                   await wait(50);

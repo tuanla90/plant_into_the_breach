@@ -92,10 +92,25 @@ const planIntentCore = (
         ? playerUnits.find(u => u.id === enemy.provokedBy && u.hp > 0)
         : undefined;
 
+    /**
+     * KẸT CHÂN (Jamming Plate) — không đi được, vẫn đánh được.
+     *
+     * Đọc ở đây, TRƯỚC mọi quyết định đi lại, vì đó là toàn bộ nội dung của status: nó cắt
+     * nửa DI CHUYỂN của lượt và để nguyên nửa TẤN CÔNG. Nếu chặn ở chỗ khác thì con zombie
+     * vẫn telegraph một nước đi rồi đứng im — người chơi đọc bàn cờ sai, và cam kết
+     * thông-tin-hoàn-hảo vỡ ngay tại đó.
+     */
+    const rooted = enemy.statusEffects.includes('ROOTED');
+
     if (provoker) {
         const provokeReach = Math.max(1, enemy.attackRange ?? 1);
         if (manhattan(enemy.position, provoker.position) <= provokeReach) {
             return { type: 'ATTACK', target: { ...provoker.position }, damage };
+        }
+        // Kẹt chân mà người kẹp lại đứng ngoài tầm với: nó không bò tới được, và cũng không
+        // được phép quay sang tìm mục tiêu khác. Đứng đó mà giãy.
+        if (rooted) {
+            return { type: 'WAIT', description: 'Stuck fast on the plating...' };
         }
 
         // Close the distance. Deliberately NOT subject to the "never turn around to eat what
@@ -196,6 +211,13 @@ const planIntentCore = (
     // This runs AFTER movement, so a zombie that walked up to a plant telegraphs the hit here.
     if (blocker) {
         return { type: 'ATTACK', target: blocker.position, damage };
+    }
+
+    // Kẹt chân và không có gì trong tầm với: hết lượt. Cửa thứ hai của `ROOTED`, cho trường hợp
+    // status tồn tại mà không đi kèm PROVOKED (không ô nào làm thế hôm nay, nhưng một status
+    // chỉ đúng khi nó đúng ở mọi đường).
+    if (rooted) {
+        return { type: 'WAIT', description: 'Stuck fast on the plating...' };
     }
 
     // Otherwise walk. moveTo / movePath drive the movement telegraph, so they must always be set.
