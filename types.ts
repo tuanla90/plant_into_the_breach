@@ -1094,6 +1094,24 @@ export type FusionEffectType =
      */
     | 'SHIELD_RETALIATE'
     /**
+     * Shrapnel Kernel — kỹ năng TRẢ PHÍ của hero này làm 4 ô quanh mục tiêu **chảy máu**,
+     * không phải mất máu.
+     *
+     * Cố ý không phải damage: `SKILL_SPLASH` (ô chữ ký của chính Cornova) đã bán vành-gây-damage
+     * rồi, nên một ô nữa cũng gây damage lên vành sẽ là bản-nhỏ-của-SIG ngay trong hàng. Bán vết
+     * thương thay vì bán số làm hai ô hợp tác: một phát Nova Shell = vành làm chậm + vành toác.
+     */
+    | 'SKILL_BLEED_SPLASH'
+    /**
+     * Caltrop Cob — kỹ năng TRẢ PHÍ rải mảnh gai lên các ô TRỐNG kề mục tiêu; thứ gì bước vào
+     * ăn `value` sát thương.
+     *
+     * Skill-only đúng tiền lệ `SKILL_SPLASH`: rải gai trên một đòn miễn phí là một bức tường
+     * dựng lại mỗi lượt, đúng thứ bị cấm. Dùng lại máy `TileData.spikes` đang nuôi item Cây Gai
+     * — đây là bản yếu hơn của nó, nên không có máy nào phải viết mới.
+     */
+    | 'SKILL_SPIKE_SCATTER'
+    /**
      * Shields this hero hands out spill over to whoever stands beside the recipient.
      * Replaces SHIELD_BONUS ("+2 size"), which stopped meaning anything when shields became
      * LAYERS (PLAN-hero-zephyr §6.0) — a layer has no size to enlarge, so the pumpkin axis

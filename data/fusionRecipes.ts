@@ -337,8 +337,8 @@ export const FUSION_RECIPES: Matrix = {
         },
         MAT_SNAPMAW: {
             name: 'Shrapnel Kernel',
-            description: 'Her kernels leave the target bleeding: the next hit against it lands +1.',
-            effect: { type: 'BLEED_ON_HIT' },
+            description: 'Nova Shell throws splinters: the four tiles around the blast are left bleeding, ready for somebody else to finish.',
+            effect: { type: 'SKILL_BLEED_SPLASH' },
             live: true,
         },
         MAT_IRONHUSK: {
@@ -360,9 +360,9 @@ export const FUSION_RECIPES: Matrix = {
             live: true,
         },
         MAT_THORNSHELL: {
-            name: 'Barbed Cob',
-            description: 'Anything her kernels hurt turns on her — it must come for her next turn.',
-            effect: { type: 'PROVOKE_ON_HIT' },
+            name: 'Caltrop Cob',
+            description: 'Nova Shell scatters caltrops across the empty ground around the blast: anything that walks in takes 2.',
+            effect: { type: 'SKILL_SPIKE_SCATTER', value: 2 },
             live: true,
         },
         MAT_CHARDSLAM: {

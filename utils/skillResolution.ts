@@ -1262,6 +1262,54 @@ export const planSkillActions = (
     }
 
     /**
+     * VÀNH QUANH ĐIỂM NỔ — hai ô Cornova, cả hai chỉ cưỡi KỸ NĂNG TRẢ PHÍ.
+     *
+     * Cùng cổng `sunCost > 0` mà `SKILL_SPLASH` dùng, và vì đúng một lý do: thứ gì rải ra cả
+     * một vành mỗi lượt mà không tốn gì là một trò chơi khác hẳn trò chơi nó được định giá cho.
+     *
+     *  - `SKILL_BLEED_SPLASH` (Shrapnel Kernel): mảnh văng ra làm 4 ô quanh mục tiêu CHẢY MÁU,
+     *    không phải mất máu. Khác `SKILL_SPLASH` (ô SIG của chính cô, gây damage + làm chậm)
+     *    nên hai ô không giẫm chân nhau; và nó mở combo đội — ai đó khác tới kết liễu chỗ đã toác.
+     *  - `SKILL_SPIKE_SCATTER` (Caltrop Cob): rải gai lên các ô TRỐNG kề mục tiêu.
+     *
+     * GHI CHÚ LỆCH SPEC, cố ý và cần biết: bản thiết kế nói "mảnh tan sau MỘT LẦN dẫm". Máy
+     * gai trong engine (`TileData.spikes`) đếm theo LƯỢT chứ không theo lần kích, và sửa nó
+     * thành một-lần-dùng sẽ đổi luôn hành vi của item Cây Gai vốn đang dùng chung máy đó. Nên
+     * ở đây dùng `turns: 1` — bãi gai sống đúng lượt địch kế tiếp rồi tan. Gần đúng tinh thần
+     * ("rải xong ai bước vào ngay thì dính"), khác ở chỗ hai con cùng bước vào một ô thì cả hai
+     * đều dính. Muốn đúng từng chữ thì phải cho `spikes` một cờ one-shot riêng.
+     */
+    const ringOf = (p: Position) => [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }]
+        .map(o => ({ x: p.x + o.x, y: p.y + o.y }))
+        .filter(t => t.x >= 0 && t.x < 8 && t.y >= 0 && t.y < 8);
+
+    if ((skill.sunCost ?? 0) > 0 && hasFusionEffect(caster, 'SKILL_BLEED_SPLASH')) {
+        ringOf(pos).forEach(t => {
+            const victim = [...tempUnits.values()].find(
+                u => u.hp > 0 && u.isEnemy && !u.isBurrowed && u.position.x === t.x && u.position.y === t.y);
+            if (!victim || victim.statusEffects.includes('BLEEDING')) return;
+            // Vết bleed xuyên miễn nhiễm STATUS như mọi chỗ khác — trùm vẫn chảy máu.
+            const bleeding: StatusEffectType[] = [...victim.statusEffects, 'BLEEDING'];
+            actions.push({ type: 'UPDATE_UNIT_STATE', unitId: victim.id, updates: { statusEffects: bleeding } });
+            victim.statusEffects = bleeding;
+        });
+    }
+
+    if ((skill.sunCost ?? 0) > 0 && hasFusionEffect(caster, 'SKILL_SPIKE_SCATTER')) {
+        const scatter = getFusionEffectValue(caster, 'SKILL_SPIKE_SCATTER') || 2;
+        ringOf(pos).forEach(t => {
+            // CHỈ ô TRỐNG: mảnh gai nằm trên ĐẤT, không nằm dưới chân ai đang đứng sẵn.
+            const occupied = [...tempUnits.values()].some(
+                u => u.hp > 0 && !u.isBurrowed && u.position.x === t.x && u.position.y === t.y);
+            if (occupied) return;
+            if (t.x === caster.position.x && t.y === caster.position.y) return;
+            const tile = getTileAt(t, board);
+            if (!tile || tile.terrain === 'WALL' || tile.isHouse) return;
+            actions.push({ type: 'MODIFY_TERRAIN', pos: { ...t }, spikes: { damage: scatter, turns: 1 } });
+        });
+    }
+
+    /**
      * DUST_TILE — the veil the DUST_VEIL hazard writes, cast by hand (PLAN-hero-zephyr §5.3).
      *
      * Same field, same reader: `TileData.smoke` plus `environment: 'SMOKE'`, aged by
