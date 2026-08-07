@@ -367,6 +367,24 @@ Final: okie
 
 Final: okie
 
+**FINAL v3 (2026-08-08) — CHỐT LẠI TOÀN BỘ Ô NÀY:**
+- Lịch sử: (a) Teamlift/`TOSS_ALLY` không chốt → góp ý xoay dấu cộng thành "Roundhouse
+  Chard"/`PLUS_ROTATE` → **vòng 3 RÚT khỏi ma trận** (đổi cơ chế chiến đấu không thuộc lớp MAT;
+  `PLUS_ROTATE` chưa từng được code, data vẫn là `ATTACK_RANGE_BONUS 1`) → phương án "Nảy"
+  từng là thay thế tạm.
+- **CHỐT: "Slingshot Chard" — type mới `SKILL_DASH`.** Sweep đổi cách tiếp cận: LAO theo
+  ĐƯỜNG THẲNG 2–3 ô (rangeType DASH như Rolling Charge) rồi quét radial tại điểm đến —
+  "tự biến mình thành viên đạn". Bán đúng danh từ cột (đường thẳng/viên đậu); là modifier họ
+  `SKILL_*` lên skill trả tiền (tiền lệ SKILL_STUN/SKILL_REPEL), KHÔNG phạm bài học vòng 3.
+- Wiring: đổi rangeType SELF→DASH khi carrier có effect (mẫu `ARC_ATTACK` LINE→LOB trong
+  `applyFusionToSkill`), resolve radial push tại ô đáp. Preview: vệt lao + mũi tên đẩy ([G0]).
+  Phân định cảm giác với Rolling Charge: cô ấy lao-húc MỘT mục tiêu, anh này lao-quét VÒNG.
+- GOD-BUILDS: entry bắt buộc — hero 0-damage tự phóng vào giữa bầy là van tự cân bằng, nhưng
+  DASH + Sweep + bộ ba va chạm cần đo damage/cú quét so ngưỡng mục 1.1.
+- Các phương án thua chuyển tầng: **"Đẩy Xuyên"** (push truyền đà 1 nấc qua chuỗi thân) →
+  relic đẩy-nhánh của Chardslam ([G8]); **"Roundhouse"** → relic đẩy-nhánh ([G8]); **"Nảy"**
+  (tiếp đất trượt tiếp + va chuỗi) → fallback chính thức nếu Slingshot đo ra lố.
+
 #### [C6.4] GOURDWARD × MAT_PEASHOOTER — "Rind Pellet" (data honesty)
 
 - **Hiện tại:** `ATTACK_RANGE_BONUS 3` — nhưng desc hứa hành vi line-seek: "fired down a row: shells the FIRST ally up to 4 tiles" (fusionRecipes.ts:564). Reinforce gốc là `MELEE 1` (heroes.ts:457) — +3 range trên MELEE nhiều khả năng cho chọn tự do trong tầm 4, KHÔNG phải bắn dọc hàng như lời hứa (cần đối chiếu targeting lúc implement).
@@ -599,7 +617,7 @@ Ký hiệu: **GIỮ** không đụng · **ĐỔI** viết mới trong pass này 
 | Cornova | Split Shell | `SPLIT_SHOT` 1 | ĐỔI [C6.1] · ô phụ **CỐ ĐỊNH** = ô ngay SAU mục tiêu theo trục bắn, zero random |
 | Reedwing | *(tên chờ)* | `EXTENDED_BARRELS` | ĐỔI [C6.2] · ⚠ **nợ sơ đồ**: `WING_PAIR` là 8 ô knight, không phải hàng dọc — vẽ hình duyệt trước khi code |
 | Thornshell | Piercing Needles | `LASER_NEEDLE` 2 | ⚠ [A7] |
-| Chardslam | Roundhouse Chard | `PLUS_ROTATE` | ĐỔI [C6.3] · action **THAY THẾ** Vault Toss, không cộng thêm |
+| Chardslam | Slingshot Chard | `SKILL_DASH` | ĐỔI [C6.3 FINAL v3] · Sweep lao thẳng 2–3 ô rồi quét tại điểm đến; Roundhouse/`PLUS_ROTATE` đã rút sang relic (vòng 3) |
 | Gourdward | Rind Pellet | `SHIELD_SHOT` | ĐỔI [C6.4] · LINE 4, unit ĐẦU TIÊN nhận layer **bất kể phe** |
 
 **9/9 · 1 ô rỗng.**
@@ -755,6 +773,421 @@ Cả 9 cột đạt **9/9 theo type** — nhưng con số thật chỉ đúng sa
    có hình, khuyến nghị A (lấp 2 ô chéo kề). Chỉ còn chờ bạn chọn A/B/C.
 3. ~~Luật cộng dồn `BLEED_EXECUTION`~~ — **XONG**, `PLAN-fusion-effects.md` **Phụ lục D**: luật cộng
    dồn 3 tầng cho toàn ma trận, và khuyến nghị "+2 **thay** +1, tiêu vết bleed" → ra đúng 7.
+
+- **Trạng thái:** ⬜ chờ duyệt
+- **Góp ý:**
+
+---
+
+## G. Đợt "ĐỘ THÚ VỊ" — đề xuất SAU pass unique (2026-08-08, chờ duyệt từng mục)
+
+> **Context cho session mới đọc lạnh:** mục này sinh ra từ phiên rà soát 2026-08-08, khi chủ dự án
+> hỏi "sau pass unique thì mua thêm độ thú vị bằng gì". Tiền đề bắt buộc đọc trước:
+> 1. **F1–F11 ở trên** — pass unique đang triển khai dở (commit gần nhất tới "đợt 5"); mục G KHÔNG
+>    đụng vào 81 ô, không phá công thức "cột bán một danh từ / ô đổi trigger theo động từ hero".
+> 2. **`docs/game_lore.md` (v2.1)** — lore đã là canon cơ chế; các hệ thống mới được nhắc ở đây
+>    (Trạm Mầm, máy nguyên sơ/nhiễm bẩn, quà người đi trước, Phổ Hệ) định nghĩa ở đó + Phụ lục A/B.
+> 3. **`docs/PLAN-lore-rework.md`** — spec cơ chế đi kèm lore (đánh số §); các mục G ghi rõ phụ
+>    thuộc § nào của file đó.
+>
+> **Triết lý chọn ý tưởng** (đúc từ phiên phản biện — xem lý do bác các đề xuất "combo chéo nhét
+> vào ma trận" ở cuối mục): thú vị = (a) **nhìn thấy được trên bàn cờ**, (b) **nhân được với nhau**
+> chứ không cộng số, (c) **có nút vặn rủi ro**. Combo chéo hero và hiệu ứng đánh bạc KHÔNG vào
+> ma trận 9×9 (phá luật "ô thuộc đúng một hero") — chỗ đứng của chúng là **tầng relic**
+> (`PLAN-relics-27.md`) và **luật engine** (tiền lệ: `BLEED_ON_SHOVE`, `COLLISION_SPLASH` — các
+> luật va-chạm đã ship, chứng minh engine nuốt được trigger chéo hệ thống mà không "ác mộng
+> event listener").
+
+### [G0] GUARDRAIL BẤT KHẢ XÂM PHẠM — mọi trigger mới phải hiện trong preview
+
+Áp cho MỌI mục G bên dưới và mọi effect [A7] còn lại. `data/heroUpgrades.ts` đã phát biểu chuẩn:
+upgrade đi qua pipeline `getFusionEffects` → `applyFusionToSkill` để nuôi **cả** resolution LẪN
+targeting overlay — "một buff wire chỗ khác là buff người chơi không thấy trước khi commit cú
+click, trong game mà lời hứa là tính trước được mọi thứ". Hệ quả cụ thể:
+- [G3] phải vẽ được mũi tên đón bắn NGAY khi đang ngắm cú đẩy (tiền lệ UI: ô Downwash F8 —
+  "mũi tên hiện trong overlay chọn ô đáp").
+- [G5] phải hiện badge "Quá nhiệt — nổ khi chết" trên unit card từ lượt máy thức dậy.
+- Relic [G4] đổi nhịp giá Sol phải hiện giá ĐÃ đổi trên nút skill, không phải trừ ngầm.
+
+- **Trạng thái:** ⬜ chờ duyệt
+- **Góp ý:**
+
+### [G1] Audit "mỗi cột một ô chụp-ảnh-được" — rẻ nhất trên mỗi đơn vị vui
+
+**Vấn đề:** hiệu ứng chỉ sống trong tooltip thì đúng mà nguội. Hiệu ứng để lại DẤU trên bàn cờ
+(gai, khói, vệt nổ, xác đá) vừa vui hơn vừa là nguồn GIF marketing (MASTER-VISION §4 xác định
+GIF-able là lợi thế bán hàng số 2).
+
+**Việc cần làm:** sau khi [A7] chốt, lập bảng 9 cột × câu hỏi "cột này có ≥1 ô làm thay đổi
+HÌNH ẢNH bàn cờ không". Trạng thái đo nhanh theo bảng F (chỉ tính ô GIỮ/ĐỔI, chưa tính 14 ô rỗng):
+- Có sẵn: F5 (`COLLISION_SPLASH` vòng nổ, `SKILL_SPLASH`), F7 (`SKILL_SPIKE_SCATTER` gai trên ô),
+  F6 (`SMOKE_ON_HIT` khói), F3 (vết bleed nếu có hiển thị trạng thái), F9 (layer khiên nhìn thấy).
+- Nghi ngờ thiếu: F2 (đạn/nòng — thuần chỉ số), F4 (giáp — thuần trừ damage), F8 (xung lực —
+  đẩy kéo nhìn thấy qua chuyển động, tạm tính đạt).
+- Với cột thiếu: KHÔNG thêm ô mới — chọn 1 ô sẵn có và nâng phần **render** (ví dụ F4
+  `COLLISION_PLATING` để lại vết nứt 1 lượt trên ô va chạm — thuần cosmetic, không đổi luật).
+
+**Cài đặt:** tầng render (Board) + bảng hazard/terrain có sẵn (`data/terrain.ts`, `data/hazards.ts`).
+Không type mới, không đổi số.
+
+- **Trạng thái:** ⬜ chờ duyệt
+- **Góp ý:**
+
+### [G2] Relic "Trạm Sạc Dã Chiến" — chơi vị trí quanh Trạm Mầm
+
+**Phụ thuộc:** `PLAN-lore-rework.md` §1b (số ô cần bảo vệ = số sprout hiện có) phải ship trước.
+
+**Mô tả:** relic (pool `PLAN-relics-27.md`): *"Hero đứng KỀ một Trạm Mầm (ô nhà hàng trên) được
+giảm 10 Sol giá skill trong lượt đó."* Con số 10 lấy theo thang Sol bội 25 của DESIGN §8 —
+đủ nhỏ để không phá `SKILL_DISCOUNT` của cột Sol Battery (đang bán 10, xem §9.3), và relic +
+fusion discount CỘNG DỒN là chủ đích (build "pháo đài quanh trạm").
+
+**Vì sao thú vị:** luật mới "mỗi Mầm một trạm" biến hàng trên thành tài nguyên VỊ TRÍ; relic này
+tạo giằng co phòng thủ-tấn công (đứng gần trạm = rẻ skill, nhưng chiến trường kéo bạn ra xa),
+và làm người chơi quý trạm đúng như lore muốn (Mầm sạc trong lửa đạn — game_lore ch.1).
+
+**Cài đặt:** một fusion-effect-shaped rider cấp relic, điều kiện `adjacentToSeedpost(unit)` đọc
+tại chỗ tính giá skill. Cần helper vị trí trạm từ encounter state (§1b sẽ có sẵn danh sách ô trạm).
+
+**Cân bằng cần đo:** không được rẻ đến mức "đứng im hàng trên cả trận" tối ưu hơn ra trận —
+nếu playtest lộ camp-y, đổi điều kiện thành "lượt này RỜI ô kề trạm" (thưởng xuất kích).
+
+- **Trạng thái:** ⬜ chờ duyệt
+- **Góp ý:**
+
+### [G3] Relic "Bắn Đón" (Skeet Volley) — combo chéo hero, mua "0.5 điểm" ở đúng tầng
+
+**Mô tả:** relic: *"Mỗi lượt một lần: kẻ địch bị dịch chuyển cưỡng bức (đẩy/kéo/ném) đi NGANG QUA
+hàng/cột bắn thẳng của một hero tầm xa phe ta sẽ ăn một đòn đánh thường miễn phí giữa đường bay."*
+
+**Vì sao ở tầng relic:** đây nguyên là ý "Clay Pigeon" từng bị bác khỏi ma trận (ô fusion chỉ
+thuộc MỘT hero — combo hai hero phá identity ô). Relic là luật toàn đội nên hợp lệ. Đây là
+relic dạy người chơi BUILD ĐỘI HÌNH (đứa ném + đứa trực xạ) — dopamine ItB thuần chủng.
+
+**Cài đặt (tiền lệ đầy đủ, KHÔNG phải hệ mới):**
+- Đường bay cú đẩy đã được engine tính từng ô (resolve shove path — `COLLISION_SPLASH` [C1.2]
+  và `BLEED_ON_SHOVE` [C2.2] đều móc vào đúng chỗ này).
+- Với mỗi ô đường bay: quét hero phe ta có đòn đánh thường TẦM XA thẳng hàng và trong tầm →
+  bắn một phát qua pipeline projectile thường (đạn PEA/CORN có sẵn).
+- Cap **1 lần/lượt** (chống lạm phát khi Chardslam sweep nhiều mục tiêu); ưu tiên hero gần nhất.
+- Thứ tự animation: đòn đón nổ TRONG chuyển động ném (queue action giữa các bước path) — engine
+  phát lại `TurnAction[]` nên chèn action giữa path là hợp khung.
+- [G0]: khi ngắm skill đẩy, overlay vẽ mũi tên đón từ hero sẽ bắn.
+
+**Cân bằng cần đo:** giá relic cao (hàng hiếm của pool 27); nếu vẫn lố, hạ damage đòn đón còn 1
+cố định thay vì đòn thường đầy đủ.
+
+- **Trạng thái:** ⬜ chờ duyệt
+- **Góp ý:**
+
+### [G4] Relic nguyền rủa — "bản mẫu dở dang" của Tàn Cơ
+
+**Phụ thuộc:** `PLAN-lore-rework.md` §4 (mission Tàn Cơ → relic). Lore đã dọn chỗ: Di Sản
+Nghiên Cứu = vũ khí CHƯA HOÀN THIỆN (game_lore ch.5 — "những lời trăng trối biết bắn").
+
+**Luật thiết kế cho cả nhóm:** cursed relic đổi **NHỊP**, không đổi **SỐ** — người chơi phải đổi
+cách chơi, không phải chịu một hình phạt thụ động. Và mọi mặt trái phải đọc được TRƯỚC khi nhặt.
+
+Ba mẫu khởi điểm (số liệu là đề xuất đầu, chờ playtest):
+1. **Lõi Quá Áp (Overvolt Core):** skill ĐẦU TIÊN mỗi trận miễn phí; từ skill thứ BA trong cùng
+   một trận, giá gấp đôi. → thưởng mở trận bùng nổ, phạt spam cuối trận; tự đối trọng với build
+   `SKILL_DISCOUNT`.
+2. **Van Xả Hỏng (Blown Vent):** toàn đội +1 damage đòn thường; mọi máy được đánh thức trong
+   trận chỉ sống 2 lượt rồi vỡ. → mua sát thương bằng tuổi thọ cây hoang; cộng hưởng với [G5].
+3. **Hộp Số Trộm Nhịp (Stolen Gearbox):** hero kill bằng đòn thường được +1 move NGAY lượt đó;
+   hero KHÔNG kill trong lượt thì lượt kế -0 (không phạt) nhưng không được nhận Sol từ kill của
+   người khác — *chưa chặt, cần nghĩ thêm mặt trái đúng nhịp; giữ chỗ*.
+
+**Cài đặt:** đi qua đúng pipeline fusion-effect như EDGE của `heroUpgrades.ts` — không hệ mới.
+
+- **Trạng thái:** ⬜ chờ duyệt
+- **Góp ý:**
+
+### [G5] Luật engine "máy quá nhiệt nổ khi chết"
+
+**Phụ thuộc:** `PLAN-lore-rework.md` §4b (nguyên sơ/nhiễm bẩn + zombie chủ động phá DORMANT).
+Lore ch.5 đã trả trước lý do: nổ máy = tản nhiệt hết công suất, van xả bung.
+
+**Mô tả:** cây hoang **đã bị đánh thức** (`isWild` && đã wake) khi CHẾT thì nổ: 1 damage lên
+4 ô trực giao, **cả hai phe**. Máy còn DORMANT bị phá thì KHÔNG nổ (lõi chưa chạy — cũng là
+mồi nhử vị trí: zombie phá máy ngủ thì mình mất nguyên liệu nhưng không ăn vùng nổ).
+
+**Vì sao thú vị:** quyết định đánh-thức-hay-không hiện có 2 tầng giá (mất tư cách nguyên liệu §4b
+/ thêm hỏa lực); mục này thêm tầng 3: *đặt một quả bom hai lưỡi giữa trận địa*. Kéo theo micro-play
+mới: dụ zombie giết máy sắp hỏng đúng chỗ, hoặc TỰ kích nổ bằng damage phe mình (hợp lệ, chịu
+1 damage lan nếu đứng kề).
+
+**Cài đặt:** hình vùng nổ + luật tường/nước mượn nguyên đặc tả `COLLISION_SPLASH` [C1.2]
+(trực giao, tường chặn) — nhưng KHÁC ở chỗ đánh cả hai phe (COLLISION_SPLASH chỉ ENEMY); ghi rõ
+trong desc để khỏi nhầm. Điểm móc: turnManager chỗ xử lý unit chết. [G0]: badge trên unit card.
+
+**Cân bằng cần đo:** 1 damage × 4 ô có làm việc đánh thức thành "lợi kép" quá không (vừa lính
+vừa bom) — nếu có, đổi thành nổ CHỈ khi bị giết bởi ĐỊCH (không tự kích).
+
+- **Trạng thái:** ⬜ chờ duyệt
+- **Góp ý:**
+
+### [G6] "Trận tái đấu Phổ Hệ" — echo cốt truyện trong cơ chế
+
+**Nền:** `data/unlocks.ts` đã có map hero↔boss (`bossForHero`); `docs/game_lore.md` Phụ lục B
+định nghĩa 6 cặp phả hệ (hero sinh từ xác boss nào, theo logic Sao Chép / Phản Chế). The Breach
+đấu lại toàn bộ boss → đất diễn chính của mục này.
+
+**Mô tả:** hero đối đầu ĐÚNG chúa tể đã sinh ra mình được một rider nhỏ, mỗi cặp một câu:
+| Cặp (unlocks.ts) | Rider đề xuất |
+|---|---|
+| Snapmaw ↔ Gravehulk | Nuốt Gravehulk-line: tiêu hóa nhanh hơn 1 lượt |
+| Cornova ↔ Ironcart | +1 damage skill lên Ironcart |
+| Reedwing ↔ Armada | Không bị đòn AoE của Armada đánh trúng khi đang bay *(kiểm khả thi với hệ intent)* |
+| Thornshell ↔ Sandreaver | Taunt giữ hiệu lực cả khi Sandreaver độn thổ |
+| Chardslam ↔ Headliner | Sweep đẩy thêm 1 ô đối với unit do Headliner triệu hồi |
+| Gourdward ↔ Clockjaw | Khiên anh phát chặn trọn cả CÚ ĐÚP của Clockjaw (1 layer ăn 2 hit từ boss này) |
+
+**⚠ RÀO KIẾN TRÚC (đọc CLAUDE.md trước khi code):** CẤM thêm `if (unit.bossId === …)` vào engine —
+`BOSS_HOOKS` là bảng của HÀNH VI BOSS, còn đây là rider phía HERO. Cài như một bảng data mới
+`data/lineageEchoes.ts` (hero → {bossId, effect}), phân giải qua đúng pipeline fusion-effect
+với điều kiện mục tiêu (tiền lệ: effect có điều kiện target đã tồn tại — `STUN_ON_FULL_HP`).
+Engine chỉ biết "effect có predicate", không biết boss nào nằm trong đó.
+
+**Vì sao thú vị:** người chơi CẢM THẤY câu chuyện trong số liệu (kiểu Hades) mà không cần đọc
+codex; The Breach từ boss-rush thuần thành 6 màn "về nhà trả nợ". Chi phí: một bảng data + 6
+predicate, phần lớn tái dùng type sẵn có.
+
+- **Trạng thái:** ⬜ chờ duyệt
+- **Góp ý:**
+
+### [G7] "Quà người đi trước" có chữ ký build
+
+**Phụ thuộc:** `PLAN-lore-rework.md` §9 — cơ chế quà-sau-game-over đã CHỐT LÀM (kiểu StS) nhưng
+chưa viết. Mục này nâng spec trước khi viết, để khỏi làm hai lần.
+
+**Mô tả:** thay vì roll quà ngẫu nhiên thuần, quà lấy **theo build của run vừa chết**: lưu một
+tóm tắt run khi game over (cột fusion dùng nhiều nhất + 1 relic đang cầm) → run kế nhận 1 item
+thường + 1 material đúng cột đó (hoặc relic đó nếu pool cho phép). Run đầu tiên của save: không
+quà (lore: "chuyến khởi hành đầu tiên trắng tay đúng nghĩa" — game_lore ch.2).
+
+**Vì sao thú vị:** thất bại gieo mầm chiến lược kế ("xác của chính mình ở dòng thời gian trước") —
+StS không làm được vì không có đa vũ trụ; đây là twist CƠ CHẾ riêng của Blightfall, đổi cảm giác
+game over từ phạt sang tiếp sức đúng hướng người chơi đang thích chơi.
+
+**Cài đặt:** thêm field `lastRunEpitaph` vào `pitb_progress_v1` (⚠ vùng KHÔNG ĐƯỢC LÀM MẤT —
+đọc chú thích `utils/persistence.ts` trước; field mới phải optional để save cũ nạp được). Ghi tại
+điểm game-over trong `useGameProgression`; đọc tại điểm khởi tạo run. UI: màn bắt đầu run hiện
+1 dòng "Đồ của người đi trước để lại" + icon.
+
+- **Trạng thái:** ⬜ chờ duyệt
+- **Góp ý:**
+
+### [G8] ASPECT — "Di Sản Thứ Hai": mỗi hero MỘT khí giới đổi cách action (chốt hướng 2026-08-08)
+
+> **Nguồn gốc & phạm vi:** chủ dự án muốn "mỗi hero có relic độc bản đẩy mạnh về một nhánh —
+> tanker đặt đúng bối cảnh thành DPS/support", tham khảo cách ItB thiết kế weapon. Phiên bản
+> 81-relic của bản nháp GOD-BUILDS cũ đã bị bác (loãng pool, phạm luật — xem GOD-BUILDS.md §5.3);
+> đây là bản chốt lại cấu trúc. Tiền lệ: Hades Aspects/Daedalus Hammer, Monster Train champion paths.
+
+**Khung đã chốt:**
+1. **Aspect ≠ relic drop.** Mỗi hero có đúng **1 Aspect**, chọn (hoặc không) tại **màn lập đội**
+   — như element. KHÔNG nằm trong pool relic 27 → không có bài toán "đồ rơi cho hero vắng mặt".
+   Đồng thời trám lỗ "start-any-act thiếu đường cong build": run vào thẳng act 3 vẫn có tuyên
+   bố build từ phút đầu.
+2. **Ranh giới với fusion, một câu:** *fusion ĐÀO SÂU động từ của hero — Aspect ĐỔI động từ.*
+   Mọi Aspect phải TƯỚC đi cách action cũ (đánh đổi thật), không cộng chồng lên nó.
+   Ranh giới này TRÙNG với quyết định vòng 3 của pass unique — "đổi cơ chế chiến đấu thì không
+   thuộc lớp MAT" — chính là lý do Roundhouse [C6.3], Thorn Lunge, và nửa melee→ranged của
+   Piercing Needles bị rút khỏi ma trận sang tầng relic. **Các món bị rút đó là ứng viên tự
+   nhiên của tầng Aspect/đẩy-nhánh này** — rà lại danh sách rút của vòng 3 trước khi viết
+   seed mới, đừng phát minh lại.
+3. **Mở khóa = thắng trận TÁI ĐẤU PHỔ HỆ** ([G6] — hero đấu lại đúng chúa tể sinh ra mình,
+   đất diễn: The Breach). Lore: "di sản thứ hai" rút được từ dòng máu chúa tể (game_lore Phụ lục B).
+4. **Hệ quả chiến lược ăn theo:** Aspect đổi bộ ô "sống" trong hàng 9 ô của hero (ô vô dụng với
+   vai cũ thành core của vai mới) → chữa bài "ô chết" mà GOD-BUILDS lo, không thêm ô nào.
+5. **Mỗi hero còn 2 relic "đẩy nhánh"** (khuếch đại, không đổi action) — vào pool drop có LỌC
+   THEO ĐỘI, để dành content update sau launch. V1 chỉ ship 9 Aspect.
+6. **Checklist bắt buộc từng Aspect:** không phạm STUN RULE / Sol-chỉ-từ-kill-harvest /
+   trần retaliate / không extra-action trá hình / 0% RNG; đạt [G0] (preview đầy đủ trước khi
+   commit); có entry GOD-BUILDS đủ 4 phần NGAY từ lúc thiết kế (Aspect × 9 ô hàng mình là máy
+   đẻ outlier mạnh nhất của game).
+7. **GUARD TƯƠNG THÍCH (đề xuất của chủ dự án, 2026-08-08): mỗi Aspect phải có MA TRẬN
+   TƯƠNG THÍCH với đủ 9 ô hàng mình trước khi ship.** Mỗi cặp (Aspect × ô) khai báo đúng
+   một trong bốn trạng thái:
+   - **SỐNG** — hoạt động nguyên nghĩa (vd. Sumo × `BLEED_ON_SHOVE`: harite vẫn là đẩy, bleed
+     vẫn chạy).
+   - **ĐỔI NGHĨA** — hoạt động nhưng nghĩa dời, PHẢI ghi cách đọc mới (vd. Sumo × Slingshot
+     `SKILL_DASH`: modifier "cách tiếp cận skill trả tiền" giờ áp lên Quạt Đẩy → *lao rồi
+     quạt*; desc/preview phải nói đúng bản này).
+   - **CHẾT** — ô trỏ vào động từ đã bị Aspect tước (vd. Oanh Tạc Dọc Đường Bay tước Wing
+     Guns → mọi ô modifier lên phát bắn thường của Reedwing chết theo). Mỗi ô chết phải chọn:
+     (a) remap sang động từ mới, hoặc (b) chấp nhận chết + FusionPanel làm mờ kèm lý do
+     (tinh thần [G0] — không bán ô vô dụng cho người chơi).
+   - **LỐ** — cặp nhân vượt ngưỡng → entry GOD-BUILDS trước khi code.
+   **Ngưỡng ship: ≥6/9 ô SỐNG hoặc ĐỔI NGHĨA.** Dưới ngưỡng = Aspect đang THU HẸP không gian
+   build thay vì xoay nó — phản bội đúng lời hứa ở khung #4, sửa Aspect chứ không hạ ngưỡng.
+   **Cưỡng chế kiểu repo:** bảng tương thích là data (`aspectCompat`), một assert kiểu
+   `roster.assert.ts` chứng minh phủ đủ 9×9 cặp — thiếu khai báo là build đỏ, không phải
+   là "để sau". Thứ tự chọn trong run tự nhiên đã đúng: Aspect chốt ở squad select TRƯỚC khi
+   mua fusion giữa run, nên FusionPanel luôn đủ thông tin để làm mờ ô chết ngay lúc bán.
+
+**Bộ 9 Aspect (bản đủ 2026-08-08) — khuôn 5 phần: TƯỚC / MỚI / ItB / COMPAT sơ bộ / cảnh báo.**
+Compat sơ bộ đếm trên các ô hàng đã chốt trong bảng F (ô ⚠[A7] chưa tính); bảng `aspectCompat`
+đầy đủ viết lúc implement, assert giữ.
+
+**1. PEABURST — Chế Độ Tháp Pháo** *(seed chủ dự án)*
+- TƯỚC: bắn trong lượt có di chuyển. MỚI: lượt đứng yên → phát Overwatch +X damage.
+- ItB: pháo binh cố định. COMPAT: ~9/9 SỐNG (mọi modifier đòn thường vẫn chạy khi bắn).
+- ⚠ LỐ chờ sẵn: × Overwatch Pea [F8] — entry GOD-BUILDS trước khi code.
+
+**2. REEDWING — Oanh Tạc Dọc Đường Bay** *(seed chủ dự án — CA KIỂM NGƯỠNG 6/9 ĐẦU TIÊN)*
+- TƯỚC: Wing Guns (phát bắn thường). MỚI: bay LÀ bắn — mỗi enemy trên đường bay ăn 1.
+- ItB: Jet Mech. COMPAT sơ bộ: SỐNG/ĐỔI NGHĨA — Airframe `SLIPSTREAM_PLATING` [F4] (hợp hoàn
+  hảo: lượt có bay → -1 dmg nhận), Barbed Skids `WIND_TAUNT` [F7], Downwash `FLYER_REPEL` [F8],
+  Dawn Pod `START_SHIELDED` [F9], Executioner `BLEED_EXECUTION` [F3] (đổi nghĩa: đòn bay
+  execute). **CHẾT cần remap: `EXTENDED_BARRELS` [F2] (→ đề xuất +1 ô đường bay), Cluster
+  `WING_MIDSHOT` [F5] (→ ?), SIG `ATTACK_THEN_MOVE` [F6] (bay=bắn thì "bắn xong bay" vô nghĩa
+  — → ?)**. Đúng 6/9 — sát ngưỡng, PHẢI chốt 2 remap trước khi ship.
+**3. CHARDSLAM — Thế Sumo (Rikishi Stance)** *(CHỐT 2026-08-08 — Aspect chuẩn mực nhất roster)*
+- TƯỚC: ném-qua-đầu (đảo vị trí ra sau lưng — utility độc nhất của judo) + phủ 360° của Sweep.
+- MỚI: đòn thường = **Tát Đẩy** (harite): đẩy mục tiêu kề 2 ô, 0 damage; skill = **Quạt Đẩy**:
+  chọn 1 hướng, vùng quạt 3+5 ô trước mặt, mọi enemy trong vùng bị đẩy theo CÙNG hướng mặt.
+- ItB: đô vật đẩy-khỏi-võ-đài. ⚠ engine: hình quạt CHỨA ô chéo nhưng vector đẩy ĐỒNG NHẤT
+  trực giao → không đụng phẫu thuật hình học chéo. Phân định Ironhusk: cô 1dmg+đẩy1 giữ hành
+  lang, anh 0dmg+đẩy2 ủi cả mảng.
+- COMPAT sơ bộ ~9/9: `BLEED_ON_SHOVE`/`COLLISION_BONUS`/`COLLISION_SPLASH`/`COLLISION_PLATING`/
+  `PUSH_DISTANCE`/`RETALIATE_PUSH`/`SHIELD_ON_KILL` SỐNG (đẩy vẫn là đẩy, kill va chạm vẫn là
+  kill); Slingshot `SKILL_DASH` ĐỔI NGHĨA = *lao rồi quạt* (sumo charge).
+- ⚠ LỐ: quạt × bộ ba va chạm × `BLEED_ON_SHOVE` — máy đẻ outlier to nhất bộ, GOD-BUILDS trước
+  khi code. Dự bị nếu đo ra lố: "Ném Xoay Đôi".
+**4. IRONHUSK — Húc Toàn Lực**
+- TƯỚC: cú đẩy của Rolling Charge — **CHỈ skill**; Plate Slam (đòn thường) vẫn đẩy như cũ,
+  scope phải ghi rõ trong desc. MỚI: toàn bộ động năng thành damage, +1 mỗi ô lấy đà.
+- ItB: Charge Mech nguyên bản. COMPAT sơ bộ ~9/9: `DASH_DISTANCE` [F6] + `BONUS_DAMAGE` [F3]
+  từ ô phụ thành CORE; `STEADFAST` SIG / Stun Charge `SKILL_STUN` [F5] (stun theo cú tông —
+  vẫn tông) / `RETALIATE_ROOT` [F7] / `LAST_STAND_SHIELD` [F9] / Sprung Bash `PUSH_DISTANCE`
+  [F8] (trên đòn thường) đều SỐNG.
+- Trade thật: mất công cụ reposition địch mạnh nhất của cô — đội mất một nửa lời giải
+  đẩy-vào-nước/hố.
+
+**5. THORNSHELL — Provoke Đảo Cực**
+- TƯỚC: kéo địch vào mình (taunt). MỚI: Provoke phát gai cho ally kề — họ RETALIATE 1 trong
+  2 lượt (đúng trần Retaliation Rule: 3 chỉ dành cho chủ gai tự đắp).
+- ItB: không có analogy — đây là phản đề của chính anh ta, chấp nhận được.
+- COMPAT sơ bộ: SIG `RETALIATE_DAMAGE` 3 / `RETALIATE_BLEED` [F3] / Sprung Thorn
+  `ON_HIT_PUSH` [F8] / Windburr `MOVE_BONUS` [F6] SỐNG; `PROVOKE_SHIELD` [F9] ĐỔI NGHĨA
+  (cast phát-gai → khiên); **CHẾT: Bellowing Thorn `TAUNT_RADIUS` [F5]** (→ remap đề xuất:
+  +1 tầm phát gai). ≈7/9.
+- ⚠ Trade CẤP ĐỘI: vai trò chống Balloon/Digger/Catapult — lý do tồn tại của Provoke, ghi
+  ngay trong comment heroes.ts — BIẾN MẤT khỏi đội. Ghi vào GOD-BUILDS như một chi phí ẩn.
+
+**6. SUNBLOOM — Harvest Đảo Chiều**
+- TƯỚC: thu Sol (Harvest). MỚI: xả Sol thành tia theo hàng — X damage mỗi 25 Sol đốt
+  (tiêu Sol lấy damage hợp lệ; luật chỉ cấm SINH Sol miễn phí).
+- COMPAT sơ bộ ~8/9: mọi ô cắm vào Solar Blessing (`BLESS_POWER`/`BLESS_RETALIATE`/
+  `BLESS_SHOCKWAVE`) + `SKILL_AURA` [F5] + `CONVOY_AURA` [F6] + `ESCORTED_REDUCTION` [F4] +
+  Gunbloom [F2] SỐNG; **Dawn Harvest `HARVEST_SHIELD` [F9] ĐỔI NGHĨA hoặc CHẾT** (trigger
+  "khi Harvest" → khi XẢ? — phải chốt).
+- ⚠ Cảnh báo TO nhất bộ: đội mất máy phát Sol chính — Aspect này đổi KINH TẾ CẢ ĐỘI, không
+  chỉ cô. Đo ví Sol/trận trước mọi thứ khác.
+**7. SNAPMAW — Bao Tử Pháo (Ballista Gut)** *(mới 2026-08-08)*
+- Vì sao KHÔNG được tước tiêu hóa: **hàng anh ta 6/9 ô khóa vào `DIGEST_*`** — vứt cái bụng là
+  rớt ngưỡng guard #7 ngay. Aspect buộc phải xoay quanh động từ nuốt. (Guard đang định hình
+  thiết kế — đúng vai của nó.)
+- TƯỚC: xóa sổ tức thì (digest-erase — identity đao phủ của Devour). MỚI: nuốt = **GIAM** mục
+  tiêu trong bụng 1 lượt; lượt sau **PHUN** nó theo đường thẳng như một viên đạn — thân bay
+  N ô, va chạm theo luật thường, nhận damage thay vì bị xóa. Đao phủ → pháo-đạn-thịt/control.
+- ItB: Vice Mech (tóm và quăng). Massive không nuốt được — luật sẵn, không cần thêm.
+- COMPAT sơ bộ ~8/9: cả họ `DIGEST_*` (SIG `DIGEST_REDUCTION` = phun sớm hơn,
+  `ARMOR_WHILE_DIGESTING`, `DIGEST_MOVE`, `DIGEST_STEADFAST`, `DIGEST_RETALIATE`,
+  `SHIELD_ON_DIGEST`) ĐỔI NGHĨA sang trạng thái "đang ngậm"; `STUN_ON_FULL_HP` SỐNG.
+- ⚠ đo: đạn-thịt × bộ ba va chạm của Chardslam trong CÙNG squad — hai nguồn ném chồng nhau.
+
+**8. CORNOVA — Nòng Cụt (Sawed-Off)** *(mới 2026-08-08 — viết lại hợp luật từ ý bản nháp cũ)*
+- TƯỚC: đường đạn VỒNG — vũ khí duy nhất của phe cây bắn qua vật cản. **Trade cấp đội to nhất
+  bộ**: đội mất lời giải "Ironhusk chắn hành lang che mắt xạ thủ sau lưng" (lý do tồn tại của
+  cô, comment heroes.ts). MỚI: đòn thường = **nón 3 ô sát mặt**, 1 dmg + đẩy 1; Nova Shell =
+  **điểm-blank** 1 mục tiêu kề: 2 dmg + đẩy 2 + stun (vẫn trả Sol — cùng gia đình ngoại lệ
+  STUN RULE có giá). Pháo binh → lính phá cửa.
+- ItB: các mech cận chiến nồi đồng. COMPAT sơ bộ ~8/9: SIG `SKILL_SPLASH` ĐỔI NGHĨA (splash
+  quanh điểm-blank); `SKILL_BLEED_SPLASH` ĐỔI NGHĨA; `SMOKE_ON_HIT`/`EMPLACED_PLATING` (đứng
+  chắn cửa — hợp vai mới)/Caltrop `SKILL_SPIKE_SCATTER`/`SKILL_DISCOUNT` [F1] SỐNG; Recoil
+  `ON_HIT_PULL` [F8] ĐỔI NGHĨA THÚ VỊ (kéo mồi vào tầm nón); Split Shell `SPLIT_SHOT` [F2]
+  ĐỔI NGHĨA (ô phụ sau mục tiêu theo trục nón).
+
+**9. GOURDWARD — Ngục Vỏ (Cage Rind)** *(mới 2026-08-08 — cứu ý "Prison Cell" của bản nháp
+GOD-BUILDS cũ, viết lại hợp luật)*
+- TƯỚC: bọc khiên cho ALLY — toàn bộ giá trị support hiện tại. MỚI: vỏ úp lên **ENEMY** —
+  Reinforce úp 1 con kề, Encase úp cả vành quanh mình: mục tiêu bị nhốt 1 lượt — không hành
+  động, không di chuyển, VÀ **không thể bị damage/đẩy** (bảo hộ hai chiều). Support → removal.
+- ItB: đúng triết lý Ice của ItB — đóng băng địch cũng là che chở nó.
+- LUẬT: đăng ký **ngoại lệ STUN RULE #4**, giá kép: vẫn tốn Sol như Encase cũ + mục tiêu bất
+  khả xâm phạm trong lúc nhốt (không thể vừa khóa vừa đấm — khác bản chất với free-stun).
+- COMPAT sơ bộ 6–7/9 nhưng **nóng nhất bộ**: Rind Pellet `SHIELD_SHOT` ĐỔI NGHĨA ĐẸP (bắn
+  ngục dọc hàng — desc gốc "unit đầu tiên bất kể phe" đột nhiên có nghĩa trọn vẹn);
+  `DAMAGE_REDUCTION` Ironrind / Shockrind `SKILL_REPEL` SỐNG; Glass Rind `BARBED_SHIELD`
+  ĐỔI NGHĨA (ngục gai — nhốt xong sổng ra ăn 1?); **⚠ LỐ ×2 phải xử trước khi ship**:
+  Payback `SHIELD_BREAK_STUN` (ngục vỡ → stun = double-dip control) và SIG Greatrind
+  `SHIELD_SPREAD` (ngục LAN sang hàng xóm = mass removal — nhiều khả năng phải chặn/remap).
+  GOD-BUILDS entry dày nhất bộ.
+
+**Relic "đẩy nhánh" đã nhận từ seed (KHÔNG phải Aspect — để pool sau launch):**
+- Peaburst "viên phụ = viên chính" (mọi phát phụ/split full damage) — khuếch đại
+  `DOUBLE_ATTACK`/`SPLIT_SHOT`, không đổi cách action. ⚠ nhân với máy-phát-Sol (GOD-BUILDS 1.3).
+- Peaburst "giết được bắn tiếp" — hợp lệ CHỈ KHI cap (đề xuất: tối đa 2 phát nối/lượt, chỉ đòn
+  đánh thường); không cap = extra-action trá hình (phạm luật). ⚠ đo cùng `SUN_ON_KILL`.
+- Chardslam **"Đẩy Xuyên"** (từ chung kết [C6.3 FINAL v3]): mọi cú đẩy của Sweep truyền đà
+  TỐI ĐA 1 NẤC qua chuỗi thân — thân bị đẩy đập vào thân sau thì cả hai lùi, mỗi mắt xích ăn
+  va chạm. Amplifier hoàn hảo cho build va chạm — đúng định nghĩa đẩy-nhánh. ⚠ nhân với
+  Bàn Bida (GOD-BUILDS 1.1).
+- Chardslam **"Roundhouse"** (nguyên [C6.3] vòng 3): xoay 4 thân kề 45° sang ô chéo, thay
+  Vault Toss lượt đó. Đổi-cơ-chế nên đúng tầng này; cần giải bài hình học chéo trước khi code.
+
+**Việc mở tiếp (cập nhật sau bản đủ 9):** đặt tên hệ (đề xuất EN: *Aspect*, VI: *Di Sản Thứ
+Hai*) vào NAMING.md khi duyệt; UI squad-select thêm hàng chọn Aspect cạnh hàng element;
+**2 remap Reedwing** (`WING_MIDSHOT`, `ATTACK_THEN_MOVE` — đang giữ cô đúng mép ngưỡng 6/9);
+**xử 2 ô LỐ của Gourdward** (Payback + Greatrind × Ngục Vỏ); chốt trigger mới cho Dawn
+Harvest dưới Sunbloom đảo chiều; viết bảng `aspectCompat` đầy đủ + assert khi implement.
+
+- **Trạng thái:** ⬜ chờ duyệt
+- **Góp ý:**
+
+### [G9] Item tiêu hao: thẻ đe dọa + spotlight + trần kho (chốt hướng 2026-08-08)
+
+> **Bệnh cần chữa:** tích trữ — người chơi tiếc item dùng-một-lần, ôm nguyên kho tới cuối run
+> (ca kinh điển: potion của StS). Item không được dùng = 11 món thiết kế đổ sông.
+> **KPI:** số item còn nguyên trong kho lúc kết run — gắn đếm từ demo.
+
+**Nguyên tắc xuyên suốt: hint MỐI ĐE DỌA, không hint ĐÁP ÁN.** Cấm tính "item tối ưu cho bàn
+này": game giải đố hộ là tự ăn thịt sản phẩm, và một lời khuyên "tối ưu" sai một lần là cả hệ
+hint (§11 PLAN-lore-rework) mất uy tín chùm.
+
+Ba tầng:
+1. **Thẻ đe dọa trên node trận** — mỗi node 1–2 tag thành phần (BẦY BAY / GIÁP DÀY / ĐÀO ĐẤT /
+   ĐÔNG NHUNG NHÚC…), hiện khi hover (thẻ bản đồ đã có tên màn + mô tả + mục tiêu — chỉ thêm
+   dòng tag). Người chơi tự nối tag → item (bay → Quạt Bão, giáp → Hỏa Kích): cùng bài học,
+   không ai giải hộ. **Điều kiện kỹ thuật cần kiểm:** thành phần encounter phải chốt từ lúc
+   SINH MAP (composition tags trên node) chứ không phải lúc bước vào node — vì shop đứng TRƯỚC
+   node cần thông tin đó cho quyết định mua.
+2. **Câu "món này để làm gì" của Mulch — một lần, khi item lần đầu xuất hiện sau unlock**
+   ("Quạt Bão hả? Thổi được đám lơ lửng đấy nhóc"). Hint TĨNH viết tay được vì mô tả item chứ
+   không mô tả bàn — sống qua mọi rebalance (luật §11.1). Ghép **spotlight-một-lần**: trận kế
+   sau unlock, encounterBuilder cài ràng buộc đảm bảo món mới có đất diễn rõ (bảng data
+   `UNLOCK_SPOTLIGHTS`: unlockable → ràng buộc spawn/formation + câu hint đúng giọng §11);
+   cờ "đã spotlight" trong progress, KHÔNG lặp lại — lặp là map có mùi dàn xếp.
+3. **Trần kho là đòn bẩy dự phòng** — nếu playtest vẫn đo ra tích trữ sau tầng 1+2: giới hạn
+   slot item mang theo (kiểu potion slot StS) — thừa thì buộc dùng hoặc bỏ. Ép chi tiêu bằng
+   LUẬT, không phải bằng lời khuyên mạnh hơn.
+
+- **Trạng thái:** ⬜ chờ duyệt
+- **Góp ý:**
+
+### G-tổng: thứ tự đề xuất nếu chỉ làm ba
+
+1. **[G3] Bắn Đón** — mở cả một LỚP relic combo-chéo (nếu nó vui, nhân bản công thức: "kẻ địch
+   cháy chạy qua ô gai thì...", v.v.).
+2. **[G5] Máy nổ** — ba tầng rủi ro trên một cơ chế đã có, gần như thuần luật.
+3. **[G1] Audit chụp-ảnh-được** — rẻ nhất, phục vụ thẳng marketing.
+
+[G2]/[G4]/[G7] chờ các § tương ứng của PLAN-lore-rework ship xong; [G6] làm lúc dựng The Breach
+content. Mọi mục qua [G0] trước khi merge. Sau khi 2-3 mục đầu vào game: đo lại bảng "cast/trận"
+§9.3 và cập nhật GOD-BUILDS.md — combo mới phải được ghi vào sổ săn outlier, không thả rông.
 
 - **Trạng thái:** ⬜ chờ duyệt
 - **Góp ý:**

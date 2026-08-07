@@ -252,6 +252,37 @@ Còn mở:
 - Shop reroll giá leo thang = trả phí cho Mulch lục sâu hơn thùng xe.
 - Power Plant = **Pin Nén** (một hơi thở Sol đóng sẵn — một tuyệt kỹ không tốn Sol).
 
+## §11. Codex & hệ thoại nhỏ giọt (chốt hướng 2026-08-08 — pattern Hades)
+
+Bốn điểm chạm lặp lại của vòng chơi = bốn kênh phát tri thức, bốn giọng, không giẫm nhau:
+
+| Điểm chạm | Người kể | Loại tri thức | Ghi chú |
+|---|---|---|---|
+| Tháp Xanh (node nghỉ) | Chính các hero | Tính cách, quan hệ, quá khứ đội | Giọng 3 hero gốc có sẵn (TUTORIAL-SCRIPT-STORY); 6 hero mới LẤY GIỌNG TỪ PHẢ HỆ (game_lore Phụ lục B: Snapmaw = cơn đói, Cornova = kỷ luật pháo binh…) |
+| Shop | Old Mulch | Hint *hướng* combo MAT | Giọng "lão thu gom" đã chốt |
+| Tàn Cơ / MAT | Mảnh AI tàn dư | Hint god-build qua relic | Giọng mới: giao thức quân sự gãy |
+| Game over | Chrona | Quá khứ, chuỗi cố định leo thang | Ghép cùng màn "quà người đi trước" (§9/G7) thành màn game-over CÓ NỘI DUNG |
+
+**Bốn luật bắt buộc:**
+1. **Hint nhắc cơ chế phải template từ data** (`FUSION_RECIPES`, tên relic) — không viết cứng
+   tên ô/số vào prose. Bài học nội bộ: vụ [A2] fusion-matrix.html trôi khỏi TS. Chỉ hint
+   "phương hướng" ("cột lò xo thích va chạm") mới được viết tay — nó sống qua mọi rebalance.
+2. **Hint god-build là nửa câu, không phải công thức:** chỉ nêu TRỤC cộng hưởng, không nêu
+   danh sách; hint đắt nhất là HỒI TỐ — Tàn Cơ chỉ hé mảnh cuối khi người chơi đã sở hữu 2/3
+   thành phần. Cú "aha" xảy ra trong đầu người chơi.
+3. **Chuỗi Chrona có phanh canon:** kể được quá khứ tới đúng ranh giới mệnh lệnh — chạm bí mật
+   là IM LẶNG 3 GIÂY, làm hẳn thành beat UI (dòng chữ đang gõ… khựng đúng 3s). Twist chương 7
+   được gieo bằng chính giao diện. Chuỗi cố định, leo thang, KHÔNG bao giờ nói trước tên
+   Blightlord/Gilbert (xem game_lore ch.7 — bí mật chỉ chết khi mặt nạ rơi).
+4. **Ngân sách chữ chốt trước khi viết** (mọi dòng = EN key + VI, sau này +Trung): v1 ≈ 80 dòng —
+   Chrona 12–15 (chuỗi), Mulch 12–18 (1–2/material), Tàn Cơ ~10 (1/nhóm relic), campfire 35–40
+   (2–3/hero + ~6 cặp đôi đặc biệt).
+
+**Kỹ thuật:** trường "dòng đã xem" thêm vào `pitb_progress_v1` (optional, di trú an toàn — cùng
+pattern `lastRunEpitaph` của G7); mọi dòng đã xem lưu vào `CodexScreen.tsx` (ĐÃ CÓ trong repo),
+chia tab: *Biên niên sử* (chương game_lore v2.1 mở theo act) / *Hồ sơ đội* / *Sổ tay Mulch* /
+*Băng ghi âm Chrona*.
+
 Ghi chú kịch bản hóa (ĐÃ CHỐT): twist chương 7 KHÔNG dùng thú tội — cấu trúc hỏi–đáp:
 Sunbloom hỏi "sao không nói", Chrona trả lời bằng logic máy (lệnh của chủ cũ trước khi
 tha hóa chưa từng được gỡ + "cô chưa bao giờ hỏi đúng câu hỏi"; bí mật tự chết khi mặt
